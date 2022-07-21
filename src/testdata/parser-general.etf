@@ -1,0 +1,222 @@
+>> test
+
+Reserved words prohibited in identifiers.
+
+>> input
+
+let true = false;
+
+>> parse-fail strip
+
+expected repeater or variable
+
+>> test
+
+Variables with and without prefixes.
+
+>> input
+
+let x = true;
+let x.y = false;
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[])]),Constant(Boolean(true))),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:Some("x"),name:"y"},[])]),Constant(Boolean(false))),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> test
+
+Macro identifiers
+
+>> input
+
+let x = test!("macro");
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Call(PTCall{
+                name: "test",
+                args: [Expression(Constant(String("macro")))],
+                is_macro: true
+            })
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Includes
+
+>> input
+
+include "abc";
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Include("abc"),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Check annotations
+
+>> input
+
+let x : length(a) length(bb..) total(ccc) ref(dddd) = [1,2,3];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[
+                PTCheck{check_type:Length,name:"a"},
+                PTCheck{check_type:LengthOrInfinite,name:"bb"},
+                PTCheck{check_type:Sum,name:"ccc"},
+                PTCheck{check_type:Reference,name:"dddd"}
+            ])]),
+            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Annotations need identifiers
+
+>> input
+
+let x : = 3;
+
+>> parse-fail strip
+
+expected check_annotation
+
+>> test
+
+Modify statement
+
+>> input
+
+let x = [1,2,3];
+x = [4,5,6];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+        ),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: ModifyStatement(
+            PTVariable{prefix:None,name:"x"},
+            FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])
+        ),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> test
+
+Bare statement
+
+>> input
+
+c(1,2,3);
+
+>> parse strip
+
+[
+    PTStatement {
+        value: BareCall(PTCall{
+            name: "c",
+            args: [
+                Expression(Constant(Number(1.0))),
+                Expression(Constant(Number(2.0))),
+                Expression(Constant(Number(3.0)))
+            ],
+            is_macro: false
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Top-level macro
+
+>> input
+
+test!("123");
+
+>> parse strip
+
+[
+    PTStatement {
+        value: BareCall(PTCall{name:"test",args:[Expression(Constant(String("123")))],is_macro:true}),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+
+>> test
+
+Procedure return
+
+>> input
+
+let (x : length(w) total(ww),y,z) = c(a,b,c);
+
+>> parse strip
+
+[
+    PTStatement{
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[
+                                            PTCheck{check_type:Length,name:"w"},
+                                            PTCheck{check_type:Sum,name:"ww"}
+                                        ]),
+                                      (PTVariable{prefix:None,name:"y"},[]),
+                                      (PTVariable{prefix:None,name:"z"},[])
+                                    ]),
+                            Call(PTCall{
+                                name:"c",
+                                args:[
+                                    Expression(Variable(PTVariable{prefix:None,name:"a"})),
+                                    Expression(Variable(PTVariable{prefix:None,name:"b"})),
+                                    Expression(Variable(PTVariable{prefix:None,name:"c"}))
+                                ],
+                                is_macro:false
+                            })),
+        file:["test"],line_no:2
+    }
+]

@@ -1,0 +1,278 @@
+>> test
+
+Code block smoke
+
+>> input
+
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X..)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
+    register r4;
+    opcode 44, r1, r2, r3, r4, r5;
+}
+
+>> parse strip
+
+[
+    PTStatement{
+        value: Code(PTCodeBlock{
+            name: "test",
+            arguments: [
+                Register(PTCodeRegisterArgument{
+                    reg_id: 1,
+                    arg_types: [Sequence(Number),Sequence(String)],
+                    checks: [PTCheck{check_type:Length,name:"X"}]
+                }),
+                Register(PTCodeRegisterArgument{
+                    reg_id: 2,
+                    arg_types: [Atomic(Boolean)],
+                    checks: [PTCheck{check_type:LengthOrInfinite,name:"X"}]
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument{
+                    reg_id: 3,
+                    arg_types: [Sequence(Boolean)],
+                    checks: [PTCheck{check_type:Reference,name:"X"}]
+                },
+                PTCodeRegisterArgument{
+                    reg_id: 5,
+                    arg_types: [Atomic(Boolean)],
+                    checks:[]
+                }
+            ],
+            commands:[
+                Register(4),
+                Opcode(44,[1,2,3,4,5])
+            ],
+            modifiers:[World]
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Code wild types
+
+>> input
+
+code test(r1: seq(?X)) -> (r2: seq(?X)) {
+    opcode 42, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement{
+        value: Code(PTCodeBlock{
+            name: "test",
+            arguments: [
+                Register(PTCodeRegisterArgument{
+                    reg_id: 1,
+                    arg_types: [
+                        SequenceWildcard("X")
+                    ],
+                    checks: []
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument{
+                    reg_id: 2,
+                    arg_types:[
+                        SequenceWildcard("X")
+                    ],
+                    checks: []
+                }
+            ],
+            commands:[
+                Opcode(42,[1,2])
+            ],
+            modifiers:[]
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Code wild checks
+
+>> input
+
+code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) ref(?Y)) {
+    opcode 42, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement{
+        value: Code(PTCodeBlock{
+            name: "test",
+            arguments: [
+                Register(PTCodeRegisterArgument{
+                    reg_id: 1,
+                    arg_types: [SequenceWildcard("X")],
+                    checks:[PTCheck{check_type:Length,name:"Y"}]
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument{
+                    reg_id: 2,
+                    arg_types: [SequenceWildcard("X")],
+                    checks: [
+                        PTCheck{check_type:Length,name:"Y"}
+                    ]
+                },
+                PTCodeRegisterArgument{
+                    reg_id: 3,
+                    arg_types: [Sequence(Boolean)],
+                    checks: [
+                        PTCheck{check_type:Reference,name:"Y"}
+                    ]
+                }
+            ],
+            commands: [
+                Opcode(42,[1,2])
+            ],
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Code unbracketed return
+
+>> input
+
+code test(r1: boolean) -> r2: seq(boolean) {
+    opcode 42, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock{
+            name: "test",
+            arguments:[
+                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]})
+            ],
+            results:[
+                PTCodeRegisterArgument{reg_id:2,arg_types:[Sequence(Boolean)],checks:[]}
+            ],
+            commands:[Opcode(42,[1,2])],
+            modifiers:[]
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Code constants
+
+>> input
+
+code test_bool(r1: boolean, false) {
+    opcode 42, r1, r2;
+}
+
+code test_number(r1: boolean, 42) {
+    opcode 42, r1, r2;
+}
+
+code test_string(r1: boolean, "hello") {
+    opcode 42, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock{
+            name: "test_bool",
+            arguments: [
+                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Constant(Boolean(false))
+            ],
+            results: [],
+            commands: [Opcode(42,[1,2])],
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: Code(PTCodeBlock{
+            name: "test_number",
+            arguments: [
+                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Constant(Number(42.0))
+            ],
+            results: [],
+            commands: [Opcode(42,[1,2])],
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 6
+    },
+    PTStatement {
+        value: Code(PTCodeBlock{name: "test_string",
+            arguments: [
+                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Constant(String("hello"))
+            ],
+            results:[],
+            commands:[Opcode(42,[1,2])],
+            modifiers:[]
+        }),
+        file: ["test"],
+        line_no: 10
+    }
+]
+
+>> test
+
+Code checks no types
+
+>> input
+
+code test_string(r1) {
+    opcode 42, r1, r2;
+}
+
+>> parse-fail strip
+
+expected code_argument
+
+>> test
+
+Code no args, no return
+
+>> input
+
+code test_string() {
+    opcode 42;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock{
+            name: "test_string",
+            arguments: [],
+            results: [],
+            commands: [Opcode(42,[])],
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]

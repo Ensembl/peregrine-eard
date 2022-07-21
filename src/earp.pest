@@ -1,0 +1,215 @@
+// TODO other code statements
+// TODO reserved
+
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ ("//" ~ (!"\n" ~ ANY)* ~ "\n") | ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
+
+/* general */
+
+reserved = {
+    "false" | "true" | "include" | "number" | "string" | "boolean" | "handle" | "seq" | "code" |
+    "world" | "opcode" | "register" | "flag" | "function" | "procedure" | "let"
+}
+
+identifier = @{ !reserved ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
+macro_identifier = @{ !reserved ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* ~ "!" }
+
+string = ${ ("\"\"\"" ~ multi_string_inner ~ "\"\"\"")|("\"" ~ string_inner ~ "\"") }
+
+string_inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "0")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+multi_string_inner = @{ multi_char* }
+multi_char = {
+    !("\"\"\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "0")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+boolean = { "false" | "true" }
+
+finite_seq  = { "[" ~ seq_inner? ~ "]" }
+infinite_seq = { "[" ~ expression ~ "," ~ "..." ~ "]" }
+seq_inner = _{ expression ~ ("," ~ expression)* }
+
+constant = { number|string|boolean }
+
+number = @{ 
+    "-"? ~ 
+    ("0"|( ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* )) ~ 
+    ("." ~ ASCII_DIGIT+)? ~
+    ("e" ~ ("+"|"-")? ~ ASCII_DIGIT+)?
+}
+
+include = { "include" ~ string ~ ";" }
+
+/* checks */
+length_check = { "length(" ~ identifier ~ ")" }
+lengthorinf_check = { "length(" ~ identifier ~ ".." ~ ")" }
+total_check = { "total(" ~ identifier ~ ")" }
+ref_check = { "ref(" ~ identifier ~ ")" }
+
+check_annotation = { length_check | lengthorinf_check | total_check | ref_check }
+
+/* arguments */
+arg_types = { (arg_type ~ ("|" ~ arg_type)*)? }
+arg_type = { arg_atomic_type | arg_seq_type | arg_seq_wild_type | arg_wild_type }
+arg_atomic_type = { "number" | "string" | "boolean" | ("handle(" ~ identifier ~ ")")  }
+arg_seq_type = { "seq(" ~ arg_atomic_type ~ ")" }
+arg_seq_wild_type = { "seq(" ~ arg_wild_type ~ ")" }
+arg_wild_type = { "?" ~ arg_check_variable }
+
+arg_check_variable = { ASCII_ALPHA_UPPER+ }
+
+arg_length_check = { "length(" ~ "?" ~ arg_check_variable ~ ")" }
+arg_lengthorinf_check = { "length(" ~ "?" ~ arg_check_variable ~ ".." ~ ")" }
+arg_total_check = { "total(" ~ "?" ~ arg_check_variable ~ ")" }
+arg_ref_check = { "ref(" ~ "?" ~ arg_check_variable ~ ")" }
+
+arg_check = { arg_length_check | arg_lengthorinf_check | arg_total_check | arg_ref_check }
+
+/* code blocks */
+code_block = { code_header ~ "{" ~ code_statement* ~ "}" }
+
+code_header = {
+     code_modifiers ~ "code" ~ identifier ~ "(" ~ code_arguments ~ ")" ~ code_return
+}
+code_modifier = { "world" }
+code_modifiers = { code_modifier* }
+
+code_return = { ("->" ~ (("(" ~ code_return_arguments ~ ")")|code_variable))? }
+code_arguments = { (code_argument ~ ("," ~ code_argument)*)? }
+code_return_arguments = _{ code_variable ~ ("," ~ code_variable)* }
+
+code_argument = { (code_variable|constant) }
+register = { "r" ~ ASCII_DIGIT+ }
+
+code_variable = { register ~ ":" ~ arg_types ~ arg_check* }
+
+opcode_opcode = { ASCII_DIGIT+ }
+opcode_statement = { "opcode" ~ opcode_opcode ~ opcode_args }
+opcode_args = { ("," ~ register)* }
+
+register_statement = { "register" ~ register  }
+
+code_statement = { (opcode_statement|register_statement) ~ ";" }
+
+flag_statement = { "flag" ~ string ~ ";" }
+
+/* operators */
+
+infix1 = { "*"|"/" }
+infix2 = { "+"|"-" }
+infix3 = { ">"|">="|"<"|"<=" }
+infix4 = { "=="|"!=" }
+infix5 = { "&& "}
+infix6 = { "||" }
+
+prefix_operators = { "!"|"-" }
+
+/* expressions */
+
+prefix = { identifier }
+repeater = { "**" ~ prefix  }
+bundle = { "*" ~ prefix }
+variable = { (prefix ~ "." ~ identifier) | identifier }
+
+argument = { expression | bundle | repeater }
+arguments = _{ argument ~ ("," ~ argument)* }
+func_or_proc_call = { identifier ~ "(" ~ arguments? ~ ")" }
+macro_call = { macro_identifier ~ "(" ~ arguments? ~ ")" }
+
+simple_expression = { 
+    ("(" ~ expression ~ ")") |
+    finite_seq |
+    infinite_seq |
+    constant |
+    (prefix_operators ~ simple_expression) |
+    macro_call |
+    func_or_proc_call |
+    variable
+}
+
+expr1 = { simple_expression ~ (infix1 ~ simple_expression)* }
+expr2 = { expr1 ~ (infix2 ~ expr1)* }
+expr3 = { expr2 ~ (infix3 ~ expr2)* }
+expr4 = { expr3 ~ (infix4 ~ expr3)* }
+expr5 = { expr4 ~ (infix5 ~ expr4)* }
+expr6 = { expr5 ~ (infix6 ~ expr5)* }
+
+expression = { expr6 }
+
+/* functions, procedures and macros */
+
+funcproc_arg_extras = { ":" ~ arg_types ~ arg_check* }
+funcproc_arg_named = { identifier ~ funcproc_arg_extras? }
+funcproc_arg = { funcproc_arg_named|bundle }
+funcproc_args = { (funcproc_arg ~ ( "," ~ funcproc_arg)*)? }
+
+funcproc_return_type = { arg_types ~ arg_check* }
+function_return = { ("->" ~ funcproc_return_type)? }
+
+function_value = { expression|bundle }
+
+function = {
+    "function" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ function_return  ~ "{" ~
+        inner_block* ~ function_value ~
+    "}"
+}
+
+procedure_return_types = _{ funcproc_return_type ~ ("," ~ funcproc_return_type)* }
+procedure_return = { "->" ~ (("(" ~ procedure_return_types ~ ")")| funcproc_return_type )  }
+procedure_return_option = { procedure_return? }
+
+procedure_named_expression = _{ ("(" ~ expression ~ ("," ~ expression)* ~ ")")| expression? }
+procedure_expression = { (bundle|procedure_named_expression) }
+
+procedure = {
+    "procedure" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ procedure_return_option  ~ "{" ~
+        inner_block* ~ procedure_expression ~
+    "}"
+}
+
+/* statements */
+
+simple_let_statement = { 
+    "let" ~ ((variable ~ (":" ~ check_annotation+)?) | repeater) ~ "=" ~ expression ~ ";"
+}
+
+composite_let_arg = {
+    (variable ~ (":" ~ check_annotation+)?)
+}
+
+composite_let_list = {
+    composite_let_arg ~ ("," ~ composite_let_arg)*
+}
+
+composite_let_statement = {
+    "let" ~ "(" ~ composite_let_list ~ ")" ~ "=" ~ expression ~ ";"
+}
+
+modify_statement = { variable ~ "=" ~ expression ~ ";" }
+bare_statement = _{ func_or_proc_call ~ ";" }
+
+inner_block = {
+    simple_let_statement |
+    composite_let_statement |
+    modify_statement |
+    bare_statement |
+    (macro_call ~ ";")
+}
+
+block = {
+    code_block |
+    include |
+    flag_statement |
+    function |
+    procedure |
+    inner_block
+}
+
+file = { SOI ~ block* ~ EOI }

@@ -1,0 +1,388 @@
+>> test
+
+This file contains general purpose tests just to make sure everything is basically fine and
+for experimentation. More targetted testing is in other files.
+
+>> input
+
+/* world indicates global state is modified */
+world code print(r1: string|number) {
+    opcode 42, r1;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock { 
+            name: "print", 
+            arguments: [
+                Register(PTCodeRegisterArgument { 
+                    reg_id: 1,
+                    arg_types: [Atomic(String), Atomic(Number)],
+                    checks: []
+                })
+            ],
+            results: [],
+            commands: [
+                Opcode(42, [1])
+            ],
+            modifiers: [World] 
+        }),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> input
+
+// regular
+code add(r1: number, r2: number) -> (r3: number) {
+    opcode 23, r3, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock {
+            name: "add",
+            arguments: [
+                Register(PTCodeRegisterArgument {
+                    reg_id: 1,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }), 
+                Register(PTCodeRegisterArgument {
+                    reg_id: 2,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument {
+                    reg_id: 3,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }],
+            commands: [
+                Opcode(23, [3, 1, 2])
+            ], 
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+
+>> input
+
+// modify
+code add(r1: number, r2: number) -> (r1: number) {
+    register r3;
+    opcode 24, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock {
+            name: "add",
+            arguments: [
+                Register(PTCodeRegisterArgument {
+                    reg_id: 1,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }), 
+                Register(PTCodeRegisterArgument {
+                    reg_id: 2,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument {
+                    reg_id: 1,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }],
+            commands: [
+                Register(3),
+                Opcode(24, [1, 2])
+            ], 
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> input
+
+// increment
+code add(r1: number, 1) -> (r1: number) {
+    opcode 25, r1;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock {
+            name: "add",
+            arguments: [
+                Register(PTCodeRegisterArgument {
+                    reg_id: 1,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }), 
+                Constant(Number(1.0))
+            ],
+            results: [
+                PTCodeRegisterArgument { 
+                    reg_id: 1,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }
+            ], 
+            commands: [
+                Opcode(25, [1])
+            ], 
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> input
+
+code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
+    opcode 43, r1, r2;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock {
+            name: "count_to_index",
+            arguments: [
+                Register(PTCodeRegisterArgument {
+                    reg_id: 1, 
+                    arg_types: [Sequence(Number)],
+                    checks: [
+                        PTCheck { check_type: Sum, name: "X " },
+                        PTCheck { check_type: Length, name: "Y" }
+                    ]
+                })
+            ],
+            results: [
+                PTCodeRegisterArgument {
+                    reg_id: 2,
+                    arg_types: [Sequence(Number)],
+                    checks: [
+                        PTCheck { check_type: Length, name: "X " },
+                        PTCheck { check_type: Reference, name: "Y" }
+                    ] 
+                }
+            ],
+            commands: [
+                Opcode(43, [1, 2])
+            ], 
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+] 
+
+>> input
+
+code len(r1: seq(?X)) -> (r2: number) {
+    opcode 16, r2, r1;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Code(PTCodeBlock {
+            name: "len",
+            arguments: [
+                Register(PTCodeRegisterArgument {
+                    reg_id: 1,
+                    arg_types: [SequenceWildcard("X")], 
+                    checks: []
+                })
+            ], 
+            results: [
+                PTCodeRegisterArgument {
+                    reg_id: 2,
+                    arg_types: [Atomic(Number)],
+                    checks: []
+                }
+            ],
+            commands: [
+                Opcode(16, [2, 1])
+            ],
+            modifiers: []
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+
+include "test1";
+flag "opt1";
+
+>> parse strip
+
+[
+    PTStatement {
+        value: Include("test1"), 
+        file: ["test"],
+        line_no: 3
+    },
+    PTStatement {
+        value: Flag("opt1"),
+        file: ["test"],
+        line_no: 4
+    }
+]
+
+>> input
+
+let gn.tr_count #gn @tr = [1,2,4-1,x(1,3-1),y()];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable(
+                PTVariable { prefix: Some("gn"), name: "tr_count" },
+                [
+                    PTCheck { check_type: Length, name: "gn" },
+                    PTCheck { check_type: Sum, name: "tr" }
+                ]
+            ),
+            FiniteSequence([
+                Constant(Number(1.0)),
+                Constant(Number(2.0)),
+                Infix(Constant(Number(4.0)), "-", Constant(Number(1.0))),
+                Call(PTCall { name: "x", args: [
+                    Expression(Constant(Number(1.0))),
+                    Expression(Infix(Constant(Number(3.0)), "-", Constant(Number(1.0))))
+                ], is_macro: false }),
+                Call(PTCall { name: "y", args: [], is_macro: false })
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+let colour = ["blue", ...];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable(
+                PTVariable { prefix: None, name: "colour" }, []),
+                InfiniteSequence(Constant(String("blue"))
+            )
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+gn.tr_count = check!(gn.tr_count + 1);
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ModifyStatement(
+            PTVariable { prefix: Some("gn"), name: "tr_count" },
+            Call(PTCall { 
+                name: "check",
+                args: [
+                    Expression(Infix(
+                        Variable(PTVariable { prefix: Some("gn"), name: "tr_count" }),
+                        "+",
+                        Constant(Number(1.0))
+                    ))
+                ],
+                is_macro: true 
+            })
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+let x = macro!();
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable(PTVariable { prefix: None, name: "x" }, []),
+            Call(PTCall {
+                name: "macro", 
+                args: [], 
+                is_macro: true 
+            })
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+z1();
+
+>> parse strip
+
+[
+    PTStatement {
+        value: BareCall(PTCall { name: "z1", args: [], is_macro: false }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> input
+
+z2(z3());
+
+>> parse strip
+
+[
+    PTStatement {
+        value: BareCall(PTCall {
+            name: "z2",
+            args: [Expression(Call(PTCall { name: "z3", args: [], is_macro: false }))],
+            is_macro: false 
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]

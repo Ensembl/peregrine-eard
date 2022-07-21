@@ -1,0 +1,12 @@
+[package]
+name = "earp-compiler-lib"
+version = "0.0.0"
+authors = ["ensembl-webteam@ebi.ac.uk"]
+edition = "2018"
+
+
+[dependencies]
+pest="*"
+pest_consume="*"
+pest_derive="*"
+minicbor={ version="*", features=["std"] }

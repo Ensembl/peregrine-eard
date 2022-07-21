@@ -1,0 +1,241 @@
+>> test
+
+Check true and false are behaving
+
+>> input
+
+let x = [true,false];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([
+                Constant(Boolean(true)),
+                Constant(Boolean(false))
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test 
+
+Number parsing
+
+>> input
+let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
+
+>> parse strip
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([
+                Constant(Number(1.0)),
+                Constant(Number(2.0)),
+                Constant(Number(-3.0)),
+                Constant(Number(40.0)),
+                Constant(Number(0.55)),
+                Constant(Number(-0.065)),
+                Constant(Number(0.007))
+            ])
+        ),
+        file: ["test"],
+        line_no: 1
+    }
+]
+
+>> test
+
+Simple string parsing
+
+>> input
+
+let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\u0031"];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([
+                Constant(String("hello")),
+                Constant(String("")),
+                Constant(String("\"")),
+                Constant(String("\\\"")),
+                Constant(String(".")),
+                Constant(String("/")),
+                Constant(String("€")),
+                Constant(String("\n\r\u{8}\t\u{12}")),
+                Constant(String("01"))
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Multi-line string parsing
+
+>> input
+
+let x = [
+    """hello""",
+    """""",
+    """\"""",
+    """\\\"""",
+    """\u002e""",
+    """\u002F""",
+    """\u20AC""",
+    """\n\r\b\t\f""",
+    """\u0030\u0031""",
+    """"hello""",
+    """h"e"l"l"o"""
+];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([
+                Constant(String("hello")),
+                Constant(String("")),
+                Constant(String("\"")),
+                Constant(String("\\\"")),
+                Constant(String(".")),
+                Constant(String("/")),
+                Constant(String("€")),
+                Constant(String("\n\r\u{8}\t\u{12}")),
+                Constant(String("01")),
+                Constant(String("\"hello")),
+                Constant(String("h\"e\"l\"l\"o"))
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Check other unquoted identifiers are parsed as variables
+
+>> input
+
+let x = [true,false,frue,talse];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([
+                Constant(Boolean(true)),
+                Constant(Boolean(false)),
+                Variable(PTVariable{prefix:None,name:"frue"}),
+                Variable(PTVariable{prefix:None,name:"talse"})
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Check sequences
+
+>> input
+
+let a = [];
+let b = [1,2,3];
+let c = [false,false,true];
+let d = ["hello","world"];
+let e = [0,x,y,z];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"a"},[])]),FiniteSequence([])),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"b"},[])]),FiniteSequence([
+            Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
+        ])),
+        file: ["test"],
+        line_no: 3
+    },
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"c"},[])]),FiniteSequence([
+            Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
+        ])),
+        file: ["test"],
+        line_no: 4
+    },
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"d"},[])]),FiniteSequence([
+            Constant(String("hello")),Constant(String("world"))
+        ])),
+        file: ["test"],
+        line_no: 5
+    },
+    PTStatement {
+        value: LetStatement(Variable([(PTVariable{prefix:None,name:"e"},[])]),FiniteSequence([
+            Constant(Number(0.0)),
+            Variable(PTVariable{prefix:None,name:"x"}),
+            Variable(PTVariable{prefix:None,name:"y"}),
+            Variable(PTVariable{prefix:None,name:"z"})
+        ])),
+        file: ["test"],
+        line_no: 6
+    }
+]
+
+>> test
+
+Bad strings 1
+
+>> input
+
+let x = "hello\uGHIJ";
+
+>> parse-fail strip
+
+expected simple_expression
+
+>> test
+
+Bad strings 2
+
+>> input
+
+let x = "hello\w";
+
+>> parse-fail strip
+
+expected simple_expression
+
+>> test
+
+Bad strings 3
+
+>> input
+
+let x = "hello\u00\u01";
+
+>> parse-fail strip
+
+expected simple_expression

@@ -1,0 +1,475 @@
+>> test
+
+Function parsing smoke
+
+>> input
+
+function first(a: seq(?X)) -> ?X {
+    print("getting first element");
+    entry(a,0)
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "first",
+            args: [
+                Named(PTFuncProcNamedArgument{
+                    id:"a",
+                    arg_types:[
+                        SequenceWildcard("X")
+                    ],
+                    checks:[]
+                })
+            ],
+            block: [
+                PTStatement {
+                    value: BareCall(PTCall{
+                        name: "print",
+                        args: [
+                            Expression(Constant(String("gettingfirstelement")))
+                        ],
+                        is_macro: false
+                    }),
+                    file: ["test"],
+                    line_no: 3
+                }
+            ],
+            value: Expression(Call(PTCall{
+                name: "entry",
+                args: [
+                    Expression(Variable(PTVariable{prefix:None,name:"a"})),
+                    Expression(Constant(Number(0.0)))
+                ],
+                is_macro: false
+            })),
+            value_type: Some(PTFuncProcAnonArgument{arg_types:[Wildcard("X")],checks:[]})
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Christmas tree argument specs function
+
+>> input
+
+function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> seq(?Z) ref(?X) {
+    42
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "test",
+            args: [
+                Named(PTFuncProcNamedArgument{
+                    id: "a",
+                    arg_types: [
+                        Sequence(Number),
+                        Atomic(Number),
+                        Atomic(Boolean)
+                    ],
+                    checks: [
+                        PTCheck{check_type:Length,name:"X"},
+                        PTCheck{check_type:Reference,name:"Y"}
+                    ]
+                }),
+                Named(PTFuncProcNamedArgument{
+                    id: "b",
+                    arg_types:[
+                        SequenceWildcard("Z")
+                    ],
+                    checks: []
+                })
+            ],
+            block: [],
+            value: Expression(Constant(Number(42.0))),
+            value_type: Some(PTFuncProcAnonArgument{
+                arg_types:[SequenceWildcard("Z")],
+                checks: [PTCheck{check_type:Reference,name:"X"}]
+            })
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Empty functions not allowed
+
+>> input
+
+function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> seq(?Z) ref(?X) {
+}
+
+>> parse-fail strip
+
+expected function_value or inner_block
+
+>> test
+
+Functions, no types.
+
+>> input
+
+function inc(a) {
+    a+1
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "inc",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]})
+            ],
+            block: [],
+            value: Expression(Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
+            value_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Functions, no return.
+
+>> input
+
+function more(a: number length(?X)) {
+    3
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "more",
+            args: [
+                Named(PTFuncProcNamedArgument{
+                    id: "a",
+                    arg_types: [Atomic(Number)],
+                    checks: [PTCheck{check_type:Length,name:"X"}]
+                })
+            ],
+            block: [],
+            value: Expression(Constant(Number(3.0))),
+            value_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Functions, bundle pass and return.
+
+>> input
+
+function func(*x) {
+    inc(x.a);
+    *x
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "func",
+            args: [Bundle("x")],
+            block: [
+                PTStatement {
+                    value: BareCall(PTCall{
+                        name: "inc",
+                        args: [Expression(Variable(PTVariable{prefix:Some("x"),name:"a"}))],
+                        is_macro:false
+                    }),
+                    file: ["test"],
+                    line_no: 3
+                }
+            ],
+            value: Bundle("x"),
+            value_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Functions, no args.
+
+>> input
+
+function x() { 42 }
+
+>> parse strip
+
+[
+    PTStatement {
+        value: FuncDef(PTFuncDef{
+            name: "x",
+            args: [],
+            block: [],
+            value: Expression(Constant(Number(42.0))),
+            value_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Procedures, multi return
+
+>> input
+
+procedure x(a: number, b: number) -> (number,number) {
+    print(a);
+    print(b);
+    (b,a)
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args:[
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+            ],
+            block:[
+                PTStatement {
+                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(PTVariable{prefix:None,name:"a"}))],is_macro:false}),
+                    file: ["test"],
+                    line_no: 3
+                },
+                PTStatement {
+                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(PTVariable{prefix:None,name:"b"}))],is_macro:false}),
+                    file: ["test"],
+                    line_no: 4
+                }
+            ],
+            ret: Named([
+                Variable(PTVariable{prefix:None,name:"b"}),
+                Variable(PTVariable{prefix:None,name:"a"})
+            ]),
+            ret_type: Some([
+                PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]},
+                PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}
+            ])
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Functions, no multi return
+
+>> input
+
+function x(a: number, b: number) -> (number,number) {
+    a+b
+}
+
+>> parse-fail strip
+
+expected arg_type or arg_check
+
+>> test
+
+Procedures, single return, bracketed.
+
+>> input
+
+procedure x(a: number, b: number) -> (number) {
+    (a+b)
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+            ],
+            block: [],
+            ret: Named([
+                Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Variable(PTVariable{prefix:None,name:"b"}))
+            ]),
+            ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Procedures, single return, unbracketed.
+
+>> input
+
+procedure x(a: number, b: number) -> number {
+    a+b
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+            ],
+            block: [],
+            ret: Named([
+                Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Variable(PTVariable{prefix:None,name:"b"}))
+            ]),
+            ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Procedures, empty allowed.
+
+>> input
+
+procedure x(a: number, b: number) {
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+            ],
+            block: [],
+            ret: Named([]),
+            ret_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Procedures, no types but checks
+
+>> input
+
+procedure x(a, b: length(?X..)) {
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
+                    PTCheck{check_type:LengthOrInfinite,name:"X"}
+                ]})
+            ],
+            block: [],
+            ret: Named([]),
+            ret_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Regression
+
+>> input
+
+funcion func(*x) -> *x {
+    inc(x.a);
+    *x
+}
+
+>> parse-fail strip
+
+expected EOI or block
+
+>> test
+
+Procedures, bundle return
+
+>> input
+
+procedure x(a, b: length(?X..), *c) {
+    c.x = 1;
+    *c
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name: "x",
+            args: [
+                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
+                Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
+                    PTCheck{check_type:LengthOrInfinite,name:"X"}
+                ]}),
+                Bundle("c")
+            ],
+            block: [
+                PTStatement {
+                    value: ModifyStatement(
+                        PTVariable{prefix:Some("c"),name:"x"},
+                        Constant(Number(1.0))
+                    ),
+                    file: ["test"],
+                    line_no: 3
+                }
+            ],
+            ret: Bundle("c"),
+            ret_type: None
+        }),
+        file: ["test"],
+        line_no: 2
+    }
+]

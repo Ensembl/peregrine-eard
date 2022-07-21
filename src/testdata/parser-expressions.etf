@@ -1,0 +1,267 @@
+>> test
+
+Check left-recursive
+
+>> input
+
+let x = 1 || 2 || 3;
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Infix(
+                Infix(Constant(Number(1.0)),"||",Constant(Number(2.0))),
+                "||",
+                Constant(Number(3.0))
+            )
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+General prcedence test
+
+1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13
+is
+(1 || ((2 && ((3 == ((4 > ((5 + ((6 * 7) / 8)) - 9)) < 10)) != 11)) && 12)) || 13
+
+>> input
+
+let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Infix(
+                Infix(
+                    Constant(Number(1.0)),
+                    "||",
+                    Infix(
+                        Infix(
+                            Constant(Number(2.0)),
+                            "&&",
+                            Infix(
+                                Infix(
+                                    Constant(Number(3.0)),
+                                    "==",
+                                    Infix(
+                                        Infix(
+                                            Constant(Number(4.0)),
+                                            ">",
+                                            Infix(
+                                                Infix(
+                                                    Constant(Number(5.0)),
+                                                    "+",
+                                                    Infix(
+                                                        Infix(
+                                                            Constant(Number(6.0)),
+                                                            "*",
+                                                            Constant(Number(7.0))
+                                                        ),
+                                                        "/",
+                                                        Constant(Number(8.0))
+                                                    )
+                                                ),
+                                                "-",
+                                                Constant(Number(9.0))
+                                            )
+                                        ),
+                                        "<",
+                                        Constant(Number(10.0))
+                                    )
+                                ),
+                                "!=",
+                                Constant(Number(11.0))
+                            )
+                        ),
+                        "&&",
+                        Constant(Number(12.0))
+                    )
+                ),
+                "||",
+                Constant(Number(13.0))
+            )
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Brackets override precedence
+
+>> input
+
+let x = 1+2*3;
+let y = (1+2)*3;
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Infix(
+                Constant(Number(1.0)),
+                "+",
+                Infix(
+                    Constant(Number(2.0)),
+                    "*",
+                    Constant(Number(3.0))
+                )
+            )
+        ),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"y"},[])]),
+            Infix(
+                Infix(
+                    Constant(Number(1.0)),
+                    "+",
+                    Constant(Number(2.0))
+                ),
+                "*",
+                Constant(Number(3.0))
+            )
+        ),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> test
+
+Finite and infinite sequences
+
+>> input
+
+let x = [1,2,3];
+let y = [1,...];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+        ),
+        file: ["test"],
+        line_no: 2
+    },
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"y"},[])]),
+            InfiniteSequence(Constant(Number(1.0)))
+        ),
+        file: ["test"],
+        line_no: 3
+    }
+]
+
+>> test
+
+Prefix operators
+
+>> input
+
+let x = -x - -y && !z;
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Infix(
+                Infix(
+                    Prefix(
+                        "-",
+                        Variable(PTVariable{prefix:None,name:"x"})
+                    ),
+                    "-",
+                    Prefix(
+                        "-",
+                        Variable(PTVariable{prefix:None,name:"y"})
+                    )
+                ),
+                "&&",
+                Prefix(
+                    "!",
+                    Variable(PTVariable{prefix:None,name:"z"})
+                )
+            )
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]
+
+>> test
+
+Function calls / repeaters
+
+>> input
+
+let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetStatement(
+            Repeater("a"),
+            FiniteSequence([
+                Infix(
+                    Infix(
+                        Constant(Number(1.0)),
+                        "+",
+                        Call(PTCall{
+                            name: "y",
+                            args:[
+                                Repeater("b")
+                            ],
+                            is_macro:false
+                        })
+                    ),
+                    "+",
+                    Infix(
+                        Constant(Number(3.0)),
+                        "*",
+                        Call(PTCall{
+                            name: "z",
+                            args:[
+                                Expression(Call(PTCall{name:"zz",args:[],is_macro:false}))
+                            ],
+                            is_macro:false
+                        })
+                    )
+                ),
+                Call(PTCall{
+                    name:"x",
+                    args:[
+                        Expression(Constant(Number(2.0))),
+                        Expression(Variable(PTVariable{prefix:None,name:"c"})),
+                        Bundle("d")
+                    ],
+                    is_macro:false
+                })
+            ])
+        ),
+        file: ["test"],
+        line_no: 2
+    }
+]

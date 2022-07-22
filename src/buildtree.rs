@@ -52,6 +52,24 @@ impl BTCodeDefinition {
     }
 }
 
+pub struct BuildContext {
+    location: (Arc<Vec<String>>,usize)
+}
+
+impl BuildContext {
+    pub fn new() -> BuildContext {
+        BuildContext { location: (Arc::new(vec!["*anon*".to_string()]),0) }
+    }
+
+    pub fn set_location(&mut self, file: &Arc<Vec<String>>, line_no: usize) {
+        self.location = (file.clone(),line_no);
+    }
+
+    pub fn location(&self) -> (&[String],usize) {
+        (self.location.0.as_ref(),self.location.1)
+    }
+}
+
 #[derive(Debug,Clone)]
 pub enum BTDefinition {
     Code(BTCodeDefinition),
@@ -71,36 +89,31 @@ impl BuildTree {
         BuildTree { statements: vec![], defnames: BTreeMap::new(), definitions: vec![] }
     }
 
-    pub(crate) fn define(&mut self, name: &str, definition: BTDefinition, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+    fn add_statement(&mut self, value: BTStatementValue, bc: &BuildContext) -> Result<(),String> {
+        let stmt = BTStatement {
+            value,
+            file: bc.location.0.clone(),
+            line_no: bc.location.1
+        };
+        self.statements.push(stmt);
+        Ok(())
+    }
+
+    pub(crate) fn define(&mut self, name: &str, definition: BTDefinition, bc: &BuildContext) -> Result<(),String> {
         let id = self.definitions.len();
         self.defnames.insert(name.to_string(),id);
         self.definitions.push(definition);
-        let stmt = BTStatement {
-            value: BTStatementValue::Define(id),
-            file: location.0.clone(),
-            line_no: location.1
-        };
-        self.statements.push(stmt);
+        self.add_statement(BTStatementValue::Define(id),bc)?;
         Ok(())
     }
 
-    pub(crate) fn declare(&mut self, declaration: BTDeclare, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
-        let stmt = BTStatement {
-            value: BTStatementValue::Declare(declaration),
-            file: location.0.clone(),
-            line_no: location.1
-        };
-        self.statements.push(stmt);
+    pub(crate) fn declare(&mut self, declaration: BTDeclare, bc: &BuildContext) -> Result<(),String> {
+        self.add_statement(BTStatementValue::Declare(declaration),bc)?;
         Ok(())
     }
 
-    pub(crate) fn check(&mut self, variable: &Variable, check: &Check, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
-        let stmt = BTStatement {
-            value: BTStatementValue::Check(variable.clone(),check.clone()),
-            file: location.0.clone(),
-            line_no: location.1
-        };
-        self.statements.push(stmt);
+    pub(crate) fn check(&mut self, variable: &Variable, check: &Check, bc: &BuildContext) -> Result<(),String> {
+        self.add_statement(BTStatementValue::Check(variable.clone(),check.clone()),bc)?;
         Ok(())
     }
 }

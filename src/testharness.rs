@@ -9,7 +9,7 @@ fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<Str
 pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompiler,String> {
     let mut compiler = EarpCompiler::new();
     compiler.set_source_loader(source_loader(sources));
-    compiler.add_block_macro("x", |expr,pos| {
+    compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
             PTCallArg::Expression(x) => x,
             _ => { return Err(format!("expceted expression")) }
@@ -20,21 +20,23 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
                 value.clone()
             ),
             file: Arc::new(pos.0.to_vec()),
-            line_no: pos.1
+            line_no: pos.1,
+            context
         }])
     })?;
-    compiler.add_expression_macro("y",|expr| {
+    compiler.add_expression_macro("y",|expr,_| {
         let value = match &expr[0] {
             PTCallArg::Expression(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
         Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(PTConstant::Number(1.)))))
     })?;
-    compiler.add_block_macro("z", |_expr,pos| {
+    compiler.add_block_macro("z", |_expr,pos,context| {
         Ok(vec![PTStatement {
             value: PTStatementValue::Include("test2".to_string()),
             file: Arc::new(pos.0.to_vec()),
-            line_no: pos.1
+            line_no: pos.1,
+            context
         }])
     })?;
     Ok(compiler)

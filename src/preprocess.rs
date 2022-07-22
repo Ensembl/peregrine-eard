@@ -32,19 +32,19 @@ struct RunMacrosOnce<'a> {
 }
 
 impl<'a> PTTransformer for RunMacrosOnce<'a> {
-    fn call_to_expr(&mut self, call: &PTCall) -> Result<Option<PTExpression>,String> {
+    fn call_to_expr(&mut self, call: &PTCall, context: usize) -> Result<Option<PTExpression>,String> {
         if call.is_macro {
             self.any = true;
-            Ok(Some(self.compiler.apply_expression_macro(&call.name,&call.args)?))
+            Ok(Some(self.compiler.apply_expression_macro(&call.name,&call.args,context)?))
         } else {
             Ok(None)
         }
     }
 
-    fn call_to_block(&mut self, call: &PTCall, pos: (&[String],usize)) -> Result<Option<Vec<PTStatement>>,String> {
+    fn call_to_block(&mut self, call: &PTCall, pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> {
         if call.is_macro {
             self.any = true;
-            Ok(Some(self.compiler.apply_block_macro(&call.name,&call.args,pos)?))
+            Ok(Some(self.compiler.apply_block_macro(&call.name,&call.args,pos,context)?))
         } else {
             Ok(None)
         }

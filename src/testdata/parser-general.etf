@@ -25,12 +25,15 @@ let x.y = false;
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"x"},[]),Constant(Boolean(true))),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
+
     },
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:Some("x"),name:"y"},[]),Constant(Boolean(false))),
         file: ["test"],
-        line_no: 3
+        line_no: 3,
+        context: 1
     }
 ]
 
@@ -55,7 +58,8 @@ let x = test!("macro");
             })
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -73,7 +77,8 @@ include "abc";
     PTStatement {
         value: Include("abc"),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -98,7 +103,8 @@ let x : length(a) length(bb..) total(ccc) ref(dddd) = [1,2,3];
             FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -132,7 +138,8 @@ x = [4,5,6];
             FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     },
     PTStatement {
         value: ModifyStatement(
@@ -140,7 +147,8 @@ x = [4,5,6];
             FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])
         ),
         file: ["test"],
-        line_no: 3
+        line_no: 3,
+        context: 1
     }
 ]
 
@@ -166,7 +174,8 @@ c(1,2,3);
             is_macro: false
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -184,6 +193,7 @@ test!("123");
     PTStatement {
         value: BareCall(PTCall{name:"test",args:[Expression(Constant(String("123")))],is_macro:true}),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]

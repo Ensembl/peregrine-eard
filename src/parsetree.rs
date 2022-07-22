@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare}, model::{CodeModifier, Variable, Check, FuncProcModifier}};
+use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext}, model::{CodeModifier, Variable, Check, FuncProcModifier}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -22,8 +22,8 @@ pub trait PTTransformer {
     fn include(&mut self, _pos: (&[String],usize), _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn remove_flags(&mut self, _flag: &str) -> Result<bool,String> { Ok(false) }
     fn bad_repeater(&mut self, _pos: (&[String],usize)) -> Result<(),String> { Ok(()) }
-    fn call_to_expr(&mut self, _call: &PTCall) -> Result<Option<PTExpression>,String> { Ok(None) }
-    fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize)) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
+    fn call_to_expr(&mut self, _call: &PTCall, context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
+    fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn replace_infix(&mut self, _a: &PTExpression, _f: &str, _b: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
@@ -99,8 +99,8 @@ pub struct PTCodeBlock {
 }
 
 impl PTCodeBlock {
-    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),location)?;
+    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),bc)?;
         Ok(())
     }
 }
@@ -113,9 +113,9 @@ pub enum PTCallArg {
 }
 
 impl PTCallArg {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), top: bool) -> Result<PTCallArg,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTCallArg,String> {
         Ok(match self {
-            PTCallArg::Expression(x) => PTCallArg::Expression(x.transform(transformer,pos,false)?),
+            PTCallArg::Expression(x) => PTCallArg::Expression(x.transform(transformer,pos,context,false)?),
             PTCallArg::Bundle(s) => PTCallArg::Bundle(s),
             PTCallArg::Repeater(r) => {
                 if !top { transformer.bad_repeater(pos)?; }
@@ -133,25 +133,25 @@ pub struct PTCall {
 }
 
 impl PTCall {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), top: bool) -> Result<PTCall,String> {
+    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTCall,String> {
         let top = top && !self.is_macro;
         Ok(PTCall {
             name: self.name,
-            args: self.args.drain(..).map(|x| x.transform(transformer,pos,top)).collect::<Result<Vec<_>,_>>()?,
+            args: self.args.drain(..).map(|x| x.transform(transformer,pos,context,top)).collect::<Result<Vec<_>,_>>()?,
             is_macro: self.is_macro
         })
     }
 
-    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), top: bool) -> Result<PTExpression,String> {
-        if let Some(repl) = transformer.call_to_expr(&self)? {
+    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTExpression,String> {
+        if let Some(repl) = transformer.call_to_expr(&self,context)? {
             Ok(repl)
         } else {
-            Ok(PTExpression::Call(self.transform(transformer,pos,top)?))
+            Ok(PTExpression::Call(self.transform(transformer,pos,context,top)?))
         }
     }
 
-    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), top: bool) -> Result<Option<Vec<PTStatement>>,String> {
-        if let Some(repl) = transformer.call_to_block(&self,pos)? {
+    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<Option<Vec<PTStatement>>,String> {
+        if let Some(repl) = transformer.call_to_block(&self,pos,context)? {
             Ok(Some(repl))
         } else {
             Ok(None)
@@ -173,23 +173,23 @@ impl PTLetAssign {
         }
     }
 
-    fn declare(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+    fn declare(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
         match self {
             PTLetAssign::Variable(var,_) => {
-                bt.declare(BTDeclare::Variable(var.clone()),location)?;
+                bt.declare(BTDeclare::Variable(var.clone()),bc)?;
             }
             PTLetAssign::Repeater(r) => {
-                bt.declare(BTDeclare::Repeater(r.to_string()),location)?;
+                bt.declare(BTDeclare::Repeater(r.to_string()),bc)?;
             }
         }
         Ok(())
     }
 
-    fn checks(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+    fn checks(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
         match self {
             PTLetAssign::Variable(var,checks) => {
                 for check in checks.iter() {
-                    bt.check(var,check,location)?;
+                    bt.check(var,check,bc)?;
                 }
             },
             _ => {}
@@ -205,19 +205,19 @@ pub enum PTProcAssignArg {
 }
 
 impl PTProcAssignArg {
-    fn declare(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+    fn declare(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
         let declare = match self {
             PTProcAssignArg::Variable(v, _) => BTDeclare::Variable(v.clone()),
             PTProcAssignArg::Bundle(b) => BTDeclare::Bundle(b.to_string())
         };
-        bt.declare(declare,location)
+        bt.declare(declare,bc)
     }
 
-    fn checks(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+    fn checks(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
         match self {
             PTProcAssignArg::Variable(var,checks) => {
                 for check in checks.iter() {
-                    bt.check(var,check,location)?;
+                    bt.check(var,check,bc)?;
                 }
             },
             _ => {}
@@ -238,17 +238,17 @@ pub enum PTExpression {
 }
 
 impl PTExpression {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), top: bool) -> Result<PTExpression,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTExpression,String> {
         Ok(match self {
             PTExpression::FiniteSequence(mut exprs) => {
-                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,false)).collect::<Result<Vec<_>,_>>()?)
+                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context,false)).collect::<Result<Vec<_>,_>>()?)
             },
             PTExpression::InfiniteSequence(expr) => {
-                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,false)?))
+                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,context,false)?))
             },
             PTExpression::Infix(a,f,b) => {
-                let a = a.transform(transformer,pos,false)?;
-                let b = b.transform(transformer,pos,false)?;
+                let a = a.transform(transformer,pos,context,false)?;
+                let b = b.transform(transformer,pos,context,false)?;
                 if let Some(repl) = transformer.replace_infix(&a,&f,&b)? {
                     repl
                 } else {
@@ -256,7 +256,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Prefix(f,a) => {
-                let a = a.transform(transformer,pos,false)?;
+                let a = a.transform(transformer,pos,context,false)?;
                 if let Some(repl) = transformer.replace_prefix(&f,&a)? {
                     repl
                 } else {
@@ -264,7 +264,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Call(call) => {
-                call.transform_expression(transformer,pos,top)?
+                call.transform_expression(transformer,pos,context,top)?
             },
             x => x
         })
@@ -278,9 +278,9 @@ pub enum PTFuncValue {
 }
 
 impl PTFuncValue {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize)) -> Result<PTFuncValue,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncValue,String> {
         Ok(match self {
-            PTFuncValue::Expression(expr) => PTFuncValue::Expression(expr.transform(transformer,pos,false)?),
+            PTFuncValue::Expression(expr) => PTFuncValue::Expression(expr.transform(transformer,pos,context,false)?),
             x => x
         })
     }
@@ -297,19 +297,19 @@ pub struct PTFuncDef {
 }
 
 impl PTFuncDef {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize)) -> Result<PTFuncDef,String> {
+    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncDef,String> {
         Ok(PTFuncDef {
             name: self.name,
             args: self.args,
             modifiers: self.modifiers,
             block: PTStatement::transform_list(self.block,transformer)?,
-            value: self.value.transform(transformer,pos)?,
+            value: self.value.transform(transformer,pos,context)?,
             value_type: self.value_type
         })
     }
 
-    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Func(),location)?;
+    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Func(),bc)?;
         Ok(())
     }
 }
@@ -322,10 +322,10 @@ pub enum PTProcReturn {
 }
 
 impl PTProcReturn {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize)) -> Result<PTProcReturn,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTProcReturn,String> {
         Ok(match self {
             PTProcReturn::Named(mut exprs) => {
-                PTProcReturn::Named(exprs.drain(..).map(|x| x.transform(transformer,pos,false)).collect::<Result<Vec<_>,_>>()?)
+                PTProcReturn::Named(exprs.drain(..).map(|x| x.transform(transformer,pos,context,false)).collect::<Result<Vec<_>,_>>()?)
             },
             x => x
         })
@@ -343,19 +343,19 @@ pub struct PTProcDef {
 }
 
 impl PTProcDef {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize)) -> Result<PTProcDef,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTProcDef,String> {
         Ok(PTProcDef {
             name: self.name,
             args: self.args,
             modifiers: self.modifiers,
             block: PTStatement::transform_list(self.block,transformer)?,
-            ret: self.ret.transform(transformer,pos)?,
+            ret: self.ret.transform(transformer,pos,context)?,
             ret_type: self.ret_type
         })
     }
 
-    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Proc(),location)?;
+    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Proc(),bc)?;
         Ok(())
     }
 }
@@ -364,7 +364,8 @@ impl PTProcDef {
 pub struct PTStatement {
     pub value: PTStatementValue,
     pub file: Arc<Vec<String>>,
-    pub line_no: usize
+    pub line_no: usize,
+    pub context: usize
 }
 
 #[derive(Debug,Clone)]
@@ -392,30 +393,31 @@ impl PTStatement {
         let value = match self.value {
             PTStatementValue::LetStatement(lvalue,rvalue) => {
                 let top = lvalue.is_repeater();
-                PTStatementValue::LetStatement(lvalue,rvalue.transform(transformer,pos,top)?)
+                PTStatementValue::LetStatement(lvalue,rvalue.transform(transformer,pos,self.context,top)?)
             },
             PTStatementValue::ModifyStatement(lvalue,rvalue) => {
-                PTStatementValue::ModifyStatement(lvalue,rvalue.transform(transformer,pos,false)?)
+                PTStatementValue::ModifyStatement(lvalue,rvalue.transform(transformer,pos,self.context,false)?)
             },
             PTStatementValue::BareCall(call) => {
-                if let Some(repl) = call.transform_block(transformer,pos,false)? {
+                if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {
                     return Ok(repl);
                 } else {
                     PTStatementValue::BareCall(call)
                 }
             },
             PTStatementValue::FuncDef(call) => {
-                PTStatementValue::FuncDef(call.transform(transformer,pos)?)
+                PTStatementValue::FuncDef(call.transform(transformer,pos,self.context)?)
             },
             PTStatementValue::ProcDef(call) => {
-                PTStatementValue::ProcDef(call.transform(transformer,pos)?)
+                PTStatementValue::ProcDef(call.transform(transformer,pos,self.context)?)
             },
             x => x
         };
         Ok(vec![PTStatement {
             value,
             file: self.file,
-            line_no: self.line_no
+            line_no: self.line_no,
+            context: self.context
         }])
     }
 
@@ -448,28 +450,27 @@ impl PTStatement {
         Ok(out)    
     }
 
-    fn build(&self, bt: &mut BuildTree) -> Result<(),String> {
-        let location = (&self.file,self.line_no);
+    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
         match &self.value {
             PTStatementValue::Include(_) |
             PTStatementValue::Flag(_) => {
                 panic!("item should have been eliminated from build tree");
             },
 
-            PTStatementValue::FuncDef(f) => { f.build(bt,location)?; },
-            PTStatementValue::ProcDef(p) => { p.build(bt,location)?; }
-            PTStatementValue::Code(c) => { c.build(bt,location)?; },
+            PTStatementValue::FuncDef(f) => { f.build(bt,bc)?; },
+            PTStatementValue::ProcDef(p) => { p.build(bt,bc)?; }
+            PTStatementValue::Code(c) => { c.build(bt,bc)?; },
 
             PTStatementValue::LetStatement(v,x) => {
-                v.declare(bt,location)?;
-                v.checks(bt,location)?;
+                v.declare(bt,bc)?;
+                v.checks(bt,bc)?;
             },
             PTStatementValue::LetProcCall(args,x) => {
                 for arg in args {
-                    arg.declare(bt,location)?;
+                    arg.declare(bt,bc)?;
                 }
                 for arg in args {
-                   arg.checks(bt,location)?;
+                   arg.checks(bt,bc)?;
                 }
             },
             PTStatementValue::ModifyProcCall(_,_) => {},
@@ -481,9 +482,11 @@ impl PTStatement {
 
     pub(crate) fn to_build_tree(this: Vec<Self>) -> Result<BuildTree,String> {
         let mut bt = BuildTree::new();
+        let mut bc = BuildContext::new();
         for stmt in this.iter() {
-            stmt.build(&mut bt).map_err(|e| {
-                at(&e,Some((&stmt.file,stmt.line_no)))
+            bc.set_location(&stmt.file,stmt.line_no);
+            stmt.build(&mut bt,&mut bc).map_err(|e| {
+                at(&e,Some(bc.location()))
             })?;
         }
         Ok(bt)

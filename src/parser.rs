@@ -8,7 +8,8 @@ struct EarpParser;
 
 #[derive(Clone)]
 struct ParseFixedState {
-    filename: Arc<Vec<String>>
+    filename: Arc<Vec<String>>,
+    context: usize
 }
 
 #[allow(unused)]
@@ -453,6 +454,7 @@ impl EarpParser {
     fn inner_block(input: Node) -> PestResult<PTStatement> {
         let filename = input.user_data().filename.clone();
         let line_no = input.as_span().start_pos().line_col().0;
+        let context = input.user_data().context;
         let value = match_nodes!(input.into_children();
             [simple_let_statement(s)] => s,
             [let_proc_call(s)] => s,
@@ -464,12 +466,14 @@ impl EarpParser {
         Ok(PTStatement {
             value,
             file: filename,
-            line_no
+            line_no,
+            context
         })
     }
 
     fn block(input: Node) -> PestResult<PTStatement> {
         let filename = input.user_data().filename.clone();
+        let context = input.user_data().context;
         let line_no = input.as_span().start_pos().line_col().0;
         let value = match_nodes!(input.into_children();
             [code_block(block)] => PTStatementValue::Code(block),
@@ -482,7 +486,8 @@ impl EarpParser {
         Ok(PTStatement {
             value,
             file: filename,
-            line_no
+            line_no,
+            context
         })
     }
 
@@ -653,15 +658,16 @@ impl EarpParser {
     }
 }
 
-fn do_parse_earp(input: &str, filename: &[String]) -> PestResult<Vec<PTStatement>> {
+fn do_parse_earp(input: &str, filename: &[String], context: usize) -> PestResult<Vec<PTStatement>> {
     let state = ParseFixedState { 
-        filename: Arc::new(filename.to_vec())
+        filename: Arc::new(filename.to_vec()),
+        context
     };
     let input = EarpParser::parse_with_userdata(Rule::file,input,state)?.single()?;
     EarpParser::file(input)
 }
 
-pub fn parse_earp(compiler: &EarpCompiler, filename: &[String]) -> Result<Vec<PTStatement>,String> {
+pub fn parse_earp(compiler: &EarpCompiler, filename: &[String], context: usize) -> Result<Vec<PTStatement>,String> {
     let input = compiler.load_source(filename.last().unwrap())?; // XXX
-    do_parse_earp(&input,filename).map_err(|e| e.to_string())
+    do_parse_earp(&input,filename,context).map_err(|e| e.to_string())
 }

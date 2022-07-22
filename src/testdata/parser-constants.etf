@@ -18,7 +18,8 @@ let x = [true,false];
             ])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -45,7 +46,8 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
             ])
         ),
         file: ["test"],
-        line_no: 1
+        line_no: 1,
+        context: 1
     }
 ]
 
@@ -76,7 +78,8 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
             ])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -121,7 +124,8 @@ let x = [
             ])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -147,7 +151,8 @@ let x = [true,false,frue,talse];
             ])
         ),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -169,28 +174,32 @@ let e = [0,x,y,z];
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"a"},[]),FiniteSequence([])),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     },
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"b"},[]),FiniteSequence([
             Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
         ])),
         file: ["test"],
-        line_no: 3
+        line_no: 3,
+        context: 1
     },
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"c"},[]),FiniteSequence([
             Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
         ])),
         file: ["test"],
-        line_no: 4
+        line_no: 4,
+        context: 1
     },
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"d"},[]),FiniteSequence([
             Constant(String("hello")),Constant(String("world"))
         ])),
         file: ["test"],
-        line_no: 5
+        line_no: 5,
+        context: 1
     },
     PTStatement {
         value: LetStatement(Variable(Variable{prefix:None,name:"e"},[]),FiniteSequence([
@@ -200,7 +209,8 @@ let e = [0,x,y,z];
             Variable(Variable{prefix:None,name:"z"})
         ])),
         file: ["test"],
-        line_no: 6
+        line_no: 6,
+        context: 1
     }
 ]
 

@@ -35,7 +35,8 @@ export function first(a: seq(?X)) -> ?X {
                         is_macro: false
                     }),
                     file: ["test"],
-                    line_no: 3
+                    line_no: 3,
+                    context: 1
                 }
             ],
             value: Expression(Call(PTCall{
@@ -49,7 +50,8 @@ export function first(a: seq(?X)) -> ?X {
             value_type: Some(PTFuncProcAnonArgument{arg_types:[Wildcard("X")],checks:[]})
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -99,7 +101,8 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             })
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -141,7 +144,8 @@ function inc(a) {
             value_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -174,7 +178,8 @@ function more(a: number length(?X)) {
             value_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -205,14 +210,16 @@ function func(*x) {
                         is_macro:false
                     }),
                     file: ["test"],
-                    line_no: 3
+                    line_no: 3,
+                    context: 1
                 }
             ],
             value: Bundle("x"),
             value_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -237,7 +244,8 @@ function x() { 42 }
             value_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -268,12 +276,14 @@ procedure x(a: number, b: number) -> (number,number) {
                 PTStatement {
                     value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
                     file: ["test"],
-                    line_no: 3
+                    line_no: 3,
+                    context: 1
                 },
                 PTStatement {
                     value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
                     file: ["test"],
-                    line_no: 4
+                    line_no: 4,
+                    context: 1
                 }
             ],
             ret: Named([
@@ -286,7 +296,8 @@ procedure x(a: number, b: number) -> (number,number) {
             ])
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -332,7 +343,8 @@ procedure x(a: number, b: number) -> (number) {
             ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -364,7 +376,8 @@ procedure x(a: number, b: number) -> number {
             ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -393,7 +406,8 @@ procedure x(a: number, b: number) {
             ret_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -424,7 +438,8 @@ procedure x(a, b: length(?X..)) {
             ret_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -475,14 +490,16 @@ procedure x(a, b: length(?X..), *c) {
                         Constant(Number(1.0))
                     ),
                     file: ["test"],
-                    line_no: 3
+                    line_no: 3,
+                    context: 1
                 }
             ],
             ret: Bundle("c"),
             ret_type: None
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -521,7 +538,8 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
             Expression(Variable(Variable{prefix:None,name:"c"}))
         ],is_macro:false}),
         file:["test"],
-        line_no:2
+        line_no:2,
+        context: 1
     }
 ]
 
@@ -552,6 +570,7 @@ Procedure return (modify)
             is_macro:false
         }),
         file: ["test"],
-        line_no:2
+        line_no:2,
+        context: 1
     }
 ]

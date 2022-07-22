@@ -46,7 +46,8 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X..)
             modifiers:[World]
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -90,7 +91,8 @@ code test(r1: seq(?X)) -> (r2: seq(?X)) {
             modifiers:[]
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -139,7 +141,8 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
             modifiers: []
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -169,7 +172,8 @@ code test(r1: boolean) -> r2: seq(boolean) {
             modifiers:[]
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -206,7 +210,8 @@ code test_string(r1: boolean, "hello") {
             modifiers: []
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     },
     PTStatement {
         value: Code(PTCodeBlock{
@@ -220,7 +225,8 @@ code test_string(r1: boolean, "hello") {
             modifiers: []
         }),
         file: ["test"],
-        line_no: 6
+        line_no: 6,
+        context: 1
     },
     PTStatement {
         value: Code(PTCodeBlock{name: "test_string",
@@ -233,7 +239,8 @@ code test_string(r1: boolean, "hello") {
             modifiers:[]
         }),
         file: ["test"],
-        line_no: 10
+        line_no: 10,
+        context: 1
     }
 ]
 
@@ -273,6 +280,7 @@ code test_string() {
             modifiers: []
         }),
         file: ["test"],
-        line_no: 2
+        line_no: 2,
+        context: 1
     }
 ]

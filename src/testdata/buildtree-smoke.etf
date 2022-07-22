@@ -1,0 +1,38 @@
+>> test
+
+Simple PT->BT smoke test
+
+>> input
+
+let x = 1;
+let y = 2;
+let z : length(y) = x+y;
+
+>> built strip
+
+BuildTree{
+    statements:[
+        BTStatement{
+            value: Declare(Variable(Variable{prefix:None,name:"x"})),
+            file: ["test"],
+            line_no:2
+        },
+        BTStatement{
+            value: Declare(Variable(Variable{prefix:None,name:"y"})),
+            file: ["test"],
+            line_no:3
+        },
+        BTStatement{
+            value: Declare(Variable(Variable{prefix:None,name:"z"})),
+            file: ["test"],
+            line_no:4
+        },
+        BTStatement{
+            value: Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),
+            file: ["test"],
+            line_no:4
+        }
+    ],
+    defnames:{},
+    definitions: []
+}

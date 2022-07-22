@@ -174,8 +174,8 @@ code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
                     reg_id: 1, 
                     arg_types: [Sequence(Number)],
                     checks: [
-                        PTCheck { check_type: Sum, name: "X " },
-                        PTCheck { check_type: Length, name: "Y" }
+                        Check { check_type: Sum, name: "X " },
+                        Check { check_type: Length, name: "Y" }
                     ]
                 })
             ],
@@ -184,8 +184,8 @@ code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
                     reg_id: 2,
                     arg_types: [Sequence(Number)],
                     checks: [
-                        PTCheck { check_type: Length, name: "X " },
-                        PTCheck { check_type: Reference, name: "Y" }
+                        Check { check_type: Length, name: "X " },
+                        Check { check_type: Reference, name: "Y" }
                     ] 
                 }
             ],
@@ -268,8 +268,8 @@ let gn.tr_count #gn @tr = [1,2,4-1,x(1,3-1),y()];
             Variable(
                 PTVariable { prefix: Some("gn"), name: "tr_count" },
                 [
-                    PTCheck { check_type: Length, name: "gn" },
-                    PTCheck { check_type: Sum, name: "tr" }
+                    Check { check_type: Length, name: "gn" },
+                    Check { check_type: Sum, name: "tr" }
                 ]
             ),
             FiniteSequence([

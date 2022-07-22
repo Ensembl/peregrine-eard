@@ -45,3 +45,8 @@ fn test_macro_clash() {
         PTExpression::Constant(PTConstant::Number(0.))
     )}).is_err());
 }
+
+#[test]
+fn test_buildtree_smoke() {
+    run_parse_tests(include_str!("testdata/buildtree-smoke.etf"));
+}

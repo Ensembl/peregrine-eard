@@ -23,12 +23,12 @@ let x.y = false;
 
 [
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[])]),Constant(Boolean(true))),
+        value: LetStatement(Variable(Variable{prefix:None,name:"x"},[]),Constant(Boolean(true))),
         file: ["test"],
         line_no: 2
     },
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:Some("x"),name:"y"},[])]),Constant(Boolean(false))),
+        value: LetStatement(Variable(Variable{prefix:Some("x"),name:"y"},[]),Constant(Boolean(false))),
         file: ["test"],
         line_no: 3
     }
@@ -47,7 +47,7 @@ let x = test!("macro");
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             Call(PTCall{
                 name: "test",
                 args: [Expression(Constant(String("macro")))],
@@ -89,12 +89,12 @@ let x : length(a) length(bb..) total(ccc) ref(dddd) = [1,2,3];
 
 [
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[
-                PTCheck{check_type:Length,name:"a"},
-                PTCheck{check_type:LengthOrInfinite,name:"bb"},
-                PTCheck{check_type:Sum,name:"ccc"},
-                PTCheck{check_type:Reference,name:"dddd"}
-            ])]),
+        value: LetStatement(Variable(Variable{prefix:None,name:"x"},[
+                Check{check_type:Length,name:"a"},
+                Check{check_type:LengthOrInfinite,name:"bb"},
+                Check{check_type:Sum,name:"ccc"},
+                Check{check_type:Reference,name:"dddd"}
+            ]),
             FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
         ),
         file: ["test"],
@@ -128,7 +128,7 @@ x = [4,5,6];
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
         ),
         file: ["test"],
@@ -136,7 +136,7 @@ x = [4,5,6];
     },
     PTStatement {
         value: ModifyStatement(
-            PTVariable{prefix:None,name:"x"},
+            Variable{prefix:None,name:"x"},
             FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])
         ),
         file: ["test"],
@@ -185,38 +185,5 @@ test!("123");
         value: BareCall(PTCall{name:"test",args:[Expression(Constant(String("123")))],is_macro:true}),
         file: ["test"],
         line_no: 2
-    }
-]
-
-
->> test
-
-Procedure return
-
->> input
-
-let (x : length(w) total(ww),y,z) = c(a,b,c);
-
->> parse strip
-
-[
-    PTStatement{
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"x"},[
-                                            PTCheck{check_type:Length,name:"w"},
-                                            PTCheck{check_type:Sum,name:"ww"}
-                                        ]),
-                                      (PTVariable{prefix:None,name:"y"},[]),
-                                      (PTVariable{prefix:None,name:"z"},[])
-                                    ]),
-                            Call(PTCall{
-                                name:"c",
-                                args:[
-                                    Expression(Variable(PTVariable{prefix:None,name:"a"})),
-                                    Expression(Variable(PTVariable{prefix:None,name:"b"})),
-                                    Expression(Variable(PTVariable{prefix:None,name:"c"}))
-                                ],
-                                is_macro:false
-                            })),
-        file:["test"],line_no:2
     }
 ]

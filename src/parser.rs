@@ -1,8 +1,6 @@
 use std::sync::Arc;
-
 use pest_consume::{Parser, Error, match_nodes};
-
-use crate::{parsetree::{PTAtomicTypeSpec, PTTypeSpec, PTCheckType, PTCheck, PTCodeRegisterArgument, PTConstant, PTCodeArgument, PTCodeBlock, PTCodeModifier, PTCodeCommand, PTExpression, PTVariable, PTCall, PTFuncProcArgument, PTFuncProcNamedArgument, PTLetAssign, PTFuncDef, PTFuncProcAnonArgument, PTProcReturn, PTProcDef, PTCallArg, PTFuncValue, PTStatement, PTStatementValue}, compiler::EarpCompiler};
+use crate::{parsetree::{PTAtomicTypeSpec, PTTypeSpec, PTCodeRegisterArgument, PTConstant, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncProcArgument, PTFuncProcNamedArgument, PTFuncDef, PTFuncProcAnonArgument, PTProcReturn, PTProcDef, PTCallArg, PTFuncValue, PTStatement, PTStatementValue, PTLetAssign, PTProcAssignArg }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -19,7 +17,7 @@ type PestResult<T> = std::result::Result<T, Error<Rule>>;
 type Node<'i> = pest_consume::Node<'i, Rule, ParseFixedState>;
 
 fn parse_string(input: Node) -> PestResult<String> {
-    /* Same as JSON's definition */
+    /* Same as JSON's definition plus \0 */
     let mut out = String::new();
     let mut u_left = 0;
     let mut u_val = 0;
@@ -79,8 +77,8 @@ macro_rules! left_rec {
     }};
 }
 
-fn check(input: Node, check_type: PTCheckType) -> PestResult<PTCheck> {
-    Ok(PTCheck { check_type, name: input.into_children().next().unwrap().as_str().to_string() })
+fn check(input: Node, check_type: CheckType) -> PestResult<Check> {
+    Ok(Check { check_type, name: input.into_children().next().unwrap().as_str().to_string() })
 }
 
 #[pest_consume::parser]
@@ -100,9 +98,16 @@ impl EarpParser {
         ))
     }
 
-    fn code_modifier(input: Node) -> PestResult<PTCodeModifier> {
+    fn code_modifier(input: Node) -> PestResult<CodeModifier> {
         Ok(match input.as_str() {
-            "world" => PTCodeModifier::World,
+            "world" => CodeModifier::World,
+            _ => unreachable!()
+        })
+    }
+
+    fn funcproc_modifier(input: Node) -> PestResult<FuncProcModifier> {
+        Ok(match input.as_str() {
+            "export" => FuncProcModifier::Export,
             _ => unreachable!()
         })
     }
@@ -252,7 +257,7 @@ impl EarpParser {
         ))
     }
 
-    fn arg_check(input: Node) -> PestResult<PTCheck> {
+    fn arg_check(input: Node) -> PestResult<Check> {
         Ok(match_nodes!(input.into_children();
           [arg_length_check(c)] => c,
           [arg_lengthorinf_check(c)] => c,
@@ -261,7 +266,7 @@ impl EarpParser {
         ))
     }
 
-    fn check_annotation(input: Node) -> PestResult<PTCheck> {
+    fn check_annotation(input: Node) -> PestResult<Check> {
         Ok(match_nodes!(input.into_children();
           [length_check(c)] => c,
           [lengthorinf_check(c)] => c,
@@ -270,22 +275,23 @@ impl EarpParser {
         ))
     }
 
-    fn length_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Length) }
-    fn lengthorinf_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::LengthOrInfinite) }
-    fn total_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Sum) }
-    fn ref_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Reference) }
-    fn arg_length_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Length) }
-    fn arg_lengthorinf_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::LengthOrInfinite) }
-    fn arg_total_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Sum) }
-    fn arg_ref_check(input: Node) -> PestResult<PTCheck> { check(input,PTCheckType::Reference) }
+    fn length_check(input: Node) -> PestResult<Check> { check(input,CheckType::Length) }
+    fn lengthorinf_check(input: Node) -> PestResult<Check> { check(input,CheckType::LengthOrInfinite) }
+    fn total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
+    fn ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
+    fn arg_length_check(input: Node) -> PestResult<Check> { check(input,CheckType::Length) }
+    fn arg_lengthorinf_check(input: Node) -> PestResult<Check> { check(input,CheckType::LengthOrInfinite) }
+    fn arg_total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
+    fn arg_ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
 
-    fn composite_let_arg(input: Node) -> PestResult<(PTVariable,Vec<PTCheck>)> {
+    fn composite_let_arg(input: Node) -> PestResult<PTProcAssignArg> {
         Ok(match_nodes!(input.into_children();
-            [variable(v),check_annotation(c)..] => (v,c.collect())
+            [variable(v),check_annotation(c)..] => PTProcAssignArg::Variable(v,c.collect()),
+            [bundle(b)] => PTProcAssignArg::Bundle(b)
         ))
     }
 
-    fn composite_let_list(input: Node) -> PestResult<Vec<(PTVariable,Vec<PTCheck>)>> {
+    fn composite_let_list(input: Node) -> PestResult<Vec<PTProcAssignArg>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::composite_let_arg(child)?);
@@ -293,17 +299,24 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn composite_let_statement(input: Node) -> PestResult<PTStatementValue> {
+    fn let_proc_call(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-            [composite_let_list(c),expression(x)] =>
-                PTStatementValue::LetStatement(PTLetAssign::Variable(c),x)
+            [composite_let_list(c),func_or_proc_call(x)] =>
+                PTStatementValue::LetProcCall(c,x)
+        ))
+    }
+
+    fn modify_proc_call(input: Node) -> PestResult<PTStatementValue> {
+        Ok(match_nodes!(input.into_children();
+            [variable(v)..,func_or_proc_call(x)] =>
+                PTStatementValue::ModifyProcCall(v.collect(),x)
         ))
     }
 
     fn simple_let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
             [variable(v),check_annotation(c)..,expression(x)] =>
-                PTStatementValue::LetStatement(PTLetAssign::Variable(vec![(v,c.collect())]),x),
+                PTStatementValue::LetStatement(PTLetAssign::Variable(v,c.collect()),x),
             [repeater(v),expression(x)] =>
                 PTStatementValue::LetStatement(PTLetAssign::Repeater(v),x)
         ))
@@ -344,10 +357,18 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn code_modifiers(input: Node) -> PestResult<Vec<PTCodeModifier>> {
+    fn code_modifiers(input: Node) -> PestResult<Vec<CodeModifier>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::code_modifier(child)?);
+        }
+        Ok(out)
+    }
+
+    fn funcproc_modifiers(input: Node) -> PestResult<Vec<FuncProcModifier>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::funcproc_modifier(child)?);
         }
         Ok(out)
     }
@@ -389,16 +410,16 @@ impl EarpParser {
         ))
     }
 
-    fn variable(input: Node) -> PestResult<PTVariable> {
+    fn variable(input: Node) -> PestResult<Variable> {
         Ok(match_nodes!(input.into_children();
             [prefix(p),identifier(id)] => {
-                PTVariable {
+                Variable {
                     prefix: Some(p),
                     name: id
                 }
             },
             [identifier(id)] => {
-                PTVariable {
+                Variable {
                     prefix: None,
                     name: id
                 }
@@ -434,7 +455,8 @@ impl EarpParser {
         let line_no = input.as_span().start_pos().line_col().0;
         let value = match_nodes!(input.into_children();
             [simple_let_statement(s)] => s,
-            [composite_let_statement(s)] => s,
+            [let_proc_call(s)] => s,
+            [modify_proc_call(s)] => s,
             [modify_statement(s)] => s,
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
             [macro_call(c)] => PTStatementValue::BareCall(c)
@@ -464,7 +486,7 @@ impl EarpParser {
         })
     }
 
-    fn funcproc_arg_extras(input: Node) -> PestResult<(Vec<PTTypeSpec>,Vec<PTCheck>)> {
+    fn funcproc_arg_extras(input: Node) -> PestResult<(Vec<PTTypeSpec>,Vec<Check>)> {
         Ok(match_nodes!(input.into_children();
             [arg_types(block),arg_check(check)..] => (block,check.collect())
         ))
@@ -524,13 +546,14 @@ impl EarpParser {
 
     fn function(input: Node) -> PestResult<PTFuncDef> {
         Ok(match_nodes!(input.into_children();
-            [identifier(id),funcproc_args(c),function_return(r),inner_block(b)..,function_value(x)] =>
+            [funcproc_modifiers(f),identifier(id),funcproc_args(c),function_return(r),inner_block(b)..,function_value(x)] =>
                 PTFuncDef {
                     name: id,
                     args: c,
                     block: b.collect(),
                     value: x,
-                    value_type: r
+                    value_type: r,
+                    modifiers: f
                 }
         ))
     }
@@ -557,13 +580,14 @@ impl EarpParser {
 
     fn procedure(input: Node) -> PestResult<PTProcDef> {
         Ok(match_nodes!(input.into_children();
-            [identifier(id),funcproc_args(args),procedure_return_option(ret_args),inner_block(b)..,procedure_expression(r)] => {
+            [funcproc_modifiers(f),identifier(id),funcproc_args(args),procedure_return_option(ret_args),inner_block(b)..,procedure_expression(r)] => {
                 PTProcDef {
                     name: id,
                     args,
                     block: b.collect(),
                     ret: r,
-                    ret_type: ret_args
+                    ret_type: ret_args,
+                    modifiers: f
                 }
             }
         ))

@@ -19,19 +19,19 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X..)
                 Register(PTCodeRegisterArgument{
                     reg_id: 1,
                     arg_types: [Sequence(Number),Sequence(String)],
-                    checks: [PTCheck{check_type:Length,name:"X"}]
+                    checks: [Check{check_type:Length,name:"X"}]
                 }),
                 Register(PTCodeRegisterArgument{
                     reg_id: 2,
                     arg_types: [Atomic(Boolean)],
-                    checks: [PTCheck{check_type:LengthOrInfinite,name:"X"}]
+                    checks: [Check{check_type:LengthOrInfinite,name:"X"}]
                 })
             ],
             results: [
                 PTCodeRegisterArgument{
                     reg_id: 3,
                     arg_types: [Sequence(Boolean)],
-                    checks: [PTCheck{check_type:Reference,name:"X"}]
+                    checks: [Check{check_type:Reference,name:"X"}]
                 },
                 PTCodeRegisterArgument{
                     reg_id: 5,
@@ -114,7 +114,7 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
                 Register(PTCodeRegisterArgument{
                     reg_id: 1,
                     arg_types: [SequenceWildcard("X")],
-                    checks:[PTCheck{check_type:Length,name:"Y"}]
+                    checks:[Check{check_type:Length,name:"Y"}]
                 })
             ],
             results: [
@@ -122,14 +122,14 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
                     reg_id: 2,
                     arg_types: [SequenceWildcard("X")],
                     checks: [
-                        PTCheck{check_type:Length,name:"Y"}
+                        Check{check_type:Length,name:"Y"}
                     ]
                 },
                 PTCodeRegisterArgument{
                     reg_id: 3,
                     arg_types: [Sequence(Boolean)],
                     checks: [
-                        PTCheck{check_type:Reference,name:"Y"}
+                        Check{check_type:Reference,name:"Y"}
                     ]
                 }
             ],

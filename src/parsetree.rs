@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare}, model::{CodeModifier, Variable, Check, FuncProcModifier}};
+
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
         let mut parents = parents.to_vec();
@@ -24,20 +26,6 @@ pub trait PTTransformer {
     fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize)) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn replace_infix(&mut self, _a: &PTExpression, _f: &str, _b: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
-}
-
-#[derive(Debug,Clone)]
-pub enum PTCheckType {
-    Length, // #
-    LengthOrInfinite, // ##
-    Reference, // ^
-    Sum // @
-}
-
-#[derive(Debug,Clone)]
-pub struct PTCheck {
-    pub check_type: PTCheckType,
-    pub name: String
 }
 
 #[derive(Debug,Clone)]
@@ -67,20 +55,20 @@ pub enum PTConstant {
 pub struct PTCodeRegisterArgument {
     pub reg_id: usize,
     pub arg_types: Vec<PTTypeSpec>,
-    pub checks: Vec<PTCheck>
+    pub checks: Vec<Check>
 }
 
 #[derive(Debug,Clone)]
 pub struct PTFuncProcNamedArgument {
     pub id: String,
     pub arg_types: Vec<PTTypeSpec>,
-    pub checks: Vec<PTCheck>
+    pub checks: Vec<Check>
 }
 
 #[derive(Debug,Clone)]
 pub struct PTFuncProcAnonArgument {
     pub arg_types: Vec<PTTypeSpec>,
-    pub checks: Vec<PTCheck>
+    pub checks: Vec<Check>
 }
 
 #[derive(Debug,Clone)]
@@ -102,17 +90,19 @@ pub enum PTCodeCommand {
 }
 
 #[derive(Debug,Clone)]
-pub enum PTCodeModifier {
-    World
-}
-
-#[derive(Debug,Clone)]
 pub struct PTCodeBlock {
     pub name: String,
     pub arguments: Vec<PTCodeArgument>,
     pub results: Vec<PTCodeRegisterArgument>,
     pub commands: Vec<PTCodeCommand>,
-    pub modifiers: Vec<PTCodeModifier>
+    pub modifiers: Vec<CodeModifier>
+}
+
+impl PTCodeBlock {
+    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),location)?;
+        Ok(())
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -171,7 +161,7 @@ impl PTCall {
 
 #[derive(Debug,Clone)]
 pub enum PTLetAssign {
-    Variable(Vec<(PTVariable,Vec<PTCheck>)>),
+    Variable(Variable,Vec<Check>),
     Repeater(String)
 }
 
@@ -182,12 +172,58 @@ impl PTLetAssign {
             _ => false
         }
     }
+
+    fn declare(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        match self {
+            PTLetAssign::Variable(var,_) => {
+                bt.declare(BTDeclare::Variable(var.clone()),location)?;
+            }
+            PTLetAssign::Repeater(r) => {
+                bt.declare(BTDeclare::Repeater(r.to_string()),location)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn checks(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        match self {
+            PTLetAssign::Variable(var,checks) => {
+                for check in checks.iter() {
+                    bt.check(var,check,location)?;
+                }
+            },
+            _ => {}
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug,Clone)]
-pub struct PTVariable {
-    pub prefix: Option<String>,
-    pub name: String
+pub enum PTProcAssignArg {
+    Variable(Variable,Vec<Check>),
+    Bundle(String)
+}
+
+impl PTProcAssignArg {
+    fn declare(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        let declare = match self {
+            PTProcAssignArg::Variable(v, _) => BTDeclare::Variable(v.clone()),
+            PTProcAssignArg::Bundle(b) => BTDeclare::Bundle(b.to_string())
+        };
+        bt.declare(declare,location)
+    }
+
+    fn checks(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        match self {
+            PTProcAssignArg::Variable(var,checks) => {
+                for check in checks.iter() {
+                    bt.check(var,check,location)?;
+                }
+            },
+            _ => {}
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -195,7 +231,7 @@ pub enum PTExpression {
     Constant(PTConstant),
     FiniteSequence(Vec<PTExpression>),
     InfiniteSequence(Box<PTExpression>),
-    Variable(PTVariable),
+    Variable(Variable),
     Infix(Box<PTExpression>,String,Box<PTExpression>),
     Prefix(String,Box<PTExpression>),
     Call(PTCall)
@@ -253,6 +289,7 @@ impl PTFuncValue {
 #[derive(Debug,Clone)]
 pub struct PTFuncDef {
     pub name: String,
+    pub modifiers: Vec<FuncProcModifier>,
     pub args: Vec<PTFuncProcArgument>,
     pub block: Vec<PTStatement>,
     pub value: PTFuncValue,
@@ -264,10 +301,16 @@ impl PTFuncDef {
         Ok(PTFuncDef {
             name: self.name,
             args: self.args,
+            modifiers: self.modifiers,
             block: PTStatement::transform_list(self.block,transformer)?,
             value: self.value.transform(transformer,pos)?,
             value_type: self.value_type
         })
+    }
+
+    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Func(),location)?;
+        Ok(())
     }
 }
 
@@ -292,6 +335,7 @@ impl PTProcReturn {
 #[derive(Debug,Clone)]
 pub struct PTProcDef {
     pub name: String,
+    pub modifiers: Vec<FuncProcModifier>,
     pub args: Vec<PTFuncProcArgument>,
     pub block: Vec<PTStatement>,
     pub ret: PTProcReturn,
@@ -303,10 +347,16 @@ impl PTProcDef {
         Ok(PTProcDef {
             name: self.name,
             args: self.args,
+            modifiers: self.modifiers,
             block: PTStatement::transform_list(self.block,transformer)?,
             ret: self.ret.transform(transformer,pos)?,
             ret_type: self.ret_type
         })
+    }
+
+    fn build(&self, bt: &mut BuildTree, location: (&Arc<Vec<String>>,usize)) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Proc(),location)?;
+        Ok(())
     }
 }
 
@@ -319,14 +369,21 @@ pub struct PTStatement {
 
 #[derive(Debug,Clone)]
 pub enum PTStatementValue {
-    Code(PTCodeBlock),
+    /* preprocessor */
     Include(String),
     Flag(String),
-    LetStatement(PTLetAssign,PTExpression),
-    ModifyStatement(PTVariable,PTExpression),
-    BareCall(PTCall),
+
+    /* definitions */
+    Code(PTCodeBlock),
     FuncDef(PTFuncDef),
-    ProcDef(PTProcDef)
+    ProcDef(PTProcDef),
+
+    /* instructions */
+    LetStatement(PTLetAssign,PTExpression),
+    ModifyStatement(Variable,PTExpression),
+    LetProcCall(Vec<PTProcAssignArg>,PTCall),
+    ModifyProcCall(Vec<Variable>,PTCall),
+    BareCall(PTCall),
 }
 
 impl PTStatement {
@@ -389,5 +446,46 @@ impl PTStatement {
             out.append(&mut more);
         }
         Ok(out)    
+    }
+
+    fn build(&self, bt: &mut BuildTree) -> Result<(),String> {
+        let location = (&self.file,self.line_no);
+        match &self.value {
+            PTStatementValue::Include(_) |
+            PTStatementValue::Flag(_) => {
+                panic!("item should have been eliminated from build tree");
+            },
+
+            PTStatementValue::FuncDef(f) => { f.build(bt,location)?; },
+            PTStatementValue::ProcDef(p) => { p.build(bt,location)?; }
+            PTStatementValue::Code(c) => { c.build(bt,location)?; },
+
+            PTStatementValue::LetStatement(v,x) => {
+                v.declare(bt,location)?;
+                v.checks(bt,location)?;
+            },
+            PTStatementValue::LetProcCall(args,x) => {
+                for arg in args {
+                    arg.declare(bt,location)?;
+                }
+                for arg in args {
+                   arg.checks(bt,location)?;
+                }
+            },
+            PTStatementValue::ModifyProcCall(_,_) => {},
+            PTStatementValue::ModifyStatement(_, _) => {},
+            PTStatementValue::BareCall(_) => {},
+        }
+        Ok(())
+    }
+
+    pub(crate) fn to_build_tree(this: Vec<Self>) -> Result<BuildTree,String> {
+        let mut bt = BuildTree::new();
+        for stmt in this.iter() {
+            stmt.build(&mut bt).map_err(|e| {
+                at(&e,Some((&stmt.file,stmt.line_no)))
+            })?;
+        }
+        Ok(bt)
     }
 }

@@ -1,4 +1,6 @@
+mod buildtree;
 mod compiler;
+mod model;
 mod preprocess;
 mod parser;
 mod parsetree;

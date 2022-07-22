@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTLetAssign, PTCallArg, PTVariable, PTConstant, PTStatementValue}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTCallArg, PTConstant, PTStatementValue, PTLetAssign}, model::Variable};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -16,7 +16,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
         };
         Ok(vec![PTStatement {
             value: PTStatementValue::LetStatement(
-                PTLetAssign::Variable(vec![(PTVariable{ prefix: None, name: "x".to_string()},vec![])]),
+                PTLetAssign::Variable(Variable{ prefix: None, name: "x".to_string()},vec![]),
                 value.clone()
             ),
             file: Arc::new(pos.0.to_vec()),
@@ -148,7 +148,7 @@ pub(super) fn run_parse_tests(data: &str) {
             assert_eq!(&compilation.flags,&want_flags);
         }
         if let Some((parse_options,parse)) = sections.get("preproc") {
-            match processed {
+            match &processed {
                 Ok(result) => {
                     let result_str = format!("{:?}",result);
                     assert_eq!(process_ws(&result_str,parse_options),process_ws(&parse,parse_options));
@@ -159,7 +159,7 @@ pub(super) fn run_parse_tests(data: &str) {
                 }
             }
         } else if let Some((parse_options,parse)) = sections.get("preproc-fail") {
-            match processed {
+            match &processed {
                 Ok(result) => {
                     eprintln!("FAILED ON \n{}\nUnexpected success:\n{:?}",input,result);
                     assert!(false);
@@ -172,6 +172,27 @@ pub(super) fn run_parse_tests(data: &str) {
                 }
             }
             continue;
+        }
+        if let Some((built_options,built)) = sections.get("built") {
+            match processed {
+                Ok(preproc) => {
+                    let output = compilation.build(preproc);
+                    match output {
+                        Ok(output) => {
+                            let built_str = format!("{:?}",output);
+                            assert_eq!(process_ws(&built_str,built_options),process_ws(&built,built_options));
+                        },
+                        Err(e) => {
+                            eprintln!("FAILED ON \n{}\nUnexpected error:\n{}",input,e);
+                            assert!(false);                                    
+                        }
+                    }
+                },
+                Err(_) => {
+                    eprintln!("prprocessing failed but expected build");
+                    assert!(false);
+                }
+            }
         }
     }
 }    

@@ -11,7 +11,7 @@ let x = 1 || 2 || 3;
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             Infix(
                 Infix(Constant(Number(1.0)),"||",Constant(Number(2.0))),
                 "||",
@@ -40,7 +40,7 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             Infix(
                 Infix(
                     Constant(Number(1.0)),
@@ -110,7 +110,7 @@ let y = (1+2)*3;
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             Infix(
                 Constant(Number(1.0)),
                 "+",
@@ -126,7 +126,7 @@ let y = (1+2)*3;
     },
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"y"},[])]),
+            Variable(Variable{prefix:None,name:"y"},[]),
             Infix(
                 Infix(
                     Constant(Number(1.0)),
@@ -156,7 +156,7 @@ let y = [1,...];
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
         ),
         file: ["test"],
@@ -164,7 +164,7 @@ let y = [1,...];
     },
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"y"},[])]),
+            Variable(Variable{prefix:None,name:"y"},[]),
             InfiniteSequence(Constant(Number(1.0)))
         ),
         file: ["test"],
@@ -185,23 +185,23 @@ let x = -x - -y && !z;
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             Infix(
                 Infix(
                     Prefix(
                         "-",
-                        Variable(PTVariable{prefix:None,name:"x"})
+                        Variable(Variable{prefix:None,name:"x"})
                     ),
                     "-",
                     Prefix(
                         "-",
-                        Variable(PTVariable{prefix:None,name:"y"})
+                        Variable(Variable{prefix:None,name:"y"})
                     )
                 ),
                 "&&",
                 Prefix(
                     "!",
-                    Variable(PTVariable{prefix:None,name:"z"})
+                    Variable(Variable{prefix:None,name:"z"})
                 )
             )
         ),
@@ -254,7 +254,7 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
                     name:"x",
                     args:[
                         Expression(Constant(Number(2.0))),
-                        Expression(Variable(PTVariable{prefix:None,name:"c"})),
+                        Expression(Variable(Variable{prefix:None,name:"c"})),
                         Bundle("d")
                     ],
                     is_macro:false

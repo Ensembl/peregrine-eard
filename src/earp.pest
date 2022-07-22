@@ -155,7 +155,11 @@ function_return = { ("->" ~ funcproc_return_type)? }
 
 function_value = { expression|bundle }
 
+funcproc_modifier = { "export" }
+funcproc_modifiers = { funcproc_modifier* }
+
 function = {
+    funcproc_modifiers ~
     "function" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ function_return  ~ "{" ~
         inner_block* ~ function_value ~
     "}"
@@ -169,6 +173,7 @@ procedure_named_expression = _{ ("(" ~ expression ~ ("," ~ expression)* ~ ")")| 
 procedure_expression = { (bundle|procedure_named_expression) }
 
 procedure = {
+    funcproc_modifiers ~
     "procedure" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ procedure_return_option  ~ "{" ~
         inner_block* ~ procedure_expression ~
     "}"
@@ -181,15 +186,19 @@ simple_let_statement = {
 }
 
 composite_let_arg = {
-    (variable ~ (":" ~ check_annotation+)?)
+    (variable ~ (":" ~ check_annotation+)?) | bundle
 }
 
 composite_let_list = {
     composite_let_arg ~ ("," ~ composite_let_arg)*
 }
 
-composite_let_statement = {
-    "let" ~ "(" ~ composite_let_list ~ ")" ~ "=" ~ expression ~ ";"
+let_proc_call = {
+    "let" ~ "(" ~ composite_let_list ~ ")" ~ "=" ~ func_or_proc_call ~ ";"
+}
+
+modify_proc_call = {
+    "(" ~ (variable ~ ("," ~ variable)*) ~ ")" ~ "=" ~ func_or_proc_call ~ ";"
 }
 
 modify_statement = { variable ~ "=" ~ expression ~ ";" }
@@ -197,8 +206,9 @@ bare_statement = _{ func_or_proc_call ~ ";" }
 
 inner_block = {
     simple_let_statement |
-    composite_let_statement |
+    let_proc_call |
     modify_statement |
+    modify_proc_call |
     bare_statement |
     (macro_call ~ ";")
 }

@@ -4,7 +4,7 @@ Function parsing smoke
 
 >> input
 
-function first(a: seq(?X)) -> ?X {
+export function first(a: seq(?X)) -> ?X {
     print("getting first element");
     entry(a,0)
 }
@@ -15,6 +15,7 @@ function first(a: seq(?X)) -> ?X {
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "first",
+            modifiers: [Export],
             args: [
                 Named(PTFuncProcNamedArgument{
                     id:"a",
@@ -40,7 +41,7 @@ function first(a: seq(?X)) -> ?X {
             value: Expression(Call(PTCall{
                 name: "entry",
                 args: [
-                    Expression(Variable(PTVariable{prefix:None,name:"a"})),
+                    Expression(Variable(Variable{prefix:None,name:"a"})),
                     Expression(Constant(Number(0.0)))
                 ],
                 is_macro: false
@@ -68,6 +69,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "test",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{
                     id: "a",
@@ -77,8 +79,8 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
                         Atomic(Boolean)
                     ],
                     checks: [
-                        PTCheck{check_type:Length,name:"X"},
-                        PTCheck{check_type:Reference,name:"Y"}
+                        Check{check_type:Length,name:"X"},
+                        Check{check_type:Reference,name:"Y"}
                     ]
                 }),
                 Named(PTFuncProcNamedArgument{
@@ -93,7 +95,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             value: Expression(Constant(Number(42.0))),
             value_type: Some(PTFuncProcAnonArgument{
                 arg_types:[SequenceWildcard("Z")],
-                checks: [PTCheck{check_type:Reference,name:"X"}]
+                checks: [Check{check_type:Reference,name:"X"}]
             })
         }),
         file: ["test"],
@@ -130,11 +132,12 @@ function inc(a) {
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "inc",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]})
             ],
             block: [],
-            value: Expression(Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
+            value: Expression(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
             value_type: None
         }),
         file: ["test"],
@@ -158,11 +161,12 @@ function more(a: number length(?X)) {
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "more",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{
                     id: "a",
                     arg_types: [Atomic(Number)],
-                    checks: [PTCheck{check_type:Length,name:"X"}]
+                    checks: [Check{check_type:Length,name:"X"}]
                 })
             ],
             block: [],
@@ -191,12 +195,13 @@ function func(*x) {
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "func",
+            modifiers: [],
             args: [Bundle("x")],
             block: [
                 PTStatement {
                     value: BareCall(PTCall{
                         name: "inc",
-                        args: [Expression(Variable(PTVariable{prefix:Some("x"),name:"a"}))],
+                        args: [Expression(Variable(Variable{prefix:Some("x"),name:"a"}))],
                         is_macro:false
                     }),
                     file: ["test"],
@@ -225,6 +230,7 @@ function x() { 42 }
     PTStatement {
         value: FuncDef(PTFuncDef{
             name: "x",
+            modifiers: [],
             args: [],
             block: [],
             value: Expression(Constant(Number(42.0))),
@@ -253,25 +259,26 @@ procedure x(a: number, b: number) -> (number,number) {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args:[
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
             ],
             block:[
                 PTStatement {
-                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(PTVariable{prefix:None,name:"a"}))],is_macro:false}),
+                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
                     file: ["test"],
                     line_no: 3
                 },
                 PTStatement {
-                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(PTVariable{prefix:None,name:"b"}))],is_macro:false}),
+                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
                     file: ["test"],
                     line_no: 4
                 }
             ],
             ret: Named([
-                Variable(PTVariable{prefix:None,name:"b"}),
-                Variable(PTVariable{prefix:None,name:"a"})
+                Variable(Variable{prefix:None,name:"b"}),
+                Variable(Variable{prefix:None,name:"a"})
             ]),
             ret_type: Some([
                 PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]},
@@ -313,13 +320,14 @@ procedure x(a: number, b: number) -> (number) {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
             ],
             block: [],
             ret: Named([
-                Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Variable(PTVariable{prefix:None,name:"b"}))
+                Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"}))
             ]),
             ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
         }),
@@ -344,13 +352,14 @@ procedure x(a: number, b: number) -> number {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
             ],
             block: [],
             ret: Named([
-                Infix(Variable(PTVariable{prefix:None,name:"a"}),"+",Variable(PTVariable{prefix:None,name:"b"}))
+                Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"}))
             ]),
             ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
         }),
@@ -374,6 +383,7 @@ procedure x(a: number, b: number) {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
@@ -402,10 +412,11 @@ procedure x(a, b: length(?X..)) {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
-                    PTCheck{check_type:LengthOrInfinite,name:"X"}
+                    Check{check_type:LengthOrInfinite,name:"X"}
                 ]})
             ],
             block: [],
@@ -449,17 +460,18 @@ procedure x(a, b: length(?X..), *c) {
     PTStatement {
         value: ProcDef(PTProcDef{
             name: "x",
+            modifiers: [],
             args: [
                 Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
                 Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
-                    PTCheck{check_type:LengthOrInfinite,name:"X"}
+                    Check{check_type:LengthOrInfinite,name:"X"}
                 ]}),
                 Bundle("c")
             ],
             block: [
                 PTStatement {
                     value: ModifyStatement(
-                        PTVariable{prefix:Some("c"),name:"x"},
+                        Variable{prefix:Some("c"),name:"x"},
                         Constant(Number(1.0))
                     ),
                     file: ["test"],
@@ -471,5 +483,75 @@ procedure x(a, b: length(?X..), *c) {
         }),
         file: ["test"],
         line_no: 2
+    }
+]
+
+>> test
+
+Procedure return (let)
+
+>> input
+
+let (x : length(w) total(ww),y,z) = c(a,b,c);
+
+>> parse strip
+
+[
+    PTStatement {
+        value: LetProcCall([
+            Variable(
+                Variable{prefix:None,name:"x"},
+                [
+                    Check{check_type:Length,name:"w"},
+                    Check{check_type:Sum,name:"ww"}
+                ]
+            ),
+            Variable(
+                Variable{prefix:None,name:"y"},[
+                ]
+            ),
+            Variable(
+                Variable{prefix:None,name:"z"},[                       
+                ]
+            )
+        ],
+        PTCall{name:"c",args:[
+            Expression(Variable(Variable{prefix:None,name:"a"})),
+            Expression(Variable(Variable{prefix:None,name:"b"})),
+            Expression(Variable(Variable{prefix:None,name:"c"}))
+        ],is_macro:false}),
+        file:["test"],
+        line_no:2
+    }
+]
+
+>> test
+
+Procedure return (modify)
+
+>> input
+
+(x,y,z) = c(a,b,c);
+
+>> parse strip
+
+[
+    PTStatement{value:ModifyProcCall(
+        [
+            Variable{prefix:None,name:"x"},
+            Variable{prefix:None,name:"y"},
+            Variable{prefix:None,name:"z"}
+        ],
+        PTCall {
+            name: "c",
+            args:[
+                Expression(Variable(Variable{prefix:None,name:"a"})),
+                Expression(Variable(Variable{prefix:None,name:"b"})),
+                Expression(Variable(Variable{prefix:None,name:"c"}))
+            ],
+            is_macro:false
+        }),
+        file: ["test"],
+        line_no:2
     }
 ]

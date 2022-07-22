@@ -11,7 +11,7 @@ let x = [true,false];
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false))
@@ -33,7 +33,7 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([
                 Constant(Number(1.0)),
                 Constant(Number(2.0)),
@@ -62,7 +62,7 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
@@ -105,7 +105,7 @@ let x = [
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
@@ -138,12 +138,12 @@ let x = [true,false,frue,talse];
 [
     PTStatement {
         value: LetStatement(
-            Variable([(PTVariable{prefix:None,name:"x"},[])]),
+            Variable(Variable{prefix:None,name:"x"},[]),
             FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false)),
-                Variable(PTVariable{prefix:None,name:"frue"}),
-                Variable(PTVariable{prefix:None,name:"talse"})
+                Variable(Variable{prefix:None,name:"frue"}),
+                Variable(Variable{prefix:None,name:"talse"})
             ])
         ),
         file: ["test"],
@@ -167,37 +167,37 @@ let e = [0,x,y,z];
 
 [
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"a"},[])]),FiniteSequence([])),
+        value: LetStatement(Variable(Variable{prefix:None,name:"a"},[]),FiniteSequence([])),
         file: ["test"],
         line_no: 2
     },
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"b"},[])]),FiniteSequence([
+        value: LetStatement(Variable(Variable{prefix:None,name:"b"},[]),FiniteSequence([
             Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
         ])),
         file: ["test"],
         line_no: 3
     },
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"c"},[])]),FiniteSequence([
+        value: LetStatement(Variable(Variable{prefix:None,name:"c"},[]),FiniteSequence([
             Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
         ])),
         file: ["test"],
         line_no: 4
     },
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"d"},[])]),FiniteSequence([
+        value: LetStatement(Variable(Variable{prefix:None,name:"d"},[]),FiniteSequence([
             Constant(String("hello")),Constant(String("world"))
         ])),
         file: ["test"],
         line_no: 5
     },
     PTStatement {
-        value: LetStatement(Variable([(PTVariable{prefix:None,name:"e"},[])]),FiniteSequence([
+        value: LetStatement(Variable(Variable{prefix:None,name:"e"},[]),FiniteSequence([
             Constant(Number(0.0)),
-            Variable(PTVariable{prefix:None,name:"x"}),
-            Variable(PTVariable{prefix:None,name:"y"}),
-            Variable(PTVariable{prefix:None,name:"z"})
+            Variable(Variable{prefix:None,name:"x"}),
+            Variable(Variable{prefix:None,name:"y"}),
+            Variable(Variable{prefix:None,name:"z"})
         ])),
         file: ["test"],
         line_no: 6

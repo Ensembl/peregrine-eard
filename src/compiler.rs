@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
-use crate::{parsetree::{PTCallArg, PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp};
+use crate::{parsetree::{PTCallArg, PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree};
 
 pub struct EarpCompiler {
     source_loader: Box<dyn Fn(&str) -> Result<String,String>>,
@@ -81,5 +81,9 @@ impl<'a> EarpCompilation<'a> {
 
     pub fn preprocess(&mut self, parse_tree: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
         preprocess(self,parse_tree)
+    }
+
+    pub fn build(&mut self, input: Vec<PTStatement>) -> Result<BuildTree,String> {
+        PTStatement::to_build_tree(input)    
     }
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant}};
+use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -22,8 +22,8 @@ pub trait PTTransformer {
     fn include(&mut self, _pos: (&[String],usize), _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn remove_flags(&mut self, _flag: &str) -> Result<bool,String> { Ok(false) }
     fn bad_repeater(&mut self, _pos: (&[String],usize)) -> Result<(),String> { Ok(()) }
-    fn call_to_expr(&mut self, _call: &PTCall, context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
-    fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
+    fn call_to_expr(&mut self, _call: &PTCall, _context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
+    fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize), _context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn replace_infix(&mut self, _a: &PTExpression, _f: &str, _b: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
@@ -164,10 +164,10 @@ impl PTCall {
         }
     }
 
-    fn build_proc(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+    fn build_proc(&self, rets: Option<Vec<BTLValue>>, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let index = bc.lookup(&self.name)?;
         let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
-        bt.statement(index,args,bc)?;
+        bt.statement(Some(index),args,rets,bc)?;
         Ok(())
     }
 
@@ -251,8 +251,8 @@ pub enum PTExpression {
     FiniteSequence(Vec<PTExpression>),
     InfiniteSequence(Box<PTExpression>),
     Variable(Variable),
-    Infix(Box<PTExpression>,String,Box<PTExpression>), // replaced during prerpocessing
-    Prefix(String,Box<PTExpression>), // replaced during prerpocessing
+    Infix(Box<PTExpression>,String,Box<PTExpression>), // replaced during preprocessing
+    Prefix(String,Box<PTExpression>), // replaced during preprocessing
     Call(PTCall)
 }
 
@@ -296,13 +296,13 @@ impl PTExpression {
 
             PTExpression::FiniteSequence(items) => {
                 let reg = bc.allocate_register();
-                bt.statement(bc.lookup("__operator_finseq")?, vec![], bc)?; // XXX out to reg
+                bt.statement(Some(bc.lookup("__operator_finseq")?), vec![], Some(vec![BTLValue::Register(reg)]),bc)?; // XXX out to reg
                 for item in items {
                     let built = item.build(bt,bc)?;
-                    bt.statement(bc.lookup("__operator_push")?, vec![
+                    bt.statement(Some(bc.lookup("__operator_push")?), vec![
                         CallArg::Expression(BTExpression::RegisterValue(reg)),
                         CallArg::Expression(built)
-                    ], bc)?;
+                    ], Some(vec![BTLValue::Register(reg)]),bc)?;
                 }
                 BTExpression::RegisterValue(reg)
             },
@@ -437,9 +437,55 @@ pub enum PTStatementValue {
     /* instructions */
     LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
-    ModifyProcCall(Vec<Variable>,PTCall),
     BareCall(PTCall),
 }
+
+fn make_statement(vv: &[PTLetAssign], xx: &[PTExpression], bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+    /* Step 2: allocate temporaries */
+    let mut regs = vec![];
+    for v in vv.iter() {
+        regs.push(bc.allocate_register());
+    }
+    /* Step 3: evaluate expressions and put into temporaries */
+    if vv.len() == xx.len() {
+        /* Lengths equal, so pair off */
+        for (x,reg) in xx.iter().zip(regs.iter()) {   
+            let expr = x.build(bt,bc)?;    
+            bt.statement(None,vec![
+                CallArg::Expression(expr)
+            ],Some(vec![BTLValue::Register(*reg)]),bc)?;
+        }
+    } else if xx.len() == 1 {
+        /* Right is single but lengths don't match so multi-return */
+        match &xx[0] {
+            PTExpression::Call(call) => {
+                let rets = regs.iter().map(|x| BTLValue::Register(*x)).collect::<Vec<_>>();
+                call.build_proc(Some(rets),bt,bc)?;
+            },
+            _ => {
+                return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
+            }
+        }
+    } else {
+        return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
+    }
+    /* Step 4: assign from temporaries to variables */
+    for (v,reg) in vv.iter().zip(regs.iter()) {
+        let lvalue = match v {
+            PTLetAssign::Variable(v, _) => BTLValue::Variable(v.clone()),
+            PTLetAssign::Repeater(r) => BTLValue::Repeater(r.to_string())
+        };
+        bt.statement(None,vec![
+            CallArg::Expression(BTExpression::RegisterValue(*reg))
+        ],Some(vec![lvalue]),bc)?;
+    }
+    /* Step 5: check sizes */
+    for v in vv.iter() {
+        v.checks(bt,bc)?;
+    }
+    Ok(())
+}
+
 
 impl PTStatement {
     pub fn transform(self, transformer: &mut dyn PTTransformer) -> Result<Vec<PTStatement>,String> {
@@ -528,21 +574,21 @@ impl PTStatement {
             PTStatementValue::Code(c) => { c.build(bt,bc)?; },
 
             PTStatementValue::LetStatement(vv,xx) => {
-                // XXX or multi-return proc
-                if vv.len() != xx.len() {
-                    //return Err(format!("let tuples differ in length"));
-                }
-                for (v,x) in vv.iter().zip(xx.iter()) {
+                /* Step 1: declare variables */
+                let mut regs = vec![];
+                for v in vv.iter() {
                     v.declare(bt,bc)?;
+                    regs.push(bc.allocate_register());
                 }
-                for (v,x) in vv.iter().zip(xx.iter()) {
-                    v.checks(bt,bc)?;
-                }
+                make_statement(vv,xx,bt,bc)?;
             },
-            PTStatementValue::ModifyProcCall(_,_) => {},
-            PTStatementValue::ModifyStatement(_, _) => {},
+            PTStatementValue::ModifyStatement(vv,xx) => {
+                /* Dress up our variable, temporarily */
+                let vv = vv.iter().map(|v| PTLetAssign::Variable(v.clone(),vec![])).collect::<Vec<_>>();
+                make_statement(&vv,xx,bt,bc)?;
+            },
             PTStatementValue::BareCall(c) => {
-                c.build_proc(bt,bc)?;
+                c.build_proc(None,bt,bc)?;
             },
         }
         Ok(())

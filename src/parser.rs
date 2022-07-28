@@ -285,12 +285,19 @@ impl EarpParser {
     fn arg_total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
     fn arg_ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
 
-    fn let_decl(input: Node) -> PestResult<PTLetAssign> {
+    fn let_decl(input: Node) -> PestResult<(Variable,Vec<Check>)> {
         Ok(match_nodes!(input.into_children();
             [variable(v),check_annotation(c)..] =>
-                PTLetAssign::Variable(v,c.collect()),
+                (v,c.collect())
+        ))
+    }
+
+    fn let_decls(input: Node) -> PestResult<Vec<PTLetAssign>> {
+        Ok(match_nodes!(input.into_children();
+            [let_decl(v)..] =>
+                v.map(|(v,c)| PTLetAssign::Variable(v,c)).collect(),
             [repeater(v)] =>
-                PTLetAssign::Repeater(v)
+                vec![PTLetAssign::Repeater(v)]
         ))
     }
 
@@ -304,8 +311,8 @@ impl EarpParser {
 
     fn let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-            [let_decl(d)..,rhs_tuple(t)] =>
-                PTStatementValue::LetStatement(d.collect(),t),
+            [let_decls(d),rhs_tuple(t)] =>
+                PTStatementValue::LetStatement(d,t),
         ))
     }
 

@@ -181,6 +181,7 @@ pub(super) fn run_parse_tests(data: &str) {
                     let output = compilation.build(preproc);
                     match output {
                         Ok(output) => {
+                            eprintln!("{:#?}",output);
                             let built_str = format!("{:?}",output);
                             assert_eq!(process_ws(&built_str,built_options),process_ws(&built,built_options));
                         },

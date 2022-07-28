@@ -1,5 +1,22 @@
 >> test
 
+Let in PT->BT
+
+>> input
+
+function __operator_add(x,y) { /* dummy */ 0 }
+
+procedure test(x) { ( 42*x, 23*x ) }
+
+let (a,b) = (1+1,2+2);
+let (c,d) = test(6);
+(c,d) = (d,c);
+
+>> built strip
+
+
+>> test
+
 Simple PT->BT smoke test
 
 >> input
@@ -21,7 +38,6 @@ test([z+1,...],[x-1,y+1]);
 let (a,b) = test(6);
 
 >> xbuilt strip
-
 
 BuildTree {
     statements: [

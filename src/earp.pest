@@ -188,12 +188,13 @@ procedure = {
 /* statements */
 
 let_decl = {
-    (variable ~ (":" ~ check_annotation+)?) | repeater
+    (variable ~ (":" ~ check_annotation+)?)
 }
 
-let_decls = _{
+let_decls = {
     ( "(" ~ (let_decl ~ ("," ~ let_decl)*) ~ ")" ) |
-    let_decl
+    let_decl |
+    repeater
 }
 
 rhs_tuple = {

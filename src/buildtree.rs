@@ -15,10 +15,19 @@ pub enum BTExpression {
     Function(BTFuncCall)
 }
 
+// XXX block macros
+#[derive(Debug,Clone)]
+pub enum BTLValue {
+    Variable(Variable),
+    Register(usize),
+    Repeater(String)
+}
+
 #[derive(Debug,Clone)]
 pub struct BTProcCall {
     proc_index: Option<usize>,
-    args: Vec<CallArg<BTExpression>>
+    args: Vec<CallArg<BTExpression>>,
+    rets: Option<Vec<BTLValue>>
 }
 
 #[derive(Debug,Clone)]
@@ -154,21 +163,27 @@ impl BuildTree {
         Ok(())
     }
 
-    pub(crate) fn statement(&mut self, defn: usize, args: Vec<CallArg<BTExpression>>, bc: &BuildContext) -> Result<(),String> {
-        let call = match &self.definitions[defn] {
-            BTDefinition::Code(_) => {
+    pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<CallArg<BTExpression>>, rets: Option<Vec<BTLValue>>, bc: &BuildContext) -> Result<(),String> {
+        let call = match defn.map(|x| &self.definitions[x]) {
+            Some(BTDefinition::Code(_)) => {
                 todo!()
             },
-            BTDefinition::Func() => {
+            Some(BTDefinition::Func()) => {
                 BTProcCall {
                     proc_index: None,
-                    args
+                    args, rets
                 }
             },
-            BTDefinition::Proc() => {
+            Some(BTDefinition::Proc()) => {
                 BTProcCall {
-                    proc_index: Some(defn),
-                    args
+                    proc_index: defn,
+                    args, rets
+                }
+            },
+            None => {
+                BTProcCall {
+                    proc_index: None,
+                    args, rets
                 }
             }
         };

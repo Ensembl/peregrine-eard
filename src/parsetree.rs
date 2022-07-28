@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext}, model::{CodeModifier, Variable, Check, FuncProcModifier}};
+use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -45,13 +45,6 @@ pub enum PTTypeSpec {
 }
 
 #[derive(Debug,Clone)]
-pub enum PTConstant {
-    Number(f64),
-    String(String),
-    Boolean(bool)
-}
-
-#[derive(Debug,Clone)]
 pub struct PTCodeRegisterArgument {
     pub reg_id: usize,
     pub arg_types: Vec<PTTypeSpec>,
@@ -80,7 +73,7 @@ pub enum PTFuncProcArgument {
 #[derive(Debug,Clone)]
 pub enum PTCodeArgument {
     Register(PTCodeRegisterArgument),
-    Constant(PTConstant)
+    Constant(Constant)
 }
 
 #[derive(Debug,Clone)]
@@ -99,28 +92,29 @@ pub struct PTCodeBlock {
 }
 
 impl PTCodeBlock {
-    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),bc)?;
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),bc,false)?;
         Ok(())
     }
 }
 
-#[derive(Debug,Clone)]
-pub enum PTCallArg {
-    Expression(PTExpression),
-    Bundle(String),
-    Repeater(String)
-}
-
-impl PTCallArg {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTCallArg,String> {
+impl CallArg<PTExpression> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<CallArg<PTExpression>,String> {
         Ok(match self {
-            PTCallArg::Expression(x) => PTCallArg::Expression(x.transform(transformer,pos,context,false)?),
-            PTCallArg::Bundle(s) => PTCallArg::Bundle(s),
-            PTCallArg::Repeater(r) => {
+            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context,false)?),
+            CallArg::Bundle(s) => CallArg::Bundle(s),
+            CallArg::Repeater(r) => {
                 if !top { transformer.bad_repeater(pos)?; }
-                PTCallArg::Repeater(r)
+                CallArg::Repeater(r)
             }
+        })
+    }
+
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<CallArg<BTExpression>,String> {
+        Ok(match self {
+            CallArg::Expression(x) => CallArg::Expression(x.build(bt,bc)?),
+            CallArg::Bundle(n) => CallArg::Bundle(n.to_string()),
+            CallArg::Repeater(n) => CallArg::Repeater(n.to_string())
         })
     }
 }
@@ -128,7 +122,7 @@ impl PTCallArg {
 #[derive(Debug,Clone)]
 pub struct PTCall {
     pub name: String,
-    pub args: Vec<PTCallArg>,
+    pub args: Vec<CallArg<PTExpression>>,
     pub is_macro: bool // removed in preprocessing
 }
 
@@ -156,6 +150,19 @@ impl PTCall {
         } else {
             Ok(None)
         }
+    }
+
+    fn build_proc(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+        let index = bc.lookup(&self.name)?;
+        let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
+        bt.statement(index,args,bc)?;
+        Ok(())
+    }
+
+    fn build_func(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<BTFuncCall,String> {
+        let index = bc.lookup(&self.name)?;
+        let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
+        Ok(bt.function_call(index,args,bc)?)
     }
 }
 
@@ -228,12 +235,12 @@ impl PTProcAssignArg {
 
 #[derive(Debug,Clone)]
 pub enum PTExpression {
-    Constant(PTConstant),
+    Constant(Constant),
     FiniteSequence(Vec<PTExpression>),
     InfiniteSequence(Box<PTExpression>),
     Variable(Variable),
-    Infix(Box<PTExpression>,String,Box<PTExpression>),
-    Prefix(String,Box<PTExpression>),
+    Infix(Box<PTExpression>,String,Box<PTExpression>), // replaced during prerpocessing
+    Prefix(String,Box<PTExpression>), // replaced during prerpocessing
     Call(PTCall)
 }
 
@@ -267,6 +274,41 @@ impl PTExpression {
                 call.transform_expression(transformer,pos,context,top)?
             },
             x => x
+        })
+    }
+
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<BTExpression,String> {
+        Ok(match self {
+            PTExpression::Constant(c) => BTExpression::Constant(c.clone()),
+
+            PTExpression::FiniteSequence(items) => {
+                let reg = bc.allocate_register();
+                bt.statement(bc.lookup("__operator_finseq")?, vec![], bc)?; // XXX out to reg
+                for item in items {
+                    let built = item.build(bt,bc)?;
+                    bt.statement(bc.lookup("__operator_push")?, vec![
+                        CallArg::Expression(BTExpression::RegisterValue(reg)),
+                        CallArg::Expression(built)
+                    ], bc)?;
+                }
+                BTExpression::RegisterValue(reg)
+            },
+            PTExpression::InfiniteSequence(x) => {
+                BTExpression::Function(BTFuncCall {
+                    func_index: bc.lookup("__operator_infseq")?,
+                    args: vec![CallArg::Expression(x.build(bt,bc)?)],
+                })
+            },
+
+            PTExpression::Variable(v) => BTExpression::Variable(v.clone()),
+            PTExpression::Call(c) => {
+                BTExpression::Function(c.build_func(bt,bc)?)
+            },
+
+            PTExpression::Infix(_, n, _) |
+            PTExpression::Prefix(n, _) => {
+                panic!("operator {} should have been replaced during preprocessing!",n);
+            }
         })
     }
 }
@@ -308,8 +350,8 @@ impl PTFuncDef {
         })
     }
 
-    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Func(),bc)?;
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Func(),bc,self.modifiers.contains(&FuncProcModifier::Export))?;
         Ok(())
     }
 }
@@ -354,8 +396,8 @@ impl PTProcDef {
         })
     }
 
-    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
-        bt.define(&self.name,BTDefinition::Proc(),bc)?;
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+        bt.define(&self.name,BTDefinition::Proc(),bc,self.modifiers.contains(&FuncProcModifier::Export))?;
         Ok(())
     }
 }
@@ -402,7 +444,7 @@ impl PTStatement {
                 if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {
                     return Ok(repl);
                 } else {
-                    PTStatementValue::BareCall(call)
+                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context,false)?)
                 }
             },
             PTStatementValue::FuncDef(call) => {
@@ -450,7 +492,7 @@ impl PTStatement {
         Ok(out)    
     }
 
-    fn build(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         match &self.value {
             PTStatementValue::Include(_) |
             PTStatementValue::Flag(_) => {
@@ -475,7 +517,9 @@ impl PTStatement {
             },
             PTStatementValue::ModifyProcCall(_,_) => {},
             PTStatementValue::ModifyStatement(_, _) => {},
-            PTStatementValue::BareCall(_) => {},
+            PTStatementValue::BareCall(c) => {
+                c.build_proc(bt,bc)?;
+            },
         }
         Ok(())
     }
@@ -485,6 +529,7 @@ impl PTStatement {
         let mut bc = BuildContext::new();
         for stmt in this.iter() {
             bc.set_location(&stmt.file,stmt.line_no);
+            bc.set_file_context(stmt.context);
             stmt.build(&mut bt,&mut bc).map_err(|e| {
                 at(&e,Some(bc.location()))
             })?;

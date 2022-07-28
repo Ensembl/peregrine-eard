@@ -49,7 +49,7 @@ include = { "include" ~ string ~ ";" }
 
 /* checks */
 length_check = { "length(" ~ identifier ~ ")" }
-lengthorinf_check = { "length(" ~ identifier ~ ".." ~ ")" }
+lengthorinf_check = { "length(" ~ identifier ~ "..." ~ ")" }
 total_check = { "total(" ~ identifier ~ ")" }
 ref_check = { "ref(" ~ identifier ~ ")" }
 
@@ -66,7 +66,7 @@ arg_wild_type = { "?" ~ arg_check_variable }
 arg_check_variable = { ASCII_ALPHA_UPPER+ }
 
 arg_length_check = { "length(" ~ "?" ~ arg_check_variable ~ ")" }
-arg_lengthorinf_check = { "length(" ~ "?" ~ arg_check_variable ~ ".." ~ ")" }
+arg_lengthorinf_check = { "length(" ~ "?" ~ arg_check_variable ~ "..." ~ ")" }
 arg_total_check = { "total(" ~ "?" ~ arg_check_variable ~ ")" }
 arg_ref_check = { "ref(" ~ "?" ~ arg_check_variable ~ ")" }
 
@@ -157,6 +157,12 @@ function_value = { expression|bundle }
 
 funcproc_modifier = { "export" }
 funcproc_modifiers = { funcproc_modifier* }
+
+// XXX let bundle call
+capture = { variable | bundle }
+capture_decl = {
+    "capture" ~ capture ~ ( "," ~ capture)* ~ ";"
+}
 
 function = {
     funcproc_modifiers ~

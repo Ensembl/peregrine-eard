@@ -1,9 +1,16 @@
 #[derive(Debug,Clone)]
+pub enum Constant {
+    Number(f64),
+    String(String),
+    Boolean(bool)
+}
+
+#[derive(Debug,Clone)]
 pub enum CodeModifier {
     World
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq,Eq)]
 pub enum FuncProcModifier {
     Export
 }
@@ -27,4 +34,11 @@ pub enum CheckType {
 pub struct Check {
     pub check_type: CheckType,
     pub name: String
+}
+
+#[derive(Debug,Clone)]
+pub enum CallArg<E> {
+    Expression(E),
+    Bundle(String),
+    Repeater(String)
 }

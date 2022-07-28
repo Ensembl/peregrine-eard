@@ -4,7 +4,7 @@ Code block smoke
 
 >> input
 
-world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X..)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
     register r4;
     opcode 44, r1, r2, r3, r4, r5;
 }

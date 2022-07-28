@@ -4,35 +4,31 @@ Simple PT->BT smoke test
 
 >> input
 
+function __operator_infseq(x) { /* dummy */ [0,...] }
+function __operator_finseq(x) { /* dummy */ [0,...] }
+procedure __operator_push(x) { /* dummy */ [0,...] }
+function __operator_add(x,y) { /* dummy */ 0 }
+function __operator_sub(x,y) { /* dummy */ 0 }
+
+procedure test(x) {
+    42 * x
+}
+
 let x = 1;
 let y = 2;
 let z : length(y) = x+y;
+test([z+1,...],[x-1,y+1]);
 
->> built strip
+>> xbuilt strip
 
-BuildTree{
-    statements:[
-        BTStatement{
-            value: Declare(Variable(Variable{prefix:None,name:"x"})),
-            file: ["test"],
-            line_no:2
-        },
-        BTStatement{
-            value: Declare(Variable(Variable{prefix:None,name:"y"})),
-            file: ["test"],
-            line_no:3
-        },
-        BTStatement{
-            value: Declare(Variable(Variable{prefix:None,name:"z"})),
-            file: ["test"],
-            line_no:4
-        },
-        BTStatement{
-            value: Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),
-            file: ["test"],
-            line_no:4
-        }
-    ],
-    defnames:{},
-    definitions: []
-}
+
+BuildTree {
+    statements: [
+        BTStatement{value:Define(0),file:["test"],line_no:2},
+        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"x"})),file:["test"],line_no:6},
+        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"y"})),file:["test"],line_no:7},
+        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"z"})),file:["test"],line_no:8},
+        BTStatement{value:Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),file:["test"],line_no:8},
+        BTStatement{value:Statement(BTProcCall{proc_index:Some(0)}),file:["test"],line_no:9}],
+    definitions:[Proc]}
+

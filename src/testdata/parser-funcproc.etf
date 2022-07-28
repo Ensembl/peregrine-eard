@@ -417,7 +417,7 @@ Procedures, no types but checks
 
 >> input
 
-procedure x(a, b: length(?X..)) {
+procedure x(a, b: length(?X...)) {
 }
 
 >> parse strip
@@ -464,7 +464,7 @@ Procedures, bundle return
 
 >> input
 
-procedure x(a, b: length(?X..), *c) {
+procedure x(a, b: length(?X...), *c) {
     c.x = 1;
     *c
 }

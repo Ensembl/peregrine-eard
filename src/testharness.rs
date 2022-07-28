@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTCallArg, PTConstant, PTStatementValue, PTLetAssign}, model::Variable};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue, PTLetAssign}, model::{Variable, CallArg, Constant}};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -11,7 +11,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     compiler.set_source_loader(source_loader(sources));
     compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
-            PTCallArg::Expression(x) => x,
+            CallArg::Expression(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
         Ok(vec![PTStatement {
@@ -26,10 +26,10 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     })?;
     compiler.add_expression_macro("y",|expr,_| {
         let value = match &expr[0] {
-            PTCallArg::Expression(x) => x,
+            CallArg::Expression(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
-        Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(PTConstant::Number(1.)))))
+        Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(Constant::Number(1.)))))
     })?;
     compiler.add_block_macro("z", |_expr,pos,context| {
         Ok(vec![PTStatement {

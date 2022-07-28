@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{PTAtomicTypeSpec, PTTypeSpec, PTCodeRegisterArgument, PTConstant, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncProcArgument, PTFuncProcNamedArgument, PTFuncDef, PTFuncProcAnonArgument, PTProcReturn, PTProcDef, PTCallArg, PTFuncValue, PTStatement, PTStatementValue, PTLetAssign, PTProcAssignArg }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier}};
+use crate::{parsetree::{PTAtomicTypeSpec, PTTypeSpec, PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncProcArgument, PTFuncProcNamedArgument, PTFuncDef, PTFuncProcAnonArgument, PTProcReturn, PTProcDef, PTFuncValue, PTStatement, PTStatementValue, PTLetAssign, PTProcAssignArg }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -159,11 +159,11 @@ impl EarpParser {
         Ok(match_nodes!(input.into_children(); [prefix(s)] => s ))
     }
 
-    fn constant(input: Node) -> PestResult<PTConstant> {
+    fn constant(input: Node) -> PestResult<Constant> {
         Ok(match_nodes!(input.into_children();
-          [string(s)] => PTConstant::String(s),
-          [number(n)] => PTConstant::Number(n),
-          [boolean(b)] => PTConstant::Boolean(b)
+          [string(s)] => Constant::String(s),
+          [number(n)] => Constant::Number(n),
+          [boolean(b)] => Constant::Boolean(b)
         ))
     }
 
@@ -228,15 +228,15 @@ impl EarpParser {
         ))
     }
 
-    fn argument(input: Node) -> PestResult<PTCallArg> {
+    fn argument(input: Node) -> PestResult<CallArg<PTExpression>> {
         Ok(match_nodes!(input.into_children();
-            [expression(x)] => PTCallArg::Expression(x),
-            [bundle(x)] => PTCallArg::Bundle(x),
-            [repeater(x)] => PTCallArg::Repeater(x)
+            [expression(x)] => CallArg::Expression(x),
+            [bundle(x)] => CallArg::Bundle(x),
+            [repeater(x)] => CallArg::Repeater(x)
         ))
     }
 
-    fn arguments(input: Node) -> PestResult<Vec<PTCallArg>> {
+    fn arguments(input: Node) -> PestResult<Vec<CallArg<PTExpression>>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::argument(child)?);

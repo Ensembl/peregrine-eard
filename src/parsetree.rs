@@ -99,12 +99,19 @@ impl PTCodeBlock {
 }
 
 impl CallArg<PTExpression> {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<CallArg<PTExpression>,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<CallArg<PTExpression>,String> {
         Ok(match self {
-            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context,false)?),
+            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context,None)?),
             CallArg::Bundle(s) => CallArg::Bundle(s),
             CallArg::Repeater(r) => {
-                if !top { transformer.bad_repeater(pos)?; }
+                let mut bad = true;
+                if let Some(allow_repeat) = allow_repeat {
+                    if *allow_repeat {
+                        *allow_repeat = false;
+                        bad = false;
+                    }
+                }
+                if bad { transformer.bad_repeater(pos)?; }
                 CallArg::Repeater(r)
             }
         })
@@ -127,16 +134,21 @@ pub struct PTCall {
 }
 
 impl PTCall {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTCall,String> {
-        let top = top && !self.is_macro;
+    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<PTCall,String> {
+        let mut no_repeat = false;
+        let allow_repeat = allow_repeat.unwrap_or(&mut no_repeat);
+        let mut args = vec![];
+        for arg in self.args {
+            args.push(arg.transform(transformer,pos,context,Some(allow_repeat))?);
+        }
         Ok(PTCall {
             name: self.name,
-            args: self.args.drain(..).map(|x| x.transform(transformer,pos,context,top)).collect::<Result<Vec<_>,_>>()?,
+            args,
             is_macro: self.is_macro
         })
     }
 
-    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTExpression,String> {
+    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: Option<&mut bool>) -> Result<PTExpression,String> {
         if let Some(repl) = transformer.call_to_expr(&self,context)? {
             Ok(repl)
         } else {
@@ -245,17 +257,18 @@ pub enum PTExpression {
 }
 
 impl PTExpression {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<PTExpression,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<PTExpression,String> {
+        let mut no_repeats = false;
         Ok(match self {
             PTExpression::FiniteSequence(mut exprs) => {
-                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context,false)).collect::<Result<Vec<_>,_>>()?)
+                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context,None)).collect::<Result<Vec<_>,_>>()?)
             },
             PTExpression::InfiniteSequence(expr) => {
-                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,context,false)?))
+                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,context,None)?))
             },
             PTExpression::Infix(a,f,b) => {
-                let a = a.transform(transformer,pos,context,false)?;
-                let b = b.transform(transformer,pos,context,false)?;
+                let a = a.transform(transformer,pos,context,None)?;
+                let b = b.transform(transformer,pos,context,None)?;
                 if let Some(repl) = transformer.replace_infix(&a,&f,&b)? {
                     repl
                 } else {
@@ -263,7 +276,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Prefix(f,a) => {
-                let a = a.transform(transformer,pos,context,false)?;
+                let a = a.transform(transformer,pos,context,None)?;
                 if let Some(repl) = transformer.replace_prefix(&f,&a)? {
                     repl
                 } else {
@@ -271,7 +284,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Call(call) => {
-                call.transform_expression(transformer,pos,context,top)?
+                call.transform_expression(transformer,pos,context,allow_repeat)?
             },
             x => x
         })
@@ -322,7 +335,7 @@ pub enum PTFuncValue {
 impl PTFuncValue {
     fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncValue,String> {
         Ok(match self {
-            PTFuncValue::Expression(expr) => PTFuncValue::Expression(expr.transform(transformer,pos,context,false)?),
+            PTFuncValue::Expression(expr) => PTFuncValue::Expression(expr.transform(transformer,pos,context,None)?),
             x => x
         })
     }
@@ -367,7 +380,7 @@ impl PTProcReturn {
     fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTProcReturn,String> {
         Ok(match self {
             PTProcReturn::Named(mut exprs) => {
-                PTProcReturn::Named(exprs.drain(..).map(|x| x.transform(transformer,pos,context,false)).collect::<Result<Vec<_>,_>>()?)
+                PTProcReturn::Named(exprs.drain(..).map(|x| x.transform(transformer,pos,context,None)).collect::<Result<Vec<_>,_>>()?)
             },
             x => x
         })
@@ -422,7 +435,7 @@ pub enum PTStatementValue {
     ProcDef(PTProcDef),
 
     /* instructions */
-    LetStatement(PTLetAssign,PTExpression),
+    LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
     ModifyStatement(Variable,PTExpression),
     LetProcCall(Vec<PTProcAssignArg>,PTCall),
     ModifyProcCall(Vec<Variable>,PTCall),
@@ -433,18 +446,26 @@ impl PTStatement {
     pub fn transform(self, transformer: &mut dyn PTTransformer) -> Result<Vec<PTStatement>,String> {
         let pos = (self.file.as_ref().as_slice(),self.line_no);
         let value = match self.value {
-            PTStatementValue::LetStatement(lvalue,rvalue) => {
-                let top = lvalue.is_repeater();
-                PTStatementValue::LetStatement(lvalue,rvalue.transform(transformer,pos,self.context,top)?)
+            PTStatementValue::LetStatement(lvalues,rvalues) => {
+                let count_repeats = lvalues.iter().map(|x| x.is_repeater()).count();
+                if count_repeats > 1 {
+                    return Err("only one repeat permitted per statement".to_string());
+                }
+                let mut allow_repeat = count_repeats > 0;
+                let mut exprs = vec![];
+                for rvalue in rvalues {
+                    exprs.push(rvalue.transform(transformer,pos,self.context,Some(&mut allow_repeat))?);
+                }
+                PTStatementValue::LetStatement(lvalues,exprs)
             },
             PTStatementValue::ModifyStatement(lvalue,rvalue) => {
-                PTStatementValue::ModifyStatement(lvalue,rvalue.transform(transformer,pos,self.context,false)?)
+                PTStatementValue::ModifyStatement(lvalue,rvalue.transform(transformer,pos,self.context,None)?)
             },
             PTStatementValue::BareCall(call) => {
                 if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {
                     return Ok(repl);
                 } else {
-                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context,false)?)
+                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context,None)?)
                 }
             },
             PTStatementValue::FuncDef(call) => {
@@ -503,9 +524,16 @@ impl PTStatement {
             PTStatementValue::ProcDef(p) => { p.build(bt,bc)?; }
             PTStatementValue::Code(c) => { c.build(bt,bc)?; },
 
-            PTStatementValue::LetStatement(v,x) => {
-                v.declare(bt,bc)?;
-                v.checks(bt,bc)?;
+            PTStatementValue::LetStatement(vv,xx) => {
+                if vv.len() != xx.len() {
+                    return Err(format!("let tuples differ in length"));
+                }
+                for (v,x) in vv.iter().zip(xx.iter()) {
+                    v.declare(bt,bc)?;
+                }
+                for (v,x) in vv.iter().zip(xx.iter()) {
+                    v.checks(bt,bc)?;
+                }
             },
             PTStatementValue::LetProcCall(args,x) => {
                 for arg in args {

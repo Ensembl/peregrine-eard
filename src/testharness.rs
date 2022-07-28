@@ -16,8 +16,8 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
         };
         Ok(vec![PTStatement {
             value: PTStatementValue::LetStatement(
-                PTLetAssign::Variable(Variable{ prefix: None, name: "x".to_string()},vec![]),
-                value.clone()
+                vec![PTLetAssign::Variable(Variable{ prefix: None, name: "x".to_string()},vec![])],
+                vec![value.clone()]
             ),
             file: Arc::new(pos.0.to_vec()),
             line_no: pos.1,

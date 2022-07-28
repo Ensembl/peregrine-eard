@@ -11,12 +11,12 @@ let x = 1 || 2 || 3;
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            Infix(
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Infix(
                 Infix(Constant(Number(1.0)),"||",Constant(Number(2.0))),
                 "||",
                 Constant(Number(3.0))
-            )
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -41,8 +41,8 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            Infix(
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Infix(
                 Infix(
                     Constant(Number(1.0)),
                     "||",
@@ -90,7 +90,7 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
                 ),
                 "||",
                 Constant(Number(13.0))
-            )
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -112,8 +112,8 @@ let y = (1+2)*3;
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            Infix(
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Infix(
                 Constant(Number(1.0)),
                 "+",
                 Infix(
@@ -121,7 +121,7 @@ let y = (1+2)*3;
                     "*",
                     Constant(Number(3.0))
                 )
-            )
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -129,8 +129,8 @@ let y = (1+2)*3;
     },
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"y"},[]),
-            Infix(
+            [Variable(Variable{prefix:None,name:"y"},[])],
+            [Infix(
                 Infix(
                     Constant(Number(1.0)),
                     "+",
@@ -138,7 +138,7 @@ let y = (1+2)*3;
                 ),
                 "*",
                 Constant(Number(3.0))
-            )
+            )]
         ),
         file: ["test"],
         line_no: 3,
@@ -160,8 +160,8 @@ let y = [1,...];
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,
@@ -169,8 +169,8 @@ let y = [1,...];
     },
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"y"},[]),
-            InfiniteSequence(Constant(Number(1.0)))
+            [Variable(Variable{prefix:None,name:"y"},[])],
+            [InfiniteSequence(Constant(Number(1.0)))]
         ),
         file: ["test"],
         line_no: 3,
@@ -191,8 +191,8 @@ let x = -x - -y && !z;
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            Infix(
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Infix(
                 Infix(
                     Prefix(
                         "-",
@@ -209,7 +209,7 @@ let x = -x - -y && !z;
                     "!",
                     Variable(Variable{prefix:None,name:"z"})
                 )
-            )
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -230,8 +230,8 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
 [
     PTStatement {
         value: LetStatement(
-            Repeater("a"),
-            FiniteSequence([
+            [Repeater("a")],
+            [FiniteSequence([
                 Infix(
                     Infix(
                         Constant(Number(1.0)),
@@ -266,7 +266,7 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
                     ],
                     is_macro:false
                 })
-            ])
+            ])]
         ),
         file: ["test"],
         line_no: 2,

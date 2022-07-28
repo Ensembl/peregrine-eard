@@ -317,9 +317,9 @@ impl EarpParser {
     fn simple_let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
             [variable(v),check_annotation(c)..,expression(x)] =>
-                PTStatementValue::LetStatement(PTLetAssign::Variable(v,c.collect()),x),
+                PTStatementValue::LetStatement(vec![PTLetAssign::Variable(v,c.collect())],vec![x]),
             [repeater(v),expression(x)] =>
-                PTStatementValue::LetStatement(PTLetAssign::Repeater(v),x)
+                PTStatementValue::LetStatement(vec![PTLetAssign::Repeater(v)],vec![x])
         ))
     }
 

@@ -23,14 +23,14 @@ let x.y = false;
 
 [
     PTStatement {
-        value: LetStatement(Variable(Variable{prefix:None,name:"x"},[]),Constant(Boolean(true))),
+        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Constant(Boolean(true))]),
         file: ["test"],
         line_no: 2,
         context: 1
 
     },
     PTStatement {
-        value: LetStatement(Variable(Variable{prefix:Some("x"),name:"y"},[]),Constant(Boolean(false))),
+        value: LetStatement([Variable(Variable{prefix:Some("x"),name:"y"},[])],[Constant(Boolean(false))]),
         file: ["test"],
         line_no: 3,
         context: 1
@@ -50,12 +50,12 @@ let x = test!("macro");
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            Call(PTCall{
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Call(PTCall{
                 name: "test",
                 args: [Expression(Constant(String("macro")))],
                 is_macro: true
-            })
+            })]
         ),
         file: ["test"],
         line_no: 2,
@@ -94,13 +94,13 @@ let x : length(a) length(bb...) total(ccc) ref(dddd) = [1,2,3];
 
 [
     PTStatement {
-        value: LetStatement(Variable(Variable{prefix:None,name:"x"},[
+        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[
                 Check{check_type:Length,name:"a"},
                 Check{check_type:LengthOrInfinite,name:"bb"},
                 Check{check_type:Sum,name:"ccc"},
                 Check{check_type:Reference,name:"dddd"}
-            ]),
-            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+            ])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,
@@ -134,8 +134,8 @@ x = [4,5,6];
 [
     PTStatement {
         value: LetStatement(
-            Variable(Variable{prefix:None,name:"x"},[]),
-            FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,

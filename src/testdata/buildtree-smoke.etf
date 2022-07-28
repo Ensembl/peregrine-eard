@@ -11,15 +11,16 @@ function __operator_add(x,y) { /* dummy */ 0 }
 function __operator_sub(x,y) { /* dummy */ 0 }
 
 procedure test(x) {
-    42 * x
+    ( 42*x, 23*x )
 }
 
 let x = 1;
 let y = 2;
 let z : length(y) = x+y;
 test([z+1,...],[x-1,y+1]);
+let (a,b) = test(6);
 
->> xbuilt strip
+>> built strip
 
 
 BuildTree {

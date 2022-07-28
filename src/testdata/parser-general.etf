@@ -8,7 +8,7 @@ let true = false;
 
 >> parse-fail strip
 
-expected repeater or variable
+expected let_decl
 
 >> test
 
@@ -195,5 +195,32 @@ test!("123");
         file: ["test"],
         line_no: 2,
         context: 1
+    }
+]
+
+>> test
+
+Multiple lets
+
+>> input
+
+let (a,b,c) = (x,y,z);
+
+>> parse strip
+
+[
+    PTStatement{
+        value:LetStatement([
+            Variable(Variable{prefix:None,name:"a"},[]),
+            Variable(Variable{prefix:None,name:"b"},[]),
+            Variable(Variable{prefix:None,name:"c"},[])
+        ],[
+            Variable(Variable{prefix:None,name:"x"}),
+            Variable(Variable{prefix:None,name:"y"}),
+            Variable(Variable{prefix:None,name:"z"})
+        ]),
+        file:["test"],
+        line_no:2,
+        context:1
     }
 ]

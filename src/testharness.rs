@@ -190,8 +190,8 @@ pub(super) fn run_parse_tests(data: &str) {
                         }
                     }
                 },
-                Err(_) => {
-                    eprintln!("prprocessing failed but expected build");
+                Err(e) => {
+                    eprintln!("prprocessing failed but expected build: {}",e);
                     assert!(false);
                 }
             }

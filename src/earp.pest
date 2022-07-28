@@ -187,8 +187,22 @@ procedure = {
 
 /* statements */
 
+let_decl = {
+    (variable ~ (":" ~ check_annotation+)?) | repeater
+}
+
+let_decls = _{
+    ( "(" ~ (let_decl ~ ("," ~ let_decl)*) ~ ")" ) |
+    let_decl
+}
+
+rhs_tuple = {
+    ( "(" ~ (expression ~ ("," ~ expression)*) ~ ")"  ~ ";" ) |
+    expression ~ ";"
+}
+
 simple_let_statement = { 
-    "let" ~ ((variable ~ (":" ~ check_annotation+)?) | repeater) ~ "=" ~ expression ~ ";"
+    "let" ~ let_decls ~ "=" ~ rhs_tuple
 }
 
 composite_let_arg = {
@@ -197,10 +211,6 @@ composite_let_arg = {
 
 composite_let_list = {
     composite_let_arg ~ ("," ~ composite_let_arg)*
-}
-
-let_proc_call = {
-    "let" ~ "(" ~ composite_let_list ~ ")" ~ "=" ~ func_or_proc_call ~ ";"
 }
 
 modify_proc_call = {
@@ -212,7 +222,6 @@ bare_statement = _{ func_or_proc_call ~ ";" }
 
 inner_block = {
     simple_let_statement |
-    let_proc_call |
     modify_statement |
     modify_proc_call |
     bare_statement |

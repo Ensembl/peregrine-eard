@@ -437,7 +437,6 @@ pub enum PTStatementValue {
     /* instructions */
     LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
     ModifyStatement(Variable,PTExpression),
-    LetProcCall(Vec<PTProcAssignArg>,PTCall),
     ModifyProcCall(Vec<Variable>,PTCall),
     BareCall(PTCall),
 }
@@ -447,9 +446,9 @@ impl PTStatement {
         let pos = (self.file.as_ref().as_slice(),self.line_no);
         let value = match self.value {
             PTStatementValue::LetStatement(lvalues,rvalues) => {
-                let count_repeats = lvalues.iter().map(|x| x.is_repeater()).count();
+                let count_repeats = lvalues.iter().filter(|x| x.is_repeater()).count();
                 if count_repeats > 1 {
-                    return Err("only one repeat permitted per statement".to_string());
+                    return Err(format!("only one repeat permitted per statement"));
                 }
                 let mut allow_repeat = count_repeats > 0;
                 let mut exprs = vec![];
@@ -525,22 +524,15 @@ impl PTStatement {
             PTStatementValue::Code(c) => { c.build(bt,bc)?; },
 
             PTStatementValue::LetStatement(vv,xx) => {
+                // XXX or multi-return proc
                 if vv.len() != xx.len() {
-                    return Err(format!("let tuples differ in length"));
+                    //return Err(format!("let tuples differ in length"));
                 }
                 for (v,x) in vv.iter().zip(xx.iter()) {
                     v.declare(bt,bc)?;
                 }
                 for (v,x) in vv.iter().zip(xx.iter()) {
                     v.checks(bt,bc)?;
-                }
-            },
-            PTStatementValue::LetProcCall(args,x) => {
-                for arg in args {
-                    arg.declare(bt,bc)?;
-                }
-                for arg in args {
-                   arg.checks(bt,bc)?;
                 }
             },
             PTStatementValue::ModifyProcCall(_,_) => {},

@@ -300,13 +300,6 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn let_proc_call(input: Node) -> PestResult<PTStatementValue> {
-        Ok(match_nodes!(input.into_children();
-            [composite_let_list(c),func_or_proc_call(x)] =>
-                PTStatementValue::LetProcCall(c,x)
-        ))
-    }
-
     fn modify_proc_call(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
             [variable(v)..,func_or_proc_call(x)] =>
@@ -314,12 +307,27 @@ impl EarpParser {
         ))
     }
 
+    fn let_decl(input: Node) -> PestResult<PTLetAssign> {
+        Ok(match_nodes!(input.into_children();
+            [variable(v),check_annotation(c)..] =>
+                PTLetAssign::Variable(v,c.collect()),
+            [repeater(v)] =>
+                PTLetAssign::Repeater(v)
+        ))
+    }
+
+    fn rhs_tuple(input: Node) -> PestResult<Vec<PTExpression>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::expression(child)?);
+        }
+        Ok(out)
+    }
+
     fn simple_let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-            [variable(v),check_annotation(c)..,expression(x)] =>
-                PTStatementValue::LetStatement(vec![PTLetAssign::Variable(v,c.collect())],vec![x]),
-            [repeater(v),expression(x)] =>
-                PTStatementValue::LetStatement(vec![PTLetAssign::Repeater(v)],vec![x])
+            [let_decl(d)..,rhs_tuple(t)] =>
+                PTStatementValue::LetStatement(d.collect(),t),
         ))
     }
 
@@ -457,7 +465,6 @@ impl EarpParser {
         let context = input.user_data().context;
         let value = match_nodes!(input.into_children();
             [simple_let_statement(s)] => s,
-            [let_proc_call(s)] => s,
             [modify_proc_call(s)] => s,
             [modify_statement(s)] => s,
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),

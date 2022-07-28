@@ -514,32 +514,36 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
 >> parse strip
 
 [
-    PTStatement {
-        value: LetProcCall([
+    PTStatement{
+        value: LetStatement([
             Variable(
-                Variable{prefix:None,name:"x"},
-                [
+                Variable{prefix:None,name:"x"},[
                     Check{check_type:Length,name:"w"},
                     Check{check_type:Sum,name:"ww"}
                 ]
             ),
             Variable(
-                Variable{prefix:None,name:"y"},[
-                ]
+                Variable{prefix:None,name:"y"},[]
             ),
             Variable(
-                Variable{prefix:None,name:"z"},[                       
-                ]
+                Variable{prefix:None,name:"z"},[]
             )
         ],
-        PTCall{name:"c",args:[
-            Expression(Variable(Variable{prefix:None,name:"a"})),
-            Expression(Variable(Variable{prefix:None,name:"b"})),
-            Expression(Variable(Variable{prefix:None,name:"c"}))
-        ],is_macro:false}),
-        file:["test"],
-        line_no:2,
-        context: 1
+        [
+            Call(PTCall{
+                name:"c",
+                args:[
+                    Expression(Variable(Variable{prefix:None,name:"a"})),
+                    Expression(Variable(Variable{prefix:None,name:"b"})),
+                    Expression(Variable(Variable{prefix:None,name:"c"}))
+                ],
+                is_macro:false
+            })
+        ]
+    ),
+    file:["test"],
+    line_no:2,
+    context:1
     }
 ]
 

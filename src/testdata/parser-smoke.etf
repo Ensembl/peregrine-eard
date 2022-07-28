@@ -326,8 +326,8 @@ gn.tr_count = check!(gn.tr_count + 1);
 [
     PTStatement {
         value: ModifyStatement(
-            PTVariable { prefix: Some("gn"), name: "tr_count" },
-            Call(PTCall { 
+            [PTVariable { prefix: Some("gn"), name: "tr_count" }],
+            [Call(PTCall { 
                 name: "check",
                 args: [
                     Expression(Infix(
@@ -337,7 +337,7 @@ gn.tr_count = check!(gn.tr_count + 1);
                     ))
                 ],
                 is_macro: true 
-            })
+            })]
         ),
         file: ["test"],
         line_no: 2,

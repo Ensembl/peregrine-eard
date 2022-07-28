@@ -436,7 +436,7 @@ pub enum PTStatementValue {
 
     /* instructions */
     LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
-    ModifyStatement(Variable,PTExpression),
+    ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     ModifyProcCall(Vec<Variable>,PTCall),
     BareCall(PTCall),
 }
@@ -457,8 +457,12 @@ impl PTStatement {
                 }
                 PTStatementValue::LetStatement(lvalues,exprs)
             },
-            PTStatementValue::ModifyStatement(lvalue,rvalue) => {
-                PTStatementValue::ModifyStatement(lvalue,rvalue.transform(transformer,pos,self.context,None)?)
+            PTStatementValue::ModifyStatement(lvalues,mut rvalues) => {
+                let context = self.context.clone();
+                let rvalues = rvalues.drain(..).map(|x| 
+                    x.transform(transformer,pos,context,None)
+                ).collect::<Result<_,_>>()?;
+                PTStatementValue::ModifyStatement(lvalues,rvalues)
             },
             PTStatementValue::BareCall(call) => {
                 if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {

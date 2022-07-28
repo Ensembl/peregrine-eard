@@ -285,28 +285,6 @@ impl EarpParser {
     fn arg_total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
     fn arg_ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
 
-    fn composite_let_arg(input: Node) -> PestResult<PTProcAssignArg> {
-        Ok(match_nodes!(input.into_children();
-            [variable(v),check_annotation(c)..] => PTProcAssignArg::Variable(v,c.collect()),
-            [bundle(b)] => PTProcAssignArg::Bundle(b)
-        ))
-    }
-
-    fn composite_let_list(input: Node) -> PestResult<Vec<PTProcAssignArg>> {
-        let mut out = vec![];
-        for child in input.into_children() {
-            out.push(Self::composite_let_arg(child)?);
-        }
-        Ok(out)
-    }
-
-    fn modify_proc_call(input: Node) -> PestResult<PTStatementValue> {
-        Ok(match_nodes!(input.into_children();
-            [variable(v)..,func_or_proc_call(x)] =>
-                PTStatementValue::ModifyProcCall(v.collect(),x)
-        ))
-    }
-
     fn let_decl(input: Node) -> PestResult<PTLetAssign> {
         Ok(match_nodes!(input.into_children();
             [variable(v),check_annotation(c)..] =>
@@ -324,7 +302,7 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn simple_let_statement(input: Node) -> PestResult<PTStatementValue> {
+    fn let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
             [let_decl(d)..,rhs_tuple(t)] =>
                 PTStatementValue::LetStatement(d.collect(),t),
@@ -333,8 +311,8 @@ impl EarpParser {
 
     fn modify_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-          [variable(v),expression(x)] => {
-              PTStatementValue::ModifyStatement(v,x)
+          [variable(v)..,expression(x)] => {
+              PTStatementValue::ModifyStatement(v.collect(),vec![x])
           }
         ))
     }
@@ -464,8 +442,7 @@ impl EarpParser {
         let line_no = input.as_span().start_pos().line_col().0;
         let context = input.user_data().context;
         let value = match_nodes!(input.into_children();
-            [simple_let_statement(s)] => s,
-            [modify_proc_call(s)] => s,
+            [let_statement(s)] => s,
             [modify_statement(s)] => s,
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
             [macro_call(c)] => PTStatementValue::BareCall(c)

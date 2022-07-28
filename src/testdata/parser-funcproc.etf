@@ -486,8 +486,8 @@ procedure x(a, b: length(?X...), *c) {
             block: [
                 PTStatement {
                     value: ModifyStatement(
-                        Variable{prefix:Some("c"),name:"x"},
-                        Constant(Number(1.0))
+                        [Variable{prefix:Some("c"),name:"x"}],
+                        [Constant(Number(1.0))]
                     ),
                     file: ["test"],
                     line_no: 3,
@@ -558,23 +558,24 @@ Procedure return (modify)
 >> parse strip
 
 [
-    PTStatement{value:ModifyProcCall(
+    PTStatement{value:ModifyStatement(
         [
             Variable{prefix:None,name:"x"},
             Variable{prefix:None,name:"y"},
             Variable{prefix:None,name:"z"}
-        ],
-        PTCall {
-            name: "c",
-            args:[
-                Expression(Variable(Variable{prefix:None,name:"a"})),
-                Expression(Variable(Variable{prefix:None,name:"b"})),
-                Expression(Variable(Variable{prefix:None,name:"c"}))
-            ],
-            is_macro:false
-        }),
-        file: ["test"],
-        line_no:2,
-        context: 1
-    }
+        ],[
+            Call(PTCall{
+                name: "c",
+                args:[
+                    Expression(Variable(Variable{prefix:None,name:"a"})),
+                    Expression(Variable(Variable{prefix:None,name:"b"})),
+                    Expression(Variable(Variable{prefix:None,name:"c"}))
+                ],
+                is_macro:false
+            })
+        ]
+    ),
+    file:["test"],
+    line_no:2,
+    context:1}
 ]

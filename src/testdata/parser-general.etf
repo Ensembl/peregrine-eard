@@ -143,8 +143,8 @@ x = [4,5,6];
     },
     PTStatement {
         value: ModifyStatement(
-            Variable{prefix:None,name:"x"},
-            FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])
+            [Variable{prefix:None,name:"x"}],
+            [FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])]
         ),
         file: ["test"],
         line_no: 3,

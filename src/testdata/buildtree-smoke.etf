@@ -20,7 +20,7 @@ let z : length(y) = x+y;
 test([z+1,...],[x-1,y+1]);
 let (a,b) = test(6);
 
->> built strip
+>> xbuilt strip
 
 
 BuildTree {

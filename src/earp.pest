@@ -201,29 +201,22 @@ rhs_tuple = {
     expression ~ ";"
 }
 
-simple_let_statement = { 
+let_statement = { 
     "let" ~ let_decls ~ "=" ~ rhs_tuple
 }
 
-composite_let_arg = {
-    (variable ~ (":" ~ check_annotation+)?) | bundle
+modify_lvalue = _{
+    ( "(" ~ ( variable ~ ("," ~ variable)* ) ~ ")" ) |
+    variable
 }
 
-composite_let_list = {
-    composite_let_arg ~ ("," ~ composite_let_arg)*
-}
+modify_statement = { modify_lvalue ~ "=" ~ expression ~ ";" }
 
-modify_proc_call = {
-    "(" ~ (variable ~ ("," ~ variable)*) ~ ")" ~ "=" ~ func_or_proc_call ~ ";"
-}
-
-modify_statement = { variable ~ "=" ~ expression ~ ";" }
 bare_statement = _{ func_or_proc_call ~ ";" }
 
 inner_block = {
-    simple_let_statement |
+    let_statement |
     modify_statement |
-    modify_proc_call |
     bare_statement |
     (macro_call ~ ";")
 }

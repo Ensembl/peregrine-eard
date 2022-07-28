@@ -311,8 +311,8 @@ impl EarpParser {
 
     fn modify_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-          [variable(v)..,expression(x)] => {
-              PTStatementValue::ModifyStatement(v.collect(),vec![x])
+          [variable(v)..,rhs_tuple(t)] => {
+              PTStatementValue::ModifyStatement(v.collect(),t)
           }
         ))
     }

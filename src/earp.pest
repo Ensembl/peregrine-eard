@@ -210,7 +210,7 @@ modify_lvalue = _{
     variable
 }
 
-modify_statement = { modify_lvalue ~ "=" ~ expression ~ ";" }
+modify_statement = { modify_lvalue ~ "=" ~ rhs_tuple }
 
 bare_statement = _{ func_or_proc_call ~ ";" }
 

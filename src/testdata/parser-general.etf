@@ -224,3 +224,30 @@ let (a,b,c) = (x,y,z);
         context:1
     }
 ]
+
+>> test
+
+Multiple modify
+
+>> input
+
+(a,b,c) = (x,y,z);
+
+>> parse strip
+
+[
+    PTStatement{
+        value:ModifyStatement([
+            Variable{prefix:None,name:"a"},
+            Variable{prefix:None,name:"b"},
+            Variable{prefix:None,name:"c"}
+        ],[
+            Variable(Variable{prefix:None,name:"x"}),
+            Variable(Variable{prefix:None,name:"y"}),
+            Variable(Variable{prefix:None,name:"z"})
+        ]),
+        file:["test"],
+        line_no:2,
+        context:1
+    }
+]

@@ -17,12 +17,14 @@ export function first(a: seq(?X)) -> ?X {
             name: "first",
             modifiers: [Export],
             args: [
-                Named(PTFuncProcNamedArgument{
+                Normal(PTTypedArgument{
                     id:"a",
-                    arg_types:[
-                        SequenceWildcard("X")
-                    ],
-                    checks:[]
+                    typespec:ArgTypeSpec{
+                        arg_types: [
+                            SequenceWildcard("X")
+                        ],
+                        checks:[]
+                    }
                 })
             ],
             block: [
@@ -39,7 +41,7 @@ export function first(a: seq(?X)) -> ?X {
                     context: 1
                 }
             ],
-            value: Expression(Call(PTCall{
+            value: Normal(Call(PTCall{
                 name: "entry",
                 args: [
                     Expression(Variable(Variable{prefix:None,name:"a"})),
@@ -47,7 +49,7 @@ export function first(a: seq(?X)) -> ?X {
                 ],
                 is_macro: false
             })),
-            value_type: Some(PTFuncProcAnonArgument{arg_types:[Wildcard("X")],checks:[]})
+            value_type: Some(ArgTypeSpec{arg_types:[Wildcard("X")],checks:[]})
         }),
         file: ["test"],
         line_no: 2,
@@ -73,29 +75,34 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             name: "test",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{
+                Normal(PTTypedArgument{
                     id: "a",
-                    arg_types: [
-                        Sequence(Number),
-                        Atomic(Number),
-                        Atomic(Boolean)
-                    ],
-                    checks: [
-                        Check{check_type:Length,name:"X"},
-                        Check{check_type:Reference,name:"Y"}
-                    ]
+                    typespec:ArgTypeSpec{
+                        arg_types: [
+                            Sequence(Number),
+                            Atomic(Number),
+                            Atomic(Boolean)
+                        ],
+                        checks: [
+                            Check{check_type:Length,name:"X"},
+                            Check{check_type:Reference,name:"Y"}
+                        ]
+                    }
                 }),
-                Named(PTFuncProcNamedArgument{
+                Normal(PTTypedArgument{
                     id: "b",
-                    arg_types:[
-                        SequenceWildcard("Z")
-                    ],
-                    checks: []
+                    typespec:ArgTypeSpec{
+                        arg_types: [
+                            SequenceWildcard("Z")
+                        ],
+                        checks: [
+                        ]
+                    }
                 })
             ],
             block: [],
-            value: Expression(Constant(Number(42.0))),
-            value_type: Some(PTFuncProcAnonArgument{
+            value: Normal(Constant(Number(42.0))),
+            value_type: Some(ArgTypeSpec{
                 arg_types:[SequenceWildcard("Z")],
                 checks: [Check{check_type:Reference,name:"X"}]
             })
@@ -137,10 +144,15 @@ function inc(a) {
             name: "inc",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]})
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],checks:[]
+                    }
+                })
             ],
             block: [],
-            value: Expression(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
+            value: Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
             value_type: None
         }),
         file: ["test"],
@@ -167,14 +179,16 @@ function more(a: number length(?X)) {
             name: "more",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{
+                Normal(PTTypedArgument{
                     id: "a",
-                    arg_types: [Atomic(Number)],
-                    checks: [Check{check_type:Length,name:"X"}]
+                    typespec:ArgTypeSpec{
+                        arg_types: [Atomic(Number)],
+                        checks: [Check{check_type:Length,name:"X"}]
+                    }
                 })
             ],
             block: [],
-            value: Expression(Constant(Number(3.0))),
+            value: Normal(Constant(Number(3.0))),
             value_type: None
         }),
         file: ["test"],
@@ -240,7 +254,7 @@ function x() { 42 }
             modifiers: [],
             args: [],
             block: [],
-            value: Expression(Constant(Number(42.0))),
+            value: Normal(Constant(Number(42.0))),
             value_type: None
         }),
         file: ["test"],
@@ -268,36 +282,48 @@ procedure x(a: number, b: number) -> (number,number) {
         value: ProcDef(PTProcDef{
             name: "x",
             modifiers: [],
-            args:[
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+            args: [
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                })
             ],
             block:[
-                PTStatement {
-                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
-                    file: ["test"],
-                    line_no: 3,
-                    context: 1
+                PTStatement{
+                    value:BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
+                    file:["test"],
+                    line_no:3,
+                    context:1
                 },
-                PTStatement {
-                    value: BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
-                    file: ["test"],
-                    line_no: 4,
-                    context: 1
+                PTStatement{
+                    value:BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
+                    file:["test"],
+                    line_no:4,
+                    context:1
                 }
             ],
-            ret: Named([
-                Variable(Variable{prefix:None,name:"b"}),
-                Variable(Variable{prefix:None,name:"a"})
-            ]),
+            ret: [
+                Normal(Variable(Variable{prefix:None,name:"b"})),
+                Normal(Variable(Variable{prefix:None,name:"a"}))
+            ],
             ret_type: Some([
-                PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]},
-                PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}
+                ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]},
+                ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}
             ])
         }),
-        file: ["test"],
-        line_no: 2,
-        context: 1
+        file:["test"],
+        line_no:2,
+        context:1
     }
 ]
 
@@ -333,14 +359,26 @@ procedure x(a: number, b: number) -> (number) {
             name: "x",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                        }
+                })
             ],
             block: [],
-            ret: Named([
-                Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"}))
-            ]),
-            ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
+            ret: [
+                Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
+            ],
+            ret_type: Some([ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}])
         }),
         file: ["test"],
         line_no: 2,
@@ -366,14 +404,26 @@ procedure x(a: number, b: number) -> number {
             name: "x",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                })
             ],
             block: [],
-            ret: Named([
-                Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"}))
-            ]),
-            ret_type: Some([PTFuncProcAnonArgument{arg_types:[Atomic(Number)],checks:[]}])
+            ret: [
+                Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
+            ],
+            ret_type: Some([ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}])
         }),
         file: ["test"],
         line_no: 2,
@@ -398,11 +448,23 @@ procedure x(a: number, b: number) {
             name: "x",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[Atomic(Number)],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[Atomic(Number)],checks:[]})
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[Atomic(Number)],
+                        checks:[]
+                    }
+                })
             ],
             block: [],
-            ret: Named([]),
+            ret: [],
             ret_type: None
         }),
         file: ["test"],
@@ -428,13 +490,25 @@ procedure x(a, b: length(?X...)) {
             name: "x",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
-                    Check{check_type:LengthOrInfinite,name:"X"}
-                ]})
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[
+                            Check{check_type:LengthOrInfinite,name:"X"}
+                        ]
+                    }
+                })
             ],
             block: [],
-            ret: Named([]),
+            ret: [],
             ret_type: None
         }),
         file: ["test"],
@@ -460,6 +534,60 @@ expected EOI or block
 
 >> test
 
+Procedures, no return
+
+>> input
+
+procedure x(a, b: length(?X...), *c) {
+    c.x = 1;
+}
+
+>> parse strip
+
+[
+    PTStatement {
+        value: ProcDef(PTProcDef{
+            name:"x",
+            modifiers:[],
+            args:[
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[Check{check_type:LengthOrInfinite,name:"X"}]
+                    }
+                }),
+                Bundle("c")
+            ],
+            block:[
+                PTStatement{
+                    value:ModifyStatement(
+                        [Variable{prefix:Some("c"),name:"x"}],
+                        [Constant(Number(1.0))]
+                    ),
+                    file:["test"],
+                    line_no:3,
+                    context:1
+                }
+            ],
+            ret: [],
+            ret_type:None
+        }),
+        file:["test"],
+        line_no:2,
+        context:1
+    }
+]
+
+>> test
+
 Procedures, bundle return
 
 >> input
@@ -477,10 +605,22 @@ procedure x(a, b: length(?X...), *c) {
             name: "x",
             modifiers: [],
             args: [
-                Named(PTFuncProcNamedArgument{id:"a",arg_types:[],checks:[]}),
-                Named(PTFuncProcNamedArgument{id:"b",arg_types:[],checks:[
-                    Check{check_type:LengthOrInfinite,name:"X"}
-                ]}),
+                Normal(PTTypedArgument{
+                    id:"a",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[]
+                    }
+                }),
+                Normal(PTTypedArgument{
+                    id:"b",
+                    typespec:ArgTypeSpec{
+                        arg_types:[],
+                        checks:[
+                            Check{check_type:LengthOrInfinite,name:"X"}
+                        ]
+                    }
+                }),
                 Bundle("c")
             ],
             block: [
@@ -494,7 +634,7 @@ procedure x(a, b: length(?X...), *c) {
                     context: 1
                 }
             ],
-            ret: Bundle("c"),
+            ret: [Bundle("c")],
             ret_type: None
         }),
         file: ["test"],

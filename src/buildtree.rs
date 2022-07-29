@@ -1,11 +1,6 @@
 use std::{sync::Arc, collections::{HashMap, BTreeMap}};
 
-use crate::model::{CodeModifier, Variable, Check, CallArg, Constant};
-
-#[derive(Debug,Clone)]
-pub struct BTLetAssign {
-
-}
+use crate::model::{CodeModifier, Variable, Check, CallArg, Constant, ArgTypeSpec};
 
 #[derive(Debug,Clone)]
 pub enum BTExpression {
@@ -71,11 +66,18 @@ impl BTCodeDefinition {
     }
 }
 
+struct CurrentDefinition {
+    block: Vec<BTStatement>,
+    name_context: Option<usize>,
+    name: String
+}
+
 pub struct BuildContext {
     location: (Arc<Vec<String>>,usize),
     file_context: usize,
     defnames: BTreeMap<(Option<usize>,String),usize>,
-    next_register: usize
+    next_register: usize,
+    code_target: Option<CurrentDefinition>
 }
 
 impl BuildContext {
@@ -84,7 +86,8 @@ impl BuildContext {
             location: (Arc::new(vec!["*anon*".to_string()]),0),
             file_context: 0,
             defnames: BTreeMap::new(),
-            next_register: 0
+            next_register: 0,
+            code_target: None
         }
     }
 
@@ -114,13 +117,31 @@ impl BuildContext {
         self.next_register += 1;
         self.next_register
     }
+
+    pub(crate) fn add_statement(&self, bt: &mut BuildTree, value: BTStatementValue) -> Result<(),String> {
+        let stmt = BTStatement {
+            value,
+            file: self.location.0.clone(),
+            line_no: self.location.1
+        };
+        bt.statements.push(stmt);
+        Ok(())
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct BTFuncProcDefinition {
+//    pub args: Vec<OrBundle<PTTypedArgument>>,
+//    pub(crate) block: Vec<BTStatement>,
+//    pub ret: Vec<OrBundle<PTExpression>>,
+    pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
 }
 
 #[derive(Debug,Clone)]
 pub enum BTDefinition {
     Code(BTCodeDefinition),
-    Func(),
-    Proc()
+    Func(BTFuncProcDefinition),
+    Proc(BTFuncProcDefinition)
 }
 
 #[derive(Debug,Clone)]
@@ -134,47 +155,34 @@ impl BuildTree {
         BuildTree { statements: vec![], definitions: vec![] }
     }
 
-    fn add_statement(&mut self, value: BTStatementValue, bc: &BuildContext) -> Result<(),String> {
-        let stmt = BTStatement {
-            value,
-            file: bc.location.0.clone(),
-            line_no: bc.location.1
-        };
-        self.statements.push(stmt);
-        Ok(())
-    }
-
-    pub(crate) fn define(&mut self, name: &str, definition: BTDefinition, bc: &mut BuildContext, export: bool) -> Result<(),String> {
+    pub(crate) fn define(&mut self, name: &str, definition: BTDefinition, bc: &mut BuildContext, export: bool) -> Result<BTStatementValue,String> {
         let id = self.definitions.len();
         let context = if export { None } else { Some(bc.file_context) };
         bc.defnames.insert((context,name.to_string()),id);
         self.definitions.push(definition);
-        self.add_statement(BTStatementValue::Define(id),bc)?;
-        Ok(())
+        Ok(BTStatementValue::Define(id))
     }
 
-    pub(crate) fn declare(&mut self, declaration: BTDeclare, bc: &BuildContext) -> Result<(),String> {
-        self.add_statement(BTStatementValue::Declare(declaration),bc)?;
-        Ok(())
+    pub(crate) fn declare(&mut self, declaration: BTDeclare, bc: &BuildContext) -> Result<BTStatementValue,String> {
+        Ok(BTStatementValue::Declare(declaration))
     }
 
-    pub(crate) fn check(&mut self, variable: &Variable, check: &Check, bc: &BuildContext) -> Result<(),String> {
-        self.add_statement(BTStatementValue::Check(variable.clone(),check.clone()),bc)?;
-        Ok(())
+    pub(crate) fn check(&mut self, variable: &Variable, check: &Check, bc: &BuildContext) -> Result<BTStatementValue,String> {
+        Ok(BTStatementValue::Check(variable.clone(),check.clone()))
     }
 
-    pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<CallArg<BTExpression>>, rets: Option<Vec<BTLValue>>, bc: &BuildContext) -> Result<(),String> {
+    pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<CallArg<BTExpression>>, rets: Option<Vec<BTLValue>>, bc: &BuildContext) -> Result<BTStatementValue,String> {
         let call = match defn.map(|x| &self.definitions[x]) {
             Some(BTDefinition::Code(_)) => {
                 todo!()
             },
-            Some(BTDefinition::Func()) => {
+            Some(BTDefinition::Func(_)) => {
                 BTProcCall {
                     proc_index: None,
                     args, rets
                 }
             },
-            Some(BTDefinition::Proc()) => {
+            Some(BTDefinition::Proc(_)) => {
                 BTProcCall {
                     proc_index: defn,
                     args, rets
@@ -187,13 +195,12 @@ impl BuildTree {
                 }
             }
         };
-        self.add_statement(BTStatementValue::Statement(call),bc)?;
-        Ok(())
+        Ok(BTStatementValue::Statement(call))
     }
 
     pub(crate) fn function_call(&self, defn: usize, args: Vec<CallArg<BTExpression>>, bc: &BuildContext) -> Result<BTFuncCall,String> {
         Ok(match &self.definitions[defn] {
-            BTDefinition::Func() => {
+            BTDefinition::Func(_) => {
                 BTFuncCall {
                     func_index: defn,
                     args

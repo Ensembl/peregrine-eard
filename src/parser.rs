@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{PTAtomicTypeSpec, PTTypeSpec, PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncProcArgument, PTFuncProcNamedArgument, PTFuncDef, PTFuncProcAnonArgument, PTProcReturn, PTProcDef, PTFuncValue, PTStatement, PTStatementValue, PTLetAssign, PTProcAssignArg }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant}};
+use crate::{parsetree::{ PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign, PTTypedArgument }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -178,35 +178,35 @@ impl EarpParser {
         input.as_str()[1..].parse::<usize>().map_err(|e| input.error(e))
     }
 
-    fn arg_atomic_type(input: Node) -> PestResult<PTAtomicTypeSpec> {
+    fn arg_atomic_type(input: Node) -> PestResult<AtomicTypeSpec> {
         match input.as_str() {
-            "string" => Ok(PTAtomicTypeSpec::String),
-            "number" => Ok(PTAtomicTypeSpec::Number),
-            "boolean" => Ok(PTAtomicTypeSpec::Boolean),
+            "string" => Ok(AtomicTypeSpec::String),
+            "number" => Ok(AtomicTypeSpec::Number),
+            "boolean" => Ok(AtomicTypeSpec::Boolean),
             _ => {
                 let inner = input.into_children().next().unwrap();
                 Ok(match inner.as_rule() {
-                    Rule::identifier => PTAtomicTypeSpec::Handle(inner.as_str().to_string()),
+                    Rule::identifier => AtomicTypeSpec::Handle(inner.as_str().to_string()),
                     _ => unreachable!()
                 })
             }
         }
     }
 
-    fn arg_seq_type(input: Node) -> PestResult<PTAtomicTypeSpec> {
+    fn arg_seq_type(input: Node) -> PestResult<AtomicTypeSpec> {
         Self::arg_atomic_type(input.into_children().next().unwrap())
     }
 
-    fn arg_type(input: Node) -> PestResult<PTTypeSpec> {
+    fn arg_type(input: Node) -> PestResult<TypeSpec> {
         Ok(match_nodes!(input.into_children();
-          [arg_atomic_type(a)] => PTTypeSpec::Atomic(a),
-          [arg_seq_type(s)] => PTTypeSpec::Sequence(s),
-          [arg_seq_wild_type(s)] => PTTypeSpec::SequenceWildcard(s),
-          [arg_wild_type(s)] => PTTypeSpec::Wildcard(s)
+          [arg_atomic_type(a)] => TypeSpec::Atomic(a),
+          [arg_seq_type(s)] => TypeSpec::Sequence(s),
+          [arg_seq_wild_type(s)] => TypeSpec::SequenceWildcard(s),
+          [arg_wild_type(s)] => TypeSpec::Wildcard(s)
         ))
     }
 
-    fn arg_types(input: Node) -> PestResult<Vec<PTTypeSpec>> {
+    fn arg_types(input: Node) -> PestResult<Vec<TypeSpec>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::arg_type(child)?);
@@ -482,32 +482,35 @@ impl EarpParser {
         })
     }
 
-    fn funcproc_arg_extras(input: Node) -> PestResult<(Vec<PTTypeSpec>,Vec<Check>)> {
+    fn funcproc_arg_extras(input: Node) -> PestResult<ArgTypeSpec> {
         Ok(match_nodes!(input.into_children();
-            [arg_types(block),arg_check(check)..] => (block,check.collect())
+            [arg_types(block),arg_check(checks)..] => ArgTypeSpec {
+                arg_types: block,
+                checks: checks.collect()
+            }
         ))
     }
 
 
-    fn funcproc_arg_named(input: Node) -> PestResult<PTFuncProcNamedArgument> {
+    fn funcproc_arg_named(input: Node) -> PestResult<PTTypedArgument> {
         Ok(match_nodes!(input.into_children();
-            [identifier(id),funcproc_arg_extras((arg_types,checks))] => {
-                PTFuncProcNamedArgument { id, arg_types, checks }
+            [identifier(id),funcproc_arg_extras(typespec)] => {
+                PTTypedArgument { id, typespec }
             },
             [identifier(id)] => {
-                PTFuncProcNamedArgument { id, arg_types: vec![], checks: vec![] }
+                PTTypedArgument { id, typespec: ArgTypeSpec { arg_types: vec![], checks: vec![] } }
             },
         ))
     }
 
-    fn funcproc_arg(input: Node) -> PestResult<PTFuncProcArgument> {
+    fn funcproc_arg(input: Node) -> PestResult<OrBundle<PTTypedArgument>> {
         Ok(match_nodes!(input.into_children();
-            [funcproc_arg_named(arg)] => PTFuncProcArgument::Named(arg),
-            [bundle(prefix)] => PTFuncProcArgument::Bundle(prefix)
+            [funcproc_arg_named(arg)] => OrBundle::Normal(arg),
+            [bundle(prefix)] => OrBundle::Bundle(prefix)
         ))
     }
 
-    fn funcproc_args(input: Node) -> PestResult<Vec<PTFuncProcArgument>> {
+    fn funcproc_args(input: Node) -> PestResult<Vec<OrBundle<PTTypedArgument>>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::funcproc_arg(child)?);
@@ -515,10 +518,10 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn funcproc_return_type(input: Node) -> PestResult<PTFuncProcAnonArgument> {
+    fn funcproc_return_type(input: Node) -> PestResult<ArgTypeSpec> {
         Ok(match_nodes!(input.into_children();
             [arg_types(t),arg_check(c)..] => {
-                PTFuncProcAnonArgument {
+                ArgTypeSpec {
                     arg_types: t,
                     checks: c.collect()
                 }
@@ -526,17 +529,17 @@ impl EarpParser {
         ))
     }
 
-    fn function_return(input: Node) -> PestResult<Option<PTFuncProcAnonArgument>> {
+    fn function_return(input: Node) -> PestResult<Option<ArgTypeSpec>> {
         Ok(match_nodes!(input.into_children();
             [funcproc_return_type(t)] => Some(t),
             [] => None
         ))
     }
 
-    fn function_value(input: Node) -> PestResult<PTFuncValue> {
+    fn function_value(input: Node) -> PestResult<OrBundle<PTExpression>> {
         Ok(match_nodes!(input.into_children();
-            [expression(x)] => PTFuncValue::Expression(x),
-            [bundle(x)] => PTFuncValue::Bundle(x)
+            [expression(x)] => OrBundle::Normal(x),
+            [bundle(x)] => OrBundle::Bundle(x)
         ))
     }
 
@@ -554,23 +557,23 @@ impl EarpParser {
         ))
     }
 
-    fn procedure_return(input: Node) -> PestResult<Vec<PTFuncProcAnonArgument>> {
+    fn procedure_return(input: Node) -> PestResult<Vec<ArgTypeSpec>> {
         Ok(match_nodes!(input.into_children();
             [funcproc_return_type(t)..] => t.collect()
         ))
     }
 
-    fn procedure_return_option(input: Node) -> PestResult<Option<Vec<PTFuncProcAnonArgument>>> {
+    fn procedure_return_option(input: Node) -> PestResult<Option<Vec<ArgTypeSpec>>> {
         Ok(match_nodes!(input.into_children();
             [procedure_return(t)] => Some(t),
             [] => None
         ))
     }
 
-    fn procedure_expression(input: Node) -> PestResult<PTProcReturn> {
+    fn procedure_expression(input: Node) -> PestResult<Vec<OrBundle<PTExpression>>> {
         Ok(match_nodes!(input.into_children();
-            [expression(x)..] => PTProcReturn::Named(x.collect()),
-            [bundle(b)] => PTProcReturn::Bundle(b)
+            [expression(x)..] => x.map(|x| OrBundle::Normal(x)).collect(),
+            [bundle(b)] => vec![OrBundle::Bundle(b)]
         ))
     }
 

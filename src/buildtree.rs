@@ -68,8 +68,25 @@ impl BTCodeDefinition {
 
 struct CurrentDefinition {
     block: Vec<BTStatement>,
-    name_context: Option<usize>,
-    name: String
+    name: String,
+    export: bool,
+    variety: BTDefinitionVariety,
+    ret_type: Option<Vec<ArgTypeSpec>>,
+    code_modifiers: Vec<CodeModifier>, // code only
+}
+
+impl CurrentDefinition {
+    fn to_funcproc(&self) -> BTFuncProcDefinition {
+        BTFuncProcDefinition {
+            ret_type: self.ret_type.clone()
+        }
+    }
+
+    fn to_code(&self) -> BTCodeDefinition {
+        BTCodeDefinition {
+            modifiers: self.code_modifiers.clone()
+        }
+    }
 }
 
 pub struct BuildContext {
@@ -89,6 +106,45 @@ impl BuildContext {
             next_register: 0,
             code_target: None
         }
+    }
+
+    pub fn push_funcproc_target(&mut self, variety: BTDefinitionVariety, name: &str, 
+            ret_type: Option<Vec<ArgTypeSpec>>,
+            export: bool) {
+        self.code_target = Some(CurrentDefinition {
+            name: name.to_string(),
+            export, variety,
+            block: vec![],
+            ret_type,
+            code_modifiers: vec![]
+        });
+    }
+
+    pub fn push_code_target(&mut self, name: &str, 
+            modifiers: Vec<CodeModifier>) {
+        self.code_target = Some(CurrentDefinition {
+            name: name.to_string(),
+            export: false,
+            variety: BTDefinitionVariety::Code,
+            block: vec![],
+            ret_type: None,
+            code_modifiers: modifiers
+        });
+    }
+
+    pub fn pop_target(&mut self, bt: &mut BuildTree) -> Result<(),String> {
+        let ctx = self.code_target.take().expect("pop without push");
+        let fpdefn = BTFuncProcDefinition {
+            ret_type: ctx.ret_type.clone()
+        };
+        let defn = match &ctx.variety {
+            BTDefinitionVariety::Code => BTDefinition::Code(ctx.to_code()),
+            BTDefinitionVariety::Func => BTDefinition::Func(ctx.to_funcproc()),
+            BTDefinitionVariety::Proc => BTDefinition::Proc(ctx.to_funcproc())
+        };
+        bt.define(&ctx.name,defn,self,ctx.export)?;
+        self.code_target = None;
+        Ok(())
     }
 
     pub fn set_file_context(&mut self, context: usize) {
@@ -137,6 +193,8 @@ pub struct BTFuncProcDefinition {
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
 }
 
+pub enum BTDefinitionVariety { Code, Func, Proc }
+
 #[derive(Debug,Clone)]
 pub enum BTDefinition {
     Code(BTCodeDefinition),
@@ -155,7 +213,7 @@ impl BuildTree {
         BuildTree { statements: vec![], definitions: vec![] }
     }
 
-    pub(crate) fn define(&mut self, name: &str, definition: BTDefinition, bc: &mut BuildContext, export: bool) -> Result<BTStatementValue,String> {
+    fn define(&mut self, name: &str, definition: BTDefinition, bc: &mut BuildContext, export: bool) -> Result<BTStatementValue,String> {
         let id = self.definitions.len();
         let context = if export { None } else { Some(bc.file_context) };
         bc.defnames.insert((context,name.to_string()),id);

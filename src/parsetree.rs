@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec}};
+use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -64,8 +64,8 @@ pub struct PTCodeBlock {
 
 impl PTCodeBlock {
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let stmt = bt.define(&self.name,BTDefinition::Code(BTCodeDefinition::new(self.modifiers.clone())),bc,false)?;
-        bc.add_statement(bt,stmt)?;
+        bc.push_code_target(&self.name,self.modifiers.clone());
+        bc.pop_target(bt)?;
         Ok(())
     }
 }
@@ -324,12 +324,10 @@ impl PTFuncDef {
 
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         //let block = self.block.iter().map(|x| x.build(bt,bc)).collect::<Result<_,_>>()?;
-        let defn = BTDefinition::Func(BTFuncProcDefinition {
-//            block,
-            ret_type: self.value_type.as_ref().map(|x| vec![x.clone()])
-        });
-        let stmt = bt.define(&self.name,defn,bc,self.modifiers.contains(&FuncProcModifier::Export))?;
-        bc.add_statement(bt,stmt)?;
+        let ret_type = self.value_type.as_ref().map(|x| vec![x.clone()]);
+        let export = self.modifiers.contains(&FuncProcModifier::Export);
+        bc.push_funcproc_target(BTDefinitionVariety::Func,&self.name,ret_type,export);
+        bc.pop_target(bt)?;
         Ok(())
     }
 }
@@ -368,11 +366,9 @@ impl PTProcDef {
     }
 
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let defn = BTDefinition::Func(BTFuncProcDefinition {
-            ret_type: self.ret_type.clone()
-        });
-        let stmt = bt.define(&self.name,defn,bc,self.modifiers.contains(&FuncProcModifier::Export))?;
-        bc.add_statement(bt,stmt)?;
+        let export = self.modifiers.contains(&FuncProcModifier::Export);
+        bc.push_funcproc_target(BTDefinitionVariety::Proc,&self.name,self.ret_type.clone(),export);
+        bc.pop_target(bt)?;
         Ok(())
     }
 }

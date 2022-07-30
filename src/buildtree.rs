@@ -43,6 +43,7 @@ pub enum BTStatementValue {
     Define(usize),
     Declare(BTDeclare),
     Check(Variable,Check),
+    Capture(OrBundle<Variable>),
     Statement(BTProcCall)
 }
 

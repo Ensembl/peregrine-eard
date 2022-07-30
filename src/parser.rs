@@ -251,6 +251,21 @@ impl EarpParser {
         ))
     }
 
+    fn capture(input: Node) -> PestResult<OrBundle<Variable>> {
+        Ok(match_nodes!(input.into_children();
+            [variable(s)] => OrBundle::Normal(s),
+            [bundle(b)] => OrBundle::Bundle(b)
+        ))
+    }
+
+    fn capture_decl(input: Node) -> PestResult<Vec<OrBundle<Variable>>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::capture(child)?);
+        }
+        Ok(out)
+    }
+
     fn macro_call(input: Node) -> PestResult<PTCall> {
         Ok(match_nodes!(input.into_children();
             [macro_identifier(name),argument(args)..] => PTCall { name, args: args.collect(), is_macro: true },
@@ -451,6 +466,7 @@ impl EarpParser {
         let value = match_nodes!(input.into_children();
             [let_statement(s)] => s,
             [modify_statement(s)] => s,
+            [capture_decl(c)] => PTStatementValue::Capture(c),
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
             [macro_call(c)] => PTStatementValue::BareCall(c)
         );

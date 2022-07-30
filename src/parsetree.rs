@@ -401,6 +401,7 @@ pub enum PTStatementValue {
     ProcDef(PTProcDef),
 
     /* instructions */
+    Capture(Vec<OrBundle<Variable>>),
     LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     BareCall(PTCall),
@@ -540,6 +541,12 @@ impl PTStatement {
             PTStatementValue::FuncDef(f) => { f.build(bt,bc)?; },
             PTStatementValue::ProcDef(p) => { p.build(bt,bc)?; }
             PTStatementValue::Code(c) => { c.build(bt,bc)?; },
+
+            PTStatementValue::Capture(vars) => {
+                for v in vars {
+                    bc.add_statement(bt,crate::buildtree::BTStatementValue::Capture(v.clone()))?;
+                }
+            },
 
             PTStatementValue::LetStatement(vv,xx) => {
                 /* Step 1: declare variables */

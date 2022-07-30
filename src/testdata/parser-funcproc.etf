@@ -588,6 +588,81 @@ procedure x(a, b: length(?X...), *c) {
 
 >> test
 
+Captures
+
+>> input
+
+let x = 2;
+let y = 20;
+
+procedure test(a) {
+    capture x,y;
+
+    x+y+1
+}
+
+>> parse strip
+
+[
+    PTStatement{
+        value:LetStatement(
+            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Constant(Number(2.0))]
+        ),
+        file:["test"],
+        line_no:2,
+        context:1
+    },
+    PTStatement{
+        value:LetStatement(
+            [Variable(Variable{prefix:None,name:"y"},[])],
+            [Constant(Number(20.0))]
+        ),
+        file:["test"],
+        line_no:3,
+        context:1
+    },
+    PTStatement{
+        value:ProcDef(PTProcDef{
+            name:"test",
+            modifiers:[],
+            args:[
+                Normal(TypedArgument{id:"a",typespec:ArgTypeSpec{arg_types:[],checks:[]}})
+            ],
+            block:[
+                PTStatement{
+                    value:Capture([
+                        Normal(Variable{prefix:None,name:"x"}),
+                        Normal(Variable{prefix:None,name:"y"})
+                    ]),
+                    file:["test"],
+                    line_no:6,
+                    context:1
+                }
+            ],
+            ret:[
+                Normal(
+                    Infix(
+                        Infix(
+                            Variable(Variable{prefix:None,name:"x"}),
+                            "+",
+                            Variable(Variable{prefix:None,name:"y"})
+                        ),
+                        "+",
+                        Constant(Number(1.0))
+                    )
+                )
+            ],
+            ret_type:None
+        }),
+        file:["test"],
+        line_no:5,
+        context:1
+    }
+]
+
+>> test
+
 Procedures, bundle return
 
 >> input

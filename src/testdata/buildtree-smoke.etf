@@ -5,14 +5,18 @@ Let in PT->BT
 >> input
 
 function __operator_add(x,y) { /* dummy */ 0 }
+function __operator_mul(x,y) { /* dummy */ 0 }
 
-procedure test(x) { ( 42*x, 23*x ) }
+procedure test(x) { 
+    let y = x+1;
+    ( 42*x, 23*y )
+}
 
 let (a,b) = (1+1,2+2);
 let (c,d) = test(6);
 (c,d) = (d,c);
 
->> xbuilt strip
+>> built strip
 
 
 >> test
@@ -26,6 +30,7 @@ function __operator_finseq(x) { /* dummy */ [0,...] }
 procedure __operator_push(x) { /* dummy */ [0,...] }
 function __operator_add(x,y) { /* dummy */ 0 }
 function __operator_sub(x,y) { /* dummy */ 0 }
+function __operator_mul(x,y) { /* dummy */ 0 }
 
 procedure test(x) {
     ( 42*x, 23*x )

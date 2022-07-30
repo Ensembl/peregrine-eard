@@ -70,3 +70,9 @@ pub struct ArgTypeSpec {
     pub arg_types: Vec<TypeSpec>,
     pub checks: Vec<Check>
 }
+
+#[derive(Debug,Clone)]
+pub struct TypedArgument {
+    pub id: String,
+    pub typespec: ArgTypeSpec
+}

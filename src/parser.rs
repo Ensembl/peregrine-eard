@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{ PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign, PTTypedArgument }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec}};
+use crate::{parsetree::{ PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -492,25 +492,25 @@ impl EarpParser {
     }
 
 
-    fn funcproc_arg_named(input: Node) -> PestResult<PTTypedArgument> {
+    fn funcproc_arg_named(input: Node) -> PestResult<TypedArgument> {
         Ok(match_nodes!(input.into_children();
             [identifier(id),funcproc_arg_extras(typespec)] => {
-                PTTypedArgument { id, typespec }
+                TypedArgument { id, typespec }
             },
             [identifier(id)] => {
-                PTTypedArgument { id, typespec: ArgTypeSpec { arg_types: vec![], checks: vec![] } }
+                TypedArgument { id, typespec: ArgTypeSpec { arg_types: vec![], checks: vec![] } }
             },
         ))
     }
 
-    fn funcproc_arg(input: Node) -> PestResult<OrBundle<PTTypedArgument>> {
+    fn funcproc_arg(input: Node) -> PestResult<OrBundle<TypedArgument>> {
         Ok(match_nodes!(input.into_children();
             [funcproc_arg_named(arg)] => OrBundle::Normal(arg),
             [bundle(prefix)] => OrBundle::Bundle(prefix)
         ))
     }
 
-    fn funcproc_args(input: Node) -> PestResult<Vec<OrBundle<PTTypedArgument>>> {
+    fn funcproc_args(input: Node) -> PestResult<Vec<OrBundle<TypedArgument>>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::funcproc_arg(child)?);

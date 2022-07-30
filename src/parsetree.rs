@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDefinition, BTCodeDefinition, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec}};
+use crate::{buildtree::{BuildTree, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -36,12 +36,6 @@ pub struct PTCodeRegisterArgument {
 }
 
 #[derive(Debug,Clone)]
-pub struct PTTypedArgument {
-    pub id: String,
-    pub typespec: ArgTypeSpec
-}
-
-#[derive(Debug,Clone)]
 pub enum PTCodeArgument {
     Register(PTCodeRegisterArgument),
     Constant(Constant)
@@ -65,7 +59,7 @@ pub struct PTCodeBlock {
 impl PTCodeBlock {
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         bc.push_code_target(&self.name,self.modifiers.clone());
-        bc.pop_target(bt)?;
+        bc.pop_target(&[],bt)?;
         Ok(())
     }
 }
@@ -165,7 +159,7 @@ impl PTLetAssign {
         }
     }
 
-    fn declare(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+    fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let stmt = match self {
             PTLetAssign::Variable(var,_) => {
                 bt.declare(BTDeclare::Variable(var.clone()),bc)?
@@ -178,7 +172,7 @@ impl PTLetAssign {
         Ok(())
     }
 
-    fn checks(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+    fn checks(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         match self {
             PTLetAssign::Variable(var,checks) => {
                 for check in checks.iter() {
@@ -193,7 +187,7 @@ impl PTLetAssign {
 }
 
 impl OrBundle<(Variable,Vec<Check>)> {
-    fn declare(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+    fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let declare = match self {
             OrBundle::Normal((v, _)) => BTDeclare::Variable(v.clone()),
             OrBundle::Bundle(b) => BTDeclare::Bundle(b.to_string())
@@ -203,7 +197,7 @@ impl OrBundle<(Variable,Vec<Check>)> {
         Ok(())
     }
 
-    fn checks(&self, bt: &mut BuildTree, bc: &BuildContext) -> Result<(),String> {
+    fn checks(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         match self {
             OrBundle::Normal((var,checks)) => {
                 for check in checks.iter() {
@@ -304,7 +298,7 @@ impl PTExpression {
 pub struct PTFuncDef {
     pub name: String,
     pub modifiers: Vec<FuncProcModifier>,
-    pub args: Vec<OrBundle<PTTypedArgument>>,
+    pub args: Vec<OrBundle<TypedArgument>>,
     pub block: Vec<PTStatement>,
     pub value: OrBundle<PTExpression>,
     pub value_type: Option<ArgTypeSpec>
@@ -323,11 +317,14 @@ impl PTFuncDef {
     }
 
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        //let block = self.block.iter().map(|x| x.build(bt,bc)).collect::<Result<_,_>>()?;
         let ret_type = self.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(BTDefinitionVariety::Func,&self.name,ret_type,export);
-        bc.pop_target(bt)?;
+        bc.push_funcproc_target(BTDefinitionVariety::Func,&self.name,&self.args,ret_type,export);
+        for stmt in &self.block {
+            stmt.build(bt,bc)?;
+        }
+        let expr = self.value.build(bt,bc)?;
+        bc.pop_target(&[expr],bt)?;
         Ok(())
     }
 }
@@ -341,16 +338,23 @@ impl OrBundle<PTExpression> {
             x => x
         })
     }
+
+    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<OrBundle<BTExpression>,String> {
+        Ok(match self {
+            OrBundle::Normal(n) => OrBundle::Normal(n.build(bt,bc)?),
+            OrBundle::Bundle(b) => OrBundle::Bundle(b.clone())
+        })
+    }
 }
 
 #[derive(Debug,Clone)]
 pub struct PTProcDef {
     pub name: String,
     pub modifiers: Vec<FuncProcModifier>,
-    pub args: Vec<OrBundle<PTTypedArgument>>, // y
-    pub block: Vec<PTStatement>, // y
-    pub ret: Vec<OrBundle<PTExpression>>, // y
-    pub ret_type: Option<Vec<ArgTypeSpec>> // y
+    pub args: Vec<OrBundle<TypedArgument>>,
+    pub block: Vec<PTStatement>,
+    pub ret: Vec<OrBundle<PTExpression>>,
+    pub ret_type: Option<Vec<ArgTypeSpec>>
 }
 
 impl PTProcDef {
@@ -367,8 +371,12 @@ impl PTProcDef {
 
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(BTDefinitionVariety::Proc,&self.name,self.ret_type.clone(),export);
-        bc.pop_target(bt)?;
+        bc.push_funcproc_target(BTDefinitionVariety::Proc,&self.name,&self.args,self.ret_type.clone(),export);
+        for stmt in &self.block {
+            stmt.build(bt,bc)?;
+        }
+        let ret = self.ret.iter().map(|x| x.build(bt,bc)).collect::<Result<Vec<_>,_>>()?;
+        bc.pop_target(&ret,bt)?;
         Ok(())
     }
 }

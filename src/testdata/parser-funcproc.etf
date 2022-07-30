@@ -17,7 +17,7 @@ export function first(a: seq(?X)) -> ?X {
             name: "first",
             modifiers: [Export],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types: [
@@ -75,7 +75,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             name: "test",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id: "a",
                     typespec:ArgTypeSpec{
                         arg_types: [
@@ -89,7 +89,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
                         ]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id: "b",
                     typespec:ArgTypeSpec{
                         arg_types: [
@@ -144,7 +144,7 @@ function inc(a) {
             name: "inc",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[],checks:[]
@@ -179,7 +179,7 @@ function more(a: number length(?X)) {
             name: "more",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id: "a",
                     typespec:ArgTypeSpec{
                         arg_types: [Atomic(Number)],
@@ -283,14 +283,14 @@ procedure x(a: number, b: number) -> (number,number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
@@ -359,14 +359,14 @@ procedure x(a: number, b: number) -> (number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
@@ -404,14 +404,14 @@ procedure x(a: number, b: number) -> number {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
@@ -448,14 +448,14 @@ procedure x(a: number, b: number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[Atomic(Number)],
@@ -490,14 +490,14 @@ procedure x(a, b: length(?X...)) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[],
@@ -550,14 +550,14 @@ procedure x(a, b: length(?X...), *c) {
             name:"x",
             modifiers:[],
             args:[
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[],
@@ -605,14 +605,14 @@ procedure x(a, b: length(?X...), *c) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"a",
                     typespec:ArgTypeSpec{
                         arg_types:[],
                         checks:[]
                     }
                 }),
-                Normal(PTTypedArgument{
+                Normal(TypedArgument{
                     id:"b",
                     typespec:ArgTypeSpec{
                         arg_types:[],

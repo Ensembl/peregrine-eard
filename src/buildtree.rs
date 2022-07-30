@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashMap, BTreeMap}};
 
-use crate::model::{CodeModifier, Variable, Check, CallArg, Constant, ArgTypeSpec};
+use crate::model::{CodeModifier, Variable, Check, CallArg, Constant, ArgTypeSpec, OrBundle, TypedArgument};
 
 #[derive(Debug,Clone)]
 pub enum BTExpression {
@@ -70,15 +70,19 @@ struct CurrentDefinition {
     block: Vec<BTStatement>,
     name: String,
     export: bool,
+    args: Vec<OrBundle<TypedArgument>>, // empty for code 
     variety: BTDefinitionVariety,
-    ret_type: Option<Vec<ArgTypeSpec>>,
+    ret_type: Option<Vec<ArgTypeSpec>>, // exactly one for functions, None for code
     code_modifiers: Vec<CodeModifier>, // code only
 }
 
 impl CurrentDefinition {
-    fn to_funcproc(&self) -> BTFuncProcDefinition {
+    fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> BTFuncProcDefinition {
         BTFuncProcDefinition {
-            ret_type: self.ret_type.clone()
+            args: self.args.clone(),
+            ret_type: self.ret_type.clone(),
+            ret: ret.to_vec(),
+            block: self.block.clone()
         }
     }
 
@@ -108,11 +112,13 @@ impl BuildContext {
         }
     }
 
-    pub fn push_funcproc_target(&mut self, variety: BTDefinitionVariety, name: &str, 
+    pub fn push_funcproc_target(&mut self, variety: BTDefinitionVariety, name: &str,
+            args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
             export: bool) {
         self.code_target = Some(CurrentDefinition {
             name: name.to_string(),
+            args: args.to_vec(),
             export, variety,
             block: vec![],
             ret_type,
@@ -124,6 +130,7 @@ impl BuildContext {
             modifiers: Vec<CodeModifier>) {
         self.code_target = Some(CurrentDefinition {
             name: name.to_string(),
+            args: vec![],
             export: false,
             variety: BTDefinitionVariety::Code,
             block: vec![],
@@ -132,15 +139,12 @@ impl BuildContext {
         });
     }
 
-    pub fn pop_target(&mut self, bt: &mut BuildTree) -> Result<(),String> {
+    pub fn pop_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
         let ctx = self.code_target.take().expect("pop without push");
-        let fpdefn = BTFuncProcDefinition {
-            ret_type: ctx.ret_type.clone()
-        };
         let defn = match &ctx.variety {
             BTDefinitionVariety::Code => BTDefinition::Code(ctx.to_code()),
-            BTDefinitionVariety::Func => BTDefinition::Func(ctx.to_funcproc()),
-            BTDefinitionVariety::Proc => BTDefinition::Proc(ctx.to_funcproc())
+            BTDefinitionVariety::Func => BTDefinition::Func(ctx.to_funcproc(ret)),
+            BTDefinitionVariety::Proc => BTDefinition::Proc(ctx.to_funcproc(ret))
         };
         bt.define(&ctx.name,defn,self,ctx.export)?;
         self.code_target = None;
@@ -174,22 +178,26 @@ impl BuildContext {
         self.next_register
     }
 
-    pub(crate) fn add_statement(&self, bt: &mut BuildTree, value: BTStatementValue) -> Result<(),String> {
+    pub(crate) fn add_statement(&mut self, bt: &mut BuildTree, value: BTStatementValue) -> Result<(),String> {
         let stmt = BTStatement {
             value,
             file: self.location.0.clone(),
             line_no: self.location.1
         };
-        bt.statements.push(stmt);
+        if let Some(target) = self.code_target.as_mut() {
+            target.block.push(stmt);
+        } else {
+            bt.statements.push(stmt);
+        }
         Ok(())
     }
 }
 
 #[derive(Debug,Clone)]
 pub struct BTFuncProcDefinition {
-//    pub args: Vec<OrBundle<PTTypedArgument>>,
-//    pub(crate) block: Vec<BTStatement>,
-//    pub ret: Vec<OrBundle<PTExpression>>,
+    pub args: Vec<OrBundle<TypedArgument>>,
+    block: Vec<BTStatement>,
+    ret: Vec<OrBundle<BTExpression>>,
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
 }
 

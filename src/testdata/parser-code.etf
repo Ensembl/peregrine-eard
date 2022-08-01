@@ -13,31 +13,31 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...
 
 [
     PTStatement{
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test",
             arguments: [
-                Register(PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 1,
                     arg_types: [Sequence(Number),Sequence(String)],
                     checks: [Check{check_type:Length,name:"X"}]
                 }),
-                Register(PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 2,
                     arg_types: [Atomic(Boolean)],
                     checks: [Check{check_type:LengthOrInfinite,name:"X"}]
                 })
             ],
             results: [
-                PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 3,
                     arg_types: [Sequence(Boolean)],
                     checks: [Check{check_type:Reference,name:"X"}]
-                },
-                PTCodeRegisterArgument{
+                }),
+                Register(CodeRegisterArgument{
                     reg_id: 5,
                     arg_types: [Atomic(Boolean)],
                     checks:[]
-                }
+                })
             ],
             commands:[
                 Register(4),
@@ -65,10 +65,10 @@ code test(r1: seq(?X)) -> (r2: seq(?X)) {
 
 [
     PTStatement{
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test",
             arguments: [
-                Register(PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 1,
                     arg_types: [
                         SequenceWildcard("X")
@@ -77,13 +77,13 @@ code test(r1: seq(?X)) -> (r2: seq(?X)) {
                 })
             ],
             results: [
-                PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 2,
                     arg_types:[
                         SequenceWildcard("X")
                     ],
                     checks: []
-                }
+                })
             ],
             commands:[
                 Opcode(42,[1,2])
@@ -110,30 +110,30 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
 
 [
     PTStatement{
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test",
             arguments: [
-                Register(PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 1,
                     arg_types: [SequenceWildcard("X")],
                     checks:[Check{check_type:Length,name:"Y"}]
                 })
             ],
             results: [
-                PTCodeRegisterArgument{
+                Register(CodeRegisterArgument{
                     reg_id: 2,
                     arg_types: [SequenceWildcard("X")],
                     checks: [
                         Check{check_type:Length,name:"Y"}
                     ]
-                },
-                PTCodeRegisterArgument{
+                }),
+                Register(CodeRegisterArgument{
                     reg_id: 3,
                     arg_types: [Sequence(Boolean)],
                     checks: [
                         Check{check_type:Reference,name:"Y"}
                     ]
-                }
+                })
             ],
             commands: [
                 Opcode(42,[1,2])
@@ -160,13 +160,13 @@ code test(r1: boolean) -> r2: seq(boolean) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test",
             arguments:[
-                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]})
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]})
             ],
             results:[
-                PTCodeRegisterArgument{reg_id:2,arg_types:[Sequence(Boolean)],checks:[]}
+                Register(CodeRegisterArgument{reg_id:2,arg_types:[Sequence(Boolean)],checks:[]})
             ],
             commands:[Opcode(42,[1,2])],
             modifiers:[]
@@ -199,10 +199,10 @@ code test_string(r1: boolean, "hello") {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test_bool",
             arguments: [
-                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
                 Constant(Boolean(false))
             ],
             results: [],
@@ -214,10 +214,10 @@ code test_string(r1: boolean, "hello") {
         context: 1
     },
     PTStatement {
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test_number",
             arguments: [
-                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
                 Constant(Number(42.0))
             ],
             results: [],
@@ -229,9 +229,9 @@ code test_string(r1: boolean, "hello") {
         context: 1
     },
     PTStatement {
-        value: Code(PTCodeBlock{name: "test_string",
+        value: Code(CodeBlock{name: "test_string",
             arguments: [
-                Register(PTCodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
                 Constant(String("hello"))
             ],
             results:[],
@@ -272,7 +272,7 @@ code test_string() {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock{
+        value: Code(CodeBlock{
             name: "test_string",
             arguments: [],
             results: [],

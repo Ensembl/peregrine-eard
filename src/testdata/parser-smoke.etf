@@ -14,10 +14,10 @@ world code print(r1: string|number) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock { 
+        value: Code(CodeBlock { 
             name: "print", 
             arguments: [
-                Register(PTCodeRegisterArgument { 
+                Register(CodeRegisterArgument { 
                     reg_id: 1,
                     arg_types: [Atomic(String), Atomic(Number)],
                     checks: []
@@ -46,22 +46,22 @@ code add(r1: number, r2: number) -> (r3: number) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock {
+        value: Code(CodeBlock {
             name: "add",
             arguments: [
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 1,
                     arg_types: [Atomic(Number)],
                     checks: []
                 }), 
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 2,
                     arg_types: [Atomic(Number)],
                     checks: []
                 })
             ],
             results: [
-                PTCodeRegisterArgument {
+                CodeRegisterArgument {
                     reg_id: 3,
                     arg_types: [Atomic(Number)],
                     checks: []
@@ -90,22 +90,22 @@ code add(r1: number, r2: number) -> (r1: number) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock {
+        value: Code(CodeBlock {
             name: "add",
             arguments: [
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 1,
                     arg_types: [Atomic(Number)],
                     checks: []
                 }), 
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 2,
                     arg_types: [Atomic(Number)],
                     checks: []
                 })
             ],
             results: [
-                PTCodeRegisterArgument {
+                CodeRegisterArgument {
                     reg_id: 1,
                     arg_types: [Atomic(Number)],
                     checks: []
@@ -133,10 +133,10 @@ code add(r1: number, 1) -> (r1: number) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock {
+        value: Code(CodeBlock {
             name: "add",
             arguments: [
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 1,
                     arg_types: [Atomic(Number)],
                     checks: []
@@ -144,7 +144,7 @@ code add(r1: number, 1) -> (r1: number) {
                 Constant(Number(1.0))
             ],
             results: [
-                PTCodeRegisterArgument { 
+                CodeRegisterArgument { 
                     reg_id: 1,
                     arg_types: [Atomic(Number)],
                     checks: []
@@ -171,10 +171,10 @@ code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock {
+        value: Code(CodeBlock {
             name: "count_to_index",
             arguments: [
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 1, 
                     arg_types: [Sequence(Number)],
                     checks: [
@@ -184,7 +184,7 @@ code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
                 })
             ],
             results: [
-                PTCodeRegisterArgument {
+                CodeRegisterArgument {
                     reg_id: 2,
                     arg_types: [Sequence(Number)],
                     checks: [
@@ -214,17 +214,17 @@ code len(r1: seq(?X)) -> (r2: number) {
 
 [
     PTStatement {
-        value: Code(PTCodeBlock {
+        value: Code(CodeBlock {
             name: "len",
             arguments: [
-                Register(PTCodeRegisterArgument {
+                Register(CodeRegisterArgument {
                     reg_id: 1,
                     arg_types: [SequenceWildcard("X")], 
                     checks: []
                 })
             ], 
             results: [
-                PTCodeRegisterArgument {
+                CodeRegisterArgument {
                     reg_id: 2,
                     arg_types: [Atomic(Number)],
                     checks: []

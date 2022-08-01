@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument}};
+use crate::{buildtree::{BuildTree, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument, CodeRegisterArgument, CodeArgument, CodeBlock}};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -28,38 +28,9 @@ pub trait PTTransformer {
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
 
-#[derive(Debug,Clone)]
-pub struct PTCodeRegisterArgument {
-    pub reg_id: usize,
-    pub arg_types: Vec<TypeSpec>,
-    pub checks: Vec<Check>
-}
-
-#[derive(Debug,Clone)]
-pub enum PTCodeArgument {
-    Register(PTCodeRegisterArgument),
-    Constant(Constant)
-}
-
-#[derive(Debug,Clone)]
-pub enum PTCodeCommand {
-    Opcode(usize,Vec<usize>),
-    Register(usize)
-}
-
-#[derive(Debug,Clone)]
-pub struct PTCodeBlock {
-    pub name: String,
-    pub arguments: Vec<PTCodeArgument>,
-    pub results: Vec<PTCodeRegisterArgument>,
-    pub commands: Vec<PTCodeCommand>,
-    pub modifiers: Vec<CodeModifier>
-}
-
-impl PTCodeBlock {
+impl CodeBlock {
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        bc.push_code_target(&self.name,self.modifiers.clone());
-        bc.pop_target(&[],bt)?;
+        bt.define_code(self,bc)?;
         Ok(())
     }
 }
@@ -131,7 +102,7 @@ impl PTCall {
     }
 
     fn build_proc(&self, rets: Option<Vec<BTLValue>>, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let index = bc.lookup(&self.name)?;
+        let index = bc.lookup_proc(&self.name)?;
         let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
         let stmt = bt.statement(Some(index),args,rets,bc)?;
         bc.add_statement(bt,stmt)?;
@@ -139,7 +110,7 @@ impl PTCall {
     }
 
     fn build_func(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<BTFuncCall,String> {
-        let index = bc.lookup(&self.name)?;
+        let index = bc.lookup_func(&self.name)?;
         let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
         Ok(bt.function_call(index,args,bc)?)
     }
@@ -262,11 +233,11 @@ impl PTExpression {
 
             PTExpression::FiniteSequence(items) => {
                 let reg = bc.allocate_register();
-                let stmt = bt.statement(Some(bc.lookup("__operator_finseq")?), vec![], Some(vec![BTLValue::Register(reg)]),bc)?; // XXX out to reg
+                let stmt = bt.statement(Some(bc.lookup_func("__operator_finseq")?), vec![], Some(vec![BTLValue::Register(reg)]),bc)?; // XXX out to reg
                 bc.add_statement(bt,stmt)?;
                 for item in items {
                     let built = item.build(bt,bc)?;
-                    let stmt = bt.statement(Some(bc.lookup("__operator_push")?), vec![
+                    let stmt = bt.statement(Some(bc.lookup_proc("__operator_push")?), vec![
                         CallArg::Expression(BTExpression::RegisterValue(reg)),
                         CallArg::Expression(built)
                     ], Some(vec![BTLValue::Register(reg)]),bc)?;
@@ -276,7 +247,7 @@ impl PTExpression {
             },
             PTExpression::InfiniteSequence(x) => {
                 BTExpression::Function(BTFuncCall {
-                    func_index: bc.lookup("__operator_infseq")?,
+                    func_index: bc.lookup_func("__operator_infseq")?,
                     args: vec![CallArg::Expression(x.build(bt,bc)?)],
                 })
             },
@@ -319,12 +290,12 @@ impl PTFuncDef {
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let ret_type = self.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(BTDefinitionVariety::Func,&self.name,&self.args,ret_type,export);
+        bc.push_funcproc_target(false,&self.name,&self.args,ret_type,export,bt);
         for stmt in &self.block {
             stmt.build(bt,bc)?;
         }
         let expr = self.value.build(bt,bc)?;
-        bc.pop_target(&[expr],bt)?;
+        bc.pop_funcproc_target(&[expr],bt)?;
         Ok(())
     }
 }
@@ -371,12 +342,12 @@ impl PTProcDef {
 
     fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(BTDefinitionVariety::Proc,&self.name,&self.args,self.ret_type.clone(),export);
+        bc.push_funcproc_target(true,&self.name,&self.args,self.ret_type.clone(),export,bt);
         for stmt in &self.block {
             stmt.build(bt,bc)?;
         }
         let ret = self.ret.iter().map(|x| x.build(bt,bc)).collect::<Result<Vec<_>,_>>()?;
-        bc.pop_target(&ret,bt)?;
+        bc.pop_funcproc_target(&ret,bt)?;
         Ok(())
     }
 }
@@ -396,7 +367,7 @@ pub enum PTStatementValue {
     Flag(String),
 
     /* definitions */
-    Code(PTCodeBlock),
+    Code(CodeBlock),
     FuncDef(PTFuncDef),
     ProcDef(PTProcDef),
 
@@ -548,12 +519,11 @@ impl PTStatement {
                 }
             },
 
+            // XXX declare after eval
             PTStatementValue::LetStatement(vv,xx) => {
                 /* Step 1: declare variables */
-                let mut regs = vec![];
                 for v in vv.iter() {
                     v.declare(bt,bc)?;
-                    regs.push(bc.allocate_register());
                 }
                 make_statement(vv,xx,bt,bc)?;
             },

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{ PTCodeRegisterArgument, PTCodeArgument, PTCodeBlock, PTCodeCommand, PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument}};
+use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeArgument, CodeRegisterArgument, CodeCommand, CodeBlock, CodeReturn}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -339,10 +339,10 @@ impl EarpParser {
         ))
     }
 
-    fn code_variable(input: Node) -> PestResult<PTCodeRegisterArgument> {
+    fn code_variable(input: Node) -> PestResult<CodeRegisterArgument> {
         Ok(match_nodes!(input.into_children();
             [register(r),arg_types(t),arg_check(c)..] => {
-                PTCodeRegisterArgument {
+                CodeRegisterArgument {
                     reg_id: r,
                     arg_types: t,
                     checks: c.collect()
@@ -351,14 +351,21 @@ impl EarpParser {
         ))
     }
 
-    fn code_argument(input: Node) -> PestResult<PTCodeArgument> {
+    fn code_return_variable(input: Node) -> PestResult<CodeReturn> {
         Ok(match_nodes!(input.into_children();
-            [code_variable(v)] => PTCodeArgument::Register(v),
-            [constant(c)] => PTCodeArgument::Constant(c)
+            [code_variable(v)] => CodeReturn::Register(v),
+            [register(c)] => CodeReturn::Repeat(c)
         ))
     }
 
-    fn code_arguments(input: Node) -> PestResult<Vec<PTCodeArgument>> {
+    fn code_argument(input: Node) -> PestResult<CodeArgument> {
+        Ok(match_nodes!(input.into_children();
+            [code_variable(v)] => CodeArgument::Register(v),
+            [constant(c)] => CodeArgument::Constant(c)
+        ))
+    }
+
+    fn code_arguments(input: Node) -> PestResult<Vec<CodeArgument>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::code_argument(child)?);
@@ -382,10 +389,10 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn code_return(input: Node) -> PestResult<Vec<PTCodeRegisterArgument>> {
+    fn code_return(input: Node) -> PestResult<Vec<CodeReturn>> {
         let mut out = vec![];
         for child in input.into_children() {
-            out.push(Self::code_variable(child)?);
+            out.push(Self::code_return_variable(child)?);
         }
         Ok(out)
     }
@@ -398,18 +405,18 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn opcode_statement(input: Node) -> PestResult<PTCodeCommand> {
+    fn opcode_statement(input: Node) -> PestResult<CodeCommand> {
         Ok(match_nodes!(input.into_children();
             [opcode_opcode(code),opcode_args(args)] => {
-                PTCodeCommand::Opcode(code,args)
+                CodeCommand::Opcode(code,args)
             }
         ))
     }
 
-    fn code_statement(input: Node) -> PestResult<PTCodeCommand> {
+    fn code_statement(input: Node) -> PestResult<CodeCommand> {
         Ok(match_nodes!(input.into_children();
             [opcode_statement(stmt)] => stmt,
-            [register_statement(reg)] => PTCodeCommand::Register(reg)
+            [register_statement(reg)] => CodeCommand::Register(reg)
         ))
     }
 
@@ -436,10 +443,10 @@ impl EarpParser {
         ))
     }
 
-    fn code_header(input: Node) -> PestResult<PTCodeBlock> {
+    fn code_header(input: Node) -> PestResult<CodeBlock> {
         Ok(match_nodes!(input.into_children();
             [code_modifiers(m),identifier(id),code_arguments(args),code_return(r)] => {
-                PTCodeBlock { 
+                CodeBlock { 
                     name: id,
                     arguments: args,
                     results: r,
@@ -450,7 +457,7 @@ impl EarpParser {
         ))
     }
 
-    fn code_block(input: Node) -> PestResult<PTCodeBlock> {
+    fn code_block(input: Node) -> PestResult<CodeBlock> {
         Ok(match_nodes!(input.into_children();
             [code_header(mut block),code_statement(stmt)..] => {
                 block.commands = stmt.collect();

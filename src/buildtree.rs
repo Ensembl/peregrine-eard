@@ -1,6 +1,6 @@
-use std::{sync::Arc, collections::{HashMap, BTreeMap}};
+use std::{sync::Arc, collections::{BTreeMap}};
 
-use crate::model::{CodeModifier, Variable, Check, CallArg, Constant, ArgTypeSpec, OrBundle, TypedArgument};
+use crate::model::{ Variable, Check, CallArg, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock};
 
 #[derive(Debug,Clone)]
 pub enum BTExpression {
@@ -56,28 +56,25 @@ pub struct BTStatement {
 
 #[derive(Debug,Clone)]
 pub struct BTCodeDefinition {
-    pub modifiers: Vec<CodeModifier>
+    blocks: Vec<CodeBlock>
 }
 
 impl BTCodeDefinition {
-    pub(crate) fn new(modifiers: Vec<CodeModifier>) -> BTCodeDefinition {
-        BTCodeDefinition {
-            modifiers
-        }
+    fn add(&mut self, alt: CodeBlock) {
+        self.blocks.push(alt);
     }
 }
 
-struct CurrentDefinition {
+struct CurrentFuncProcDefinition {
     block: Vec<BTStatement>,
     name: String,
     export: bool,
-    args: Vec<OrBundle<TypedArgument>>, // empty for code 
+    args: Vec<OrBundle<TypedArgument>>,
     variety: BTDefinitionVariety,
-    ret_type: Option<Vec<ArgTypeSpec>>, // exactly one for functions, None for code
-    code_modifiers: Vec<CodeModifier>, // code only
+    ret_type: Option<Vec<ArgTypeSpec>>, // exactly one for functions
 }
 
-impl CurrentDefinition {
+impl CurrentFuncProcDefinition {
     fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> BTFuncProcDefinition {
         BTFuncProcDefinition {
             args: self.args.clone(),
@@ -86,20 +83,21 @@ impl CurrentDefinition {
             block: self.block.clone()
         }
     }
+}
 
-    fn to_code(&self) -> BTCodeDefinition {
-        BTCodeDefinition {
-            modifiers: self.code_modifiers.clone()
-        }
-    }
+#[derive(Debug,Clone)]
+enum DefName {
+    Func(usize),
+    Proc(usize),
+    Code(usize)
 }
 
 pub struct BuildContext {
     location: (Arc<Vec<String>>,usize),
     file_context: usize,
-    defnames: BTreeMap<(Option<usize>,String),usize>,
+    defnames: BTreeMap<(Option<usize>,String),DefName>,
     next_register: usize,
-    code_target: Option<CurrentDefinition>
+    funcproc_target: Option<CurrentFuncProcDefinition>
 }
 
 impl BuildContext {
@@ -109,46 +107,35 @@ impl BuildContext {
             file_context: 0,
             defnames: BTreeMap::new(),
             next_register: 0,
-            code_target: None
+            funcproc_target: None
         }
     }
 
-    pub fn push_funcproc_target(&mut self, variety: BTDefinitionVariety, name: &str,
+    pub fn push_funcproc_target(&mut self, is_proc: bool, name: &str,
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
-            export: bool) {
-        self.code_target = Some(CurrentDefinition {
+            export: bool, bt: &mut BuildTree) {
+        let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
+        self.funcproc_target = Some(CurrentFuncProcDefinition {
             name: name.to_string(),
             args: args.to_vec(),
             export, variety,
             block: vec![],
-            ret_type,
-            code_modifiers: vec![]
+            ret_type
         });
     }
 
-    pub fn push_code_target(&mut self, name: &str, 
-            modifiers: Vec<CodeModifier>) {
-        self.code_target = Some(CurrentDefinition {
-            name: name.to_string(),
-            args: vec![],
-            export: false,
-            variety: BTDefinitionVariety::Code,
-            block: vec![],
-            ret_type: None,
-            code_modifiers: modifiers
-        });
-    }
-
-    pub fn pop_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
-        let ctx = self.code_target.take().expect("pop without push");
+    pub fn pop_funcproc_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
+        let ctx = self.funcproc_target.take().expect("pop without push");
         let defn = match &ctx.variety {
-            BTDefinitionVariety::Code => BTDefinition::Code(ctx.to_code()),
-            BTDefinitionVariety::Func => BTDefinition::Func(ctx.to_funcproc(ret)),
-            BTDefinitionVariety::Proc => BTDefinition::Proc(ctx.to_funcproc(ret))
+            BTDefinitionVariety::Func => {                
+                bt.define_funcproc(&ctx.name,ctx.to_funcproc(ret),false,self,ctx.export)?
+            },
+            BTDefinitionVariety::Proc => {
+                bt.define_funcproc(&ctx.name,ctx.to_funcproc(ret),true,self,ctx.export)?
+            }
         };
-        bt.define(&ctx.name,defn,self,ctx.export)?;
-        self.code_target = None;
+        self.add_statement(bt,defn);
         Ok(())
     }
 
@@ -164,7 +151,7 @@ impl BuildContext {
         (self.location.0.as_ref(),self.location.1)
     }
 
-    pub(crate) fn lookup(&self, name: &str) -> Result<usize,String> {
+    fn lookup(&self, name: &str) -> Result<DefName,String> {
         self.defnames
             .get(&(Some(self.file_context),name.to_string()))
             .or_else(||
@@ -172,6 +159,20 @@ impl BuildContext {
             )
             .ok_or_else(|| format!("No such function/procedure {}",name))
             .cloned()
+    }
+
+    pub(crate) fn lookup_func(&self, name: &str) -> Result<usize,String> {
+        match self.lookup(name) {
+            Ok(DefName::Func(x)) => Ok(x),
+            _ => Err(format!("cannot find function {}",name))
+        }
+    }
+
+    pub(crate) fn lookup_proc(&self, name: &str) -> Result<usize,String> {
+        match self.lookup(name) {
+            Ok(DefName::Proc(x)) => Ok(x),
+            _ => Err(format!("cannot find procedure {}",name))
+        }
     }
 
     pub(crate) fn allocate_register(&mut self) -> usize {
@@ -185,7 +186,7 @@ impl BuildContext {
             file: self.location.0.clone(),
             line_no: self.location.1
         };
-        if let Some(target) = self.code_target.as_mut() {
+        if let Some(target) = self.funcproc_target.as_mut() {
             target.block.push(stmt);
         } else {
             bt.statements.push(stmt);
@@ -196,19 +197,19 @@ impl BuildContext {
 
 #[derive(Debug,Clone)]
 pub struct BTFuncProcDefinition {
-    pub args: Vec<OrBundle<TypedArgument>>,
+    args: Vec<OrBundle<TypedArgument>>,
     block: Vec<BTStatement>,
     ret: Vec<OrBundle<BTExpression>>,
-    pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
+    ret_type: Option<Vec<ArgTypeSpec>>
 }
 
-pub enum BTDefinitionVariety { Code, Func, Proc }
+pub enum BTDefinitionVariety { Func, Proc }
 
 #[derive(Debug,Clone)]
 pub enum BTDefinition {
-    Code(BTCodeDefinition),
     Func(BTFuncProcDefinition),
-    Proc(BTFuncProcDefinition)
+    Proc(BTFuncProcDefinition),
+    Code(BTCodeDefinition)
 }
 
 #[derive(Debug,Clone)]
@@ -222,12 +223,46 @@ impl BuildTree {
         BuildTree { statements: vec![], definitions: vec![] }
     }
 
-    fn define(&mut self, name: &str, definition: BTDefinition, bc: &mut BuildContext, export: bool) -> Result<BTStatementValue,String> {
+    fn define_funcproc(&mut self, name: &str, definition: BTFuncProcDefinition, is_proc: bool, bc: &mut BuildContext, export: bool) -> Result<BTStatementValue,String> {
         let id = self.definitions.len();
+        let name_id = if is_proc { DefName::Proc(id) } else { DefName::Func(id) };
         let context = if export { None } else { Some(bc.file_context) };
-        bc.defnames.insert((context,name.to_string()),id);
+        let key = (context,name.to_string());
+        if bc.defnames.contains_key(&key) {
+            return Err(format!("duplciate definition for {}",name));
+        }
+        bc.defnames.insert(key,name_id);
+        let definition = if is_proc { BTDefinition::Proc(definition) } else { BTDefinition::Func(definition) };
         self.definitions.push(definition);
         Ok(BTStatementValue::Define(id))
+    }
+
+    pub(crate) fn define_code(&mut self, block: &CodeBlock, bc: &mut BuildContext) -> Result<(),String> {
+        let key = (Some(bc.file_context),block.name.to_string());
+        if !bc.defnames.contains_key(&key) {
+            let id = self.definitions.len();
+            let name_id = DefName::Code(id);
+            bc.defnames.insert(key.clone(),name_id);
+            self.definitions.push(BTDefinition::Code(BTCodeDefinition {
+                blocks: vec![]
+            }));
+        }
+        match bc.defnames.get(&key) {
+            Some(DefName::Code(id)) => {
+                match &mut self.definitions[*id] {
+                    BTDefinition::Code(c) => {
+                        c.add(block.clone());
+                    },
+                    _ => {
+                        panic!("Incorrectly indexed definition");
+                    }
+                }
+                Ok(())
+            },
+            _ => {
+                Err(format!("duplciate definition for {}",block.name))
+            }
+        }
     }
 
     pub(crate) fn declare(&mut self, declaration: BTDeclare, bc: &BuildContext) -> Result<BTStatementValue,String> {
@@ -239,30 +274,10 @@ impl BuildTree {
     }
 
     pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<CallArg<BTExpression>>, rets: Option<Vec<BTLValue>>, bc: &BuildContext) -> Result<BTStatementValue,String> {
-        let call = match defn.map(|x| &self.definitions[x]) {
-            Some(BTDefinition::Code(_)) => {
-                todo!()
-            },
-            Some(BTDefinition::Func(_)) => {
-                BTProcCall {
-                    proc_index: None,
-                    args, rets
-                }
-            },
-            Some(BTDefinition::Proc(_)) => {
-                BTProcCall {
-                    proc_index: defn,
-                    args, rets
-                }
-            },
-            None => {
-                BTProcCall {
-                    proc_index: None,
-                    args, rets
-                }
-            }
-        };
-        Ok(BTStatementValue::Statement(call))
+        Ok(BTStatementValue::Statement(BTProcCall {
+            proc_index: defn,
+            args, rets
+        }))
     }
 
     pub(crate) fn function_call(&self, defn: usize, args: Vec<CallArg<BTExpression>>, bc: &BuildContext) -> Result<BTFuncCall,String> {

@@ -1,5 +1,102 @@
 >> test
 
+Code blocks
+
+>> input
+
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
+    register r4;
+    opcode 44, r1, r2, r3, r4, r5;
+}
+
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r1) {
+    register r4;
+    opcode 45, r1, r2, r3, r4;
+}
+
+>> built strip
+
+BuildTree {
+    statements: [],
+    definitions: [
+        Code(
+            BTCodeDefinition {
+                blocks: [
+                    CodeBlock {
+                        name: "test",
+                        arguments: [
+                            Register(CodeRegisterArgument {
+                                reg_id: 1,
+                                arg_types: [Sequence(Number),Sequence(String)],
+                                checks: [Check { check_type: Length, name: "X" }]
+                            }),
+                            Register(CodeRegisterArgument {
+                                reg_id: 2,
+                                arg_types: [Atomic(Boolean)],
+                                checks: [Check { check_type: LengthOrInfinite, name: "X" }]
+                            })
+                        ],
+                        results: [
+                            Register(CodeRegisterArgument {
+                                reg_id: 3,
+                                arg_types: [Sequence(Boolean)],
+                                checks: [Check { check_type: Reference, name: "X" }]
+                            }),
+                            Register(CodeRegisterArgument {
+                                reg_id: 5,
+                                arg_types: [Atomic(Boolean)],
+                                checks: []
+                            })
+                        ],
+                        commands: [
+                            Register(4),
+                            Opcode(44,[1,2,3,4,5])
+                        ],
+                        modifiers: [World]
+                    },
+                    CodeBlock {
+                        name: "test",
+                        arguments: [
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 1,
+                                    arg_types: [Sequence(Number),Sequence(String)],
+                                    checks: [Check { check_type: Length, name: "X" }]
+                                }
+                            ),
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 2,
+                                    arg_types: [Atomic(Boolean)],
+                                    checks: [Check { check_type: LengthOrInfinite, name: "X" }]
+                                }
+                            )
+                        ],
+                        results: [
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 3,
+                                    arg_types: [Sequence(Boolean)],
+                                    checks: [Check { check_type: Reference, name: "X" }]
+                                }
+                            ),
+                            Repeat(1)
+                        ],
+                        commands: [
+                            Register(4),
+                            Opcode(45,[1,2,3,4])
+                        ],
+                        modifiers: [World]
+                    }
+                ]
+            }
+        )
+    ]
+}
+
+
+>> test
+
 Let in PT->BT
 
 >> input
@@ -18,6 +115,304 @@ let (c,d) = test(6);
 
 >> built strip
 
+BuildTree {
+    statements: [
+        BTStatement {
+            value: Define(0),
+            file: ["test"],
+            line_no: 2
+        },
+        BTStatement {
+            value: Define(1),
+            file: ["test"],
+            line_no: 3
+        },
+        BTStatement {
+            value: Define(2),
+            file: ["test"],
+            line_no: 5
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "a" })),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "b" })),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Expression(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 0,
+                                    args: [
+                                        Expression(Constant(Number(1.0))),
+                                        Expression(Constant(Number(1.0)))
+                                    ]
+                                }
+                            )
+                        )
+                    ],
+                    rets: Some([Register(2)])
+                }
+            ),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Expression(Function(
+                            BTFuncCall {
+                                func_index: 0,
+                                args: [
+                                    Expression(Constant(Number(2.0))),
+                                    Expression(Constant(Number(2.0)))
+                                ]
+                            }
+                        ))
+                    ],
+                    rets: Some([Register(3)])
+                }
+            ),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(2))],
+                    rets: Some([Variable(Variable { prefix: None, name: "a" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(3))],
+                    rets: Some([Variable(Variable { prefix: None, name: "b" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "c" })),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "d"})),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: Some(2),
+                    args: [Expression(Constant(Number(6.0)))],
+                    rets: Some([Register(4),Register(5)])
+                }
+            ),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(4))],
+                    rets: Some([Variable(Variable { prefix: None, name: "c" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(5))],
+                    rets: Some([Variable(Variable { prefix: None, name: "d" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(Variable(Variable { prefix: None, name: "d" }))],
+                    rets: Some([Register(6)])
+                }
+            ),
+            file: ["test"],
+            line_no: 12
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(Variable(Variable { prefix: None, name: "c" }))],
+                    rets: Some([Register(7)])
+                }
+            ),
+            file: ["test"],
+            line_no: 12
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(6))],
+                    rets: Some([Variable(Variable { prefix: None, name: "c" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 12
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Expression(RegisterValue(7))],
+                    rets: Some([Variable(Variable { prefix: None, name: "d" })])
+                }
+            ),
+            file: ["test"],
+            line_no: 12
+        }
+    ],
+    definitions: [
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
+                        }
+                    ),
+                    Normal(
+                        TypedArgument {
+                            id: "y",
+                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
+                        }
+                    )
+                ],
+                block: [],
+                ret: [Normal(Constant(Number(0.0)))],
+                ret_type: None
+            }
+        ),
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
+                        }
+                    ),
+                    Normal(
+                        TypedArgument {
+                            id: "y",
+                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
+                        }
+                    )
+                ],
+                block: [],
+                ret: [Normal(Constant(Number(0.0)))],
+                ret_type: None
+            }
+        ),
+        Proc(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(TypedArgument {
+                        id: "x",
+                        typespec: ArgTypeSpec { arg_types: [], checks: [] }
+                    })
+                ],
+                block: [
+                    BTStatement {
+                        value: Declare(Variable(Variable { prefix: None, name: "y" })),
+                        file: ["test"],
+                        line_no: 5
+                    },
+                    BTStatement {
+                        value: Statement(BTProcCall {
+                            proc_index: None,
+                            args: [
+                                Expression(
+                                    Function(BTFuncCall {
+                                        func_index: 0,
+                                        args: [
+                                            Expression(
+                                                Variable(Variable { prefix: None, name: "x" })
+                                            ),
+                                            Expression(
+                                                Constant(Number(1.0))
+                                            )
+                                        ]
+                                    })
+                                )
+                            ],
+                            rets: Some([Register(1)])
+                        }),
+                        file: ["test"],
+                        line_no: 5
+                    },
+                    BTStatement {
+                        value: Statement(
+                            BTProcCall {
+                                proc_index: None,
+                                args: [
+                                    Expression(
+                                        RegisterValue(1)
+                                    )
+                                ],
+                                rets: Some([Variable(Variable { prefix: None, name: "y" })])
+                            }
+                        ),
+                        file: ["test"],
+                        line_no: 5
+                    }
+                ],
+                ret: [
+                    Normal(Function(BTFuncCall {
+                        func_index: 1,
+                        args: [
+                            Expression(Constant(Number(42.0))),
+                            Expression(Variable(Variable { prefix: None, name: "x" }))
+                        ]
+                    })),
+                    Normal(Function(BTFuncCall {
+                        func_index: 1,
+                        args: [
+                            Expression(Constant(Number(23.0))),
+                            Expression(Variable(Variable { prefix: None, name: "y" }))
+                        ]
+                    }))
+                ],
+                ret_type: None
+            }
+        )
+    ]
+}
 
 >> test
 
@@ -25,9 +420,9 @@ Simple PT->BT smoke test
 
 >> input
 
-function __operator_infseq(x) { /* dummy */ [0,...] }
-function __operator_finseq(x) { /* dummy */ [0,...] }
-procedure __operator_push(x) { /* dummy */ [0,...] }
+function __operator_infseq(x) { /* dummy */ 0 }
+function __operator_finseq(x) { /* dummy */ 0 }
+procedure __operator_push(x) { /* dummy */ 0 }
 function __operator_add(x,y) { /* dummy */ 0 }
 function __operator_sub(x,y) { /* dummy */ 0 }
 function __operator_mul(x,y) { /* dummy */ 0 }
@@ -42,15 +437,207 @@ let z : length(y) = x+y;
 test([z+1,...],[x-1,y+1]);
 let (a,b) = test(6);
 
->> xbuilt strip
+>> built strip
 
-BuildTree {
-    statements: [
+BuildTree{
+    statements:[
         BTStatement{value:Define(0),file:["test"],line_no:2},
-        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"x"})),file:["test"],line_no:6},
-        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"y"})),file:["test"],line_no:7},
-        BTStatement{value:Declare(Variable(Variable{prefix:None,name:"z"})),file:["test"],line_no:8},
-        BTStatement{value:Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),file:["test"],line_no:8},
-        BTStatement{value:Statement(BTProcCall{proc_index:Some(0)}),file:["test"],line_no:9}],
-    definitions:[Proc]}
-
+        BTStatement{value:Define(1),file:["test"],line_no:3},
+        BTStatement{value:Define(2),file:["test"],line_no:4},
+        BTStatement{value:Define(3),file:["test"],line_no:5},
+        BTStatement{value:Define(4),file:["test"],line_no:6},
+        BTStatement{value:Define(5),file:["test"],line_no:7},
+        BTStatement{value:Define(6),file:["test"],line_no:9},
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"x"})),
+            file:["test"],
+            line_no:13
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(Constant(Number(1.0)))],
+                rets:Some([Register(1)])
+            }),
+            file:["test"],
+            line_no:13
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(RegisterValue(1))],
+                rets:Some([Variable(Variable{prefix:None,name:"x"})])
+            }),
+            file:["test"],
+            line_no:13
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"y"})),
+            file:["test"],
+            line_no:14
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(Constant(Number(2.0)))],
+                rets:Some([Register(2)])
+            }),
+            file:["test"],
+            line_no:14
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(RegisterValue(2))],
+                rets:Some([Variable(Variable{prefix:None,name:"y"})])
+            }),
+            file:["test"],
+            line_no:14
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"z"})),
+            file:["test"],
+            line_no:15
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[
+                    Expression(Function(BTFuncCall{
+                        func_index:3,
+                        args:[
+                            Expression(Variable(Variable{prefix:None,name:"x"})),
+                            Expression(Variable(Variable{prefix:None,name:"y"}))
+                        ]
+                    }))
+                ],
+                rets:Some([Register(3)])
+            }),
+            file:["test"],
+            line_no:15
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(RegisterValue(3))],
+                rets:Some([Variable(Variable{prefix:None,name:"z"})])
+            }),
+            file:["test"],
+            line_no:15
+        },
+        BTStatement{
+            value:Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),
+            file:["test"],
+            line_no:15
+        },
+        BTStatement{
+            value:Statement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Register(4)])}),
+            file:["test"],
+            line_no:16
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:Some(2),
+                args:[
+                    Expression(RegisterValue(4)),
+                    Expression(Function(BTFuncCall{
+                        func_index:4,
+                        args:[
+                            Expression(Variable(Variable{prefix:None,name:"x"})),
+                            Expression(Constant(Number(1.0)))
+                        ]
+                    }))
+                ],
+                rets:Some([Register(4)])
+            }),
+            file:["test"],
+            line_no:16
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:Some(2),
+                args:[
+                    Expression(RegisterValue(4)),
+                    Expression(Function(BTFuncCall{
+                        func_index:3,
+                        args:[
+                            Expression(Variable(Variable{prefix:None,name:"y"})),
+                            Expression(Constant(Number(1.0)))
+                        ]
+                    }))
+                ],
+                rets:Some([Register(4)])
+            }),
+            file:["test"],
+            line_no:16
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:Some(6),
+                args:[
+                    Expression(Function(BTFuncCall{
+                        func_index:0,
+                        args:[
+                            Expression(Function(BTFuncCall{
+                                func_index:3,args:[
+                                    Expression(Variable(Variable{prefix:None,name:"z"})),
+                                    Expression(Constant(Number(1.0)))
+                                ]
+                            }))
+                        ]
+                    })),
+                    Expression(RegisterValue(4))
+                ],
+                rets:None
+            }),
+            file:["test"],
+            line_no:16
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"a"})),
+            file:["test"],
+            line_no:17
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"b"})),
+            file:["test"],
+            line_no:17
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:Some(6),
+                args:[Expression(Constant(Number(6.0)))],
+                rets:Some([Register(5),Register(6)])
+            }),
+            file:["test"],
+            line_no:17
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(RegisterValue(5))],
+                rets:Some([Variable(Variable{prefix:None,name:"a"})])
+            }),
+            file:["test"],
+            line_no:17
+        },
+        BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:None,
+                args:[Expression(RegisterValue(6))],
+                rets:Some([Variable(Variable{prefix:None,name:"b"})])
+            }),
+            file:["test"],
+            line_no:17
+        }
+    ],
+    definitions:[
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(42.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(23.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
+    ]
+}

@@ -10,6 +10,25 @@ pub enum CodeModifier {
     World
 }
 
+#[derive(Debug,Clone)]
+pub struct CodeRegisterArgument {
+    pub reg_id: usize,
+    pub arg_types: Vec<TypeSpec>,
+    pub checks: Vec<Check>
+}
+
+#[derive(Debug,Clone)]
+pub enum CodeArgument {
+    Register(CodeRegisterArgument),
+    Constant(Constant)
+}
+
+#[derive(Debug,Clone)]
+pub enum CodeReturn {
+    Register(CodeRegisterArgument),
+    Repeat(usize)
+}
+
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub enum FuncProcModifier {
     Export
@@ -75,4 +94,19 @@ pub struct ArgTypeSpec {
 pub struct TypedArgument {
     pub id: String,
     pub typespec: ArgTypeSpec
+}
+
+#[derive(Debug,Clone)]
+pub enum CodeCommand {
+    Opcode(usize,Vec<usize>),
+    Register(usize)
+}
+
+#[derive(Debug,Clone)]
+pub struct CodeBlock {
+    pub name: String,
+    pub arguments: Vec<CodeArgument>,
+    pub results: Vec<CodeReturn>,
+    pub commands: Vec<CodeCommand>,
+    pub modifiers: Vec<CodeModifier>
 }

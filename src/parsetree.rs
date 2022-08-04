@@ -378,13 +378,13 @@ pub enum PTStatementValue {
     BareCall(PTCall),
 }
 
-fn make_statement(vv: &[PTLetAssign], xx: &[PTExpression], bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-    /* Step 2: allocate temporaries */
+fn make_statement(vv: &[PTLetAssign], xx: &[PTExpression], declare: bool, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
+    /* Step 1: allocate temporaries */
     let mut regs = vec![];
     for v in vv.iter() {
         regs.push(bc.allocate_register());
     }
-    /* Step 3: evaluate expressions and put into temporaries */
+    /* Step 2: evaluate expressions and put into temporaries */
     if vv.len() == xx.len() {
         /* Lengths equal, so pair off */
         for (x,reg) in xx.iter().zip(regs.iter()) {   
@@ -407,6 +407,12 @@ fn make_statement(vv: &[PTLetAssign], xx: &[PTExpression], bt: &mut BuildTree, b
         }
     } else {
         return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
+    }
+    if declare {
+        /* Step 3: declare variables */
+        for v in vv.iter() {
+            v.declare(bt,bc)?;
+        }
     }
     /* Step 4: assign from temporaries to variables */
     for (v,reg) in vv.iter().zip(regs.iter()) {
@@ -521,16 +527,12 @@ impl PTStatement {
 
             // XXX declare after eval
             PTStatementValue::LetStatement(vv,xx) => {
-                /* Step 1: declare variables */
-                for v in vv.iter() {
-                    v.declare(bt,bc)?;
-                }
-                make_statement(vv,xx,bt,bc)?;
+                make_statement(vv,xx,true,bt,bc)?;
             },
             PTStatementValue::ModifyStatement(vv,xx) => {
                 /* Dress up our variable, temporarily */
                 let vv = vv.iter().map(|v| PTLetAssign::Variable(v.clone(),vec![])).collect::<Vec<_>>();
-                make_statement(&vv,xx,bt,bc)?;
+                make_statement(&vv,xx,false,bt,bc)?;
             },
             PTStatementValue::BareCall(c) => {
                 c.build_proc(None,bt,bc)?;

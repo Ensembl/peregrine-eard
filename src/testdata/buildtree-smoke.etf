@@ -133,16 +133,6 @@ BuildTree {
             line_no: 5
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "a" })),
-            file: ["test"],
-            line_no: 10
-        },
-        BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "b" })),
-            file: ["test"],
-            line_no: 10
-        },
-        BTStatement {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
@@ -187,6 +177,16 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "a" })),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "b" })),
+            file: ["test"],
+            line_no: 10
+        },
+        BTStatement {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
@@ -209,16 +209,6 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "c" })),
-            file: ["test"],
-            line_no: 11
-        },
-        BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "d"})),
-            file: ["test"],
-            line_no: 11
-        },
-        BTStatement {
             value: Statement(
                 BTProcCall {
                     proc_index: Some(2),
@@ -226,6 +216,16 @@ BuildTree {
                     rets: Some([Register(4),Register(5)])
                 }
             ),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "c" })),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Declare(Variable(Variable { prefix: None, name: "d"})),
             file: ["test"],
             line_no: 11
         },
@@ -349,11 +349,6 @@ BuildTree {
                 ],
                 block: [
                     BTStatement {
-                        value: Declare(Variable(Variable { prefix: None, name: "y" })),
-                        file: ["test"],
-                        line_no: 5
-                    },
-                    BTStatement {
                         value: Statement(BTProcCall {
                             proc_index: None,
                             args: [
@@ -373,6 +368,11 @@ BuildTree {
                             ],
                             rets: Some([Register(1)])
                         }),
+                        file: ["test"],
+                        line_no: 5
+                    },
+                    BTStatement {
+                        value: Declare(Variable(Variable { prefix: None, name: "y" })),
                         file: ["test"],
                         line_no: 5
                     },
@@ -449,16 +449,16 @@ BuildTree{
         BTStatement{value:Define(5),file:["test"],line_no:7},
         BTStatement{value:Define(6),file:["test"],line_no:9},
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"x"})),
-            file:["test"],
-            line_no:13
-        },
-        BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
                 args:[Expression(Constant(Number(1.0)))],
                 rets:Some([Register(1)])
             }),
+            file:["test"],
+            line_no:13
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"x"})),
             file:["test"],
             line_no:13
         },
@@ -472,16 +472,16 @@ BuildTree{
             line_no:13
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"y"})),
-            file:["test"],
-            line_no:14
-        },
-        BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
                 args:[Expression(Constant(Number(2.0)))],
                 rets:Some([Register(2)])
             }),
+            file:["test"],
+            line_no:14
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"y"})),
             file:["test"],
             line_no:14
         },
@@ -493,11 +493,6 @@ BuildTree{
             }),
             file:["test"],
             line_no:14
-        },
-        BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"z"})),
-            file:["test"],
-            line_no:15
         },
         BTStatement{
             value:Statement(BTProcCall{
@@ -513,6 +508,11 @@ BuildTree{
                 ],
                 rets:Some([Register(3)])
             }),
+            file:["test"],
+            line_no:15
+        },
+        BTStatement{
+            value:Declare(Variable(Variable{prefix:None,name:"z"})),
             file:["test"],
             line_no:15
         },
@@ -594,21 +594,21 @@ BuildTree{
             line_no:16
         },
         BTStatement{
+            value:Statement(BTProcCall{
+                proc_index:Some(6),
+                args:[Expression(Constant(Number(6.0)))],
+                rets:Some([Register(5),Register(6)])
+            }),
+            file:["test"],
+            line_no:17
+        },
+        BTStatement{
             value:Declare(Variable(Variable{prefix:None,name:"a"})),
             file:["test"],
             line_no:17
         },
         BTStatement{
             value:Declare(Variable(Variable{prefix:None,name:"b"})),
-            file:["test"],
-            line_no:17
-        },
-        BTStatement{
-            value:Statement(BTProcCall{
-                proc_index:Some(6),
-                args:[Expression(Constant(Number(6.0)))],
-                rets:Some([Register(5),Register(6)])
-            }),
             file:["test"],
             line_no:17
         },

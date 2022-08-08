@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::BTreeMap};
 
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, CallArg, FuncProcModifier}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTCodeDefinition, BTLValue, BTFuncCall, BTDeclare}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTLetAssign, PTFuncDef, PTProcDef}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, CallArg, FuncProcModifier, Variable}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTCodeDefinition, BTLValue, BTFuncCall, BTDeclare}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTLetAssign, PTFuncDef, PTProcDef}};
 
 #[derive(Debug,Clone)]
 pub(super) enum DefName {
@@ -14,6 +14,7 @@ struct CurrentFuncProcDefinition {
     name: String,
     export: bool,
     args: Vec<OrBundle<TypedArgument>>,
+    captures: Vec<OrBundle<Variable>>,
     variety: BTDefinitionVariety,
     ret_type: Option<Vec<ArgTypeSpec>>, // exactly one for functions
 }
@@ -22,6 +23,7 @@ impl CurrentFuncProcDefinition {
     fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> BTFuncProcDefinition {
         BTFuncProcDefinition {
             args: self.args.clone(),
+            captures: self.captures.clone(),
             ret_type: self.ret_type.clone(),
             ret: ret.to_vec(),
             block: self.block.clone()
@@ -51,11 +53,13 @@ impl BuildContext {
     pub fn push_funcproc_target(&mut self, is_proc: bool, name: &str,
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
+            captures: &[OrBundle<Variable>],
             export: bool, bt: &mut BuildTree) {
         let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
         self.funcproc_target = Some(CurrentFuncProcDefinition {
             name: name.to_string(),
             args: args.to_vec(),
+            captures: captures.to_vec(),
             export, variety,
             block: vec![],
             ret_type
@@ -313,7 +317,7 @@ impl BuildContext {
     fn build_funcdef(&mut self, bt: &mut BuildTree, def: &PTFuncDef) -> Result<(),String> {
         let ret_type = def.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(false,&def.name,&def.args,ret_type,export,bt);
+        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export,bt);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }
@@ -324,7 +328,7 @@ impl BuildContext {
 
     fn build_procdef(&mut self, bt: &mut BuildTree, def: &PTProcDef) -> Result<(),String> {
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),export,bt);
+        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export,bt);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }

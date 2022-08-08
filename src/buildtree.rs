@@ -68,6 +68,7 @@ impl BTCodeDefinition {
 #[derive(Debug,Clone)]
 pub struct BTFuncProcDefinition {
     pub(crate) args: Vec<OrBundle<TypedArgument>>,
+    pub(crate) captures: Vec<OrBundle<Variable>>,
     pub(crate) block: Vec<BTStatement>,
     pub(crate) ret: Vec<OrBundle<BTExpression>>,
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>

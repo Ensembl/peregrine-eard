@@ -168,32 +168,62 @@ impl BuildContext {
         Ok(())
     }
 
-    fn make_statement(&mut self, vv: &[PTLetAssign], xx: &[PTExpression], declare: bool, bt: &mut BuildTree) -> Result<(),String> {
+    fn is_procedure(&self, x: &OrBundle<PTExpression>, bt: &mut BuildTree) -> Result<bool,String> {
+        Ok(match x {
+            OrBundle::Normal(PTExpression::Call(c)) => {
+                match self.lookup(&c.name)? {
+                    DefName::Proc(_) => true,
+                    _ => false
+                }
+            },
+            _ => false
+        })
+    }
+
+    fn lvalue_to_rvalue(&self, lvalue: &BTLValue) -> Result<CallArg<BTExpression>,String> {
+        let expr = match lvalue {
+            BTLValue::Variable(v) => BTExpression::Variable(v.clone()),
+            BTLValue::Bundle(b) => BTExpression::Bundle(b.to_string()),
+            BTLValue::Register(r) => BTExpression::RegisterValue(*r),
+            BTLValue::Repeater(r) => {return Ok(CallArg::Repeater(r.to_string())); }
+        };
+        Ok(CallArg::Expression(expr))
+    }
+
+    fn make_statement(&mut self, vv: &[PTLetAssign], xx: &[OrBundle<PTExpression>], declare: bool, bt: &mut BuildTree) -> Result<(),String> {
         /* Step 1: allocate temporaries */
         let mut regs = vec![];
         for v in vv.iter() {
-            regs.push(self.allocate_register());
+            match v {
+                PTLetAssign::Variable(_,_) => { regs.push(BTLValue::Register(self.allocate_register())); },
+                PTLetAssign::Bundle(b) => { regs.push(BTLValue::Bundle(b.to_string())); },
+                PTLetAssign::Repeater(r) => { regs.push(BTLValue::Repeater(r.to_string())); },
+            }
         }
         /* Step 2: evaluate expressions and put into temporaries */
-        if vv.len() == xx.len() {
-            /* Lengths equal, so pair off */
-            for (x,reg) in xx.iter().zip(regs.iter()) {   
-                let expr = self.build_expression(bt,x)?;    
-                let stmt = bt.statement(None,vec![
-                    CallArg::Expression(expr)
-                ],Some(vec![BTLValue::Register(*reg)]))?;
-                self.add_statement(bt,stmt)?;
-            }
-        } else if xx.len() == 1 {
-            /* Right is single but lengths don't match so multi-return */
+        if xx.len() == 1 && self.is_procedure(&xx[0],bt)? {
             match &xx[0] {
-                PTExpression::Call(call) => {
-                    let rets = regs.iter().map(|x| BTLValue::Register(*x)).collect::<Vec<_>>();
-                    self.build_proc(Some(rets),bt,call)?;
+                OrBundle::Normal(PTExpression::Call(call)) => {
+                    self.build_proc(Some(regs.clone()),bt,call)?;
                 },
                 _ => {
                     return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
                 }
+            }
+        } else if vv.len() == xx.len() {
+            /* Lengths equal, so pair off */
+            for (x,reg) in xx.iter().zip(regs.clone().iter()) {
+                let call_arg = match x {
+                    OrBundle::Normal(x) => {
+                        let expr = self.build_expression(bt,x)?;    
+                        CallArg::Expression(expr)
+                    },
+                    OrBundle::Bundle(b) => {
+                        CallArg::Bundle(b.to_string())
+                    }
+                };
+                let stmt = bt.statement(None,vec![call_arg],Some(vec![reg.clone()]))?;
+                self.add_statement(bt,stmt)?;
             }
         } else {
             return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
@@ -207,13 +237,16 @@ impl BuildContext {
         /* Step 4: assign from temporaries to variables */
         for (v,reg) in vv.iter().zip(regs.iter()) {
             let lvalue = match v {
-                PTLetAssign::Variable(v, _) => BTLValue::Variable(v.clone()),
-                PTLetAssign::Repeater(r) => BTLValue::Repeater(r.to_string())
+                PTLetAssign::Variable(v,_) => Some(BTLValue::Variable(v.clone())),
+                PTLetAssign::Bundle(_) => None,
+                PTLetAssign::Repeater(_) => None
             };
-            let stmt = bt.statement(None,vec![
-                CallArg::Expression(BTExpression::RegisterValue(*reg))
-            ],Some(vec![lvalue]))?;
-            self.add_statement(bt,stmt)?;
+            if let Some(lvalue) = lvalue {
+                let stmt = bt.statement(None,vec![
+                    self.lvalue_to_rvalue(reg)?
+                ],Some(vec![lvalue]))?;
+                self.add_statement(bt,stmt)?;    
+            }
         }
         /* Step 5: check sizes */
         for v in vv.iter() {
@@ -245,14 +278,17 @@ impl BuildContext {
     }
 
     fn build_declare(&mut self, bt: &mut BuildTree, decl: &PTLetAssign) -> Result<(),String> {
-        let stmt = match decl {
+        let stmt = BTStatementValue::Declare(match decl {
             PTLetAssign::Variable(var,_) => {
-                BTStatementValue::Declare(BTDeclare::Variable(var.clone()))
-            }
+                BTDeclare::Variable(var.clone())
+            },
+            PTLetAssign::Bundle(b) => {
+                BTDeclare::Bundle(b.to_string())
+            },
             PTLetAssign::Repeater(r) => {
-                BTStatementValue::Declare(BTDeclare::Repeater(r.to_string()))
+               BTDeclare::Repeater(r.to_string())
             }
-        };
+        });
         self.add_statement(bt,stmt)?;
         Ok(())
     }
@@ -348,14 +384,6 @@ impl BuildContext {
             PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; }
             PTStatementValue::Code(c) => { self.define_code(c,bt)?; },
 
-            /*
-            PTStatementValue::Capture(vars) => {
-                for v in vars {
-                    self.add_statement(bt,crate::buildtree::BTStatementValue::Capture(v.clone()))?;
-                }
-            },
-            */
-
             // XXX declare after eval
             PTStatementValue::LetStatement(vv,xx) => {
                 self.make_statement(vv,xx,true,bt)?;
@@ -363,7 +391,8 @@ impl BuildContext {
             PTStatementValue::ModifyStatement(vv,xx) => {
                 /* Dress up our variable, temporarily */
                 let vv = vv.iter().map(|v| PTLetAssign::Variable(v.clone(),vec![])).collect::<Vec<_>>();
-                self.make_statement(&vv,xx,false,bt)?;
+                let xx = xx.iter().map(|x| OrBundle::Normal(x.clone())).collect::<Vec<_>>();
+                self.make_statement(&vv,&xx,false,bt)?;
             },
             PTStatementValue::BareCall(c) => {
                 self.build_proc(None,bt,c)?;

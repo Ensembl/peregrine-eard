@@ -5,6 +5,7 @@ mod model;
 mod preprocess;
 mod parser;
 mod parsetree;
+mod unbundle;
 
 #[cfg(test)]
 mod test;

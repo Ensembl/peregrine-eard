@@ -50,3 +50,8 @@ fn test_macro_clash() {
 fn test_buildtree_smoke() {
     run_parse_tests(include_str!("testdata/buildtree-smoke.etf"));
 }
+
+#[test]
+fn test_bundle_smoke() {
+    run_parse_tests(include_str!("testdata/bundle-smoke.etf"));
+}

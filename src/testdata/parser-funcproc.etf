@@ -619,7 +619,7 @@ procedure test(a) {
     PTStatement{
         value:LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [Constant(Number(2.0))]
+            [Normal(Constant(Number(2.0)))]
         ),
         file:["test"],
         line_no:2,
@@ -628,7 +628,7 @@ procedure test(a) {
     PTStatement{
         value:LetStatement(
             [Variable(Variable{prefix:None,name:"y"},[])],
-            [Constant(Number(20.0))]
+            [Normal(Constant(Number(20.0)))]
         ),
         file:["test"],
         line_no:3,
@@ -752,7 +752,7 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
             )
         ],
         [
-            Call(PTCall{
+            Normal(Call(PTCall{
                 name:"c",
                 args:[
                     Expression(Variable(Variable{prefix:None,name:"a"})),
@@ -760,7 +760,7 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
                     Expression(Variable(Variable{prefix:None,name:"c"}))
                 ],
                 is_macro:false
-            })
+            }))
         ]
     ),
     file:["test"],

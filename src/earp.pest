@@ -179,8 +179,7 @@ procedure_return_types = _{ funcproc_return_type ~ ("," ~ funcproc_return_type)*
 procedure_return = { "->" ~ (("(" ~ procedure_return_types ~ ")")| funcproc_return_type )  }
 procedure_return_option = { procedure_return? }
 
-procedure_named_expression = _{ ("(" ~ expression ~ ("," ~ expression)* ~ ")")| expression? }
-procedure_expression = { (bundle|procedure_named_expression) }
+procedure_expression = { ("(" ~ expr_or_bundle ~ ("," ~ expr_or_bundle)* ~ ")")| expr_or_bundle? }
 
 procedure = {
     funcproc_modifiers ~
@@ -193,7 +192,8 @@ procedure = {
 /* statements */
 
 let_decl = {
-    (variable ~ (":" ~ check_annotation+)?)
+    (variable ~ (":" ~ check_annotation+)?) |
+    bundle
 }
 
 let_decls = {
@@ -202,13 +202,20 @@ let_decls = {
     repeater
 }
 
+expr_or_bundle = { expression | bundle }
+
 rhs_tuple = {
     ( "(" ~ (expression ~ ("," ~ expression)*) ~ ")"  ~ ";" ) |
     expression ~ ";"
 }
 
+let_rhs_tuple = {
+    ( "(" ~ (expr_or_bundle ~ ("," ~ expr_or_bundle)*) ~ ")"  ~ ";" ) |
+    expr_or_bundle ~ ";"
+}
+
 let_statement = { 
-    "let" ~ let_decls ~ "=" ~ rhs_tuple
+    "let" ~ let_decls ~ "=" ~ let_rhs_tuple
 }
 
 modify_lvalue = _{

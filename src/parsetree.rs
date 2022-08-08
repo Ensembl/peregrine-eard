@@ -29,21 +29,11 @@ pub trait PTTransformer {
 }
 
 impl CallArg<PTExpression> {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<CallArg<PTExpression>,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<CallArg<PTExpression>,String> {
         Ok(match self {
-            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context,None)?),
+            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context)?),
             CallArg::Bundle(s) => CallArg::Bundle(s),
-            CallArg::Repeater(r) => {
-                let mut bad = true;
-                if let Some(allow_repeat) = allow_repeat {
-                    if *allow_repeat {
-                        *allow_repeat = false;
-                        bad = false;
-                    }
-                }
-                if bad { transformer.bad_repeater(pos)?; }
-                CallArg::Repeater(r)
-            }
+            CallArg::Repeater(r) => CallArg::Repeater(r)
         })
     }
 }
@@ -56,12 +46,10 @@ pub struct PTCall {
 }
 
 impl PTCall {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<PTCall,String> {
-        let mut no_repeat = false;
-        let allow_repeat = allow_repeat.unwrap_or(&mut no_repeat);
+    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTCall,String> {
         let mut args = vec![];
         for arg in self.args {
-            args.push(arg.transform(transformer,pos,context,Some(allow_repeat))?);
+            args.push(arg.transform(transformer,pos,context)?);
         }
         Ok(PTCall {
             name: self.name,
@@ -70,11 +58,11 @@ impl PTCall {
         })
     }
 
-    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: Option<&mut bool>) -> Result<PTExpression,String> {
+    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTExpression,String> {
         if let Some(repl) = transformer.call_to_expr(&self,context)? {
             Ok(repl)
         } else {
-            Ok(PTExpression::Call(self.transform(transformer,pos,context,top)?))
+            Ok(PTExpression::Call(self.transform(transformer,pos,context)?))
         }
     }
 
@@ -90,6 +78,7 @@ impl PTCall {
 #[derive(Debug,Clone)]
 pub enum PTLetAssign {
     Variable(Variable,Vec<Check>),
+    Bundle(String),
     Repeater(String)
 }
 
@@ -138,18 +127,17 @@ pub enum PTExpression {
 }
 
 impl PTExpression {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<PTExpression,String> {
-        let mut no_repeats = false;
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTExpression,String> {
         Ok(match self {
             PTExpression::FiniteSequence(mut exprs) => {
-                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context,None)).collect::<Result<Vec<_>,_>>()?)
+                PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context)).collect::<Result<Vec<_>,_>>()?)
             },
             PTExpression::InfiniteSequence(expr) => {
-                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,context,None)?))
+                PTExpression::InfiniteSequence(Box::new(expr.transform(transformer,pos,context)?))
             },
             PTExpression::Infix(a,f,b) => {
-                let a = a.transform(transformer,pos,context,None)?;
-                let b = b.transform(transformer,pos,context,None)?;
+                let a = a.transform(transformer,pos,context)?;
+                let b = b.transform(transformer,pos,context)?;
                 if let Some(repl) = transformer.replace_infix(&a,&f,&b)? {
                     repl
                 } else {
@@ -157,7 +145,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Prefix(f,a) => {
-                let a = a.transform(transformer,pos,context,None)?;
+                let a = a.transform(transformer,pos,context)?;
                 if let Some(repl) = transformer.replace_prefix(&f,&a)? {
                     repl
                 } else {
@@ -165,7 +153,7 @@ impl PTExpression {
                 }
             },
             PTExpression::Call(call) => {
-                call.transform_expression(transformer,pos,context,allow_repeat)?
+                call.transform_expression(transformer,pos,context)?
             },
             x => x
         })
@@ -201,7 +189,7 @@ impl OrBundle<PTExpression> {
     fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<OrBundle<PTExpression>,String> {
         Ok(match self {
             OrBundle::Normal(mut expr) => {
-                OrBundle::Normal(expr.transform(transformer,pos,context,None)?)
+                OrBundle::Normal(expr.transform(transformer,pos,context)?)
             },
             x => x
         })
@@ -253,7 +241,7 @@ pub enum PTStatementValue {
     ProcDef(PTProcDef),
 
     /* instructions */
-    LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
+    LetStatement(Vec<PTLetAssign>,Vec<OrBundle<PTExpression>>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     BareCall(PTCall),
 }
@@ -267,17 +255,16 @@ impl PTStatement {
                 if count_repeats > 1 {
                     return Err(format!("only one repeat permitted per statement"));
                 }
-                let mut allow_repeat = count_repeats > 0;
                 let mut exprs = vec![];
                 for rvalue in rvalues {
-                    exprs.push(rvalue.transform(transformer,pos,self.context,Some(&mut allow_repeat))?);
+                    exprs.push(rvalue.transform(transformer,pos,self.context)?);
                 }
                 PTStatementValue::LetStatement(lvalues,exprs)
             },
             PTStatementValue::ModifyStatement(lvalues,mut rvalues) => {
                 let context = self.context.clone();
                 let rvalues = rvalues.drain(..).map(|x| 
-                    x.transform(transformer,pos,context,None)
+                    x.transform(transformer,pos,context)
                 ).collect::<Result<_,_>>()?;
                 PTStatementValue::ModifyStatement(lvalues,rvalues)
             },
@@ -285,7 +272,7 @@ impl PTStatement {
                 if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {
                     return Ok(repl);
                 } else {
-                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context,None)?)
+                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context)?)
                 }
             },
             PTStatementValue::FuncDef(call) => {

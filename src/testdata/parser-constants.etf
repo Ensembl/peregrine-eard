@@ -12,10 +12,10 @@ let x = [true,false];
     PTStatement {
         value: LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [FiniteSequence([
+            [Normal(FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false))
-            ])]
+            ]))]
         ),
         file: ["test"],
         line_no: 2,
@@ -35,7 +35,7 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
     PTStatement {
         value: LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [FiniteSequence([
+            [Normal(FiniteSequence([
                 Constant(Number(1.0)),
                 Constant(Number(2.0)),
                 Constant(Number(-3.0)),
@@ -43,7 +43,7 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
                 Constant(Number(0.55)),
                 Constant(Number(-0.065)),
                 Constant(Number(0.007))
-            ])]
+            ]))]
         ),
         file: ["test"],
         line_no: 1,
@@ -65,7 +65,7 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
     PTStatement {
         value: LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [FiniteSequence([
+            [Normal(FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
                 Constant(String("\"")),
@@ -75,7 +75,7 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
                 Constant(String("€")),
                 Constant(String("\n\r\u{8}\t\u{12}")),
                 Constant(String("01"))
-            ])]
+            ]))]
         ),
         file: ["test"],
         line_no: 2,
@@ -109,7 +109,7 @@ let x = [
     PTStatement {
         value: LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [FiniteSequence([
+            [Normal(FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
                 Constant(String("\"")),
@@ -121,7 +121,7 @@ let x = [
                 Constant(String("01")),
                 Constant(String("\"hello")),
                 Constant(String("h\"e\"l\"l\"o"))
-            ])]
+            ]))]
         ),
         file: ["test"],
         line_no: 2,
@@ -143,12 +143,12 @@ let x = [true,false,frue,talse];
     PTStatement {
         value: LetStatement(
             [Variable(Variable{prefix:None,name:"x"},[])],
-            [FiniteSequence([
+            [Normal(FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false)),
                 Variable(Variable{prefix:None,name:"frue"}),
                 Variable(Variable{prefix:None,name:"talse"})
-            ])]
+            ]))]
         ),
         file: ["test"],
         line_no: 2,
@@ -172,42 +172,42 @@ let e = [0,x,y,z];
 
 [
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"a"},[])],[FiniteSequence([])]),
+        value: LetStatement([Variable(Variable{prefix:None,name:"a"},[])],[Normal(FiniteSequence([]))]),
         file: ["test"],
         line_no: 2,
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"b"},[])],[FiniteSequence([
+        value: LetStatement([Variable(Variable{prefix:None,name:"b"},[])],[Normal(FiniteSequence([
             Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
-        ])]),
+        ]))]),
         file: ["test"],
         line_no: 3,
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"c"},[])],[FiniteSequence([
+        value: LetStatement([Variable(Variable{prefix:None,name:"c"},[])],[Normal(FiniteSequence([
             Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
-        ])]),
+        ]))]),
         file: ["test"],
         line_no: 4,
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"d"},[])],[FiniteSequence([
+        value: LetStatement([Variable(Variable{prefix:None,name:"d"},[])],[Normal(FiniteSequence([
             Constant(String("hello")),Constant(String("world"))
-        ])]),
+        ]))]),
         file: ["test"],
         line_no: 5,
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"e"},[])],[FiniteSequence([
+        value: LetStatement([Variable(Variable{prefix:None,name:"e"},[])],[Normal(FiniteSequence([
             Constant(Number(0.0)),
             Variable(Variable{prefix:None,name:"x"}),
             Variable(Variable{prefix:None,name:"y"}),
             Variable(Variable{prefix:None,name:"z"})
-        ])]),
+        ]))]),
         file: ["test"],
         line_no: 6,
         context: 1
@@ -224,8 +224,7 @@ let x = "hello\uGHIJ";
 
 >> parse-fail strip
 
-expected simple_expression
-
+expected expr_or_bundle
 >> test
 
 Bad strings 2
@@ -236,7 +235,7 @@ let x = "hello\w";
 
 >> parse-fail strip
 
-expected simple_expression
+expected expr_or_bundle
 
 >> test
 
@@ -248,4 +247,4 @@ let x = "hello\u00\u01";
 
 >> parse-fail strip
 
-expected simple_expression
+expected expr_or_bundle

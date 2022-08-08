@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue, PTLetAssign}, model::{Variable, CallArg, Constant}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue, PTLetAssign}, model::{Variable, CallArg, Constant, OrBundle}, unbundle::{self, Unbundle}};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -17,7 +17,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
         Ok(vec![PTStatement {
             value: PTStatementValue::LetStatement(
                 vec![PTLetAssign::Variable(Variable{ prefix: None, name: "x".to_string()},vec![])],
-                vec![value.clone()]
+                vec![OrBundle::Normal(value.clone())]
             ),
             file: Arc::new(pos.0.to_vec()),
             line_no: pos.1,
@@ -176,9 +176,9 @@ pub(super) fn run_parse_tests(data: &str) {
             continue;
         }
         if let Some((built_options,built)) = sections.get("built") {
-            match processed {
+            match &processed {
                 Ok(preproc) => {
-                    let output = compilation.build(preproc);
+                    let output = compilation.build(preproc.to_vec());
                     match output {
                         Ok(output) => {
                             eprintln!("{:#?}",output);
@@ -196,6 +196,17 @@ pub(super) fn run_parse_tests(data: &str) {
                     assert!(false);
                 }
             }
+        }
+        if let Some((unbundle_options,unbundle)) = sections.get("unbundle") {
+            let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
+            let mut unbundle = Unbundle::new(&processed);
+            unbundle.unbundle().expect("unbundle failed");
+        }
+        if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
+            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
+            let mut unbundle = Unbundle::new(&processed);
+            let error = unbundle.unbundle().expect_err("unbundle unexpectedly succeeded");
+            assert_eq!(process_ws(&error,unbundle_options),process_ws(&unbundle_err,unbundle_options));
         }
     }
 }    

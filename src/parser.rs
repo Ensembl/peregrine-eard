@@ -306,17 +306,23 @@ impl EarpParser {
     fn arg_total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
     fn arg_ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
 
-    fn let_decl(input: Node) -> PestResult<(Variable,Vec<Check>)> {
+    fn let_decl(input: Node) -> PestResult<OrBundle<(Variable,Vec<Check>)>> {
         Ok(match_nodes!(input.into_children();
-            [variable(v),check_annotation(c)..] =>
-                (v,c.collect())
+            [variable(v),check_annotation(c)..] => OrBundle::Normal((v,c.collect())),
+            [bundle(b)] => OrBundle::Bundle(b)
         ))
     }
 
     fn let_decls(input: Node) -> PestResult<Vec<PTLetAssign>> {
         Ok(match_nodes!(input.into_children();
-            [let_decl(v)..] =>
-                v.map(|(v,c)| PTLetAssign::Variable(v,c)).collect(),
+            [let_decl(v)..] => {
+                v.map(|x| {
+                    match x {
+                        OrBundle::Normal((v,c)) => PTLetAssign::Variable(v,c),
+                        OrBundle::Bundle(b) => PTLetAssign::Bundle(b)
+                    }
+                }).collect()
+            },
             [repeater(v)] =>
                 vec![PTLetAssign::Repeater(v)]
         ))
@@ -330,9 +336,17 @@ impl EarpParser {
         Ok(out)
     }
 
+    fn let_rhs_tuple(input: Node) -> PestResult<Vec<OrBundle<PTExpression>>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::expr_or_bundle(child)?);
+        }
+        Ok(out)
+    }
+
     fn let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
-            [let_decls(d),rhs_tuple(t)] =>
+            [let_decls(d),let_rhs_tuple(t)] =>
                 PTStatementValue::LetStatement(d,t),
         ))
     }
@@ -601,8 +615,7 @@ impl EarpParser {
 
     fn procedure_expression(input: Node) -> PestResult<Vec<OrBundle<PTExpression>>> {
         Ok(match_nodes!(input.into_children();
-            [expression(x)..] => x.map(|x| OrBundle::Normal(x)).collect(),
-            [bundle(b)] => vec![OrBundle::Bundle(b)]
+            [expr_or_bundle(x)..] => x.collect(),
         ))
     }
 
@@ -665,7 +678,13 @@ impl EarpParser {
         Ok(match_nodes!(input.into_children();
             [expr6(x)] => x
         ))
+    }
 
+    fn expr_or_bundle(input: Node) -> PestResult<OrBundle<PTExpression>> {
+        Ok(match_nodes!(input.into_children();
+            [expression(x)] => OrBundle::Normal(x),
+            [bundle(b)] => OrBundle::Bundle(b)
+        ))
     }
 
     fn file(input: Node) -> PestResult<Vec<PTStatement>> {

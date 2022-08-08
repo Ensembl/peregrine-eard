@@ -7,6 +7,7 @@ pub enum BTExpression {
     Constant(Constant),
     Variable(Variable),
     RegisterValue(usize),
+    Bundle(String),
     Function(BTFuncCall)
 }
 
@@ -14,15 +15,16 @@ pub enum BTExpression {
 #[derive(Debug,Clone)]
 pub enum BTLValue {
     Variable(Variable),
+    Bundle(String),
     Register(usize),
     Repeater(String)
 }
 
 #[derive(Debug,Clone)]
 pub struct BTProcCall {
-    proc_index: Option<usize>,
-    args: Vec<CallArg<BTExpression>>,
-    rets: Option<Vec<BTLValue>>
+    pub(crate) proc_index: Option<usize>,
+    pub(crate) args: Vec<CallArg<BTExpression>>,
+    pub(crate) rets: Option<Vec<BTLValue>>
 }
 
 #[derive(Debug,Clone)]
@@ -43,7 +45,6 @@ pub enum BTStatementValue {
     Define(usize),
     Declare(BTDeclare),
     Check(Variable,Check),
-    Capture(OrBundle<Variable>),
     Statement(BTProcCall)
 }
 
@@ -85,8 +86,8 @@ pub enum BTDefinition {
 
 #[derive(Debug,Clone)]
 pub struct BuildTree {
-    statements: Vec<BTStatement>,
-    definitions: Vec<BTDefinition>
+    pub(crate) statements: Vec<BTStatement>,
+    pub(crate) definitions: Vec<BTDefinition>
 }
 
 impl BuildTree {

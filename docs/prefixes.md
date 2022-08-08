@@ -37,6 +37,3 @@ In the process we determine:
 1. In step 3, the repeated instances;
 2. In step 4, the bundle variables to return;
 3. In step 5, the bundle arguments to pass.
-
-XXX captures
-XXX scoping

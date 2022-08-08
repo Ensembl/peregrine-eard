@@ -313,6 +313,7 @@ BuildTree {
                         }
                     )
                 ],
+                captures: [],
                 block: [],
                 ret: [Normal(Constant(Number(0.0)))],
                 ret_type: None
@@ -334,6 +335,7 @@ BuildTree {
                         }
                     )
                 ],
+                captures: [],
                 block: [],
                 ret: [Normal(Constant(Number(0.0)))],
                 ret_type: None
@@ -347,6 +349,7 @@ BuildTree {
                         typespec: ArgTypeSpec { arg_types: [], checks: [] }
                     })
                 ],
+                captures: [],
                 block: [
                     BTStatement {
                         value: Statement(BTProcCall {
@@ -632,12 +635,12 @@ BuildTree{
         }
     ],
     definitions:[
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(42.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(23.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
+        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(42.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(23.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
     ]
 }

@@ -266,6 +266,12 @@ impl EarpParser {
         Ok(out)
     }
 
+    fn capture_decls(input: Node) -> PestResult<Vec<OrBundle<Variable>>> {
+        Ok(match_nodes!(input.into_children();
+            [capture_decl(t)..] => t.flatten().collect::<Vec<OrBundle<Variable>>>()
+        ))
+    }
+
     fn macro_call(input: Node) -> PestResult<PTCall> {
         Ok(match_nodes!(input.into_children();
             [macro_identifier(name),argument(args)..] => PTCall { name, args: args.collect(), is_macro: true },
@@ -473,7 +479,6 @@ impl EarpParser {
         let value = match_nodes!(input.into_children();
             [let_statement(s)] => s,
             [modify_statement(s)] => s,
-            [capture_decl(c)] => PTStatementValue::Capture(c),
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
             [macro_call(c)] => PTStatementValue::BareCall(c)
         );
@@ -568,10 +573,11 @@ impl EarpParser {
 
     fn function(input: Node) -> PestResult<PTFuncDef> {
         Ok(match_nodes!(input.into_children();
-            [funcproc_modifiers(f),identifier(id),funcproc_args(c),function_return(r),inner_block(b)..,function_value(x)] =>
+            [funcproc_modifiers(f),identifier(id),funcproc_args(c),function_return(r),capture_decls(p),inner_block(b)..,function_value(x)] =>
                 PTFuncDef {
                     name: id,
                     args: c,
+                    captures: p,
                     block: b.collect(),
                     value: x,
                     value_type: r,
@@ -602,10 +608,11 @@ impl EarpParser {
 
     fn procedure(input: Node) -> PestResult<PTProcDef> {
         Ok(match_nodes!(input.into_children();
-            [funcproc_modifiers(f),identifier(id),funcproc_args(args),procedure_return_option(ret_args),inner_block(b)..,procedure_expression(r)] => {
+            [funcproc_modifiers(f),identifier(id),funcproc_args(args),procedure_return_option(ret_args),capture_decls(p),inner_block(b)..,procedure_expression(r)] => {
                 PTProcDef {
                     name: id,
                     args,
+                    captures: p,
                     block: b.collect(),
                     ret: r,
                     ret_type: ret_args,

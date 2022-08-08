@@ -165,9 +165,12 @@ capture_decl = {
     "capture" ~ capture ~ ( "," ~ capture)* ~ ";"
 }
 
+capture_decls = { capture_decl* }
+
 function = {
     funcproc_modifiers ~
     "function" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ function_return  ~ "{" ~
+        capture_decls ~
         inner_block* ~ function_value ~
     "}"
 }
@@ -182,6 +185,7 @@ procedure_expression = { (bundle|procedure_named_expression) }
 procedure = {
     funcproc_modifiers ~
     "procedure" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ procedure_return_option  ~ "{" ~
+        capture_decls ~
         inner_block* ~ procedure_expression ~
     "}"
 }
@@ -220,7 +224,6 @@ inner_block = {
     let_statement |
     modify_statement |
     bare_statement |
-    capture_decl |
     (macro_call ~ ";")
 }
 

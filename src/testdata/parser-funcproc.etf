@@ -27,6 +27,7 @@ export function first(a: seq(?X)) -> ?X {
                     }
                 })
             ],
+            captures: [],
             block: [
                 PTStatement {
                     value: BareCall(PTCall{
@@ -100,6 +101,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
                     }
                 })
             ],
+            captures: [],
             block: [],
             value: Normal(Constant(Number(42.0))),
             value_type: Some(ArgTypeSpec{
@@ -124,7 +126,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
 
 >> parse-fail strip
 
-expected function_value or inner_block
+expected function_value, capture_decl, or inner_block
 
 >> test
 
@@ -151,6 +153,7 @@ function inc(a) {
                     }
                 })
             ],
+            captures: [],
             block: [],
             value: Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
             value_type: None
@@ -187,6 +190,7 @@ function more(a: number length(?X)) {
                     }
                 })
             ],
+            captures: [],
             block: [],
             value: Normal(Constant(Number(3.0))),
             value_type: None
@@ -216,6 +220,7 @@ function func(*x) {
             name: "func",
             modifiers: [],
             args: [Bundle("x")],
+            captures: [],
             block: [
                 PTStatement {
                     value: BareCall(PTCall{
@@ -253,6 +258,7 @@ function x() { 42 }
             name: "x",
             modifiers: [],
             args: [],
+            captures: [],
             block: [],
             value: Normal(Constant(Number(42.0))),
             value_type: None
@@ -298,6 +304,7 @@ procedure x(a: number, b: number) -> (number,number) {
                     }
                 })
             ],
+            captures: [],
             block:[
                 PTStatement{
                     value:BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
@@ -374,6 +381,7 @@ procedure x(a: number, b: number) -> (number) {
                         }
                 })
             ],
+            captures: [],
             block: [],
             ret: [
                 Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
@@ -419,6 +427,7 @@ procedure x(a: number, b: number) -> number {
                     }
                 })
             ],
+            captures: [],
             block: [],
             ret: [
                 Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
@@ -463,6 +472,7 @@ procedure x(a: number, b: number) {
                     }
                 })
             ],
+            captures: [],
             block: [],
             ret: [],
             ret_type: None
@@ -507,6 +517,7 @@ procedure x(a, b: length(?X...)) {
                     }
                 })
             ],
+            captures: [],
             block: [],
             ret: [],
             ret_type: None
@@ -566,6 +577,7 @@ procedure x(a, b: length(?X...), *c) {
                 }),
                 Bundle("c")
             ],
+            captures: [],
             block:[
                 PTStatement{
                     value:ModifyStatement(
@@ -629,17 +641,11 @@ procedure test(a) {
             args:[
                 Normal(TypedArgument{id:"a",typespec:ArgTypeSpec{arg_types:[],checks:[]}})
             ],
-            block:[
-                PTStatement{
-                    value:Capture([
-                        Normal(Variable{prefix:None,name:"x"}),
-                        Normal(Variable{prefix:None,name:"y"})
-                    ]),
-                    file:["test"],
-                    line_no:6,
-                    context:1
-                }
+            captures:[
+                Normal(Variable{prefix:None,name:"x"}),
+                Normal(Variable{prefix:None,name:"y"})
             ],
+            block:[],
             ret:[
                 Normal(
                     Infix(
@@ -698,6 +704,7 @@ procedure x(a, b: length(?X...), *c) {
                 }),
                 Bundle("c")
             ],
+            captures: [],
             block: [
                 PTStatement {
                     value: ModifyStatement(

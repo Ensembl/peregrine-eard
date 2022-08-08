@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDeclare, BuildContext, BTExpression, BTFuncCall, BTLValue, BTFuncProcDefinition, BTDefinitionVariety}, model::{CodeModifier, Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument, CodeRegisterArgument, CodeArgument, CodeBlock}};
+use crate::{buildtree::{BuildTree, BTDeclare, BTStatementValue}, model::{Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument, CodeBlock}, buildtreebuilder::BuildContext};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -28,13 +28,6 @@ pub trait PTTransformer {
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
 
-impl CodeBlock {
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        bt.define_code(self,bc)?;
-        Ok(())
-    }
-}
-
 impl CallArg<PTExpression> {
     fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, allow_repeat: Option<&mut bool>) -> Result<CallArg<PTExpression>,String> {
         Ok(match self {
@@ -51,14 +44,6 @@ impl CallArg<PTExpression> {
                 if bad { transformer.bad_repeater(pos)?; }
                 CallArg::Repeater(r)
             }
-        })
-    }
-
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<CallArg<BTExpression>,String> {
-        Ok(match self {
-            CallArg::Expression(x) => CallArg::Expression(x.build(bt,bc)?),
-            CallArg::Bundle(n) => CallArg::Bundle(n.to_string()),
-            CallArg::Repeater(n) => CallArg::Repeater(n.to_string())
         })
     }
 }
@@ -100,20 +85,6 @@ impl PTCall {
             Ok(None)
         }
     }
-
-    fn build_proc(&self, rets: Option<Vec<BTLValue>>, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let index = bc.lookup_proc(&self.name)?;
-        let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
-        let stmt = bt.statement(Some(index),args,rets,bc)?;
-        bc.add_statement(bt,stmt)?;
-        Ok(())
-    }
-
-    fn build_func(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<BTFuncCall,String> {
-        let index = bc.lookup_func(&self.name)?;
-        let args = self.args.iter().map(|a| a.build(bt,bc)).collect::<Result<_,_>>()?;
-        Ok(bt.function_call(index,args,bc)?)
-    }
 }
 
 #[derive(Debug,Clone)]
@@ -129,32 +100,6 @@ impl PTLetAssign {
             _ => false
         }
     }
-
-    fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let stmt = match self {
-            PTLetAssign::Variable(var,_) => {
-                bt.declare(BTDeclare::Variable(var.clone()),bc)?
-            }
-            PTLetAssign::Repeater(r) => {
-                bt.declare(BTDeclare::Repeater(r.to_string()),bc)?
-            }
-        };
-        bc.add_statement(bt,stmt)?;
-        Ok(())
-    }
-
-    fn checks(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        match self {
-            PTLetAssign::Variable(var,checks) => {
-                for check in checks.iter() {
-                    let stmt = bt.check(var,check,bc)?;
-                    bc.add_statement(bt,stmt)?;
-                }
-            },
-            _ => {}
-        }
-        Ok(())
-    }
 }
 
 impl OrBundle<(Variable,Vec<Check>)> {
@@ -163,8 +108,7 @@ impl OrBundle<(Variable,Vec<Check>)> {
             OrBundle::Normal((v, _)) => BTDeclare::Variable(v.clone()),
             OrBundle::Bundle(b) => BTDeclare::Bundle(b.to_string())
         };
-        let stmt = bt.declare(declare,bc)?;
-        bc.add_statement(bt,stmt)?;
+        bc.add_statement(bt,BTStatementValue::Declare(declare))?;
         Ok(())
     }
 
@@ -172,7 +116,7 @@ impl OrBundle<(Variable,Vec<Check>)> {
         match self {
             OrBundle::Normal((var,checks)) => {
                 for check in checks.iter() {
-                    let stmt = bt.check(var,check,bc)?;
+                    let stmt = BTStatementValue::Check(var.clone(),check.clone());
                     bc.add_statement(bt,stmt)?;
                 }
             },
@@ -226,43 +170,6 @@ impl PTExpression {
             x => x
         })
     }
-
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<BTExpression,String> {
-        Ok(match self {
-            PTExpression::Constant(c) => BTExpression::Constant(c.clone()),
-
-            PTExpression::FiniteSequence(items) => {
-                let reg = bc.allocate_register();
-                let stmt = bt.statement(Some(bc.lookup_func("__operator_finseq")?), vec![], Some(vec![BTLValue::Register(reg)]),bc)?; // XXX out to reg
-                bc.add_statement(bt,stmt)?;
-                for item in items {
-                    let built = item.build(bt,bc)?;
-                    let stmt = bt.statement(Some(bc.lookup_proc("__operator_push")?), vec![
-                        CallArg::Expression(BTExpression::RegisterValue(reg)),
-                        CallArg::Expression(built)
-                    ], Some(vec![BTLValue::Register(reg)]),bc)?;
-                    bc.add_statement(bt,stmt)?;
-                }
-                BTExpression::RegisterValue(reg)
-            },
-            PTExpression::InfiniteSequence(x) => {
-                BTExpression::Function(BTFuncCall {
-                    func_index: bc.lookup_func("__operator_infseq")?,
-                    args: vec![CallArg::Expression(x.build(bt,bc)?)],
-                })
-            },
-
-            PTExpression::Variable(v) => BTExpression::Variable(v.clone()),
-            PTExpression::Call(c) => {
-                BTExpression::Function(c.build_func(bt,bc)?)
-            },
-
-            PTExpression::Infix(_, n, _) |
-            PTExpression::Prefix(n, _) => {
-                panic!("operator {} should have been replaced during preprocessing!",n);
-            }
-        })
-    }
 }
 
 #[derive(Debug,Clone)]
@@ -270,6 +177,7 @@ pub struct PTFuncDef {
     pub name: String,
     pub modifiers: Vec<FuncProcModifier>,
     pub args: Vec<OrBundle<TypedArgument>>,
+    pub captures: Vec<OrBundle<Variable>>,
     pub block: Vec<PTStatement>,
     pub value: OrBundle<PTExpression>,
     pub value_type: Option<ArgTypeSpec>
@@ -281,22 +189,11 @@ impl PTFuncDef {
             name: self.name,
             args: self.args,
             modifiers: self.modifiers,
+            captures: self.captures,
             block: PTStatement::transform_list(self.block,transformer)?,
             value: self.value.transform(transformer,pos,context)?,
             value_type: self.value_type
         })
-    }
-
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let ret_type = self.value_type.as_ref().map(|x| vec![x.clone()]);
-        let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(false,&self.name,&self.args,ret_type,export,bt);
-        for stmt in &self.block {
-            stmt.build(bt,bc)?;
-        }
-        let expr = self.value.build(bt,bc)?;
-        bc.pop_funcproc_target(&[expr],bt)?;
-        Ok(())
     }
 }
 
@@ -309,13 +206,6 @@ impl OrBundle<PTExpression> {
             x => x
         })
     }
-
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<OrBundle<BTExpression>,String> {
-        Ok(match self {
-            OrBundle::Normal(n) => OrBundle::Normal(n.build(bt,bc)?),
-            OrBundle::Bundle(b) => OrBundle::Bundle(b.clone())
-        })
-    }
 }
 
 #[derive(Debug,Clone)]
@@ -323,6 +213,7 @@ pub struct PTProcDef {
     pub name: String,
     pub modifiers: Vec<FuncProcModifier>,
     pub args: Vec<OrBundle<TypedArgument>>,
+    pub captures: Vec<OrBundle<Variable>>,
     pub block: Vec<PTStatement>,
     pub ret: Vec<OrBundle<PTExpression>>,
     pub ret_type: Option<Vec<ArgTypeSpec>>
@@ -334,21 +225,11 @@ impl PTProcDef {
             name: self.name,
             args: self.args,
             modifiers: self.modifiers,
+            captures: self.captures,
             block: PTStatement::transform_list(self.block,transformer)?,
             ret: self.ret.drain(..).map(|x| x.transform(transformer,pos,context)).collect::<Result<_,_>>()?,
             ret_type: self.ret_type
         })
-    }
-
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let export = self.modifiers.contains(&FuncProcModifier::Export);
-        bc.push_funcproc_target(true,&self.name,&self.args,self.ret_type.clone(),export,bt);
-        for stmt in &self.block {
-            stmt.build(bt,bc)?;
-        }
-        let ret = self.ret.iter().map(|x| x.build(bt,bc)).collect::<Result<Vec<_>,_>>()?;
-        bc.pop_funcproc_target(&ret,bt)?;
-        Ok(())
     }
 }
 
@@ -372,66 +253,10 @@ pub enum PTStatementValue {
     ProcDef(PTProcDef),
 
     /* instructions */
-    Capture(Vec<OrBundle<Variable>>),
     LetStatement(Vec<PTLetAssign>,Vec<PTExpression>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     BareCall(PTCall),
 }
-
-fn make_statement(vv: &[PTLetAssign], xx: &[PTExpression], declare: bool, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-    /* Step 1: allocate temporaries */
-    let mut regs = vec![];
-    for v in vv.iter() {
-        regs.push(bc.allocate_register());
-    }
-    /* Step 2: evaluate expressions and put into temporaries */
-    if vv.len() == xx.len() {
-        /* Lengths equal, so pair off */
-        for (x,reg) in xx.iter().zip(regs.iter()) {   
-            let expr = x.build(bt,bc)?;    
-            let stmt = bt.statement(None,vec![
-                CallArg::Expression(expr)
-            ],Some(vec![BTLValue::Register(*reg)]),bc)?;
-            bc.add_statement(bt,stmt)?;
-        }
-    } else if xx.len() == 1 {
-        /* Right is single but lengths don't match so multi-return */
-        match &xx[0] {
-            PTExpression::Call(call) => {
-                let rets = regs.iter().map(|x| BTLValue::Register(*x)).collect::<Vec<_>>();
-                call.build_proc(Some(rets),bt,bc)?;
-            },
-            _ => {
-                return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
-            }
-        }
-    } else {
-        return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
-    }
-    if declare {
-        /* Step 3: declare variables */
-        for v in vv.iter() {
-            v.declare(bt,bc)?;
-        }
-    }
-    /* Step 4: assign from temporaries to variables */
-    for (v,reg) in vv.iter().zip(regs.iter()) {
-        let lvalue = match v {
-            PTLetAssign::Variable(v, _) => BTLValue::Variable(v.clone()),
-            PTLetAssign::Repeater(r) => BTLValue::Repeater(r.to_string())
-        };
-        let stmt = bt.statement(None,vec![
-            CallArg::Expression(BTExpression::RegisterValue(*reg))
-        ],Some(vec![lvalue]),bc)?;
-        bc.add_statement(bt,stmt)?;
-    }
-    /* Step 5: check sizes */
-    for v in vv.iter() {
-        v.checks(bt,bc)?;
-    }
-    Ok(())
-}
-
 
 impl PTStatement {
     pub fn transform(self, transformer: &mut dyn PTTransformer) -> Result<Vec<PTStatement>,String> {
@@ -508,46 +333,13 @@ impl PTStatement {
         Ok(out)    
     }
 
-    fn build(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        match &self.value {
-            PTStatementValue::Include(_) |
-            PTStatementValue::Flag(_) => {
-                panic!("item should have been eliminated from build tree");
-            },
-
-            PTStatementValue::FuncDef(f) => { f.build(bt,bc)?; },
-            PTStatementValue::ProcDef(p) => { p.build(bt,bc)?; }
-            PTStatementValue::Code(c) => { c.build(bt,bc)?; },
-
-            PTStatementValue::Capture(vars) => {
-                for v in vars {
-                    bc.add_statement(bt,crate::buildtree::BTStatementValue::Capture(v.clone()))?;
-                }
-            },
-
-            // XXX declare after eval
-            PTStatementValue::LetStatement(vv,xx) => {
-                make_statement(vv,xx,true,bt,bc)?;
-            },
-            PTStatementValue::ModifyStatement(vv,xx) => {
-                /* Dress up our variable, temporarily */
-                let vv = vv.iter().map(|v| PTLetAssign::Variable(v.clone(),vec![])).collect::<Vec<_>>();
-                make_statement(&vv,xx,false,bt,bc)?;
-            },
-            PTStatementValue::BareCall(c) => {
-                c.build_proc(None,bt,bc)?;
-            },
-        }
-        Ok(())
-    }
-
     pub(crate) fn to_build_tree(this: Vec<Self>) -> Result<BuildTree,String> {
         let mut bt = BuildTree::new();
         let mut bc = BuildContext::new();
         for stmt in this.iter() {
             bc.set_location(&stmt.file,stmt.line_no);
             bc.set_file_context(stmt.context);
-            stmt.build(&mut bt,&mut bc).map_err(|e| {
+            bc.build_statement(&mut bt,&stmt).map_err(|e| {
                 at(&e,Some(bc.location()))
             })?;
         }

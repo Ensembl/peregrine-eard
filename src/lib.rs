@@ -1,4 +1,5 @@
 mod buildtree;
+mod buildtreebuilder;
 mod compiler;
 mod model;
 mod preprocess;

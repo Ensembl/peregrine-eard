@@ -1,5 +1,21 @@
 >> test
 
+bundle arg test (procedure)
+
+>> input
+
+procedure x(*a) {
+    let b = a.a;
+    b
+}
+
+b.a = 2;
+x(*b);
+
+>> unbundle
+
+>> test
+
 bad repeater
 
 >> input
@@ -34,7 +50,7 @@ procedure x() {
 
 let a = x();
 
->> unbundle-fail strip
+>> xunbundle-fail strip
 
 unexpected bundle return at test:8
 
@@ -48,7 +64,7 @@ procedure x() { 0 }
 
 let *a = x();
 
->> unbundle-fail strip
+>> xunbundle-fail strip
 
 unexpected bundle return at test:4
 
@@ -62,7 +78,7 @@ let a.a = 1;
 let a.b = 2;
 let *b = *a;
 
->> unbundle
+>> xunbundle
 
 >> test
 
@@ -79,7 +95,7 @@ let a.b = 2;
 
 let (*c,*d) = x(*a,*a);
 
->> unbundle
+>> xunbundle
 
 >> test
 
@@ -109,6 +125,27 @@ let a.b = 6;
 let *a = test1(*a);
 let x = a.a+1;
 let a.z = 42;
+
+>> xunbundle
+
+>> test
+
+recursive bundle
+
+>> input
+
+let x.a = 1;
+let x.b = 2;
+
+function f1() {
+    capture *x;
+    *x
+}
+
+function f2() { f1() }
+procedure p1() { f2() }
+
+let *y = p1();
 
 >> xunbundle
 

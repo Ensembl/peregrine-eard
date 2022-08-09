@@ -183,7 +183,7 @@ impl BuildContext {
     fn lvalue_to_rvalue(&self, lvalue: &BTLValue) -> Result<CallArg<BTExpression>,String> {
         let expr = match lvalue {
             BTLValue::Variable(v) => BTExpression::Variable(v.clone()),
-            BTLValue::Bundle(b) => BTExpression::Bundle(b.to_string()),
+            BTLValue::Bundle(b) => { return Ok(CallArg::Bundle(b.to_string())); },
             BTLValue::Register(r) => BTExpression::RegisterValue(*r),
             BTLValue::Repeater(r) => {return Ok(CallArg::Repeater(r.to_string())); }
         };

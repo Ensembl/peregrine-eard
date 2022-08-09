@@ -7,7 +7,7 @@ pub enum BTExpression {
     Constant(Constant),
     Variable(Variable),
     RegisterValue(usize),
-    Bundle(String),
+    //Bundle(String),
     Function(BTFuncCall)
 }
 
@@ -136,5 +136,23 @@ impl BuildTree {
 
     pub(super) fn add_statement(&mut self, stmt: BTStatement) {
         self.statements.push(stmt);
+    }
+
+    pub(crate) fn get_function(&self, f: &BTFuncCall) -> Result<&BTFuncProcDefinition,String> {
+        Ok(match &self.definitions[f.func_index] {
+            BTDefinition::Func(f) => f,
+            _ => { return Err(format!("expected function, got non-function")); }
+        })
+    }
+
+    pub(crate) fn get_procedure(&self, p: &BTProcCall) -> Result<Option<&BTFuncProcDefinition>,String> {
+        if let Some(index) = p.proc_index {
+            Ok(match &self.definitions[index] {
+                BTDefinition::Proc(p) => Some(p),
+                _ => { return Err(format!("expected function, got non-function")); }
+            })
+        } else {
+            Ok(None)
+        }
     }
 }

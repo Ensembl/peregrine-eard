@@ -30,7 +30,7 @@ At any point in time, tracing the call-graph backwards, we will have seen uses o
 
 4. When a bundle return is found, we apply the algorithm within the call, marking the return prefix as containing the same unresolved variables as in the call return and working up through the function.
 
-5. When a bundle is found in the start of a function, the unresolved variables are assigned to the bundle argument in the call.
+5. When a bundle is found in the args to a function, the unresolved variables are assigned to the bundle argument in the call.
 
 In the process we determine:
 

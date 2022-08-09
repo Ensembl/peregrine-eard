@@ -85,8 +85,29 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_expression(&self) -> Result<OrBundle<()>,String> {
-        todo!();
+    fn unbundle_callarg(&self, x: &CallArg<BTExpression>) -> Result<Option<String>,String> {
+        Ok(match x {
+            CallArg::Expression(BTExpression::Function(f)) => {
+                let defn = match &self.bt.definitions[f.func_index] {
+                    BTDefinition::Func(f) => f,
+                    _ => { panic!("expected func definition"); }
+                };
+                self.unbundle_expression(&defn.ret[0])?
+            },
+            CallArg::Expression(_) => None,
+            CallArg::Bundle(b) => Some(b.to_string()),
+            CallArg::Repeater(_) => { panic!("unexpected repeater"); }
+        })
+    }
+
+    fn unbundle_expression(&self, x: &OrBundle<BTExpression>) -> Result<Option<String>,String> {
+        Ok(match x {
+            OrBundle::Normal(BTExpression::Function(f)) => {
+                self.unbundle_expression(&self.bt.get_function(f)?.ret[0])?
+            },
+            OrBundle::Normal(_) => None,
+            OrBundle::Bundle(b) => Some(b.to_string())
+        })
     }
 
     fn unbundle_repeater(&self, call: &BTProcCall) -> Result<(),String> {
@@ -99,27 +120,36 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_defn(&self, defn: &BTFuncProcDefinition, outside: &[Option<String>]) -> Result<(),String> {
-        let inside = defn.ret.iter().map(|x| {
+    fn unbundle_defn(&mut self, defn: &BTFuncProcDefinition, ret_outsides: &[Option<String>], arg_outsides: &[Option<String>]) -> Result<(),String> {
+        /* return expression */
+        let ret_insides = defn.ret.iter().map(|x| {
+            self.unbundle_expression(x)
+        }).collect::<Result<Vec<_>,_>>()?;
+        self.bundle_match(&ret_insides,ret_outsides,true)?;
+        /* statements */
+        for stmt in defn.block.iter().rev() {
+            self.unbundle_stmt(stmt)?;
+        }
+        /* arguments */
+        let arg_insides = defn.args.iter().map(|x| {
             match x {
                 OrBundle::Normal(_) => None,
                 OrBundle::Bundle(b) => Some(b.to_string())
             }
         }).collect::<Vec<_>>();
-        self.bundle_return_match(&inside,outside)?;
-        self.unbundle_expression();
-        //todo!(); // final expression
-        for stmt in defn.block.iter().rev() {
-            //todo!(); // each statement
-        }
+        self.bundle_match(&arg_insides,arg_outsides,false)?;
         Ok(())
     }
 
-    fn bundle_return_match(&self, insides: &[Option<String>], outsides: &[Option<String>]) -> Result<(),String> {
+    fn bundle_match(&self, insides: &[Option<String>], outsides: &[Option<String>], ret: bool) -> Result<(),String> {
         for (inside,outside) in insides.iter().zip(outsides.iter()) {
             match (inside,outside) {
                 (Some(inside),Some(outside)) => {
-                    println!("> bundle return match inside {:?} outside {:?}",inside,outside);
+                    if ret {
+                        println!("> bundle return match inside {:?} outside {:?}",inside,outside);
+                    } else {
+                        println!("> bundle arg match inside {:?} outside {:?}",inside,outside);
+                    }
                 },
                 (None,None) => {},
                 _ => {
@@ -130,7 +160,7 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_proccall(&self, call: &BTProcCall) -> Result<(),String> {
+    fn unbundle_proccall(&mut self, call: &BTProcCall) -> Result<(),String> {
         if self.uses_repeater(call)? {
             if self.is_good_repeater(call)? {
                 self.unbundle_repeater(call)?;
@@ -138,28 +168,38 @@ impl<'a> Unbundle<'a> {
                 return Err(self.error_at("bad repeater statement"));
             }
         } else {
-            println!("NORMAL");
-            let outside = call.rets.as_ref().unwrap_or(&vec![]).iter().map(|ret| {
+            let ret_outsides = call.rets.as_ref().unwrap_or(&vec![]).iter().map(|ret| {
                 match ret {
                     BTLValue::Bundle(b) => Some(b.to_string()),
                     _ => None
                 }
             }).collect::<Vec<_>>();
-            if let Some(index) = call.proc_index {
-                let defn = match &self.bt.definitions[index] {
-                    BTDefinition::Proc(p) => p,
-                    _ => { panic!("expected proc definition"); }
-                };
-                self.unbundle_defn(defn,&outside)?;
+            let arg_outsides = call.args.iter().map(|arg| {
+                match arg {
+                    CallArg::Expression(_) => None,
+                    CallArg::Bundle(b) => Some(b.to_string()),
+                    CallArg::Repeater(_) => { panic!("Unexpected repeater"); }
+                }
+            }).collect::<Vec<_>>();
+            if let Some(defn) = self.bt.get_procedure(call)? {
+                self.unbundle_defn(defn,&ret_outsides,&arg_outsides)?;
             } else {
                 let inside = call.args.iter().map(|x| {
-                    match x {
-                        CallArg::Bundle(b) => Some(b.to_string()),
-                        _ => None
-                    }
-                }).collect::<Vec<_>>();
-                self.bundle_return_match(&inside,&outside)?;
+                    self.unbundle_callarg(x)
+                }).collect::<Result<Vec<_>,_>>()?;
+                self.bundle_match(&inside,&ret_outsides,true)?   
             }
+        }
+        Ok(())
+    }
+
+    fn unbundle_stmt(&mut self, stmt: &BTStatement) -> Result<(),String> {
+        println!("B {:?}",stmt);
+        self.position = Some((stmt.file.clone(),stmt.line_no));
+        match &stmt.value {
+            BTStatementValue::Declare(d) => self.unbundle_declare(d)?,
+            BTStatementValue::Statement(s) => self.unbundle_proccall(s)?,
+            _ => {}
         }
         Ok(())
     }
@@ -167,13 +207,7 @@ impl<'a> Unbundle<'a> {
     pub(crate) fn unbundle(&mut self) -> Result<(),String> {
         println!("A");
         for stmt in self.bt.statements.iter().rev() {
-            println!("B {:?}",stmt);
-            self.position = Some((stmt.file.clone(),stmt.line_no));
-            match &stmt.value {
-                BTStatementValue::Declare(d) => self.unbundle_declare(d)?,
-                BTStatementValue::Statement(s) => self.unbundle_proccall(s)?,
-                _ => {}
-            }
+            self.unbundle_stmt(stmt)?;
         }
         Ok(())
     }

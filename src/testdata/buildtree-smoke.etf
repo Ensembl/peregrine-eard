@@ -137,19 +137,19 @@ BuildTree {
                 BTProcCall {
                     proc_index: None,
                     args: [
-                        Expression(
+                        Normal(
                             Function(
                                 BTFuncCall {
                                     func_index: 0,
                                     args: [
-                                        Expression(Constant(Number(1.0))),
-                                        Expression(Constant(Number(1.0)))
+                                        Normal(Constant(Number(1.0))),
+                                        Normal(Constant(Number(1.0)))
                                     ]
                                 }
                             )
                         )
                     ],
-                    rets: Some([Register(2)])
+                    rets: Some([Normal(Register(2))])
                 }
             ),
             file: ["test"],
@@ -160,29 +160,29 @@ BuildTree {
                 BTProcCall {
                     proc_index: None,
                     args: [
-                        Expression(Function(
+                        Normal(Function(
                             BTFuncCall {
                                 func_index: 0,
                                 args: [
-                                    Expression(Constant(Number(2.0))),
-                                    Expression(Constant(Number(2.0)))
+                                    Normal(Constant(Number(2.0))),
+                                    Normal(Constant(Number(2.0)))
                                 ]
                             }
                         ))
                     ],
-                    rets: Some([Register(3)])
+                    rets: Some([Normal(Register(3))])
                 }
             ),
             file: ["test"],
             line_no: 10
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "a" })),
+            value: Declare(Normal(Variable { prefix: None, name: "a" })),
             file: ["test"],
             line_no: 10
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "b" })),
+            value: Declare(Normal(Variable { prefix: None, name: "b" })),
             file: ["test"],
             line_no: 10
         },
@@ -190,8 +190,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(RegisterValue(2))],
-                    rets: Some([Variable(Variable { prefix: None, name: "a" })])
+                    args: [Normal(RegisterValue(2))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "a" }))])
                 }
             ),
             file: ["test"],
@@ -201,8 +201,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(RegisterValue(3))],
-                    rets: Some([Variable(Variable { prefix: None, name: "b" })])
+                    args: [Normal(RegisterValue(3))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "b" }))])
                 }
             ),
             file: ["test"],
@@ -212,20 +212,20 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: Some(2),
-                    args: [Expression(Constant(Number(6.0)))],
-                    rets: Some([Register(4),Register(5)])
+                    args: [Normal(Constant(Number(6.0)))],
+                    rets: Some([Normal(Register(4)),Normal(Register(5))])
                 }
             ),
             file: ["test"],
             line_no: 11
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "c" })),
+            value: Declare(Normal(Variable { prefix: None, name: "c" })),
             file: ["test"],
             line_no: 11
         },
         BTStatement {
-            value: Declare(Variable(Variable { prefix: None, name: "d"})),
+            value: Declare(Normal(Variable { prefix: None, name: "d"})),
             file: ["test"],
             line_no: 11
         },
@@ -233,19 +233,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(RegisterValue(4))],
-                    rets: Some([Variable(Variable { prefix: None, name: "c" })])
-                }
-            ),
-            file: ["test"],
-            line_no: 11
-        },
-        BTStatement {
-            value: Statement(
-                BTProcCall {
-                    proc_index: None,
-                    args: [Expression(RegisterValue(5))],
-                    rets: Some([Variable(Variable { prefix: None, name: "d" })])
+                    args: [Normal(RegisterValue(4))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "c" }))])
                 }
             ),
             file: ["test"],
@@ -255,8 +244,19 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(Variable(Variable { prefix: None, name: "d" }))],
-                    rets: Some([Register(6)])
+                    args: [Normal(RegisterValue(5))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "d" }))])
+                }
+            ),
+            file: ["test"],
+            line_no: 11
+        },
+        BTStatement {
+            value: Statement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [Normal(Variable(Variable { prefix: None, name: "d" }))],
+                    rets: Some([Normal(Register(6))])
                 }
             ),
             file: ["test"],
@@ -266,8 +266,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(Variable(Variable { prefix: None, name: "c" }))],
-                    rets: Some([Register(7)])
+                    args: [Normal(Variable(Variable { prefix: None, name: "c" }))],
+                    rets: Some([Normal(Register(7))])
                 }
             ),
             file: ["test"],
@@ -277,8 +277,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(RegisterValue(6))],
-                    rets: Some([Variable(Variable { prefix: None, name: "c" })])
+                    args: [Normal(RegisterValue(6))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "c" }))])
                 }
             ),
             file: ["test"],
@@ -288,8 +288,8 @@ BuildTree {
             value: Statement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Expression(RegisterValue(7))],
-                    rets: Some([Variable(Variable { prefix: None, name: "d" })])
+                    args: [Normal(RegisterValue(7))],
+                    rets: Some([Normal(Variable(Variable { prefix: None, name: "d" }))])
                 }
             ),
             file: ["test"],
@@ -355,27 +355,27 @@ BuildTree {
                         value: Statement(BTProcCall {
                             proc_index: None,
                             args: [
-                                Expression(
+                                Normal(
                                     Function(BTFuncCall {
                                         func_index: 0,
                                         args: [
-                                            Expression(
+                                            Normal(
                                                 Variable(Variable { prefix: None, name: "x" })
                                             ),
-                                            Expression(
+                                            Normal(
                                                 Constant(Number(1.0))
                                             )
                                         ]
                                     })
                                 )
                             ],
-                            rets: Some([Register(1)])
+                            rets: Some([Normal(Register(1))])
                         }),
                         file: ["test"],
                         line_no: 5
                     },
                     BTStatement {
-                        value: Declare(Variable(Variable { prefix: None, name: "y" })),
+                        value: Declare(Normal(Variable { prefix: None, name: "y" })),
                         file: ["test"],
                         line_no: 5
                     },
@@ -384,11 +384,11 @@ BuildTree {
                             BTProcCall {
                                 proc_index: None,
                                 args: [
-                                    Expression(
+                                    Normal(
                                         RegisterValue(1)
                                     )
                                 ],
-                                rets: Some([Variable(Variable { prefix: None, name: "y" })])
+                                rets: Some([Normal(Variable(Variable { prefix: None, name: "y" }))])
                             }
                         ),
                         file: ["test"],
@@ -399,15 +399,15 @@ BuildTree {
                     Normal(Function(BTFuncCall {
                         func_index: 1,
                         args: [
-                            Expression(Constant(Number(42.0))),
-                            Expression(Variable(Variable { prefix: None, name: "x" }))
+                            Normal(Constant(Number(42.0))),
+                            Normal(Variable(Variable { prefix: None, name: "x" }))
                         ]
                     })),
                     Normal(Function(BTFuncCall {
                         func_index: 1,
                         args: [
-                            Expression(Constant(Number(23.0))),
-                            Expression(Variable(Variable { prefix: None, name: "y" }))
+                            Normal(Constant(Number(23.0))),
+                            Normal(Variable(Variable { prefix: None, name: "y" }))
                         ]
                     }))
                 ],
@@ -454,22 +454,22 @@ BuildTree{
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(Constant(Number(1.0)))],
-                rets:Some([Register(1)])
+                args:[Normal(Constant(Number(1.0)))],
+                rets:Some([Normal(Register(1))])
             }),
             file:["test"],
             line_no:13
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"x"})),
+            value:Declare(Normal(Variable{prefix:None,name:"x"})),
             file:["test"],
             line_no:13
         },
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(RegisterValue(1))],
-                rets:Some([Variable(Variable{prefix:None,name:"x"})])
+                args:[Normal(RegisterValue(1))],
+                rets:Some([Normal(Variable(Variable{prefix:None,name:"x"}))])
             }),
             file:["test"],
             line_no:13
@@ -477,22 +477,22 @@ BuildTree{
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(Constant(Number(2.0)))],
-                rets:Some([Register(2)])
+                args:[Normal(Constant(Number(2.0)))],
+                rets:Some([Normal(Register(2))])
             }),
             file:["test"],
             line_no:14
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"y"})),
+            value:Declare(Normal(Variable{prefix:None,name:"y"})),
             file:["test"],
             line_no:14
         },
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(RegisterValue(2))],
-                rets:Some([Variable(Variable{prefix:None,name:"y"})])
+                args:[Normal(RegisterValue(2))],
+                rets:Some([Normal(Variable(Variable{prefix:None,name:"y"}))])
             }),
             file:["test"],
             line_no:14
@@ -501,29 +501,29 @@ BuildTree{
             value:Statement(BTProcCall{
                 proc_index:None,
                 args:[
-                    Expression(Function(BTFuncCall{
+                    Normal(Function(BTFuncCall{
                         func_index:3,
                         args:[
-                            Expression(Variable(Variable{prefix:None,name:"x"})),
-                            Expression(Variable(Variable{prefix:None,name:"y"}))
+                            Normal(Variable(Variable{prefix:None,name:"x"})),
+                            Normal(Variable(Variable{prefix:None,name:"y"}))
                         ]
                     }))
                 ],
-                rets:Some([Register(3)])
+                rets:Some([Normal(Register(3))])
             }),
             file:["test"],
             line_no:15
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"z"})),
+            value:Declare(Normal(Variable{prefix:None,name:"z"})),
             file:["test"],
             line_no:15
         },
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(RegisterValue(3))],
-                rets:Some([Variable(Variable{prefix:None,name:"z"})])
+                args:[Normal(RegisterValue(3))],
+                rets:Some([Normal(Variable(Variable{prefix:None,name:"z"}))])
             }),
             file:["test"],
             line_no:15
@@ -534,7 +534,7 @@ BuildTree{
             line_no:15
         },
         BTStatement{
-            value:Statement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Register(4)])}),
+            value:Statement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Normal(Register(4))])}),
             file:["test"],
             line_no:16
         },
@@ -542,16 +542,16 @@ BuildTree{
             value:Statement(BTProcCall{
                 proc_index:Some(2),
                 args:[
-                    Expression(RegisterValue(4)),
-                    Expression(Function(BTFuncCall{
+                    Normal(RegisterValue(4)),
+                    Normal(Function(BTFuncCall{
                         func_index:4,
                         args:[
-                            Expression(Variable(Variable{prefix:None,name:"x"})),
-                            Expression(Constant(Number(1.0)))
+                            Normal(Variable(Variable{prefix:None,name:"x"})),
+                            Normal(Constant(Number(1.0)))
                         ]
                     }))
                 ],
-                rets:Some([Register(4)])
+                rets:Some([Normal(Register(4))])
             }),
             file:["test"],
             line_no:16
@@ -560,16 +560,16 @@ BuildTree{
             value:Statement(BTProcCall{
                 proc_index:Some(2),
                 args:[
-                    Expression(RegisterValue(4)),
-                    Expression(Function(BTFuncCall{
+                    Normal(RegisterValue(4)),
+                    Normal(Function(BTFuncCall{
                         func_index:3,
                         args:[
-                            Expression(Variable(Variable{prefix:None,name:"y"})),
-                            Expression(Constant(Number(1.0)))
+                            Normal(Variable(Variable{prefix:None,name:"y"})),
+                            Normal(Constant(Number(1.0)))
                         ]
                     }))
                 ],
-                rets:Some([Register(4)])
+                rets:Some([Normal(Register(4))])
             }),
             file:["test"],
             line_no:16
@@ -578,18 +578,18 @@ BuildTree{
             value:Statement(BTProcCall{
                 proc_index:Some(6),
                 args:[
-                    Expression(Function(BTFuncCall{
+                    Normal(Function(BTFuncCall{
                         func_index:0,
                         args:[
-                            Expression(Function(BTFuncCall{
+                            Normal(Function(BTFuncCall{
                                 func_index:3,args:[
-                                    Expression(Variable(Variable{prefix:None,name:"z"})),
-                                    Expression(Constant(Number(1.0)))
+                                    Normal(Variable(Variable{prefix:None,name:"z"})),
+                                    Normal(Constant(Number(1.0)))
                                 ]
                             }))
                         ]
                     })),
-                    Expression(RegisterValue(4))
+                    Normal(RegisterValue(4))
                 ],
                 rets:None
             }),
@@ -599,27 +599,27 @@ BuildTree{
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:Some(6),
-                args:[Expression(Constant(Number(6.0)))],
-                rets:Some([Register(5),Register(6)])
+                args:[Normal(Constant(Number(6.0)))],
+                rets:Some([Normal(Register(5)),Normal(Register(6))])
             }),
             file:["test"],
             line_no:17
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"a"})),
+            value:Declare(Normal(Variable{prefix:None,name:"a"})),
             file:["test"],
             line_no:17
         },
         BTStatement{
-            value:Declare(Variable(Variable{prefix:None,name:"b"})),
+            value:Declare(Normal(Variable{prefix:None,name:"b"})),
             file:["test"],
             line_no:17
         },
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(RegisterValue(5))],
-                rets:Some([Variable(Variable{prefix:None,name:"a"})])
+                args:[Normal(RegisterValue(5))],
+                rets:Some([Normal(Variable(Variable{prefix:None,name:"a"}))])
             }),
             file:["test"],
             line_no:17
@@ -627,8 +627,8 @@ BuildTree{
         BTStatement{
             value:Statement(BTProcCall{
                 proc_index:None,
-                args:[Expression(RegisterValue(6))],
-                rets:Some([Variable(Variable{prefix:None,name:"b"})])
+                args:[Normal(RegisterValue(6))],
+                rets:Some([Normal(Variable(Variable{prefix:None,name:"b"}))])
             }),
             file:["test"],
             line_no:17
@@ -641,6 +641,6 @@ BuildTree{
         Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
         Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
         Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(42.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Expression(Constant(Number(23.0))),Expression(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
+        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Normal(Constant(Number(42.0))),Normal(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Normal(Constant(Number(23.0))),Normal(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
     ]
 }

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTDeclare, BTProcCall, BTLValue, BTExpression, BTFuncProcDefinition, BTDefinition}, parsetree::at, model::{CallArg, OrBundle}};
+use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable}};
 
 pub(crate) struct Unbundle<'a> {
     bt: &'a BuildTree,
@@ -20,11 +20,11 @@ impl<'a> Unbundle<'a> {
         at(msg,pos)
     }
 
-    fn list_repeaters(&self, args: &[CallArg<BTExpression>]) -> Result<Vec<String>,String> {
+    fn list_repeaters(&self, args: &[OrBundleRepeater<BTExpression>]) -> Result<Vec<String>,String> {
         let mut repeaters = vec![];
         for arg in args {
             match arg {
-                CallArg::Expression(x) => {
+                OrBundleRepeater::Normal(x) => {
                     match x {
                         BTExpression::Function(f) => {
                             repeaters.append(&mut self.list_repeaters(&f.args)?);
@@ -32,8 +32,8 @@ impl<'a> Unbundle<'a> {
                         _ => {},
                     }
                 },
-                CallArg::Bundle(_) => {},
-                CallArg::Repeater(r) => { repeaters.push(r.to_string()) }
+                OrBundleRepeater::Bundle(_) => {},
+                OrBundleRepeater::Repeater(r) => { repeaters.push(r.to_string()) }
             }
         }
         Ok(repeaters)
@@ -48,7 +48,7 @@ impl<'a> Unbundle<'a> {
             _ => { return Ok(false); } // len != 1 on lhs
         };
         match rets {
-            BTLValue::Repeater(_) => {},
+            OrBundleRepeater::Repeater(_) => {},
             _ => { return Ok(false); } // lhs is not repeater
         }
         Ok(self.list_repeaters(&call.args)?.len() == 1)
@@ -57,7 +57,7 @@ impl<'a> Unbundle<'a> {
     fn uses_repeater(&self, call: &BTProcCall) -> Result<bool,String> {
         for ret in call.rets.as_ref().unwrap_or(&vec![]).iter() {
             match ret {
-                BTLValue::Repeater(_) => { return Ok(true); },
+                OrBundleRepeater::Repeater(_) => { return Ok(true); },
                 _ => {}
             }
         }
@@ -72,31 +72,31 @@ impl<'a> Unbundle<'a> {
         println!("> found bundle member source for {:?}.{:?}",name,var);
     }
 
-    fn unbundle_declare(&self, decl: &BTDeclare) -> Result<(),String> {
+    fn unbundle_declare(&self, decl: &OrBundleRepeater<Variable>) -> Result<(),String> {
         match decl {
-            BTDeclare::Variable(v) => {
+            OrBundleRepeater::Normal(v) => {
                 if let Some(prefix) = &v.prefix {
                     self.found_bundle_member_source(prefix,&v.name);
                 }
             },
-            BTDeclare::Repeater(r) => { self.found_bundle_source(r); }
-            BTDeclare::Bundle(r) => { self.found_bundle_source(r); }
+            OrBundleRepeater::Repeater(r) => { self.found_bundle_source(r); }
+            OrBundleRepeater::Bundle(r) => { self.found_bundle_source(r); }
         }
         Ok(())
     }
 
-    fn unbundle_callarg(&self, x: &CallArg<BTExpression>) -> Result<Option<String>,String> {
+    fn unbundle_callarg(&self, x: &OrBundleRepeater<BTExpression>) -> Result<Option<String>,String> {
         Ok(match x {
-            CallArg::Expression(BTExpression::Function(f)) => {
+            OrBundleRepeater::Normal(BTExpression::Function(f)) => {
                 let defn = match &self.bt.definitions[f.func_index] {
                     BTDefinition::Func(f) => f,
                     _ => { panic!("expected func definition"); }
                 };
                 self.unbundle_expression(&defn.ret[0])?
             },
-            CallArg::Expression(_) => None,
-            CallArg::Bundle(b) => Some(b.to_string()),
-            CallArg::Repeater(_) => { panic!("unexpected repeater"); }
+            OrBundleRepeater::Normal(_) => None,
+            OrBundleRepeater::Bundle(b) => Some(b.to_string()),
+            OrBundleRepeater::Repeater(_) => { panic!("unexpected repeater"); }
         })
     }
 
@@ -112,7 +112,7 @@ impl<'a> Unbundle<'a> {
 
     fn unbundle_repeater(&self, call: &BTProcCall) -> Result<(),String> {
         let source = match &call.rets.as_ref().expect("unbundling repeater from non-repeater")[0] {
-            BTLValue::Repeater(r) => r,
+            OrBundleRepeater::Repeater(r) => r,
             _ => { panic!("unbundling repeater from non-repeater {:?}",call); }
         };
         let target = self.list_repeaters(&call.args)?[0].to_string();
@@ -170,15 +170,15 @@ impl<'a> Unbundle<'a> {
         } else {
             let ret_outsides = call.rets.as_ref().unwrap_or(&vec![]).iter().map(|ret| {
                 match ret {
-                    BTLValue::Bundle(b) => Some(b.to_string()),
+                    OrBundleRepeater::Bundle(b) => Some(b.to_string()),
                     _ => None
                 }
             }).collect::<Vec<_>>();
             let arg_outsides = call.args.iter().map(|arg| {
                 match arg {
-                    CallArg::Expression(_) => None,
-                    CallArg::Bundle(b) => Some(b.to_string()),
-                    CallArg::Repeater(_) => { panic!("Unexpected repeater"); }
+                    OrBundleRepeater::Normal(_) => None,
+                    OrBundleRepeater::Bundle(b) => Some(b.to_string()),
+                    OrBundleRepeater::Repeater(_) => { panic!("Unexpected repeater"); }
                 }
             }).collect::<Vec<_>>();
             if let Some(defn) = self.bt.get_procedure(call)? {

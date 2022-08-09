@@ -23,14 +23,14 @@ let x.y = false;
 
 [
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Boolean(true)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Boolean(true)))]),
         file: ["test"],
         line_no: 2,
         context: 1
 
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:Some("x"),name:"y"},[])],[Normal(Constant(Boolean(false)))]),
+        value: LetStatement([Normal((Variable{prefix:Some("x"),name:"y"},[]))],[Normal(Constant(Boolean(false)))]),
         file: ["test"],
         line_no: 3,
         context: 1
@@ -50,10 +50,10 @@ let x = test!("macro");
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(Call(PTCall{
                 name: "test",
-                args: [Expression(Constant(String("macro")))],
+                args: [Normal(Constant(String("macro")))],
                 is_macro: true
             }))]
         ),
@@ -94,12 +94,12 @@ let x : length(a) length(bb...) total(ccc) ref(dddd) = [1,2,3];
 
 [
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[
                 Check{check_type:Length,name:"a"},
                 Check{check_type:LengthOrInfinite,name:"bb"},
                 Check{check_type:Sum,name:"ccc"},
                 Check{check_type:Reference,name:"dddd"}
-            ])],
+            ]))],
             [Normal(FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))]))]
         ),
         file: ["test"],
@@ -134,7 +134,7 @@ x = [4,5,6];
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))]))]
         ),
         file: ["test"],
@@ -167,9 +167,9 @@ c(1,2,3);
         value: BareCall(PTCall{
             name: "c",
             args: [
-                Expression(Constant(Number(1.0))),
-                Expression(Constant(Number(2.0))),
-                Expression(Constant(Number(3.0)))
+                Normal(Constant(Number(1.0))),
+                Normal(Constant(Number(2.0))),
+                Normal(Constant(Number(3.0)))
             ],
             is_macro: false
         }),
@@ -191,7 +191,7 @@ test!("123");
 
 [
     PTStatement {
-        value: BareCall(PTCall{name:"test",args:[Expression(Constant(String("123")))],is_macro:true}),
+        value: BareCall(PTCall{name:"test",args:[Normal(Constant(String("123")))],is_macro:true}),
         file: ["test"],
         line_no: 2,
         context: 1
@@ -211,9 +211,9 @@ let (a,b,c) = (x,y,z);
 [
     PTStatement{
         value:LetStatement([
-            Variable(Variable{prefix:None,name:"a"},[]),
-            Variable(Variable{prefix:None,name:"b"},[]),
-            Variable(Variable{prefix:None,name:"c"},[])
+            Normal((Variable{prefix:None,name:"a"},[])),
+            Normal((Variable{prefix:None,name:"b"},[])),
+            Normal((Variable{prefix:None,name:"c"},[]))
         ],[
             Normal(Variable(Variable{prefix:None,name:"x"})),
             Normal(Variable(Variable{prefix:None,name:"y"})),

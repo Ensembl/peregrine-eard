@@ -20,19 +20,19 @@ let z = 3;
 
 [
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Number(1.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Number(1.0)))]),
         file: ["test"],
         line_no: 2,
         context: 1
     },
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"y"},[])],[Normal(Constant(Number(2.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"y"},[]))],[Normal(Constant(Number(2.0)))]),
         file: ["test","include-macro-smoke2.earp"],
         line_no: 2,
         context: 2
     },
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"z"},[])],[Normal(Constant(Number(3.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"z"},[]))],[Normal(Constant(Number(3.0)))]),
         file: ["test","include-macro-smoke2.earp","include-macro-smoke3.earp"],
         line_no: 2,
         context: 3
@@ -92,13 +92,13 @@ let x = 1;
 
 [
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Number(1.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Number(1.0)))]),
         file: ["test","test1","test2"],
         line_no: 2,
         context: 3
     },
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Number(1.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Number(1.0)))]),
         file: ["test","test1","test2"],
         line_no: 2,
         context: 4
@@ -133,7 +133,7 @@ x!(2);
 
 [
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Number(2.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Number(2.0)))]),
         file: ["test"],
         line_no: 2,
         context: 1
@@ -153,16 +153,16 @@ let x = 4 * y!(z);
 [
     PTStatement{
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(Call(PTCall{
                 name: "__operator_mul",
                 args:[
-                    Expression(Constant(Number(4.0))),
-                    Expression(Call(PTCall{
+                    Normal(Constant(Number(4.0))),
+                    Normal(Call(PTCall{
                         name: "__operator_add",
                         args: [
-                            Expression(Variable(Variable{prefix:None,name:"z"})),
-                            Expression(Constant(Number(1.0)))
+                            Normal(Variable(Variable{prefix:None,name:"z"})),
+                            Normal(Constant(Number(1.0)))
                         ],
                         is_macro:false
                     }))
@@ -200,7 +200,7 @@ let x = 1;
 
 [
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],[Normal(Constant(Number(1.0)))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Number(1.0)))]),
         file: ["test","test1","test2","test3"],
         line_no: 2,
         context: 4
@@ -245,7 +245,7 @@ let **tr_gn = lookup(**gn,tr.gn);
                 name: "lookup",
                 args: [
                     Repeater("gn"),
-                    Expression(Variable(Variable{prefix:Some("tr"),name:"gn"}))
+                    Normal(Variable(Variable{prefix:Some("tr"),name:"gn"}))
                 ],
                 is_macro: false
             }))]
@@ -268,87 +268,87 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
 
 [
     PTStatement{
-        value: LetStatement([Variable(Variable{prefix:None,name:"x"},[])],
+        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],
         [Normal(Call(PTCall{
             name: "__operator_or",
             args:[
-                Expression(Call(PTCall{
+                Normal(Call(PTCall{
                     name: "__operator_or",
                     args:[
-                        Expression(Constant(Number(1.0))),
-                        Expression(Call(PTCall{
+                        Normal(Constant(Number(1.0))),
+                        Normal(Call(PTCall{
                             name: "__operator_and",
                             args:[
-                                Expression(Call(PTCall{
+                                Normal(Call(PTCall{
                                     name: "__operator_and",
                                     args:[
-                                        Expression(Constant(Number(2.0))),
-                                        Expression(Call(PTCall{
+                                        Normal(Constant(Number(2.0))),
+                                        Normal(Call(PTCall{
                                             name: "__operator_ne",
                                             args:[
-                                                Expression(Call(PTCall{
+                                                Normal(Call(PTCall{
                                                     name: "__operator_eq",
                                                     args:[
-                                                        Expression(Constant(Number(3.0))),
-                                                        Expression(Call(PTCall{
+                                                        Normal(Constant(Number(3.0))),
+                                                        Normal(Call(PTCall{
                                                             name: "__operator_lt",
                                                             args:[
-                                                                Expression(Call(PTCall{
+                                                                Normal(Call(PTCall{
                                                                     name: "__operator_gt",
                                                                     args:[
-                                                                        Expression(Constant(Number(4.0))),
-                                                                        Expression(Call(PTCall{
+                                                                        Normal(Constant(Number(4.0))),
+                                                                        Normal(Call(PTCall{
                                                                             name: "__operator_sub",
                                                                             args:[
-                                                                                Expression(Call(PTCall{
+                                                                                Normal(Call(PTCall{
                                                                                     name: "__operator_add",args:[
-                                                                                        Expression(Constant(Number(5.0))),
-                                                                                        Expression(Call(PTCall{
+                                                                                        Normal(Constant(Number(5.0))),
+                                                                                        Normal(Call(PTCall{
                                                                                             name: "__operator_div ",
                                                                                             args:[
-                                                                                                Expression(Call(PTCall{
+                                                                                                Normal(Call(PTCall{
                                                                                                     name: "__operator_mul",
                                                                                                     args:[
-                                                                                                        Expression(Constant(Number(6.0))),
-                                                                                                        Expression(Constant(Number(7.0)))
+                                                                                                        Normal(Constant(Number(6.0))),
+                                                                                                        Normal(Constant(Number(7.0)))
                                                                                                     ],
                                                                                                     is_macro:false
                                                                                                 })),
-                                                                                                Expression(Constant(Number(8.0)))
+                                                                                                Normal(Constant(Number(8.0)))
                                                                                             ],
                                                                                             is_macro: false
                                                                                         }))],
                                                                                         is_macro: false
                                                                                     })),
-                                                                                    Expression(Constant(Number(9.0)))
+                                                                                    Normal(Constant(Number(9.0)))
                                                                                 ],
                                                                                 is_macro: false
                                                                             }))
                                                                         ],
                                                                         is_macro: false
                                                                     })),
-                                                                    Expression(Constant(Number(10.0)))
+                                                                    Normal(Constant(Number(10.0)))
                                                                 ],
                                                                 is_macro: false
                                                             }))
                                                         ],
                                                         is_macro: false
                                                     })),
-                                                    Expression(Constant(Number(11.0)))
+                                                    Normal(Constant(Number(11.0)))
                                                 ],
                                                 is_macro: false
                                             }))
                                         ],
                                         is_macro:false
                                     })),
-                                    Expression(Constant(Number(12.0)))
+                                    Normal(Constant(Number(12.0)))
                                 ],
                                 is_macro:false
                             }))
                         ],
                         is_macro:false
                     })),
-                    Expression(Constant(Number(13.0)))
+                    Normal(Constant(Number(13.0)))
                 ],
                 is_macro:false
             })

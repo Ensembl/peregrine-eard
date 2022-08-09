@@ -11,7 +11,7 @@ let x = [true,false];
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false))
@@ -34,7 +34,7 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([
                 Constant(Number(1.0)),
                 Constant(Number(2.0)),
@@ -64,7 +64,7 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
@@ -108,7 +108,7 @@ let x = [
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([
                 Constant(String("hello")),
                 Constant(String("")),
@@ -142,7 +142,7 @@ let x = [true,false,frue,talse];
 [
     PTStatement {
         value: LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(FiniteSequence([
                 Constant(Boolean(true)),
                 Constant(Boolean(false)),
@@ -172,13 +172,13 @@ let e = [0,x,y,z];
 
 [
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"a"},[])],[Normal(FiniteSequence([]))]),
+        value: LetStatement([Normal((Variable{prefix:None,name:"a"},[]))],[Normal(FiniteSequence([]))]),
         file: ["test"],
         line_no: 2,
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"b"},[])],[Normal(FiniteSequence([
+        value: LetStatement([Normal((Variable{prefix:None,name:"b"},[]))],[Normal(FiniteSequence([
             Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
         ]))]),
         file: ["test"],
@@ -186,7 +186,7 @@ let e = [0,x,y,z];
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"c"},[])],[Normal(FiniteSequence([
+        value: LetStatement([Normal((Variable{prefix:None,name:"c"},[]))],[Normal(FiniteSequence([
             Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
         ]))]),
         file: ["test"],
@@ -194,7 +194,7 @@ let e = [0,x,y,z];
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"d"},[])],[Normal(FiniteSequence([
+        value: LetStatement([Normal((Variable{prefix:None,name:"d"},[]))],[Normal(FiniteSequence([
             Constant(String("hello")),Constant(String("world"))
         ]))]),
         file: ["test"],
@@ -202,7 +202,7 @@ let e = [0,x,y,z];
         context: 1
     },
     PTStatement {
-        value: LetStatement([Variable(Variable{prefix:None,name:"e"},[])],[Normal(FiniteSequence([
+        value: LetStatement([Normal((Variable{prefix:None,name:"e"},[]))],[Normal(FiniteSequence([
             Constant(Number(0.0)),
             Variable(Variable{prefix:None,name:"x"}),
             Variable(Variable{prefix:None,name:"y"}),

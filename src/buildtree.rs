@@ -1,13 +1,12 @@
 use std::{sync::Arc};
 
-use crate::{model::{ Variable, Check, CallArg, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock}};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock, OrBundleRepeater}};
 
 #[derive(Debug,Clone)]
 pub enum BTExpression {
     Constant(Constant),
     Variable(Variable),
     RegisterValue(usize),
-    //Bundle(String),
     Function(BTFuncCall)
 }
 
@@ -15,35 +14,30 @@ pub enum BTExpression {
 #[derive(Debug,Clone)]
 pub enum BTLValue {
     Variable(Variable),
-    Bundle(String),
-    Register(usize),
-    Repeater(String)
+    Register(usize)
 }
+
+// BTLValue -> OrBundleRepeater<BTLValue>
 
 #[derive(Debug,Clone)]
 pub struct BTProcCall {
     pub(crate) proc_index: Option<usize>,
-    pub(crate) args: Vec<CallArg<BTExpression>>,
-    pub(crate) rets: Option<Vec<BTLValue>>
+    pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
+    pub(crate) rets: Option<Vec<OrBundleRepeater<BTLValue>>>
 }
 
 #[derive(Debug,Clone)]
 pub struct BTFuncCall {
     pub(crate) func_index: usize,
-    pub(crate) args: Vec<CallArg<BTExpression>>
+    pub(crate) args: Vec<OrBundleRepeater<BTExpression>>
 }
 
-#[derive(Debug,Clone)]
-pub enum BTDeclare {
-    Variable(Variable),
-    Repeater(String),
-    Bundle(String)
-}
+// BTDeclare -> OrBundleRepeater<Variable>
 
 #[derive(Debug,Clone)]
 pub enum BTStatementValue {
     Define(usize),
-    Declare(BTDeclare),
+    Declare(OrBundleRepeater<Variable>),
     Check(Variable,Check),
     Statement(BTProcCall)
 }
@@ -113,14 +107,14 @@ impl BuildTree {
         Ok(())
     }
 
-    pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<CallArg<BTExpression>>, rets: Option<Vec<BTLValue>>) -> Result<BTStatementValue,String> {
+    pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<OrBundleRepeater<BTExpression>>, rets: Option<Vec<OrBundleRepeater<BTLValue>>>) -> Result<BTStatementValue,String> {
         Ok(BTStatementValue::Statement(BTProcCall {
             proc_index: defn,
             args, rets
         }))
     }
 
-    pub(crate) fn function_call(&self, defn: usize, args: Vec<CallArg<BTExpression>>) -> Result<BTFuncCall,String> {
+    pub(crate) fn function_call(&self, defn: usize, args: Vec<OrBundleRepeater<BTExpression>>) -> Result<BTFuncCall,String> {
         Ok(match &self.definitions[defn] {
             BTDefinition::Func(_) => {
                 BTFuncCall {

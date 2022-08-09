@@ -33,7 +33,7 @@ export function first(a: seq(?X)) -> ?X {
                     value: BareCall(PTCall{
                         name: "print",
                         args: [
-                            Expression(Constant(String("gettingfirstelement")))
+                            Normal(Constant(String("gettingfirstelement")))
                         ],
                         is_macro: false
                     }),
@@ -45,8 +45,8 @@ export function first(a: seq(?X)) -> ?X {
             value: Normal(Call(PTCall{
                 name: "entry",
                 args: [
-                    Expression(Variable(Variable{prefix:None,name:"a"})),
-                    Expression(Constant(Number(0.0)))
+                    Normal(Variable(Variable{prefix:None,name:"a"})),
+                    Normal(Constant(Number(0.0)))
                 ],
                 is_macro: false
             })),
@@ -225,7 +225,7 @@ function func(*x) {
                 PTStatement {
                     value: BareCall(PTCall{
                         name: "inc",
-                        args: [Expression(Variable(Variable{prefix:Some("x"),name:"a"}))],
+                        args: [Normal(Variable(Variable{prefix:Some("x"),name:"a"}))],
                         is_macro:false
                     }),
                     file: ["test"],
@@ -307,13 +307,13 @@ procedure x(a: number, b: number) -> (number,number) {
             captures: [],
             block:[
                 PTStatement{
-                    value:BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
+                    value:BareCall(PTCall{name:"print",args:[Normal(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
                     file:["test"],
                     line_no:3,
                     context:1
                 },
                 PTStatement{
-                    value:BareCall(PTCall{name:"print",args:[Expression(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
+                    value:BareCall(PTCall{name:"print",args:[Normal(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
                     file:["test"],
                     line_no:4,
                     context:1
@@ -618,7 +618,7 @@ procedure test(a) {
 [
     PTStatement{
         value:LetStatement(
-            [Variable(Variable{prefix:None,name:"x"},[])],
+            [Normal((Variable{prefix:None,name:"x"},[]))],
             [Normal(Constant(Number(2.0)))]
         ),
         file:["test"],
@@ -627,7 +627,7 @@ procedure test(a) {
     },
     PTStatement{
         value:LetStatement(
-            [Variable(Variable{prefix:None,name:"y"},[])],
+            [Normal((Variable{prefix:None,name:"y"},[]))],
             [Normal(Constant(Number(20.0)))]
         ),
         file:["test"],
@@ -738,26 +738,26 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
 [
     PTStatement{
         value: LetStatement([
-            Variable(
+            Normal((
                 Variable{prefix:None,name:"x"},[
                     Check{check_type:Length,name:"w"},
                     Check{check_type:Sum,name:"ww"}
                 ]
-            ),
-            Variable(
+            )),
+            Normal((
                 Variable{prefix:None,name:"y"},[]
-            ),
-            Variable(
+            )),
+            Normal((
                 Variable{prefix:None,name:"z"},[]
-            )
+            ))
         ],
         [
             Normal(Call(PTCall{
                 name:"c",
                 args:[
-                    Expression(Variable(Variable{prefix:None,name:"a"})),
-                    Expression(Variable(Variable{prefix:None,name:"b"})),
-                    Expression(Variable(Variable{prefix:None,name:"c"}))
+                    Normal(Variable(Variable{prefix:None,name:"a"})),
+                    Normal(Variable(Variable{prefix:None,name:"b"})),
+                    Normal(Variable(Variable{prefix:None,name:"c"}))
                 ],
                 is_macro:false
             }))
@@ -789,9 +789,9 @@ Procedure return (modify)
             Call(PTCall{
                 name: "c",
                 args:[
-                    Expression(Variable(Variable{prefix:None,name:"a"})),
-                    Expression(Variable(Variable{prefix:None,name:"b"})),
-                    Expression(Variable(Variable{prefix:None,name:"c"}))
+                    Normal(Variable(Variable{prefix:None,name:"a"})),
+                    Normal(Variable(Variable{prefix:None,name:"b"})),
+                    Normal(Variable(Variable{prefix:None,name:"c"}))
                 ],
                 is_macro:false
             })

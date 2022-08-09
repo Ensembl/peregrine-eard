@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::{buildtree::{BuildTree, BTDeclare, BTStatementValue}, model::{Variable, Check, FuncProcModifier, CallArg, Constant, OrBundle, TypeSpec, ArgTypeSpec, TypedArgument, CodeBlock}, buildtreebuilder::BuildContext};
+use crate::{buildtree::{BuildTree, BTStatementValue}, model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, CodeBlock, OrBundleRepeater}, buildtreebuilder::BuildContext};
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {
@@ -28,12 +28,12 @@ pub trait PTTransformer {
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
 
-impl CallArg<PTExpression> {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<CallArg<PTExpression>,String> {
+impl OrBundleRepeater<PTExpression> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<OrBundleRepeater<PTExpression>,String> {
         Ok(match self {
-            CallArg::Expression(x) => CallArg::Expression(x.transform(transformer,pos,context)?),
-            CallArg::Bundle(s) => CallArg::Bundle(s),
-            CallArg::Repeater(r) => CallArg::Repeater(r)
+            OrBundleRepeater::Normal(x) => OrBundleRepeater::Normal(x.transform(transformer,pos,context)?),
+            OrBundleRepeater::Bundle(s) => OrBundleRepeater::Bundle(s),
+            OrBundleRepeater::Repeater(r) => OrBundleRepeater::Repeater(r)
         })
     }
 }
@@ -41,7 +41,7 @@ impl CallArg<PTExpression> {
 #[derive(Debug,Clone)]
 pub struct PTCall {
     pub name: String,
-    pub args: Vec<CallArg<PTExpression>>,
+    pub args: Vec<OrBundleRepeater<PTExpression>>,
     pub is_macro: bool // removed in preprocessing
 }
 
@@ -75,27 +75,13 @@ impl PTCall {
     }
 }
 
-#[derive(Debug,Clone)]
-pub enum PTLetAssign {
-    Variable(Variable,Vec<Check>),
-    Bundle(String),
-    Repeater(String)
-}
-
-impl PTLetAssign {
-    fn is_repeater(&self) -> bool {
-        match self {
-            PTLetAssign::Repeater(_) => true,
-            _ => false
-        }
-    }
-}
+// PTLetAssign -> OrBundleRepeater<(Variable,Vec<Check>)>
 
 impl OrBundle<(Variable,Vec<Check>)> {
     fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let declare = match self {
-            OrBundle::Normal((v, _)) => BTDeclare::Variable(v.clone()),
-            OrBundle::Bundle(b) => BTDeclare::Bundle(b.to_string())
+            OrBundle::Normal((v, _)) => OrBundleRepeater::Normal(v.clone()),
+            OrBundle::Bundle(b) => OrBundleRepeater::Bundle(b.to_string())
         };
         bc.add_statement(bt,BTStatementValue::Declare(declare))?;
         Ok(())
@@ -241,7 +227,7 @@ pub enum PTStatementValue {
     ProcDef(PTProcDef),
 
     /* instructions */
-    LetStatement(Vec<PTLetAssign>,Vec<OrBundle<PTExpression>>),
+    LetStatement(Vec<OrBundleRepeater<(Variable,Vec<Check>)>>,Vec<OrBundle<PTExpression>>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     BareCall(PTCall),
 }

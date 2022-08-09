@@ -56,16 +56,41 @@ pub struct Check {
 }
 
 #[derive(Debug,Clone)]
-pub enum CallArg<E> {
-    Expression(E),
+pub enum OrBundle<T: std::fmt::Debug+Clone> {
+    Normal(T),
+    Bundle(String)
+}
+
+#[derive(Debug,Clone)]
+pub enum OrBundleRepeater<T: std::fmt::Debug+Clone> {
+    Normal(T),
     Bundle(String),
     Repeater(String)
 }
 
-#[derive(Debug,Clone)]
-pub enum OrBundle<T: std::fmt::Debug+Clone> {
-    Normal(T),
-    Bundle(String)
+impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
+    pub(crate) fn map<F,U: std::fmt::Debug+Clone>(&self, cb: F) -> OrBundleRepeater<U> where F: FnOnce(&T) -> U {
+        match self {
+            OrBundleRepeater::Normal(n) => OrBundleRepeater::Normal(cb(n)),
+            OrBundleRepeater::Bundle(b) => OrBundleRepeater::Bundle(b.clone()),
+            OrBundleRepeater::Repeater(r) => OrBundleRepeater::Repeater(r.clone())
+        }
+    }
+
+    pub(crate) fn map_result<F,U: std::fmt::Debug+Clone,E>(&self, cb: F) -> Result<OrBundleRepeater<U>,E> where F: FnOnce(&T) -> Result<U,E> {
+        Ok(match self {
+            OrBundleRepeater::Normal(n) => OrBundleRepeater::Normal(cb(n)?),
+            OrBundleRepeater::Bundle(b) => OrBundleRepeater::Bundle(b.clone()),
+            OrBundleRepeater::Repeater(r) => OrBundleRepeater::Repeater(r.clone())
+        })
+    }
+
+    pub(crate) fn is_repeater(&self) -> bool {
+        match self {
+            OrBundleRepeater::Repeater(_) => true,
+            _ => false
+        }
+    }
 }
 
 #[derive(Debug,Clone)]

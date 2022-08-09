@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, PTLetAssign }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, CallArg, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeArgument, CodeRegisterArgument, CodeCommand, CodeBlock, CodeReturn}};
+use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeArgument, CodeRegisterArgument, CodeCommand, CodeBlock, CodeReturn, OrBundleRepeater}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -228,15 +228,15 @@ impl EarpParser {
         ))
     }
 
-    fn argument(input: Node) -> PestResult<CallArg<PTExpression>> {
+    fn argument(input: Node) -> PestResult<OrBundleRepeater<PTExpression>> {
         Ok(match_nodes!(input.into_children();
-            [expression(x)] => CallArg::Expression(x),
-            [bundle(x)] => CallArg::Bundle(x),
-            [repeater(x)] => CallArg::Repeater(x)
+            [expression(x)] => OrBundleRepeater::Normal(x),
+            [bundle(x)] => OrBundleRepeater::Bundle(x),
+            [repeater(x)] => OrBundleRepeater::Repeater(x)
         ))
     }
 
-    fn arguments(input: Node) -> PestResult<Vec<CallArg<PTExpression>>> {
+    fn arguments(input: Node) -> PestResult<Vec<OrBundleRepeater<PTExpression>>> {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::argument(child)?);
@@ -313,18 +313,18 @@ impl EarpParser {
         ))
     }
 
-    fn let_decls(input: Node) -> PestResult<Vec<PTLetAssign>> {
+    fn let_decls(input: Node) -> PestResult<Vec<OrBundleRepeater<(Variable,Vec<Check>)>>> {
         Ok(match_nodes!(input.into_children();
             [let_decl(v)..] => {
                 v.map(|x| {
                     match x {
-                        OrBundle::Normal((v,c)) => PTLetAssign::Variable(v,c),
-                        OrBundle::Bundle(b) => PTLetAssign::Bundle(b)
+                        OrBundle::Normal((v,c)) => OrBundleRepeater::Normal((v,c)),
+                        OrBundle::Bundle(b) => OrBundleRepeater::Bundle(b)
                     }
                 }).collect()
             },
             [repeater(v)] =>
-                vec![PTLetAssign::Repeater(v)]
+                vec![OrBundleRepeater::Repeater(v)]
         ))
     }
 

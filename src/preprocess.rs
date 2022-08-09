@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at}, compiler::{EarpCompiler, EarpCompilation}, model::CallArg};
+use crate::{parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at}, compiler::{EarpCompiler, EarpCompilation}, model::OrBundleRepeater};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
     ("*", "__operator_mul"),
@@ -110,8 +110,8 @@ impl<'a,'b> PTTransformer for Phase2Misc<'a,'b> {
             Ok(Some(PTExpression::Call(PTCall {
                 name: name.to_string(),
                 args: vec![
-                    CallArg::Expression(a.clone()),
-                    CallArg::Expression(b.clone()),
+                    OrBundleRepeater::Normal(a.clone()),
+                    OrBundleRepeater::Normal(b.clone()),
                 ],
                 is_macro: false
             })))
@@ -125,7 +125,7 @@ impl<'a,'b> PTTransformer for Phase2Misc<'a,'b> {
             Ok(Some(PTExpression::Call(PTCall {
                 name: name.to_string(),
                 args: vec![
-                    CallArg::Expression(a.clone()),
+                    OrBundleRepeater::Normal(a.clone()),
                 ],
                 is_macro: false
             })))

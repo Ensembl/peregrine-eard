@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue, PTLetAssign}, model::{Variable, CallArg, Constant, OrBundle}, unbundle::{self, Unbundle}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{self, Unbundle}};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -11,12 +11,12 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     compiler.set_source_loader(source_loader(sources));
     compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
-            CallArg::Expression(x) => x,
+            OrBundleRepeater::Normal(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
         Ok(vec![PTStatement {
             value: PTStatementValue::LetStatement(
-                vec![PTLetAssign::Variable(Variable{ prefix: None, name: "x".to_string()},vec![])],
+                vec![OrBundleRepeater::Normal((Variable{ prefix: None, name: "x".to_string()},vec![]))],
                 vec![OrBundle::Normal(value.clone())]
             ),
             file: Arc::new(pos.0.to_vec()),
@@ -26,7 +26,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     })?;
     compiler.add_expression_macro("y",|expr,_| {
         let value = match &expr[0] {
-            CallArg::Expression(x) => x,
+            OrBundleRepeater::Normal(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
         Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(Constant::Number(1.)))))

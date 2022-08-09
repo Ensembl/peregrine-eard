@@ -17,13 +17,11 @@ pub enum BTLValue {
     Register(usize)
 }
 
-// BTLValue -> OrBundleRepeater<BTLValue>
-
 #[derive(Debug,Clone)]
-pub struct BTProcCall {
+pub struct BTProcCall<R> {
     pub(crate) proc_index: Option<usize>,
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
-    pub(crate) rets: Option<Vec<OrBundleRepeater<BTLValue>>>
+    pub(crate) rets: Option<Vec<R>>
 }
 
 #[derive(Debug,Clone)]
@@ -32,14 +30,13 @@ pub struct BTFuncCall {
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>
 }
 
-// BTDeclare -> OrBundleRepeater<Variable>
-
 #[derive(Debug,Clone)]
 pub enum BTStatementValue {
     Define(usize),
     Declare(OrBundleRepeater<Variable>),
     Check(Variable,Check),
-    Statement(BTProcCall)
+    BundledStatement(BTProcCall<OrBundleRepeater<BTLValue>>),
+    UnbundledStatement(BTProcCall<Vec<BTLValue>>)
 }
 
 #[derive(Debug,Clone)]
@@ -108,7 +105,7 @@ impl BuildTree {
     }
 
     pub(crate) fn statement(&mut self, defn: Option<usize>, args: Vec<OrBundleRepeater<BTExpression>>, rets: Option<Vec<OrBundleRepeater<BTLValue>>>) -> Result<BTStatementValue,String> {
-        Ok(BTStatementValue::Statement(BTProcCall {
+        Ok(BTStatementValue::BundledStatement(BTProcCall {
             proc_index: defn,
             args, rets
         }))
@@ -139,7 +136,7 @@ impl BuildTree {
         })
     }
 
-    pub(crate) fn get_procedure(&self, p: &BTProcCall) -> Result<Option<&BTFuncProcDefinition>,String> {
+    pub(crate) fn get_procedure(&self, p: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<&BTFuncProcDefinition>,String> {
         if let Some(index) = p.proc_index {
             Ok(match &self.definitions[index] {
                 BTDefinition::Proc(p) => Some(p),

@@ -201,6 +201,8 @@ pub(super) fn run_parse_tests(data: &str) {
             let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let mut unbundle = Unbundle::new(&processed);
             unbundle.unbundle().expect("unbundle failed");
+            let bundles = unbundle.bundle_stack();
+            print!("{:?}",bundles);
         }
         if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");

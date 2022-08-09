@@ -61,6 +61,15 @@ pub enum OrBundle<T: std::fmt::Debug+Clone> {
     Bundle(String)
 }
 
+impl<T: std::fmt::Debug+Clone> OrBundle<T> {
+    pub(crate) fn as_bundle(&self) -> Option<String> {
+        match self {
+            OrBundle::Normal(_) => None,
+            OrBundle::Bundle(b) => Some(b.to_string())
+        }
+    }
+}
+
 #[derive(Debug,Clone)]
 pub enum OrBundleRepeater<T: std::fmt::Debug+Clone> {
     Normal(T),
@@ -90,6 +99,14 @@ impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
             OrBundleRepeater::Repeater(_) => true,
             _ => false
         }
+    }
+
+    pub(crate) fn no_repeater(&self) -> Result<OrBundle<T>,String> {
+        Ok(match self {
+            OrBundleRepeater::Normal(n) => OrBundle::Normal(n.clone()),
+            OrBundleRepeater::Bundle(b) => OrBundle::Bundle(b.clone()),
+            OrBundleRepeater::Repeater(_) => { return Err(format!("unexpected repeater")) }
+        })
     }
 }
 

@@ -133,7 +133,7 @@ BuildTree {
             line_no: 5
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [
@@ -156,7 +156,7 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [
@@ -187,7 +187,7 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(2))],
@@ -198,7 +198,7 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(3))],
@@ -209,7 +209,7 @@ BuildTree {
             line_no: 10
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: Some(2),
                     args: [Normal(Constant(Number(6.0)))],
@@ -230,7 +230,7 @@ BuildTree {
             line_no: 11
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(4))],
@@ -241,7 +241,7 @@ BuildTree {
             line_no: 11
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(5))],
@@ -252,7 +252,7 @@ BuildTree {
             line_no: 11
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(Variable(Variable { prefix: None, name: "d" }))],
@@ -263,7 +263,7 @@ BuildTree {
             line_no: 12
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(Variable(Variable { prefix: None, name: "c" }))],
@@ -274,7 +274,7 @@ BuildTree {
             line_no: 12
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(6))],
@@ -285,7 +285,7 @@ BuildTree {
             line_no: 12
         },
         BTStatement {
-            value: Statement(
+            value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [Normal(RegisterValue(7))],
@@ -352,7 +352,7 @@ BuildTree {
                 captures: [],
                 block: [
                     BTStatement {
-                        value: Statement(BTProcCall {
+                        value: BundledStatement(BTProcCall {
                             proc_index: None,
                             args: [
                                 Normal(
@@ -380,7 +380,7 @@ BuildTree {
                         line_no: 5
                     },
                     BTStatement {
-                        value: Statement(
+                        value: BundledStatement(
                             BTProcCall {
                                 proc_index: None,
                                 args: [
@@ -452,7 +452,7 @@ BuildTree{
         BTStatement{value:Define(5),file:["test"],line_no:7},
         BTStatement{value:Define(6),file:["test"],line_no:9},
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(Constant(Number(1.0)))],
                 rets:Some([Normal(Register(1))])
@@ -466,7 +466,7 @@ BuildTree{
             line_no:13
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(RegisterValue(1))],
                 rets:Some([Normal(Variable(Variable{prefix:None,name:"x"}))])
@@ -475,7 +475,7 @@ BuildTree{
             line_no:13
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(Constant(Number(2.0)))],
                 rets:Some([Normal(Register(2))])
@@ -489,7 +489,7 @@ BuildTree{
             line_no:14
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(RegisterValue(2))],
                 rets:Some([Normal(Variable(Variable{prefix:None,name:"y"}))])
@@ -498,7 +498,7 @@ BuildTree{
             line_no:14
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[
                     Normal(Function(BTFuncCall{
@@ -520,7 +520,7 @@ BuildTree{
             line_no:15
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(RegisterValue(3))],
                 rets:Some([Normal(Variable(Variable{prefix:None,name:"z"}))])
@@ -534,12 +534,12 @@ BuildTree{
             line_no:15
         },
         BTStatement{
-            value:Statement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Normal(Register(4))])}),
+            value:BundledStatement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Normal(Register(4))])}),
             file:["test"],
             line_no:16
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:Some(2),
                 args:[
                     Normal(RegisterValue(4)),
@@ -557,7 +557,7 @@ BuildTree{
             line_no:16
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:Some(2),
                 args:[
                     Normal(RegisterValue(4)),
@@ -575,7 +575,7 @@ BuildTree{
             line_no:16
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:Some(6),
                 args:[
                     Normal(Function(BTFuncCall{
@@ -597,7 +597,7 @@ BuildTree{
             line_no:16
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:Some(6),
                 args:[Normal(Constant(Number(6.0)))],
                 rets:Some([Normal(Register(5)),Normal(Register(6))])
@@ -616,7 +616,7 @@ BuildTree{
             line_no:17
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(RegisterValue(5))],
                 rets:Some([Normal(Variable(Variable{prefix:None,name:"a"}))])
@@ -625,7 +625,7 @@ BuildTree{
             line_no:17
         },
         BTStatement{
-            value:Statement(BTProcCall{
+            value:BundledStatement(BTProcCall{
                 proc_index:None,
                 args:[Normal(RegisterValue(6))],
                 rets:Some([Normal(Variable(Variable{prefix:None,name:"b"}))])

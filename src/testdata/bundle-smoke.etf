@@ -1,5 +1,23 @@
 >> test
 
+argument passing smoke
+
+>> input
+
+function f1() { let a.a = 1; let a.b = 2; *a }
+function f2() { f1() }
+procedure p(*a) { (a.a,a.b) }
+procedure print(a) { 0 }
+
+let *x = p(f2());
+
+print(x.a);
+print(x.b);
+
+>> unbundle
+
+>> test
+
 test returns of nested bundles
 
 >> input
@@ -33,7 +51,7 @@ print(y.b);
 print(y.c);
 print(z.d);
 
->> unbundle
+>> xunbundle
 
 >> test
 

@@ -61,7 +61,8 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     if options.contains("strip") {
         let mut out = String::new();
         for c in input.chars() {
-            if !c.is_whitespace() {
+            let skipped_comma = options.contains("skip-commas") && c == ',';
+            if !c.is_whitespace() && !skipped_comma {
                 out.push(c);
             }
         }
@@ -202,7 +203,7 @@ pub(super) fn run_parse_tests(data: &str) {
             let mut unbundle = Unbundle::new(&processed);
             unbundle.unbundle().expect("unbundle failed");
             let bundles = unbundle.bundle_stack();
-            print!("{:?}",bundles);
+            print!("{:#?}{:?}\n{:?}",processed,bundles,unbundle.transits());
         }
         if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");

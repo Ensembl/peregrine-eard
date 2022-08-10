@@ -71,6 +71,12 @@ impl<T: std::fmt::Debug+Clone> OrBundle<T> {
 }
 
 #[derive(Debug,Clone)]
+pub enum OrRepeater<T: std::fmt::Debug+Clone> {
+    Normal(T),
+    Repeater(String)
+}
+
+#[derive(Debug,Clone)]
 pub enum OrBundleRepeater<T: std::fmt::Debug+Clone> {
     Normal(T),
     Bundle(String),

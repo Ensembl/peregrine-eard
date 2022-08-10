@@ -23,9 +23,14 @@ procedure p() {
 let (*x,*y,*z) = p();
 let (*m,*n) = (func1(),func2());
 
+print(m.a);
 print(m.b);
+print(m.c);
 print(n.a);
+print(x.a);
 print(x.c);
+print(y.b);
+print(y.c);
 print(z.d);
 
 >> unbundle
@@ -41,6 +46,24 @@ procedure proc1() {
     (*a,1)
 }
 
-proc1();
+let (*b,c) = proc1();
+
+>> xunbundle
+
+>> test
+
+test anon regression2
+
+>> input
+
+procedure print(a) { 0 }
+
+function func1() {
+    let a.a = 0;
+    *a
+}
+
+let *b = func1();
+print(b.z);
 
 >> xunbundle

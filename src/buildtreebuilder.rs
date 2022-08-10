@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::BTreeMap};
 
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, FuncProcModifier, Variable, OrBundleRepeater, Check}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTCodeDefinition, BTFuncCall, BTLValue}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTCodeDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
 
 #[derive(Debug,Clone)]
 pub(super) enum DefName {
@@ -36,7 +36,8 @@ pub struct BuildContext {
     file_context: usize,
     defnames: BTreeMap<(Option<usize>,String),DefName>,
     next_register: usize,
-    funcproc_target: Option<CurrentFuncProcDefinition>
+    funcproc_target: Option<CurrentFuncProcDefinition>,
+    next_call_index: usize
 }
 
 impl BuildContext {
@@ -46,7 +47,8 @@ impl BuildContext {
             file_context: 0,
             defnames: BTreeMap::new(),
             next_register: 0,
-            funcproc_target: None
+            funcproc_target: None,
+            next_call_index: 0
         }
     }
 
@@ -184,18 +186,39 @@ impl BuildContext {
         lvalue.map(|x| {
             match x {
                 BTLValue::Variable(v) => BTExpression::Variable(v.clone()),
-                BTLValue::Register(r) => BTExpression::RegisterValue(*r)
+                BTLValue::Register(r,t) => BTExpression::RegisterValue(*r,t.clone())
             }
         })
+    }
+
+    pub(crate) fn make_statement_value(&mut self, proc_index: Option<usize>, args: Vec<OrBundleRepeater<BTExpression>>, rets: Option<Vec<OrBundleRepeater<BTLValue>>>) -> BTStatementValue {
+        self.next_call_index += 1;
+        BTStatementValue::BundledStatement(BTProcCall {
+            proc_index,
+            args, rets,
+            call_index: self.next_call_index
+        })
+    }
+
+    pub(crate) fn make_function_call(&mut self, defn: usize, args: Vec<OrBundleRepeater<BTExpression>>) -> BTFuncCall {
+        self.next_call_index += 1;
+        BTFuncCall {
+            func_index: defn,
+            args,
+            call_index: self.next_call_index
+        }
     }
 
     fn make_statement(&mut self, vv: &[OrBundleRepeater<(Variable,Vec<Check>)>], xx: &[OrBundle<PTExpression>], declare: bool, bt: &mut BuildTree) -> Result<(),String> {
         /* Step 1: allocate temporaries */
         let mut regs = vec![];
         for v in vv.iter() {
-            regs.push(v.map(|x| {
-                BTLValue::Register(self.allocate_register())
-            }));
+            let reg = self.allocate_register();
+            let typ = match v {
+                OrBundleRepeater::Bundle(_) => BTRegisterType::Bundle,
+                _ => BTRegisterType::Normal
+            };
+            regs.push(OrBundleRepeater::Normal(BTLValue::Register(reg,typ)));
         }
         /* Step 2: evaluate expressions and put into temporaries */
         if xx.len() == 1 && self.is_procedure(&xx[0],bt)? {
@@ -212,14 +235,14 @@ impl BuildContext {
             for (x,reg) in xx.iter().zip(regs.clone().iter()) {
                 let call_arg = match x {
                     OrBundle::Normal(x) => {
-                        let expr = self.build_expression(bt,x)?;    
+                        let expr = self.build_expression(bt,x)?;
                         OrBundleRepeater::Normal(expr)
                     },
                     OrBundle::Bundle(b) => {
                         OrBundleRepeater::Bundle(b.to_string())
                     }
                 };
-                let stmt = bt.statement(None,vec![call_arg],Some(vec![reg.clone()]))?;
+                let stmt = self.make_statement_value(None,vec![call_arg],Some(vec![reg.clone()]));
                 self.add_statement(bt,stmt)?;
             }
         } else {
@@ -235,12 +258,15 @@ impl BuildContext {
         for (v,reg) in vv.iter().zip(regs.iter()) {
             let lvalue = match v {
                 OrBundleRepeater::Normal((v,_)) => Some(OrBundleRepeater::Normal(BTLValue::Variable(v.clone()))),
-                _ => None
+                OrBundleRepeater::Bundle(b) => { 
+                    Some(OrBundleRepeater::Bundle(b.to_string()))
+                },
+                OrBundleRepeater::Repeater(_) => { todo!() }
             };
             if let Some(lvalue) = lvalue {
-                let stmt = bt.statement(None,vec![
+                let stmt = self.make_statement_value(None,vec![
                     self.lvalue_to_rvalue(reg)
-                ],Some(vec![lvalue]))?;
+                ],Some(vec![lvalue]));
                 self.add_statement(bt,stmt)?;    
             }
         }
@@ -262,7 +288,7 @@ impl BuildContext {
     fn build_proc(&mut self, rets: Option<Vec<OrBundleRepeater<BTLValue>>>, bt: &mut BuildTree, call: &PTCall) -> Result<(),String> {
         let index = self.lookup_proc(&call.name)?;
         let args = call.args.iter().map(|a| self.build_call(bt,a.clone())).collect::<Result<_,_>>()?;
-        let stmt = bt.statement(Some(index),args,rets)?;
+        let stmt = self.make_statement_value(Some(index),args,rets);
         self.add_statement(bt,stmt)?;
         Ok(())
     }
@@ -270,7 +296,7 @@ impl BuildContext {
     fn build_func(&mut self, bt: &mut BuildTree, call: &PTCall) -> Result<BTFuncCall,String> {
         let index = self.lookup_func(&call.name)?;
         let args = call.args.iter().map(|a| self.build_call(bt,a.clone())).collect::<Result<_,_>>()?;
-        Ok(bt.function_call(index,args)?)
+        Ok(self.make_function_call(index,args))
     }
 
     fn build_declare(&mut self, bt: &mut BuildTree, decl: &OrBundleRepeater<(Variable,Vec<Check>)>) -> Result<(),String> {
@@ -296,23 +322,25 @@ impl BuildContext {
 
             PTExpression::FiniteSequence(items) => {
                 let reg = self.allocate_register();
-                let stmt = bt.statement(Some(self.lookup_func("__operator_finseq")?), 
-                    vec![], Some(vec![OrBundleRepeater::Normal(BTLValue::Register(reg))]))?; // XXX out to reg
+                let stmt = self.make_statement_value(Some(self.lookup_func("__operator_finseq")?), 
+                    vec![], Some(vec![OrBundleRepeater::Normal(BTLValue::Register(reg,BTRegisterType::Normal))])); // XXX out to reg
                 self.add_statement(bt,stmt)?;
                 for item in items {
                     let built = self.build_expression(bt,item)?;
-                    let stmt = bt.statement(Some(self.lookup_proc("__operator_push")?), vec![
-                        OrBundleRepeater::Normal(BTExpression::RegisterValue(reg)),
+                    let stmt = self.make_statement_value(Some(self.lookup_proc("__operator_push")?), vec![
+                        OrBundleRepeater::Normal(BTExpression::RegisterValue(reg,BTRegisterType::Normal)),
                         OrBundleRepeater::Normal(built)
-                    ], Some(vec![OrBundleRepeater::Normal(BTLValue::Register(reg))]))?;
+                    ], Some(vec![OrBundleRepeater::Normal(BTLValue::Register(reg,BTRegisterType::Normal))]));
                     self.add_statement(bt,stmt)?;
                 }
-                BTExpression::RegisterValue(reg)
+                BTExpression::RegisterValue(reg,BTRegisterType::Normal)
             },
             PTExpression::InfiniteSequence(x) => {
+                self.next_call_index += 1;
                 BTExpression::Function(BTFuncCall {
                     func_index: self.lookup_func("__operator_infseq")?,
                     args: vec![OrBundleRepeater::Normal(self.build_expression(bt,x)?)],
+                    call_index: self.next_call_index
                 })
             },
 

@@ -14,7 +14,7 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...
     opcode 45, r1, r2, r3, r4;
 }
 
->> built strip
+>> built strip skip-commas
 
 BuildTree {
     statements: [],
@@ -25,34 +25,89 @@ BuildTree {
                     CodeBlock {
                         name: "test",
                         arguments: [
-                            Register(CodeRegisterArgument {
-                                reg_id: 1,
-                                arg_types: [Sequence(Number),Sequence(String)],
-                                checks: [Check { check_type: Length, name: "X" }]
-                            }),
-                            Register(CodeRegisterArgument {
-                                reg_id: 2,
-                                arg_types: [Atomic(Boolean)],
-                                checks: [Check { check_type: LengthOrInfinite, name: "X" }]
-                            })
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 1,
+                                    arg_types: [
+                                        Sequence(
+                                            Number,
+                                        ),
+                                        Sequence(
+                                            String,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: Length,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
+                            ),
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 2,
+                                    arg_types: [
+                                        Atomic(
+                                            Boolean,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: LengthOrInfinite,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
+                            ),
                         ],
                         results: [
-                            Register(CodeRegisterArgument {
-                                reg_id: 3,
-                                arg_types: [Sequence(Boolean)],
-                                checks: [Check { check_type: Reference, name: "X" }]
-                            }),
-                            Register(CodeRegisterArgument {
-                                reg_id: 5,
-                                arg_types: [Atomic(Boolean)],
-                                checks: []
-                            })
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 3,
+                                    arg_types: [
+                                        Sequence(
+                                            Boolean,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: Reference,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
+                            ),
+                            Register(
+                                CodeRegisterArgument {
+                                    reg_id: 5,
+                                    arg_types: [
+                                        Atomic(
+                                            Boolean,
+                                        ),
+                                    ],
+                                    checks: [],
+                                },
+                            ),
                         ],
                         commands: [
-                            Register(4),
-                            Opcode(44,[1,2,3,4,5])
+                            Register(
+                                4,
+                            ),
+                            Opcode(
+                                44,
+                                [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                    5,
+                                ],
+                            ),
                         ],
-                        modifiers: [World]
+                        modifiers: [
+                            World,
+                        ],
                     },
                     CodeBlock {
                         name: "test",
@@ -60,38 +115,82 @@ BuildTree {
                             Register(
                                 CodeRegisterArgument {
                                     reg_id: 1,
-                                    arg_types: [Sequence(Number),Sequence(String)],
-                                    checks: [Check { check_type: Length, name: "X" }]
-                                }
+                                    arg_types: [
+                                        Sequence(
+                                            Number,
+                                        ),
+                                        Sequence(
+                                            String,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: Length,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
                             ),
                             Register(
                                 CodeRegisterArgument {
                                     reg_id: 2,
-                                    arg_types: [Atomic(Boolean)],
-                                    checks: [Check { check_type: LengthOrInfinite, name: "X" }]
-                                }
-                            )
+                                    arg_types: [
+                                        Atomic(
+                                            Boolean,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: LengthOrInfinite,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
+                            ),
                         ],
                         results: [
                             Register(
                                 CodeRegisterArgument {
                                     reg_id: 3,
-                                    arg_types: [Sequence(Boolean)],
-                                    checks: [Check { check_type: Reference, name: "X" }]
-                                }
+                                    arg_types: [
+                                        Sequence(
+                                            Boolean,
+                                        ),
+                                    ],
+                                    checks: [
+                                        Check {
+                                            check_type: Reference,
+                                            name: "X",
+                                        },
+                                    ],
+                                },
                             ),
-                            Repeat(1)
+                            Repeat(
+                                1,
+                            ),
                         ],
                         commands: [
-                            Register(4),
-                            Opcode(45,[1,2,3,4])
+                            Register(
+                                4,
+                            ),
+                            Opcode(
+                                45,
+                                [
+                                    1,
+                                    2,
+                                    3,
+                                    4,
+                                ],
+                            ),
                         ],
-                        modifiers: [World]
-                    }
-                ]
-            }
-        )
-    ]
+                        modifiers: [
+                            World,
+                        ],
+                    },
+                ],
+            },
+        ),
+    ],
 }
 
 
@@ -113,24 +212,36 @@ let (a,b) = (1+1,2+2);
 let (c,d) = test(6);
 (c,d) = (d,c);
 
->> built strip
+>> built strip skip-commas
 
 BuildTree {
     statements: [
         BTStatement {
-            value: Define(0),
-            file: ["test"],
-            line_no: 2
+            value: Define(
+                0,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 2,
         },
         BTStatement {
-            value: Define(1),
-            file: ["test"],
-            line_no: 3
+            value: Define(
+                1,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 3,
         },
         BTStatement {
-            value: Define(2),
-            file: ["test"],
-            line_no: 5
+            value: Define(
+                2,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 5,
         },
         BTStatement {
             value: BundledStatement(
@@ -142,159 +253,431 @@ BuildTree {
                                 BTFuncCall {
                                     func_index: 0,
                                     args: [
-                                        Normal(Constant(Number(1.0))),
-                                        Normal(Constant(Number(1.0)))
-                                    ]
-                                }
-                            )
-                        )
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    1.0,
+                                                ),
+                                            ),
+                                        ),
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    1.0,
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 6,
+                                },
+                            ),
+                        ),
                     ],
-                    rets: Some([Normal(Register(2))])
-                }
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    2,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 7,
+                },
             ),
-            file: ["test"],
-            line_no: 10
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
                     args: [
-                        Normal(Function(
-                            BTFuncCall {
-                                func_index: 0,
-                                args: [
-                                    Normal(Constant(Number(2.0))),
-                                    Normal(Constant(Number(2.0)))
-                                ]
-                            }
-                        ))
+                        Normal(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 0,
+                                    args: [
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    2.0,
+                                                ),
+                                            ),
+                                        ),
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    2.0,
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 8,
+                                },
+                            ),
+                        ),
                     ],
-                    rets: Some([Normal(Register(3))])
-                }
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    3,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 9,
+                },
             ),
-            file: ["test"],
-            line_no: 10
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
-            value: Declare(Normal(Variable { prefix: None, name: "a" })),
-            file: ["test"],
-            line_no: 10
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "a",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
-            value: Declare(Normal(Variable { prefix: None, name: "b" })),
-            file: ["test"],
-            line_no: 10
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "b",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(2))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "a" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                2,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "a",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 10,
+                },
             ),
-            file: ["test"],
-            line_no: 10
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(3))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "b" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                3,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "b",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 11,
+                },
             ),
-            file: ["test"],
-            line_no: 10
+            file: [
+                "test",
+            ],
+            line_no: 10,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
-                    proc_index: Some(2),
-                    args: [Normal(Constant(Number(6.0)))],
-                    rets: Some([Normal(Register(4)),Normal(Register(5))])
-                }
+                    proc_index: Some(
+                        2,
+                    ),
+                    args: [
+                        Normal(
+                            Constant(
+                                Number(
+                                    6.0,
+                                ),
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    4,
+                                ),
+                            ),
+                            Normal(
+                                Register(
+                                    5,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 12,
+                },
             ),
-            file: ["test"],
-            line_no: 11
+            file: [
+                "test",
+            ],
+            line_no: 11,
         },
         BTStatement {
-            value: Declare(Normal(Variable { prefix: None, name: "c" })),
-            file: ["test"],
-            line_no: 11
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "c",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 11,
         },
         BTStatement {
-            value: Declare(Normal(Variable { prefix: None, name: "d"})),
-            file: ["test"],
-            line_no: 11
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "d",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 11,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(4))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "c" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                4,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "c",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 13,
+                },
             ),
-            file: ["test"],
-            line_no: 11
+            file: [
+                "test",
+            ],
+            line_no: 11,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(5))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "d" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                5,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "d",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 14,
+                },
             ),
-            file: ["test"],
-            line_no: 11
+            file: [
+                "test",
+            ],
+            line_no: 11,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(Variable(Variable { prefix: None, name: "d" }))],
-                    rets: Some([Normal(Register(6))])
-                }
+                    args: [
+                        Normal(
+                            Variable(
+                                Variable {
+                                    prefix: None,
+                                    name: "d",
+                                },
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    6,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 15,
+                },
             ),
-            file: ["test"],
-            line_no: 12
+            file: [
+                "test",
+            ],
+            line_no: 12,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(Variable(Variable { prefix: None, name: "c" }))],
-                    rets: Some([Normal(Register(7))])
-                }
+                    args: [
+                        Normal(
+                            Variable(
+                                Variable {
+                                    prefix: None,
+                                    name: "c",
+                                },
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    7,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 16,
+                },
             ),
-            file: ["test"],
-            line_no: 12
+            file: [
+                "test",
+            ],
+            line_no: 12,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(6))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "c" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                6,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "c",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 17,
+                },
             ),
-            file: ["test"],
-            line_no: 12
+            file: [
+                "test",
+            ],
+            line_no: 12,
         },
         BTStatement {
             value: BundledStatement(
                 BTProcCall {
                     proc_index: None,
-                    args: [Normal(RegisterValue(7))],
-                    rets: Some([Normal(Variable(Variable { prefix: None, name: "d" }))])
-                }
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                7,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "d",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 18,
+                },
             ),
-            file: ["test"],
-            line_no: 12
-        }
+            file: [
+                "test",
+            ],
+            line_no: 12,
+        },
     ],
     definitions: [
         Func(
@@ -303,21 +686,35 @@ BuildTree {
                     Normal(
                         TypedArgument {
                             id: "x",
-                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
-                        }
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
                     ),
                     Normal(
                         TypedArgument {
                             id: "y",
-                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
-                        }
-                    )
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
                 ],
                 captures: [],
                 block: [],
-                ret: [Normal(Constant(Number(0.0)))],
-                ret_type: None
-            }
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
         ),
         Func(
             BTFuncProcDefinition {
@@ -325,59 +722,112 @@ BuildTree {
                     Normal(
                         TypedArgument {
                             id: "x",
-                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
-                        }
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
                     ),
                     Normal(
                         TypedArgument {
                             id: "y",
-                            typespec: ArgTypeSpec { arg_types: [], checks: [] }
-                        }
-                    )
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
                 ],
                 captures: [],
                 block: [],
-                ret: [Normal(Constant(Number(0.0)))],
-                ret_type: None
-            }
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
         ),
         Proc(
             BTFuncProcDefinition {
                 args: [
-                    Normal(TypedArgument {
-                        id: "x",
-                        typespec: ArgTypeSpec { arg_types: [], checks: [] }
-                    })
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
                 ],
                 captures: [],
                 block: [
                     BTStatement {
-                        value: BundledStatement(BTProcCall {
-                            proc_index: None,
-                            args: [
-                                Normal(
-                                    Function(BTFuncCall {
-                                        func_index: 0,
-                                        args: [
-                                            Normal(
-                                                Variable(Variable { prefix: None, name: "x" })
+                        value: BundledStatement(
+                            BTProcCall {
+                                proc_index: None,
+                                args: [
+                                    Normal(
+                                        Function(
+                                            BTFuncCall {
+                                                func_index: 0,
+                                                args: [
+                                                    Normal(
+                                                        Variable(
+                                                            Variable {
+                                                                prefix: None,
+                                                                name: "x",
+                                                            },
+                                                        ),
+                                                    ),
+                                                    Normal(
+                                                        Constant(
+                                                            Number(
+                                                                1.0,
+                                                            ),
+                                                        ),
+                                                    ),
+                                                ],
+                                                call_index: 1,
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                rets: Some(
+                                    [
+                                        Normal(
+                                            Register(
+                                                1,
                                             ),
-                                            Normal(
-                                                Constant(Number(1.0))
-                                            )
-                                        ]
-                                    })
-                                )
-                            ],
-                            rets: Some([Normal(Register(1))])
-                        }),
-                        file: ["test"],
-                        line_no: 5
+                                        ),
+                                    ],
+                                ),
+                                call_index: 2,
+                            },
+                        ),
+                        file: [
+                            "test",
+                        ],
+                        line_no: 5,
                     },
                     BTStatement {
-                        value: Declare(Normal(Variable { prefix: None, name: "y" })),
-                        file: ["test"],
-                        line_no: 5
+                        value: Declare(
+                            Normal(
+                                Variable {
+                                    prefix: None,
+                                    name: "y",
+                                },
+                            ),
+                        ),
+                        file: [
+                            "test",
+                        ],
+                        line_no: 5,
                     },
                     BTStatement {
                         value: BundledStatement(
@@ -385,36 +835,88 @@ BuildTree {
                                 proc_index: None,
                                 args: [
                                     Normal(
-                                        RegisterValue(1)
-                                    )
+                                        RegisterValue(
+                                            1,
+                                        ),
+                                    ),
                                 ],
-                                rets: Some([Normal(Variable(Variable { prefix: None, name: "y" }))])
-                            }
+                                rets: Some(
+                                    [
+                                        Normal(
+                                            Variable(
+                                                Variable {
+                                                    prefix: None,
+                                                    name: "y",
+                                                },
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                call_index: 3,
+                            },
                         ),
-                        file: ["test"],
-                        line_no: 5
-                    }
+                        file: [
+                            "test",
+                        ],
+                        line_no: 5,
+                    },
                 ],
                 ret: [
-                    Normal(Function(BTFuncCall {
-                        func_index: 1,
-                        args: [
-                            Normal(Constant(Number(42.0))),
-                            Normal(Variable(Variable { prefix: None, name: "x" }))
-                        ]
-                    })),
-                    Normal(Function(BTFuncCall {
-                        func_index: 1,
-                        args: [
-                            Normal(Constant(Number(23.0))),
-                            Normal(Variable(Variable { prefix: None, name: "y" }))
-                        ]
-                    }))
+                    Normal(
+                        Function(
+                            BTFuncCall {
+                                func_index: 1,
+                                args: [
+                                    Normal(
+                                        Constant(
+                                            Number(
+                                                42.0,
+                                            ),
+                                        ),
+                                    ),
+                                    Normal(
+                                        Variable(
+                                            Variable {
+                                                prefix: None,
+                                                name: "x",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                call_index: 4,
+                            },
+                        ),
+                    ),
+                    Normal(
+                        Function(
+                            BTFuncCall {
+                                func_index: 1,
+                                args: [
+                                    Normal(
+                                        Constant(
+                                            Number(
+                                                23.0,
+                                            ),
+                                        ),
+                                    ),
+                                    Normal(
+                                        Variable(
+                                            Variable {
+                                                prefix: None,
+                                                name: "y",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                call_index: 5,
+                            },
+                        ),
+                    ),
                 ],
-                ret_type: None
-            }
-        )
-    ]
+                ret_type: None,
+            },
+        ),
+    ],
 }
 
 >> test
@@ -440,207 +942,911 @@ let z : length(y) = x+y;
 test([z+1,...],[x-1,y+1]);
 let (a,b) = test(6);
 
->> built strip
+>> built strip skip-commas
 
-BuildTree{
-    statements:[
-        BTStatement{value:Define(0),file:["test"],line_no:2},
-        BTStatement{value:Define(1),file:["test"],line_no:3},
-        BTStatement{value:Define(2),file:["test"],line_no:4},
-        BTStatement{value:Define(3),file:["test"],line_no:5},
-        BTStatement{value:Define(4),file:["test"],line_no:6},
-        BTStatement{value:Define(5),file:["test"],line_no:7},
-        BTStatement{value:Define(6),file:["test"],line_no:9},
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(Constant(Number(1.0)))],
-                rets:Some([Normal(Register(1))])
-            }),
-            file:["test"],
-            line_no:13
+BuildTree {
+    statements: [
+        BTStatement {
+            value: Define(
+                0,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 2,
         },
-        BTStatement{
-            value:Declare(Normal(Variable{prefix:None,name:"x"})),
-            file:["test"],
-            line_no:13
+        BTStatement {
+            value: Define(
+                1,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 3,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(RegisterValue(1))],
-                rets:Some([Normal(Variable(Variable{prefix:None,name:"x"}))])
-            }),
-            file:["test"],
-            line_no:13
+        BTStatement {
+            value: Define(
+                2,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 4,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(Constant(Number(2.0)))],
-                rets:Some([Normal(Register(2))])
-            }),
-            file:["test"],
-            line_no:14
+        BTStatement {
+            value: Define(
+                3,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 5,
         },
-        BTStatement{
-            value:Declare(Normal(Variable{prefix:None,name:"y"})),
-            file:["test"],
-            line_no:14
+        BTStatement {
+            value: Define(
+                4,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 6,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(RegisterValue(2))],
-                rets:Some([Normal(Variable(Variable{prefix:None,name:"y"}))])
-            }),
-            file:["test"],
-            line_no:14
+        BTStatement {
+            value: Define(
+                5,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 7,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[
-                    Normal(Function(BTFuncCall{
-                        func_index:3,
-                        args:[
-                            Normal(Variable(Variable{prefix:None,name:"x"})),
-                            Normal(Variable(Variable{prefix:None,name:"y"}))
-                        ]
-                    }))
-                ],
-                rets:Some([Normal(Register(3))])
-            }),
-            file:["test"],
-            line_no:15
+        BTStatement {
+            value: Define(
+                6,
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 9,
         },
-        BTStatement{
-            value:Declare(Normal(Variable{prefix:None,name:"z"})),
-            file:["test"],
-            line_no:15
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            Constant(
+                                Number(
+                                    1.0,
+                                ),
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    1,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 3,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 13,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(RegisterValue(3))],
-                rets:Some([Normal(Variable(Variable{prefix:None,name:"z"}))])
-            }),
-            file:["test"],
-            line_no:15
+        BTStatement {
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "x",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 13,
         },
-        BTStatement{
-            value:Check(Variable{prefix:None,name:"z"},Check{check_type:Length,name:"y"}),
-            file:["test"],
-            line_no:15
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                1,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "x",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 4,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 13,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{proc_index:Some(1),args:[],rets:Some([Normal(Register(4))])}),
-            file:["test"],
-            line_no:16
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            Constant(
+                                Number(
+                                    2.0,
+                                ),
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    2,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 5,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 14,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:Some(2),
-                args:[
-                    Normal(RegisterValue(4)),
-                    Normal(Function(BTFuncCall{
-                        func_index:4,
-                        args:[
-                            Normal(Variable(Variable{prefix:None,name:"x"})),
-                            Normal(Constant(Number(1.0)))
-                        ]
-                    }))
-                ],
-                rets:Some([Normal(Register(4))])
-            }),
-            file:["test"],
-            line_no:16
+        BTStatement {
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "y",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 14,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:Some(2),
-                args:[
-                    Normal(RegisterValue(4)),
-                    Normal(Function(BTFuncCall{
-                        func_index:3,
-                        args:[
-                            Normal(Variable(Variable{prefix:None,name:"y"})),
-                            Normal(Constant(Number(1.0)))
-                        ]
-                    }))
-                ],
-                rets:Some([Normal(Register(4))])
-            }),
-            file:["test"],
-            line_no:16
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                2,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "y",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 6,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 14,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:Some(6),
-                args:[
-                    Normal(Function(BTFuncCall{
-                        func_index:0,
-                        args:[
-                            Normal(Function(BTFuncCall{
-                                func_index:3,args:[
-                                    Normal(Variable(Variable{prefix:None,name:"z"})),
-                                    Normal(Constant(Number(1.0)))
-                                ]
-                            }))
-                        ]
-                    })),
-                    Normal(RegisterValue(4))
-                ],
-                rets:None
-            }),
-            file:["test"],
-            line_no:16
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 3,
+                                    args: [
+                                        Normal(
+                                            Variable(
+                                                Variable {
+                                                    prefix: None,
+                                                    name: "x",
+                                                },
+                                            ),
+                                        ),
+                                        Normal(
+                                            Variable(
+                                                Variable {
+                                                    prefix: None,
+                                                    name: "y",
+                                                },
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 7,
+                                },
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    3,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 8,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 15,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:Some(6),
-                args:[Normal(Constant(Number(6.0)))],
-                rets:Some([Normal(Register(5)),Normal(Register(6))])
-            }),
-            file:["test"],
-            line_no:17
+        BTStatement {
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "z",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 15,
         },
-        BTStatement{
-            value:Declare(Normal(Variable{prefix:None,name:"a"})),
-            file:["test"],
-            line_no:17
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                3,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "z",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 9,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 15,
         },
-        BTStatement{
-            value:Declare(Normal(Variable{prefix:None,name:"b"})),
-            file:["test"],
-            line_no:17
+        BTStatement {
+            value: Check(
+                Variable {
+                    prefix: None,
+                    name: "z",
+                },
+                Check {
+                    check_type: Length,
+                    name: "y",
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 15,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(RegisterValue(5))],
-                rets:Some([Normal(Variable(Variable{prefix:None,name:"a"}))])
-            }),
-            file:["test"],
-            line_no:17
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: Some(
+                        1,
+                    ),
+                    args: [],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    4,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 12,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 16,
         },
-        BTStatement{
-            value:BundledStatement(BTProcCall{
-                proc_index:None,
-                args:[Normal(RegisterValue(6))],
-                rets:Some([Normal(Variable(Variable{prefix:None,name:"b"}))])
-            }),
-            file:["test"],
-            line_no:17
-        }
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: Some(
+                        2,
+                    ),
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                4,
+                            ),
+                        ),
+                        Normal(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 4,
+                                    args: [
+                                        Normal(
+                                            Variable(
+                                                Variable {
+                                                    prefix: None,
+                                                    name: "x",
+                                                },
+                                            ),
+                                        ),
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    1.0,
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 13,
+                                },
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    4,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 14,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 16,
+        },
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: Some(
+                        2,
+                    ),
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                4,
+                            ),
+                        ),
+                        Normal(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 3,
+                                    args: [
+                                        Normal(
+                                            Variable(
+                                                Variable {
+                                                    prefix: None,
+                                                    name: "y",
+                                                },
+                                            ),
+                                        ),
+                                        Normal(
+                                            Constant(
+                                                Number(
+                                                    1.0,
+                                                ),
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 15,
+                                },
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    4,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 16,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 16,
+        },
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: Some(
+                        6,
+                    ),
+                    args: [
+                        Normal(
+                            Function(
+                                BTFuncCall {
+                                    func_index: 0,
+                                    args: [
+                                        Normal(
+                                            Function(
+                                                BTFuncCall {
+                                                    func_index: 3,
+                                                    args: [
+                                                        Normal(
+                                                            Variable(
+                                                                Variable {
+                                                                    prefix: None,
+                                                                    name: "z",
+                                                                },
+                                                            ),
+                                                        ),
+                                                        Normal(
+                                                            Constant(
+                                                                Number(
+                                                                    1.0,
+                                                                ),
+                                                            ),
+                                                        ),
+                                                    ],
+                                                    call_index: 11,
+                                                },
+                                            ),
+                                        ),
+                                    ],
+                                    call_index: 11,
+                                },
+                            ),
+                        ),
+                        Normal(
+                            RegisterValue(
+                                4,
+                            ),
+                        ),
+                    ],
+                    rets: None,
+                    call_index: 17,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 16,
+        },
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: Some(
+                        6,
+                    ),
+                    args: [
+                        Normal(
+                            Constant(
+                                Number(
+                                    6.0,
+                                ),
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Register(
+                                    5,
+                                ),
+                            ),
+                            Normal(
+                                Register(
+                                    6,
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 18,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 17,
+        },
+        BTStatement {
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "a",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 17,
+        },
+        BTStatement {
+            value: Declare(
+                Normal(
+                    Variable {
+                        prefix: None,
+                        name: "b",
+                    },
+                ),
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 17,
+        },
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                5,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "a",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 19,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 17,
+        },
+        BTStatement {
+            value: BundledStatement(
+                BTProcCall {
+                    proc_index: None,
+                    args: [
+                        Normal(
+                            RegisterValue(
+                                6,
+                            ),
+                        ),
+                    ],
+                    rets: Some(
+                        [
+                            Normal(
+                                Variable(
+                                    Variable {
+                                        prefix: None,
+                                        name: "b",
+                                    },
+                                ),
+                            ),
+                        ],
+                    ),
+                    call_index: 20,
+                },
+            ),
+            file: [
+                "test",
+            ],
+            line_no: 17,
+        },
     ],
-    definitions:[
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Func(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}}),Normal(TypedArgument{id:"y",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Constant(Number(0.0)))],ret_type:None}),
-        Proc(BTFuncProcDefinition{args:[Normal(TypedArgument{id:"x",typespec:ArgTypeSpec{arg_types:[],checks:[]}})],captures:[],block:[],ret:[Normal(Function(BTFuncCall{func_index:5,args:[Normal(Constant(Number(42.0))),Normal(Variable(Variable{prefix:None,name:"x"}))]})),Normal(Function(BTFuncCall{func_index:5,args:[Normal(Constant(Number(23.0))),Normal(Variable(Variable{prefix:None,name:"x"}))]}))],ret_type:None})
-    ]
+    definitions: [
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Proc(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                    Normal(
+                        TypedArgument {
+                            id: "y",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                    Normal(
+                        TypedArgument {
+                            id: "y",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Func(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                    Normal(
+                        TypedArgument {
+                            id: "y",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Constant(
+                            Number(
+                                0.0,
+                            ),
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+        Proc(
+            BTFuncProcDefinition {
+                args: [
+                    Normal(
+                        TypedArgument {
+                            id: "x",
+                            typespec: ArgTypeSpec {
+                                arg_types: [],
+                                checks: [],
+                            },
+                        },
+                    ),
+                ],
+                captures: [],
+                block: [],
+                ret: [
+                    Normal(
+                        Function(
+                            BTFuncCall {
+                                func_index: 5,
+                                args: [
+                                    Normal(
+                                        Constant(
+                                            Number(
+                                                42.0,
+                                            ),
+                                        ),
+                                    ),
+                                    Normal(
+                                        Variable(
+                                            Variable {
+                                                prefix: None,
+                                                name: "x",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                call_index: 1,
+                            },
+                        ),
+                    ),
+                    Normal(
+                        Function(
+                            BTFuncCall {
+                                func_index: 5,
+                                args: [
+                                    Normal(
+                                        Constant(
+                                            Number(
+                                                23.0,
+                                            ),
+                                        ),
+                                    ),
+                                    Normal(
+                                        Variable(
+                                            Variable {
+                                                prefix: None,
+                                                name: "x",
+                                            },
+                                        ),
+                                    ),
+                                ],
+                                call_index: 2,
+                            },
+                        ),
+                    ),
+                ],
+                ret_type: None,
+            },
+        ),
+    ],
 }

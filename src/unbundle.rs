@@ -1,17 +1,17 @@
 use std::{sync::Arc, collections::{HashMap, HashSet}};
 
-use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable}, repeater::{list_repeaters, uses_repeater, is_good_repeater}};
+use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue, BTRegisterType}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable, OrRepeater}, repeater::{list_repeaters, uses_repeater, is_good_repeater}};
 
 struct Bundle {
-    debug_name: String,
+    debug_name: BundleKey,
     used: HashSet<String>,
     dead: bool
 }
 
 impl Bundle {
-    fn new(debug_name: &str) -> Bundle {
+    fn new(debug_name: &BundleKey) -> Bundle {
         Bundle {
-            debug_name: debug_name.to_string(),
+            debug_name: debug_name.clone(),
             used: HashSet::new(),
             dead: false
         }
@@ -22,7 +22,7 @@ impl Bundle {
     }
 
     fn name_unused(&mut self, name: &str) {
-        self.used.remove(name);
+        //self.used.remove(name);
     }
 
     fn names(&self) -> &HashSet<String> { &self.used }
@@ -32,8 +32,8 @@ impl Bundle {
     }
 
     fn kill(&mut self) {
-        self.dead = true;
-        self.used.clear();
+        //self.dead = true;
+        //self.used.clear();
     }
 }
 
@@ -41,15 +41,21 @@ impl std::fmt::Debug for Bundle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut values = self.used.iter().cloned().collect::<Vec<_>>();
         values.sort();
-        write!(f,"{}: {}",self.debug_name,values.join(", "))
+        write!(f,"{:?}: {}",self.debug_name,values.join(", "))
     }
 }
 
 #[derive(Clone,Debug)]
 struct BundleHandle(usize);
 
+#[derive(Clone,Debug,PartialEq,Eq,Hash)]
+enum BundleKey {
+    Name(String),
+    Register(usize)
+}
+
 pub(crate) struct BundleStack {
-    names: Vec<HashMap<String,usize>>,
+    names: Vec<HashMap<BundleKey,usize>>,
     bundles: Vec<Bundle>
 }
 
@@ -79,28 +85,38 @@ impl BundleStack {
     }
 
     fn new_anon_bundle(&mut self) -> BundleHandle {
-        let bundle = Bundle::new("_");
+        let bundle = Bundle::new(&BundleKey::Name("_".to_string()));
         let id = self.bundles.len();
-        println!("ALLOCATED ANON BUNDLE {}",id);
         self.bundles.push(bundle);
         BundleHandle(id)
     }
 
-    fn get_by_name(&mut self, name: &str) -> BundleHandle {
+    fn get(&mut self, key: BundleKey, force: bool) -> Option<BundleHandle> {
         let lookup = self.names.last_mut().unwrap();
-        if let Some(id) = lookup.get(name) {
+        if let Some(id) = lookup.get(&key) {
             if self.bundles[*id].dead {
-                lookup.remove(name);
+                //lookup.remove(&key);
             }
         }
-        if !lookup.contains_key(name) {
-            let bundle = Bundle::new(name);
+        if !lookup.contains_key(&key) && force {
+            let bundle = Bundle::new(&key);
             let id = self.bundles.len();
-            println!("ALLOCATED BUNDLE {} ({})",id,name);
             self.bundles.push(bundle);
-            lookup.insert(name.to_string(),id);
+            lookup.insert(key.clone(),id);
         }
-        BundleHandle(*lookup.get(name).unwrap())
+        lookup.get(&key).map(|x| BundleHandle(*x))
+    }
+
+    fn get_by_name(&mut self, name: &str) -> BundleHandle {
+        self.get(BundleKey::Name(name.to_string()),true).unwrap()
+    }
+
+    fn get_by_register(&mut self, reg: usize) -> BundleHandle {
+        self.get(BundleKey::Register(reg),true).unwrap()
+    }
+
+    fn try_get_by_register(&mut self, reg: usize) -> Option<BundleHandle> {
+        self.get(BundleKey::Register(reg),false)
     }
 
     fn merge(&mut self, to: &BundleHandle, from: &BundleHandle) {
@@ -110,15 +126,19 @@ impl BundleStack {
     }
 
     fn get_mut(&mut self, handle: &BundleHandle) -> &mut Bundle { &mut self.bundles[handle.0] }
+}
 
-    fn finish(&mut self, handle: &BundleHandle) {
-    }
+#[derive(Clone,Debug,PartialEq,Eq,Hash)]
+pub(crate) enum Position {
+    Return(usize)
 }
 
 pub(crate) struct Unbundle<'a> {
     bt: &'a BuildTree,
     bundles: BundleStack,
-    position: Option<(Arc<Vec<String>>,usize)>
+    transits: HashMap<(Vec<usize>,Position),HashSet<String>>,
+    position: Option<(Arc<Vec<String>>,usize)>,
+    call_stack: Vec<usize>
 }
 
 impl<'a> Unbundle<'a> {
@@ -126,7 +146,9 @@ impl<'a> Unbundle<'a> {
         Unbundle {
             bt,
             bundles: BundleStack::new(),
-            position: None
+            transits: HashMap::new(),
+            position: None,
+            call_stack: vec![]
         }
     }
 
@@ -195,17 +217,22 @@ impl<'a> Unbundle<'a> {
             _ => { panic!("unbundling repeater from non-repeater {:?}",call); }
         };
         let target = list_repeaters(&call.args)?[0].to_string();
-        println!("> repeater copy usage of {:?} into {:?}",source,target);
         Ok(())
     }
 
-    fn unbundle_function(&mut self, defn: &BTFuncProcDefinition, outside: &Option<BundleHandle>) -> Result<(),String> {
+    fn unbundle_function(&mut self, defn: &BTFuncProcDefinition, outside: &Option<BundleHandle>, call_index: usize) -> Result<(),String> {
         self.bundles.push_level();
+        self.call_stack.push(call_index);
+        if let Some(handle) = &outside {
+            let names = self.bundles.get_mut(handle).names().clone();
+            self.transits.insert((self.call_stack.clone(),Position::Return(0)),names);
+        }
         self.unbundle_return(&defn.ret[0],outside)?;
         for stmt in defn.block.iter().rev() {
             self.unbundle_stmt(stmt)?;
         }
         self.bundles.pop_level();
+        self.call_stack.pop();
         Ok(())
     }
 
@@ -228,8 +255,12 @@ impl<'a> Unbundle<'a> {
             },
             OrBundle::Normal(BTExpression::Function(f)) => {
                 let defn = self.bt.get_function(f)?;
-                self.unbundle_function(defn,outside)?;
+                self.unbundle_function(defn,outside,f.call_index)?;
             }
+            OrBundle::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
+                let handle = self.bundles.get_by_register(*r);
+                self.process_match(&Some(handle),outside)?;
+            },
             OrBundle::Normal(_) => {}
         }
         Ok(())
@@ -240,11 +271,18 @@ impl<'a> Unbundle<'a> {
             (None,None) => {},
             (Some(inside), Some(outside)) => {
                 self.bundles.merge(inside,outside);
-                println!("> match {:?} to {:?}",inside,outside);
             }
-            _ => { return Err(format!("expected bundle in return")); }
+            _ => { return Err(format!("expected bundle in return inside={:?} outside={:?}",inside,outside)); }
         }
         Ok(())
+    }
+
+    fn get_bundle_from_lvalue(&mut self, lvalue: &BTLValue) -> Option<BundleHandle> {
+        match lvalue {
+            BTLValue::Register(r,BTRegisterType::Bundle) => Some(self.bundles.get_by_register(*r)),
+            _ => None
+
+        }
     }
 
     /* If returns are given explicitly, it's easy to tell which are bundles. If they are discarded,
@@ -256,7 +294,7 @@ impl<'a> Unbundle<'a> {
             /* returns consumed */
             rets.iter().map(|x| {
                 match x {
-                    OrBundleRepeater::Normal(_) => None,
+                    OrBundleRepeater::Normal(n) => self.get_bundle_from_lvalue(n),
                     OrBundleRepeater::Bundle(b) => Some(self.bundles.get_by_name(b)),
                     OrBundleRepeater::Repeater(_) => { todo!(); }
                 }
@@ -281,13 +319,20 @@ impl<'a> Unbundle<'a> {
      * the (potentially nested) place where the bundle is explicit with the outer call.
      * 
      */
-    fn unbundle_proc(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+     fn unbundle_proc(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         let outside = self.build_proc_return_bundles(call)?;
         /* get handles for all bundles in return */
-        self.bundles.push_level();
         if let Some(defn) = self.bt.get_procedure(call)? {
             /* real procedure */
-            // XXX rets ignored
+            self.bundles.push_level();
+            self.call_stack.push(call.call_index);    
+            /* record return transit */
+            for (i,outside) in outside.iter().enumerate() {
+                if let Some(handle) = &outside {
+                    let names = self.bundles.get_mut(handle).names().clone();
+                    self.transits.insert((self.call_stack.clone(),Position::Return(i)),names);
+                }        
+            }
             /* bind retuns */
             for (inside,outside) in defn.ret.iter().zip(outside.iter()) {
                 self.unbundle_return(inside,outside)?;
@@ -299,15 +344,23 @@ impl<'a> Unbundle<'a> {
             /* process each statement */
             for stmt in defn.block.iter().rev() {
                 self.unbundle_stmt(stmt)?;
-            }    
+            }
+            self.bundles.pop_level();
+            self.call_stack.pop();    
         } else {
             /* assignment procedure */
-            /* bind retuns */
+            /* record return transit */
+            if let Some(handle) = &outside[0] {
+                self.call_stack.push(call.call_index);
+                let names = self.bundles.get_mut(handle).names().clone();
+                self.transits.insert((self.call_stack.clone(),Position::Return(0)),names);
+                self.call_stack.pop();
+            }
+            /* bind returns */
             self.unbundle_return(&call.args[0].no_repeater()?,&outside[0])?;
             /* usage in rhs */
             self.find_usage_expr(&call.args[0].no_repeater()?)?;
         }
-        self.bundles.pop_level();
         /* find usage in lvalue to this call */
         self.find_usage_proc(call)?;
         Ok(())
@@ -345,7 +398,6 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    pub(crate) fn bundle_stack(&self) -> &BundleStack {
-        &self.bundles
-    }
+    pub(crate) fn bundle_stack(&self) -> &BundleStack { &self.bundles }
+    pub(crate) fn transits(&self) -> &HashMap<(Vec<usize>,Position),HashSet<String>> { &self.transits }
 }

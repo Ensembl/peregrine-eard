@@ -198,12 +198,26 @@ pub(super) fn run_parse_tests(data: &str) {
                 }
             }
         }
-        if let Some((unbundle_options,unbundle)) = sections.get("unbundle") {
+        if let Some((unbundle_options,unbundle_correct)) = sections.get("unbundle") {
             let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let mut unbundle = Unbundle::new(&processed);
             unbundle.unbundle().expect("unbundle failed");
             let bundles = unbundle.bundle_stack();
-            print!("{:#?}{:?}\n{:?}",processed,bundles,unbundle.transits());
+            let transits = unbundle.transits();
+            let mut keys = transits.keys().cloned().collect::<Vec<_>>();
+            keys.sort();
+            let mut lines = vec![];
+            for key in keys {
+                let mut values = transits.get(&key).unwrap().iter().cloned().collect::<Vec<_>>();
+                values.sort();
+                let key_path = key.0.iter().map(|c|{
+                    c.to_string()
+                }).collect::<Vec<_>>();
+                lines.push(format!("{}/{:?}: {}",key_path.join(","),key.1,values.join(" ")));
+            }
+            let unbundle_got = lines.join("\n");
+            assert_eq!(process_ws(&unbundle_got,unbundle_options),process_ws(unbundle_correct,unbundle_options));
+            print!("{}",lines.join("\n"));
         }
         if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");

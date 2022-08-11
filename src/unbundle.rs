@@ -128,7 +128,7 @@ impl BundleStack {
     fn get_mut(&mut self, handle: &BundleHandle) -> &mut Bundle { &mut self.bundles[handle.0] }
 }
 
-#[derive(Clone,Debug,PartialEq,Eq,Hash)]
+#[derive(Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub(crate) enum Position {
     Arg(usize),
     Return(usize)
@@ -221,13 +221,9 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_function_in_return(&mut self, defn: &BTFuncProcDefinition, outside: &Option<BundleHandle>, call_index: usize, position: Position) -> Result<(),String> {
+    fn unbundle_function(&mut self, defn: &BTFuncProcDefinition, outside: &Option<BundleHandle>, call_index: usize) -> Result<(),String> {
         self.bundles.push_level();
         self.call_stack.push(call_index);
-        if let Some(handle) = &outside {
-            let names = self.bundles.get_mut(handle).names().clone();
-            self.transits.insert((self.call_stack.clone(),position),names);
-        }
         self.unbundle_return(&defn.ret[0],outside)?;
         for stmt in defn.block.iter().rev() {
             self.unbundle_stmt(stmt)?;
@@ -235,6 +231,13 @@ impl<'a> Unbundle<'a> {
         self.bundles.pop_level();
         self.call_stack.pop();
         Ok(())
+    }
+
+    fn add_transit(&mut self, handle: &Option<BundleHandle>, position: Position) {
+        if let Some(handle) = &handle {
+            let names = self.bundles.get_mut(handle).names().clone();
+            self.transits.insert((self.call_stack.clone(),position),names);
+        }
     }
 
     fn make_ret_bundle(&mut self, expr: &OrBundle<BTExpression>) -> Result<Option<BundleHandle>,String> {
@@ -253,10 +256,12 @@ impl<'a> Unbundle<'a> {
             OrBundle::Bundle(b) => {
                 let handle = self.bundles.get_by_name(b);
                 self.process_match(&Some(handle),outside)?;
+                self.add_transit(outside,Position::Return(0));
             },
             OrBundle::Normal(BTExpression::Function(f)) => {
                 let defn = self.bt.get_function(f)?;
-                self.unbundle_function_in_return(defn,outside,f.call_index,Position::Return(0))?;
+                self.add_transit(outside,Position::Return(0));
+                self.unbundle_function(defn,outside,f.call_index)?;
             }
             OrBundle::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
                 let handle = self.bundles.get_by_register(*r);
@@ -267,7 +272,7 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_arg(&mut self, expr: &OrBundleRepeater<BTExpression>, inside: &Option<BundleHandle>, index: usize) -> Result<(),String> {
+    fn unbundle_arg(&mut self, expr: &OrBundleRepeater<BTExpression>, inside: &Option<BundleHandle>, arg_index: usize) -> Result<(),String> {
         match expr {
             OrBundleRepeater::Bundle(b) => {
                 let handle = self.bundles.get_by_name(b);
@@ -276,7 +281,8 @@ impl<'a> Unbundle<'a> {
             OrBundleRepeater::Normal(BTExpression::Function(f)) => {
                 let defn = self.bt.get_function(f)?;
                 /* /inside/ the procedure arg is playing the role of /outside/ the function */
-                self.unbundle_function_in_return(defn,inside,f.call_index,Position::Arg(index))?;
+                self.unbundle_function(defn,inside,f.call_index)?;
+                self.add_transit(inside,Position::Arg(arg_index));
             },
             OrBundleRepeater::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
                 let handle = self.bundles.get_by_register(*r);
@@ -350,10 +356,7 @@ impl<'a> Unbundle<'a> {
             self.call_stack.push(call.call_index);
             /* record return transit */
             for (i,outside) in outside_ret.iter().enumerate() {
-                if let Some(handle) = &outside {
-                    let names = self.bundles.get_mut(handle).names().clone();
-                    self.transits.insert((self.call_stack.clone(),Position::Return(i)),names);
-                }        
+                self.add_transit(&outside,Position::Return(i));
             }
             /* bind retuns */
             for (inside,outside) in defn.ret.iter().zip(outside_ret.iter()) {
@@ -374,22 +377,19 @@ impl<'a> Unbundle<'a> {
                     OrBundle::Bundle(b) => Some(self.bundles.get_by_name(b)),
                 }
             }).collect::<Vec<_>>();
-            /**/
-            self.bundles.pop_level();
-            self.call_stack.pop();
             /* bind arguments */
             for (i,(inside,outside)) in inside_args.iter().zip(call.args.iter()).enumerate() {
                 self.unbundle_arg(outside,inside,i)?;
             }
+            /**/
+            self.bundles.pop_level();
+            self.call_stack.pop();
         } else {
             /* assignment procedure */
             /* record return transit */
-            if let Some(handle) = &outside_ret[0] {
-                self.call_stack.push(call.call_index);
-                let names = self.bundles.get_mut(handle).names().clone();
-                self.transits.insert((self.call_stack.clone(),Position::Return(0)),names);
-                self.call_stack.pop();
-            }
+            self.call_stack.push(call.call_index);
+            self.add_transit(&outside_ret[0],Position::Return(0));
+            self.call_stack.pop();
             /* bind */
             self.unbundle_return(&call.args[0].no_repeater()?,&outside_ret[0])?;
             /* usage in rhs */

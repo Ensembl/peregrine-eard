@@ -7,8 +7,8 @@ argument passing smoke
 7 = call to p from top
 8 = copy into x at top
 
-5/r0 = a,b
-6/r0 = a,b
+7,6,5/r0 = a,b
+7,6/r0 = a,b
 7/r0 = a,b
 7/a0 = a,b
 8/r0 = a,b
@@ -59,14 +59,13 @@ test:7 (*x) <- #8 *r3
 test:9 (3#9 x.a)
 test:10 (3#10 x.b)
 
->> unbundle
+>> unbundle trim
 
-{
-    ([6], Arg(0)): {"a", "b"},
-    ([8], Return(0)): {"b", "a"},
-    ([6, 5], Return(0)): {"a", "b"},
-    ([7], Return(0)): {"b", "a"}
-}
+7/Arg(0): a b
+7/Return(0): a b
+7,6/Return(0): a b
+7,6,5/Return(0): a b
+8/Return(0): a b
 
 >> test
 

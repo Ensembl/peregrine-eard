@@ -18,24 +18,24 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...
             arguments: [
                 Register(CodeRegisterArgument{
                     reg_id: 1,
-                    arg_types: [Sequence(Number),Sequence(String)],
-                    checks: [Check{check_type:Length,name:"X"}]
+                    arg_types: [seq(number),seq(string)],
+                    checks: [length(X)]
                 }),
                 Register(CodeRegisterArgument{
                     reg_id: 2,
-                    arg_types: [Atomic(Boolean)],
-                    checks: [Check{check_type:LengthOrInfinite,name:"X"}]
+                    arg_types: [boolean],
+                    checks: [length(X...)]
                 })
             ],
             results: [
                 Register(CodeRegisterArgument{
                     reg_id: 3,
-                    arg_types: [Sequence(Boolean)],
-                    checks: [Check{check_type:Reference,name:"X"}]
+                    arg_types: [seq(boolean)],
+                    checks: [ref(X)]
                 }),
                 Register(CodeRegisterArgument{
                     reg_id: 5,
-                    arg_types: [Atomic(Boolean)],
+                    arg_types: [boolean],
                     checks:[]
                 })
             ],
@@ -70,18 +70,14 @@ code test(r1: seq(?X)) -> (r2: seq(?X)) {
             arguments: [
                 Register(CodeRegisterArgument{
                     reg_id: 1,
-                    arg_types: [
-                        SequenceWildcard("X")
-                    ],
+                    arg_types: [seq(?X)],
                     checks: []
                 })
             ],
             results: [
                 Register(CodeRegisterArgument{
                     reg_id: 2,
-                    arg_types:[
-                        SequenceWildcard("X")
-                    ],
+                    arg_types:[seq(?X)],
                     checks: []
                 })
             ],
@@ -115,24 +111,20 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
             arguments: [
                 Register(CodeRegisterArgument{
                     reg_id: 1,
-                    arg_types: [SequenceWildcard("X")],
-                    checks:[Check{check_type:Length,name:"Y"}]
+                    arg_types: [seq(?X)],
+                    checks: [length(Y)]
                 })
             ],
             results: [
                 Register(CodeRegisterArgument{
                     reg_id: 2,
-                    arg_types: [SequenceWildcard("X")],
-                    checks: [
-                        Check{check_type:Length,name:"Y"}
-                    ]
+                    arg_types: [seq(?X)],
+                    checks: [length(Y)]
                 }),
                 Register(CodeRegisterArgument{
                     reg_id: 3,
-                    arg_types: [Sequence(Boolean)],
-                    checks: [
-                        Check{check_type:Reference,name:"Y"}
-                    ]
+                    arg_types: [seq(boolean)],
+                    checks: [ref(Y)]
                 })
             ],
             commands: [
@@ -163,10 +155,10 @@ code test(r1: boolean) -> r2: seq(boolean) {
         value: Code(CodeBlock{
             name: "test",
             arguments:[
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]})
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]})
             ],
             results:[
-                Register(CodeRegisterArgument{reg_id:2,arg_types:[Sequence(Boolean)],checks:[]})
+                Register(CodeRegisterArgument{reg_id:2,arg_types:[seq(boolean)],checks:[]})
             ],
             commands:[Opcode(42,[1,2])],
             modifiers:[]
@@ -202,7 +194,7 @@ code test_string(r1: boolean, "hello") {
         value: Code(CodeBlock{
             name: "test_bool",
             arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
                 Constant(Boolean(false))
             ],
             results: [],
@@ -217,7 +209,7 @@ code test_string(r1: boolean, "hello") {
         value: Code(CodeBlock{
             name: "test_number",
             arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
                 Constant(Number(42.0))
             ],
             results: [],
@@ -231,7 +223,7 @@ code test_string(r1: boolean, "hello") {
     PTStatement {
         value: Code(CodeBlock{name: "test_string",
             arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[Atomic(Boolean)],checks:[]}),
+                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
                 Constant(String("hello"))
             ],
             results:[],

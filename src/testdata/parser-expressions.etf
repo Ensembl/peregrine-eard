@@ -11,12 +11,12 @@ let x = 1 || 2 || 3;
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Infix(
+            [(x,[])],
+            [Infix(
                 Infix(Constant(Number(1.0)),"||",Constant(Number(2.0))),
                 "||",
                 Constant(Number(3.0))
-            ))]
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -41,8 +41,8 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Infix(
+            [(x,[])],
+            [Infix(
                 Infix(
                     Constant(Number(1.0)),
                     "||",
@@ -90,7 +90,7 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
                 ),
                 "||",
                 Constant(Number(13.0))
-            ))]
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -112,8 +112,8 @@ let y = (1+2)*3;
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Infix(
+            [(x,[])],
+            [Infix(
                 Constant(Number(1.0)),
                 "+",
                 Infix(
@@ -121,7 +121,7 @@ let y = (1+2)*3;
                     "*",
                     Constant(Number(3.0))
                 )
-            ))]
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -129,8 +129,8 @@ let y = (1+2)*3;
     },
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"y"},[]))],
-            [Normal(Infix(
+            [(y,[])],
+            [Infix(
                 Infix(
                     Constant(Number(1.0)),
                     "+",
@@ -138,7 +138,7 @@ let y = (1+2)*3;
                 ),
                 "*",
                 Constant(Number(3.0))
-            ))]
+            )]
         ),
         file: ["test"],
         line_no: 3,
@@ -160,8 +160,8 @@ let y = [1,...];
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))]))]
+            [(x,[])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,
@@ -169,8 +169,8 @@ let y = [1,...];
     },
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"y"},[]))],
-            [Normal(InfiniteSequence(Constant(Number(1.0))))]
+            [(y,[])],
+            [InfiniteSequence(Constant(Number(1.0)))]
         ),
         file: ["test"],
         line_no: 3,
@@ -191,25 +191,25 @@ let x = -x - -y && !z;
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Infix(
+            [(x,[])],
+            [Infix(
                 Infix(
                     Prefix(
                         "-",
-                        Variable(Variable{prefix:None,name:"x"})
+                        Variable(x)
                     ),
                     "-",
                     Prefix(
                         "-",
-                        Variable(Variable{prefix:None,name:"y"})
+                        Variable(y)
                     )
                 ),
                 "&&",
                 Prefix(
                     "!",
-                    Variable(Variable{prefix:None,name:"z"})
+                    Variable(z)
                 )
-            ))]
+            )]
         ),
         file: ["test"],
         line_no: 2,
@@ -230,17 +230,15 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
 [
     PTStatement {
         value: LetStatement(
-            [Repeater("a")],
-            [Normal(FiniteSequence([
+            [**a],
+            [FiniteSequence([
                 Infix(
                     Infix(
                         Constant(Number(1.0)),
                         "+",
                         Call(PTCall{
                             name: "y",
-                            args:[
-                                Repeater("b")
-                            ],
+                            args:[**b],
                             is_macro:false
                         })
                     ),
@@ -251,7 +249,7 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
                         Call(PTCall{
                             name: "z",
                             args:[
-                                Normal(Call(PTCall{name:"zz",args:[],is_macro:false}))
+                                Call(PTCall{name:"zz",args:[],is_macro:false})
                             ],
                             is_macro:false
                         })
@@ -260,13 +258,13 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
                 Call(PTCall{
                     name:"x",
                     args:[
-                        Normal(Constant(Number(2.0))),
-                        Normal(Variable(Variable{prefix:None,name:"c"})),
-                        Bundle("d")
+                        Constant(Number(2.0)),
+                        Variable(c),
+                        *d
                     ],
                     is_macro:false
                 })
-            ]))]
+            ])]
         ),
         file: ["test"],
         line_no: 2,

@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug,Clone)]
 pub enum Constant {
     Number(f64),
@@ -34,12 +36,21 @@ pub enum FuncProcModifier {
     Export
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Variable {
     pub prefix: Option<String>,
     pub name: String
 }
 
+impl fmt::Debug for Variable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(prefix) = &self.prefix {
+            write!(f,"{}.{}",prefix,self.name)
+        } else {
+            write!(f,"{}",self.name)
+        }
+    }
+}
 
 #[derive(Debug,Clone)]
 pub enum CheckType {
@@ -49,16 +60,36 @@ pub enum CheckType {
     Sum
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct Check {
     pub check_type: CheckType,
     pub name: String
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for Check {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self.check_type {
+            CheckType::Length => write!(f,"length({})",self.name),
+            CheckType::LengthOrInfinite => write!(f,"length({}...)",self.name),
+            CheckType::Reference => write!(f,"ref({})",self.name),
+            CheckType::Sum => write!(f,"total({})",self.name)
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum OrBundle<T: std::fmt::Debug+Clone> {
     Normal(T),
     Bundle(String)
+}
+
+impl<T: fmt::Debug+Clone> fmt::Debug for OrBundle<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Normal(v) => write!(f,"{:?}",v),
+            Self::Bundle(b) => write!(f,"*{}",b),
+        }
+    }
 }
 
 impl<T: std::fmt::Debug+Clone> OrBundle<T> {
@@ -70,17 +101,36 @@ impl<T: std::fmt::Debug+Clone> OrBundle<T> {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum OrRepeater<T: std::fmt::Debug+Clone> {
     Normal(T),
     Repeater(String)
 }
 
-#[derive(Debug,Clone)]
+impl<T: fmt::Debug+Clone> fmt::Debug for OrRepeater<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Normal(v) => write!(f,"{:?}",v),
+            Self::Repeater(r) => write!(f,"**{}",r),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum OrBundleRepeater<T: std::fmt::Debug+Clone> {
     Normal(T),
     Bundle(String),
     Repeater(String)
+}
+
+impl<T: fmt::Debug+Clone> fmt::Debug for OrBundleRepeater<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Normal(v) => write!(f,"{:?}",v),
+            Self::Bundle(b) => write!(f,"*{}",b),
+            Self::Repeater(r) => write!(f,"**{}",r),
+        }
+    }
 }
 
 impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
@@ -116,7 +166,7 @@ impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum AtomicTypeSpec {
     Number,
     String,
@@ -124,7 +174,18 @@ pub enum AtomicTypeSpec {
     Handle(String)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for AtomicTypeSpec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Number => write!(f,"number"),
+            Self::String => write!(f,"string"),
+            Self::Boolean => write!(f,"boolean"),
+            Self::Handle(h) => write!(f,"handle({})",h),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum TypeSpec {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
@@ -132,16 +193,46 @@ pub enum TypeSpec {
     SequenceWildcard(String)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for TypeSpec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Atomic(v) => write!(f,"{:?}",v),
+            Self::Sequence(v) => write!(f,"seq({:?})",v),
+            Self::Wildcard(v) => write!(f,"?{}",v),
+            Self::SequenceWildcard(v) => write!(f,"seq(?{})",v),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct ArgTypeSpec {
     pub arg_types: Vec<TypeSpec>,
     pub checks: Vec<Check>
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for ArgTypeSpec {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i,arg) in self.arg_types.iter().enumerate() {
+            write!(f,"{}{:?}",if i>0 {"|"} else{""},arg)?;
+        }
+        for check in &self.checks {
+            write!(f," {:?}",check)?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
 pub struct TypedArgument {
     pub id: String,
     pub typespec: ArgTypeSpec
+}
+
+impl fmt::Debug for TypedArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let sep = self.typespec.arg_types.len() > 0 || self.typespec.checks.len() > 0;
+        write!(f,"{}{}{:?}",self.id,if sep { ": "} else { "" },self.typespec)
+    }
 }
 
 #[derive(Debug,Clone)]

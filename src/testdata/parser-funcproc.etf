@@ -17,15 +17,7 @@ export function first(a: seq(?X)) -> ?X {
             name: "first",
             modifiers: [Export],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types: [
-                            SequenceWildcard("X")
-                        ],
-                        checks:[]
-                    }
-                })
+                a: seq(?X)
             ],
             captures: [],
             block: [
@@ -33,7 +25,7 @@ export function first(a: seq(?X)) -> ?X {
                     value: BareCall(PTCall{
                         name: "print",
                         args: [
-                            Normal(Constant(String("gettingfirstelement")))
+                            Constant(String("gettingfirstelement"))
                         ],
                         is_macro: false
                     }),
@@ -42,15 +34,15 @@ export function first(a: seq(?X)) -> ?X {
                     context: 1
                 }
             ],
-            value: Normal(Call(PTCall{
+            value: Call(PTCall{
                 name: "entry",
                 args: [
-                    Normal(Variable(Variable{prefix:None,name:"a"})),
-                    Normal(Constant(Number(0.0)))
+                    Variable(a),
+                    Constant(Number(0.0))
                 ],
                 is_macro: false
-            })),
-            value_type: Some(ArgTypeSpec{arg_types:[Wildcard("X")],checks:[]})
+            }),
+            value_type: Some(?X)
         }),
         file: ["test"],
         line_no: 2,
@@ -76,38 +68,13 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             name: "test",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id: "a",
-                    typespec:ArgTypeSpec{
-                        arg_types: [
-                            Sequence(Number),
-                            Atomic(Number),
-                            Atomic(Boolean)
-                        ],
-                        checks: [
-                            Check{check_type:Length,name:"X"},
-                            Check{check_type:Reference,name:"Y"}
-                        ]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id: "b",
-                    typespec:ArgTypeSpec{
-                        arg_types: [
-                            SequenceWildcard("Z")
-                        ],
-                        checks: [
-                        ]
-                    }
-                })
+                a: seq(number)|number|boolean length(X) ref(Y),
+                b: seq(?Z)
             ],
             captures: [],
             block: [],
-            value: Normal(Constant(Number(42.0))),
-            value_type: Some(ArgTypeSpec{
-                arg_types:[SequenceWildcard("Z")],
-                checks: [Check{check_type:Reference,name:"X"}]
-            })
+            value: Constant(Number(42.0)),
+            value_type: Some(seq(?Z) ref(X))
         }),
         file: ["test"],
         line_no: 2,
@@ -145,17 +112,10 @@ function inc(a) {
         value: FuncDef(PTFuncDef{
             name: "inc",
             modifiers: [],
-            args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],checks:[]
-                    }
-                })
-            ],
+            args: [a],
             captures: [],
             block: [],
-            value: Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Constant(Number(1.0)))),
+            value: Infix(Variable(a),"+",Constant(Number(1.0))),
             value_type: None
         }),
         file: ["test"],
@@ -182,17 +142,11 @@ function more(a: number length(?X)) {
             name: "more",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id: "a",
-                    typespec:ArgTypeSpec{
-                        arg_types: [Atomic(Number)],
-                        checks: [Check{check_type:Length,name:"X"}]
-                    }
-                })
+                a: number length(X)
             ],
             captures: [],
             block: [],
-            value: Normal(Constant(Number(3.0))),
+            value: Constant(Number(3.0)),
             value_type: None
         }),
         file: ["test"],
@@ -219,13 +173,13 @@ function func(*x) {
         value: FuncDef(PTFuncDef{
             name: "func",
             modifiers: [],
-            args: [Bundle("x")],
+            args: [*x],
             captures: [],
             block: [
                 PTStatement {
                     value: BareCall(PTCall{
                         name: "inc",
-                        args: [Normal(Variable(Variable{prefix:Some("x"),name:"a"}))],
+                        args: [Variable(x.a)],
                         is_macro:false
                     }),
                     file: ["test"],
@@ -233,7 +187,7 @@ function func(*x) {
                     context: 1
                 }
             ],
-            value: Bundle("x"),
+            value: *x,
             value_type: None
         }),
         file: ["test"],
@@ -260,7 +214,7 @@ function x() { 42 }
             args: [],
             captures: [],
             block: [],
-            value: Normal(Constant(Number(42.0))),
+            value: Constant(Number(42.0)),
             value_type: None
         }),
         file: ["test"],
@@ -289,43 +243,28 @@ procedure x(a: number, b: number) -> (number,number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                })
+                a: number,
+                b: number
             ],
             captures: [],
             block:[
                 PTStatement{
-                    value:BareCall(PTCall{name:"print",args:[Normal(Variable(Variable{prefix:None,name:"a"}))],is_macro:false}),
+                    value:BareCall(PTCall{name:"print",args:[Variable(a)],is_macro:false}),
                     file:["test"],
                     line_no:3,
                     context:1
                 },
                 PTStatement{
-                    value:BareCall(PTCall{name:"print",args:[Normal(Variable(Variable{prefix:None,name:"b"}))],is_macro:false}),
+                    value:BareCall(PTCall{name:"print",args:[Variable(b)],is_macro:false}),
                     file:["test"],
                     line_no:4,
                     context:1
                 }
             ],
-            ret: [
-                Normal(Variable(Variable{prefix:None,name:"b"})),
-                Normal(Variable(Variable{prefix:None,name:"a"}))
-            ],
+            ret: [Variable(b),Variable(a)],
             ret_type: Some([
-                ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]},
-                ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}
+                number,
+                number
             ])
         }),
         file:["test"],
@@ -366,27 +305,15 @@ procedure x(a: number, b: number) -> (number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                        }
-                })
+                a: number,
+                b: number
             ],
             captures: [],
             block: [],
             ret: [
-                Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
+                Infix(Variable(a),"+",Variable(b))
             ],
-            ret_type: Some([ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}])
+            ret_type: Some([number])
         }),
         file: ["test"],
         line_no: 2,
@@ -412,27 +339,15 @@ procedure x(a: number, b: number) -> number {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                })
+                a: number,
+                b: number
             ],
             captures: [],
             block: [],
             ret: [
-                Normal(Infix(Variable(Variable{prefix:None,name:"a"}),"+",Variable(Variable{prefix:None,name:"b"})))
+                Infix(Variable(a),"+",Variable(b))
             ],
-            ret_type: Some([ArgTypeSpec{arg_types:[Atomic(Number)],checks:[]}])
+            ret_type: Some([number])
         }),
         file: ["test"],
         line_no: 2,
@@ -457,20 +372,8 @@ procedure x(a: number, b: number) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[Atomic(Number)],
-                        checks:[]
-                    }
-                })
+                a: number,
+                b: number
             ],
             captures: [],
             block: [],
@@ -500,22 +403,8 @@ procedure x(a, b: length(?X...)) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[
-                            Check{check_type:LengthOrInfinite,name:"X"}
-                        ]
-                    }
-                })
+                a,
+                b: length(X...)
             ],
             captures: [],
             block: [],
@@ -561,27 +450,15 @@ procedure x(a, b: length(?X...), *c) {
             name:"x",
             modifiers:[],
             args:[
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[Check{check_type:LengthOrInfinite,name:"X"}]
-                    }
-                }),
-                Bundle("c")
+                a,
+                b: length(X...),
+                *c
             ],
             captures: [],
             block:[
                 PTStatement{
                     value:ModifyStatement(
-                        [Variable{prefix:Some("c"),name:"x"}],
+                        [c.x],
                         [Constant(Number(1.0))]
                     ),
                     file:["test"],
@@ -618,8 +495,8 @@ procedure test(a) {
 [
     PTStatement{
         value:LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Constant(Number(2.0)))]
+            [(x,[])],
+            [Constant(Number(2.0))]
         ),
         file:["test"],
         line_no:2,
@@ -627,8 +504,8 @@ procedure test(a) {
     },
     PTStatement{
         value:LetStatement(
-            [Normal((Variable{prefix:None,name:"y"},[]))],
-            [Normal(Constant(Number(20.0)))]
+            [(y,[])],
+            [Constant(Number(20.0))]
         ),
         file:["test"],
         line_no:3,
@@ -638,25 +515,18 @@ procedure test(a) {
         value:ProcDef(PTProcDef{
             name:"test",
             modifiers:[],
-            args:[
-                Normal(TypedArgument{id:"a",typespec:ArgTypeSpec{arg_types:[],checks:[]}})
-            ],
-            captures:[
-                Normal(Variable{prefix:None,name:"x"}),
-                Normal(Variable{prefix:None,name:"y"})
-            ],
+            args:[a],
+            captures:[x,y],
             block:[],
             ret:[
-                Normal(
+                Infix(
                     Infix(
-                        Infix(
-                            Variable(Variable{prefix:None,name:"x"}),
-                            "+",
-                            Variable(Variable{prefix:None,name:"y"})
-                        ),
+                        Variable(x),
                         "+",
-                        Constant(Number(1.0))
-                    )
+                        Variable(y)
+                    ),
+                    "+",
+                    Constant(Number(1.0))
                 )
             ],
             ret_type:None
@@ -686,29 +556,15 @@ procedure x(a, b: length(?X...), *c) {
             name: "x",
             modifiers: [],
             args: [
-                Normal(TypedArgument{
-                    id:"a",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[]
-                    }
-                }),
-                Normal(TypedArgument{
-                    id:"b",
-                    typespec:ArgTypeSpec{
-                        arg_types:[],
-                        checks:[
-                            Check{check_type:LengthOrInfinite,name:"X"}
-                        ]
-                    }
-                }),
-                Bundle("c")
+                a,
+                b: length(X...),
+                *c
             ],
             captures: [],
             block: [
                 PTStatement {
                     value: ModifyStatement(
-                        [Variable{prefix:Some("c"),name:"x"}],
+                        [c.x],
                         [Constant(Number(1.0))]
                     ),
                     file: ["test"],
@@ -716,7 +572,7 @@ procedure x(a, b: length(?X...), *c) {
                     context: 1
                 }
             ],
-            ret: [Bundle("c")],
+            ret: [*c],
             ret_type: None
         }),
         file: ["test"],
@@ -738,29 +594,20 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
 [
     PTStatement{
         value: LetStatement([
-            Normal((
-                Variable{prefix:None,name:"x"},[
-                    Check{check_type:Length,name:"w"},
-                    Check{check_type:Sum,name:"ww"}
-                ]
-            )),
-            Normal((
-                Variable{prefix:None,name:"y"},[]
-            )),
-            Normal((
-                Variable{prefix:None,name:"z"},[]
-            ))
+            (x,[length(w),total(ww)]),
+            (y,[]),
+            (z,[])
         ],
         [
-            Normal(Call(PTCall{
+            Call(PTCall{
                 name:"c",
                 args:[
-                    Normal(Variable(Variable{prefix:None,name:"a"})),
-                    Normal(Variable(Variable{prefix:None,name:"b"})),
-                    Normal(Variable(Variable{prefix:None,name:"c"}))
+                    Variable(a),
+                    Variable(b),
+                    Variable(c)
                 ],
                 is_macro:false
-            }))
+            })
         ]
     ),
     file:["test"],
@@ -781,17 +628,14 @@ Procedure return (modify)
 
 [
     PTStatement{value:ModifyStatement(
+        [x,y,z],
         [
-            Variable{prefix:None,name:"x"},
-            Variable{prefix:None,name:"y"},
-            Variable{prefix:None,name:"z"}
-        ],[
             Call(PTCall{
                 name: "c",
                 args:[
-                    Normal(Variable(Variable{prefix:None,name:"a"})),
-                    Normal(Variable(Variable{prefix:None,name:"b"})),
-                    Normal(Variable(Variable{prefix:None,name:"c"}))
+                    Variable(a),
+                    Variable(b),
+                    Variable(c)
                 ],
                 is_macro:false
             })

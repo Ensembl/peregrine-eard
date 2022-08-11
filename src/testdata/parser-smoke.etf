@@ -392,7 +392,7 @@ z2(z3());
     PTStatement {
         value: BareCall(PTCall {
             name: "z2",
-            args: [Normal(Call(PTCall { name: "z3", args: [], is_macro: false }))],
+            args: [Call(PTCall { name: "z3", args: [], is_macro: false })],
             is_macro: false 
         }),
         file: ["test"],

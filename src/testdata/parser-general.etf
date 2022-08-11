@@ -23,14 +23,14 @@ let x.y = false;
 
 [
     PTStatement {
-        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[]))],[Normal(Constant(Boolean(true)))]),
+        value: LetStatement([(x,[])],[Constant(Boolean(true))]),
         file: ["test"],
         line_no: 2,
         context: 1
 
     },
     PTStatement {
-        value: LetStatement([Normal((Variable{prefix:Some("x"),name:"y"},[]))],[Normal(Constant(Boolean(false)))]),
+        value: LetStatement([(x.y,[])],[Constant(Boolean(false))]),
         file: ["test"],
         line_no: 3,
         context: 1
@@ -50,12 +50,12 @@ let x = test!("macro");
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(Call(PTCall{
+            [(x,[])],
+            [Call(PTCall{
                 name: "test",
-                args: [Normal(Constant(String("macro")))],
+                args: [Constant(String("macro"))],
                 is_macro: true
-            }))]
+            })]
         ),
         file: ["test"],
         line_no: 2,
@@ -94,13 +94,13 @@ let x : length(a) length(bb...) total(ccc) ref(dddd) = [1,2,3];
 
 [
     PTStatement {
-        value: LetStatement([Normal((Variable{prefix:None,name:"x"},[
-                Check{check_type:Length,name:"a"},
-                Check{check_type:LengthOrInfinite,name:"bb"},
-                Check{check_type:Sum,name:"ccc"},
-                Check{check_type:Reference,name:"dddd"}
-            ]))],
-            [Normal(FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))]))]
+        value: LetStatement([(x,[
+                length(a),
+                length(bb...),
+                total(ccc),
+                ref(dddd)
+            ])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,
@@ -134,8 +134,8 @@ x = [4,5,6];
 [
     PTStatement {
         value: LetStatement(
-            [Normal((Variable{prefix:None,name:"x"},[]))],
-            [Normal(FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))]))]
+            [(x,[])],
+            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
         ),
         file: ["test"],
         line_no: 2,
@@ -143,7 +143,7 @@ x = [4,5,6];
     },
     PTStatement {
         value: ModifyStatement(
-            [Variable{prefix:None,name:"x"}],
+            [x],
             [FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])]
         ),
         file: ["test"],
@@ -167,9 +167,9 @@ c(1,2,3);
         value: BareCall(PTCall{
             name: "c",
             args: [
-                Normal(Constant(Number(1.0))),
-                Normal(Constant(Number(2.0))),
-                Normal(Constant(Number(3.0)))
+                Constant(Number(1.0)),
+                Constant(Number(2.0)),
+                Constant(Number(3.0))
             ],
             is_macro: false
         }),
@@ -191,7 +191,7 @@ test!("123");
 
 [
     PTStatement {
-        value: BareCall(PTCall{name:"test",args:[Normal(Constant(String("123")))],is_macro:true}),
+        value: BareCall(PTCall{name:"test",args:[Constant(String("123"))],is_macro:true}),
         file: ["test"],
         line_no: 2,
         context: 1
@@ -211,13 +211,13 @@ let (a,b,c) = (x,y,z);
 [
     PTStatement{
         value:LetStatement([
-            Normal((Variable{prefix:None,name:"a"},[])),
-            Normal((Variable{prefix:None,name:"b"},[])),
-            Normal((Variable{prefix:None,name:"c"},[]))
+            (a,[]),
+            (b,[]),
+            (c,[])
         ],[
-            Normal(Variable(Variable{prefix:None,name:"x"})),
-            Normal(Variable(Variable{prefix:None,name:"y"})),
-            Normal(Variable(Variable{prefix:None,name:"z"}))
+            Variable(x),
+            Variable(y),
+            Variable(z)
         ]),
         file:["test"],
         line_no:2,
@@ -237,14 +237,12 @@ Multiple modify
 
 [
     PTStatement{
-        value:ModifyStatement([
-            Variable{prefix:None,name:"a"},
-            Variable{prefix:None,name:"b"},
-            Variable{prefix:None,name:"c"}
-        ],[
-            Variable(Variable{prefix:None,name:"x"}),
-            Variable(Variable{prefix:None,name:"y"}),
-            Variable(Variable{prefix:None,name:"z"})
+        value:ModifyStatement(
+        [a,b,c],
+        [
+            Variable(x),
+            Variable(y),
+            Variable(z)
         ]),
         file:["test"],
         line_no:2,

@@ -1,4 +1,4 @@
-use std::{sync::Arc, collections::HashMap};
+use std::{sync::Arc, collections::HashMap, fmt};
 
 use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock, OrBundleRepeater, OrRepeater}};
 
@@ -8,7 +8,7 @@ pub enum BTRegisterType {
     Bundle
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum BTExpression {
     Constant(Constant),
     Variable(Variable),
@@ -16,14 +16,37 @@ pub enum BTExpression {
     Function(BTFuncCall)
 }
 
+impl fmt::Debug for BTExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Constant(v) => write!(f,"{:?}",v),
+            Self::Variable(v) => write!(f,"{:?}",v),
+            Self::RegisterValue(v,BTRegisterType::Normal) => write!(f,"r{}",v),
+            Self::RegisterValue(v,BTRegisterType::Bundle) => write!(f,"*r{}",v),
+            Self::Function(v) => write!(f,"{:?}",v)
+        }
+    }
+}
+
 // XXX block macros
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum BTLValue {
     Variable(Variable),
     Register(usize,BTRegisterType)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for BTLValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Variable(v) => write!(f,"{:?}",v),
+            Self::Register(v,BTRegisterType::Normal) => write!(f,"r{}",v),
+            Self::Register(v,BTRegisterType::Bundle) => write!(f,"*r{}",v),
+        }
+    }
+}
+
+
+#[derive(Clone)]
 pub struct BTProcCall<R> {
     pub(crate) proc_index: Option<usize>,
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
@@ -31,14 +54,48 @@ pub struct BTProcCall<R> {
     pub(crate) call_index: usize
 }
 
-#[derive(Debug,Clone)]
+impl<R: fmt::Debug> fmt::Debug for BTProcCall<R> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(rets) = &self.rets {
+            write!(f,"(")?;
+            for (i,ret) in rets.iter().enumerate() {
+                write!(f,"{}{:?}",if i>0 { " " } else { "" },ret)?;
+            }
+            write!(f,") <- ")?;
+        }
+        if let Some(proc) = self.proc_index {
+            write!(f,"({}#{}",proc,self.call_index)?;    
+        } else {
+            write!(f,"#{}",self.call_index)?;
+        }
+        for arg in &self.args {
+            write!(f," {:?}",arg)?;
+        }
+        if self.proc_index.is_some() {
+            write!(f,")")?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
 pub struct BTFuncCall {
     pub(crate) func_index: usize,
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
     pub(crate) call_index: usize
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for BTFuncCall {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"({}#{}",self.func_index,self.call_index)?;
+        for arg in &self.args {
+            write!(f," {:?}",arg)?;
+        }
+        write!(f,")")
+    }
+}
+
+#[derive(Clone)]
 pub enum BTStatementValue {
     Define(usize),
     Declare(OrBundleRepeater<Variable>),
@@ -46,11 +103,29 @@ pub enum BTStatementValue {
     BundledStatement(BTProcCall<OrBundleRepeater<BTLValue>>)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for BTStatementValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Define(v) => write!(f,"define {:?}",v),
+            Self::Declare(v) => write!(f,"let {:?}",v),
+            Self::Check(v, c) => write!(f,"{:?} <check> {:?}",v,c),
+            Self::BundledStatement(v) => write!(f,"{:?}",v),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct BTStatement {
     pub value: BTStatementValue,
     pub file: Arc<Vec<String>>,
     pub line_no: usize
+}
+
+impl fmt::Debug for BTStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let file = self.file.as_ref().last().map(|x| x.as_str()).unwrap_or("");
+        write!(f,"{}:{} {:?}",file,self.line_no,self.value)
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -64,7 +139,7 @@ impl BTCodeDefinition {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub struct BTFuncProcDefinition {
     pub(crate) args: Vec<OrBundle<TypedArgument>>,
     pub(crate) captures: Vec<OrBundle<Variable>>,
@@ -73,16 +148,56 @@ pub struct BTFuncProcDefinition {
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
 }
 
+impl fmt::Debug for BTFuncProcDefinition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"(")?;
+        for (i,arg) in self.args.iter().enumerate() {
+            write!(f,"{}{:?}",if i>0 { "," } else { "" },arg)?;
+        }
+        write!(f,") ")?;
+        if let Some(ret_type) = &self.ret_type {
+            write!(f,"-> (")?;
+            for (i,ret_type) in ret_type.iter().enumerate() {
+                write!(f,"{}{:?}",if i>0 { "," } else { "" },ret_type)?;
+            }
+            write!(f,") ")?;
+        }
+        write!(f,"{{\n")?;
+        for capture in &self.captures {
+            write!(f,"  capture {:?}\n",capture)?;
+        }
+        for stmt in &self.block {
+            write!(f,"  {:?}\n",stmt)?;
+        }
+        write!(f,"  (")?;
+        for (i,ret) in self.ret.iter().enumerate() {
+            write!(f,"{}{:?}",if i>0 {","} else {""},ret)?;
+        }
+        write!(f,")\n}}\n")?;
+        Ok(())
+    }
+}
+
 pub enum BTDefinitionVariety { Func, Proc }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum BTDefinition {
     Func(BTFuncProcDefinition),
     Proc(BTFuncProcDefinition),
     Code(BTCodeDefinition)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for BTDefinition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+         match self {
+            Self::Func(v) => write!(f,"func {:?}",v),
+            Self::Proc(v) => write!(f,"proc {:?}",v),
+            Self::Code(v) => write!(f,"code {:?}",v)
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct BuildTree {
     pub(crate) statements: Vec<BTStatement>,
     pub(crate) definitions: Vec<BTDefinition>
@@ -133,5 +248,17 @@ impl BuildTree {
         } else {
             Ok(None)
         }
+    }
+}
+
+impl fmt::Debug for BuildTree {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i,defn) in self.definitions.iter().enumerate() {
+            write!(f,"{}:{:?}\n",i,defn)?;
+        }
+        for stmt in &self.statements {
+            write!(f,"{:?}\n",stmt)?;
+        }
+        Ok(())
     }
 }

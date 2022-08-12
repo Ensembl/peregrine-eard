@@ -200,7 +200,11 @@ impl<'a> Unbundle<'a> {
                 }
             },
             OrBundle::Normal(_) => {},
-            OrBundle::Bundle(_) => { /*todo!()*/ }
+            OrBundle::Bundle(_) => {
+                /* Usage of a bundle in a call is handled elsewhere during func/proc call
+                 * processing.
+                 */
+            }
         }
         Ok(())
     }
@@ -225,7 +229,7 @@ impl<'a> Unbundle<'a> {
         let defn = self.bt.get_function(call)?;
         self.bundles.push_level();
         self.call_stack.push(call.call_index);
-        self.unbundle_return(&defn.ret[0],outside)?;
+        self.unbundle_return(&defn.ret[0],outside,0)?;
         for stmt in defn.block.iter().rev() {
             self.unbundle_stmt(stmt)?;
         }
@@ -261,15 +265,15 @@ impl<'a> Unbundle<'a> {
         })
     }
 
-    fn unbundle_return(&mut self, expr: &OrBundle<BTExpression>, outside: &Option<BundleHandle>) -> Result<(),String> {
+    fn unbundle_return(&mut self, expr: &OrBundle<BTExpression>, outside: &Option<BundleHandle>, arg_index: usize) -> Result<(),String> {
         match expr {
             OrBundle::Bundle(b) => {
                 let handle = self.bundles.get_by_name(b);
                 self.process_match(&Some(handle),outside)?;
-                self.add_transit(outside,Position::Return(0));
+                self.add_transit(outside,Position::Return(arg_index));
             },
             OrBundle::Normal(BTExpression::Function(f)) => {
-                self.add_transit(outside,Position::Return(0));
+                self.add_transit(outside,Position::Return(arg_index));
                 self.unbundle_function(outside,f)?;
             }
             OrBundle::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
@@ -345,7 +349,7 @@ impl<'a> Unbundle<'a> {
                     self.make_ret_bundle(x)
                 }).collect::<Result<Vec<_>,_>>()?
             } else {
-                panic!("assignment not consumed!");
+                vec![self.make_ret_bundle(&call.args[0].no_repeater()?)?]
             }
         })
     }
@@ -370,8 +374,8 @@ impl<'a> Unbundle<'a> {
                 self.add_transit(&outside,Position::Return(i));
             }
             /* bind retuns */
-            for (inside,outside) in defn.ret.iter().zip(outside_ret.iter()) {
-                self.unbundle_return(inside,outside)?;
+            for (i,(inside,outside)) in defn.ret.iter().zip(outside_ret.iter()).enumerate() {
+                self.unbundle_return(inside,outside,i)?;
             }
             /* usage in return expressions */
             for ret in &defn.ret {
@@ -382,8 +386,8 @@ impl<'a> Unbundle<'a> {
                 self.unbundle_stmt(stmt)?;
             }
             /* We've now reached the top of the procedure and are looking at the argument list.
-             * Some of these arguments may be bundles. While we still have the name context,
-             * collect the contents of them and put them into "inside_args". Then pop the
+             * Some of these arguments may be bundles. While we still have the interior name
+             * context, collect the contents of them and put them into "inside_args". Then pop the
              * name context so that we resolve names at the outer scope. At that point, we can
              * call unbundle_arg() with the variables used and the expression at call site. See
              * unbundle_arg() to see what it does with these. Finally, pop the context for the
@@ -406,7 +410,7 @@ impl<'a> Unbundle<'a> {
             self.call_stack.push(call.call_index);
             self.add_transit(&outside_ret[0],Position::Return(0));
             /* bind */
-            self.unbundle_return(&call.args[0].no_repeater()?,&outside_ret[0])?;
+            self.unbundle_return(&call.args[0].no_repeater()?,&outside_ret[0],0)?;
             self.call_stack.pop();
             /* usage in rhs */
             self.find_usage_expr(&call.args[0].no_repeater()?)?;

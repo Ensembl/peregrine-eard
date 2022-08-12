@@ -408,7 +408,17 @@ impl BuildContext {
                 self.make_statement(&vv,&xx,false,bt)?;
             },
             PTStatementValue::BareCall(c) => {
-                self.build_proc(None,bt,c)?;
+                match self.lookup(&c.name)? {
+                    DefName::Func(f) => {
+                        /* top level is function call with discarded result, add assign proc */
+                        let expr = PTExpression::Call(c.clone());
+                        let ret = OrBundleRepeater::Normal(self.build_expression(bt,&expr)?);
+                        let stmt = self.make_statement_value(None,vec![ret],None);
+                        self.add_statement(bt,stmt)?;
+                    },
+                    DefName::Proc(_) => { self.build_proc(None,bt,c)? },
+                    DefName::Code(_) => todo!(),
+                }
             },
         }
         Ok(())

@@ -287,7 +287,81 @@ print(y.b);
 print(y.c);
 print(z.d);
 
->> xunbundle
+>> built strip
+
+0:proc (a) {
+  (Number(0.0))
+}
+
+1:func () {
+  test:4 (r1) <- #1 Number(0.0)
+  test:4 let a.a
+  test:4 (a.a) <- #2 r1
+  test:4 (r2) <- #3 Number(1.0)
+  test:4 let a.b
+  test:4 (a.b) <- #4 r2
+  test:4 (r3) <- #5 Number(2.0)
+  test:4 let a.c
+  test:4 (a.c) <- #6 r3
+  (*a)
+}
+
+2:func () {
+  ((1#7))
+}
+
+3:proc () {
+  test:13 (r4) <- #8 Number(3.0)
+  test:13 let a.d
+  test:13 (a.d) <- #9 r4
+  ((1#10),(2#11),*a)
+}
+
+test:2 define 0
+test:4 define 1
+test:11 define 2
+test:13 define 3
+test:18 (*r5 *r6 *r7) <- (3#12)
+test:18 let *x
+test:18 let *y
+test:18 let *z
+test:18 (*x) <- #13 *r5
+test:18 (*y) <- #14 *r6
+test:18 (*z) <- #15 *r7
+test:19 (*r8) <- #17 (1#16)
+test:19 (*r9) <- #19 (2#18)
+test:19 let *m
+test:19 let *n
+test:19 (*m) <- #20 *r8
+test:19 (*n) <- #21 *r9
+test:21 (0#22 m.a)
+test:22 (0#23 m.b)
+test:23 (0#24 m.c)
+test:24 (0#25 n.a)
+test:25 (0#26 x.a)
+test:26 (0#27 x.c)
+test:27 (0#28 y.b)
+test:28 (0#29 y.c)
+test:29 (0#30 z.d)
+
+>> unbundle trim
+
+12/Return(0): a c
+12/Return(1): b c
+12/Return(2): d
+12,10/Return(0): a c
+12,11/Return(0): b c
+12,11,7/Return(0): b c
+13/Return(0): a c
+14/Return(0): b c
+15/Return(0): d
+17/Return(0): a b c
+17,16/Return(0): a b c
+19/Return(0): a
+19,18/Return(0): a
+19,18,7/Return(0): a
+20/Return(0): a b c
+21/Return(0): a
 
 >> test
 
@@ -295,14 +369,41 @@ test anon regression
 
 >> input
 
+procedure print(a) { 0 }
 procedure proc1() {
     let a.a = 0;
     (*a,1)
 }
 
 let (*b,c) = proc1();
+print(b.a);
 
->> xunbundle
+>> built strip
+
+0:proc (a) {
+  (Number(0.0))
+}
+
+1:proc () {
+  test:3 (r1) <- #1 Number(0.0)
+  test:3 let a.a
+  test:3 (a.a) <- #2 r1
+  (*a,Number(1.0))
+}
+
+test:2 define 0
+test:3 define 1
+test:8 (*r2 r3) <- (1#3)
+test:8 let *b
+test:8 let c
+test:8 (*b) <- #4 *r2
+test:8 (c) <- #5 r3
+test:9 (0#6 b.a)
+
+>> unbundle trim
+
+3/Return(0): a
+4/Return(0): a
 
 >> test
 
@@ -320,4 +421,28 @@ function func1() {
 let *b = func1();
 print(b.z);
 
->> xunbundle
+>> built strip
+
+0:proc (a) {
+  (Number(0.0))
+}
+
+1:func () {
+  test:4 (r1) <- #1 Number(0.0)
+  test:4 let a.a
+  test:4 (a.a) <- #2 r1
+  (*a)
+}
+
+test:2 define 0
+test:4 define 1
+test:9 (*r2) <- #4 (1#3)
+test:9 let *b
+test:9 (*b) <- #5 *r2
+test:10 (0#6 b.z)
+
+>> unbundle trim
+
+4/Return(0): z
+4,3/Return(0): z
+5/Return(0): z

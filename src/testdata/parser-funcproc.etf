@@ -645,3 +645,20 @@ Procedure return (modify)
     line_no:2,
     context:1}
 ]
+
+>> test
+
+argument passing smoke
+
+>> input
+
+procedure print(a) { 0 }
+function f1(*a) { print(a.c); 0 }
+
+let a.a = 1;
+let a.b = 2;
+let a.c = 3;
+f1(*a);
+print(a.a);
+
+>> built strip

@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashMap, HashSet}};
 
-use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue, BTRegisterType}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable, OrRepeater}, repeater::{list_repeaters, uses_repeater, is_good_repeater}};
+use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue, BTRegisterType, BTFuncCall}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable, OrRepeater}, repeater::{list_repeaters, uses_repeater, is_good_repeater}};
 
 struct Bundle {
     debug_name: BundleKey,
@@ -95,7 +95,7 @@ impl BundleStack {
         let lookup = self.names.last_mut().unwrap();
         if let Some(id) = lookup.get(&key) {
             if self.bundles[*id].dead {
-                //lookup.remove(&key);
+                lookup.remove(&key);
             }
         }
         if !lookup.contains_key(&key) && force {
@@ -120,9 +120,9 @@ impl BundleStack {
     }
 
     fn merge(&mut self, to: &BundleHandle, from: &BundleHandle) {
-        let from = &self.bundles[from.0].names().iter().cloned().collect::<Vec<_>>();
+        let names = &self.bundles[from.0].names().iter().cloned().collect::<Vec<_>>();
         let to = &mut self.bundles[to.0];
-        to.merge(&mut from.iter());
+        to.merge(&mut names.iter());
     }
 
     fn get_mut(&mut self, handle: &BundleHandle) -> &mut Bundle { &mut self.bundles[handle.0] }
@@ -221,14 +221,24 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_function(&mut self, defn: &BTFuncProcDefinition, outside: &Option<BundleHandle>, call_index: usize) -> Result<(),String> {
+    fn unbundle_function(&mut self, outside: &Option<BundleHandle>, call: &BTFuncCall) -> Result<(),String> {
+        let defn = self.bt.get_function(call)?;
         self.bundles.push_level();
-        self.call_stack.push(call_index);
+        self.call_stack.push(call.call_index);
         self.unbundle_return(&defn.ret[0],outside)?;
         for stmt in defn.block.iter().rev() {
             self.unbundle_stmt(stmt)?;
         }
+        let inside_args = defn.args.iter().map(|arg| {
+            match arg {
+                OrBundle::Normal(_) => None,
+                OrBundle::Bundle(b) => Some(self.bundles.get_by_name(b)),
+            }
+        }).collect::<Vec<_>>();
         self.bundles.pop_level();
+        for (i,(inside,outside)) in inside_args.iter().zip(call.args.iter()).enumerate() {
+            self.unbundle_arg(outside, inside, i)?;
+        }
         self.call_stack.pop();
         Ok(())
     }
@@ -259,9 +269,8 @@ impl<'a> Unbundle<'a> {
                 self.add_transit(outside,Position::Return(0));
             },
             OrBundle::Normal(BTExpression::Function(f)) => {
-                let defn = self.bt.get_function(f)?;
                 self.add_transit(outside,Position::Return(0));
-                self.unbundle_function(defn,outside,f.call_index)?;
+                self.unbundle_function(outside,f)?;
             }
             OrBundle::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
                 let handle = self.bundles.get_by_register(*r);
@@ -272,35 +281,41 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_arg(&mut self, expr: &OrBundleRepeater<BTExpression>, inside: &Option<BundleHandle>, arg_index: usize) -> Result<(),String> {
-        match expr {
-            OrBundleRepeater::Bundle(b) => {
-                let handle = self.bundles.get_by_name(b);
-                self.process_match(inside,&Some(handle))?;
-            },
+    /* Called at a call site in the caller's name context with the bundle of values used from this
+     * arg and the expression at the call site. If that expression is an explicit bundle or a bundle
+     * register, just apply transitivity and record the names passed through. If it's a function
+     * call, it could be a function returning a bundle.  In this case process this function, passing
+     * in the argument from our call as its return but also record the names passing through.
+     */
+    fn unbundle_arg(&mut self, at_call_site: &OrBundleRepeater<BTExpression>, bundle_from_inside: &Option<BundleHandle>, arg_index: usize) -> Result<(),String> {
+        match at_call_site {
             OrBundleRepeater::Normal(BTExpression::Function(f)) => {
-                let defn = self.bt.get_function(f)?;
-                /* /inside/ the procedure arg is playing the role of /outside/ the function */
-                self.unbundle_function(defn,inside,f.call_index)?;
-                self.add_transit(inside,Position::Arg(arg_index));
-            },
+                self.unbundle_function(bundle_from_inside,f)?;
+                self.add_transit(bundle_from_inside,Position::Arg(arg_index));
+            }
             OrBundleRepeater::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
                 let handle = self.bundles.get_by_register(*r);
-                self.process_match(inside,&Some(handle))?;
+                self.process_match(&Some(handle),bundle_from_inside)?;
+                self.add_transit(bundle_from_inside,Position::Arg(arg_index));
             },
-            OrBundleRepeater::Normal(_) => {},
+            OrBundleRepeater::Bundle(b) => {
+                let handle = self.bundles.get_by_name(b);
+                self.process_match(&Some(handle),&bundle_from_inside)?;
+                self.add_transit(bundle_from_inside,Position::Arg(arg_index));
+            },
             OrBundleRepeater::Repeater(_) => { todo!() },
+            OrBundleRepeater::Normal(_) => {},
         }
         Ok(())
     }
 
-    fn process_match(&mut self, inside: &Option<BundleHandle>, outside: &Option<BundleHandle>) -> Result<(),String> {
-        match (inside,outside) {
+    fn process_match(&mut self, to: &Option<BundleHandle>, from: &Option<BundleHandle>) -> Result<(),String> {
+        match (to,from) {
             (None,None) => {},
             (Some(inside), Some(outside)) => {
                 self.bundles.merge(inside,outside);
             }
-            _ => { return Err(format!("expected bundle in return inside={:?} outside={:?}",inside,outside)); }
+            _ => { return Err(format!("expected bundle in return inside={:?} outside={:?}",to,from)); }
         }
         Ok(())
     }
@@ -313,10 +328,6 @@ impl<'a> Unbundle<'a> {
         }
     }
 
-    /* If returns are given explicitly, it's easy to tell which are bundles. If they are discarded,
-     * we need to look into the return for the proc to see which are bundles and create an anon
-     * placeholder.
-     */
     fn build_proc_return_bundles(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Vec<Option<BundleHandle>>,String> {
         Ok(if let Some(rets) = &call.rets {
             /* returns consumed */
@@ -370,32 +381,37 @@ impl<'a> Unbundle<'a> {
             for stmt in defn.block.iter().rev() {
                 self.unbundle_stmt(stmt)?;
             }
-            /* bind arguments (collect inside for use later) */
+            /* We've now reached the top of the procedure and are looking at the argument list.
+             * Some of these arguments may be bundles. While we still have the name context,
+             * collect the contents of them and put them into "inside_args". Then pop the
+             * name context so that we resolve names at the outer scope. At that point, we can
+             * call unbundle_arg() with the variables used and the expression at call site. See
+             * unbundle_arg() to see what it does with these. Finally, pop the context for the
+             * transit declarations.
+             */
             let inside_args = defn.args.iter().map(|arg| {
                 match arg {
                     OrBundle::Normal(_) => None,
                     OrBundle::Bundle(b) => Some(self.bundles.get_by_name(b)),
                 }
             }).collect::<Vec<_>>();
-            /* bind arguments */
-            for (i,(inside,outside)) in inside_args.iter().zip(call.args.iter()).enumerate() {
-                self.unbundle_arg(outside,inside,i)?;
-            }
-            /**/
             self.bundles.pop_level();
+            for (i,(bundle_from_inside,at_call_site)) in inside_args.iter().zip(call.args.iter()).enumerate() {
+                self.unbundle_arg(at_call_site,bundle_from_inside,i)?;
+            }
             self.call_stack.pop();
         } else {
             /* assignment procedure */
             /* record return transit */
             self.call_stack.push(call.call_index);
             self.add_transit(&outside_ret[0],Position::Return(0));
-            self.call_stack.pop();
             /* bind */
             self.unbundle_return(&call.args[0].no_repeater()?,&outside_ret[0])?;
+            self.call_stack.pop();
             /* usage in rhs */
             self.find_usage_expr(&call.args[0].no_repeater()?)?;
         }
-        /* find usage in lvalue to this call */
+        /* find usage in args to this call */
         self.find_usage_proc(call)?;
         Ok(())
     }
@@ -414,7 +430,7 @@ impl<'a> Unbundle<'a> {
     }
 
     fn unbundle_stmt(&mut self, stmt: &BTStatement) -> Result<(),String> {
-        println!("B {:?}",stmt);
+        println!("\nB {:?}",stmt);
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             BTStatementValue::Declare(d) => self.unbundle_declare(d)?,

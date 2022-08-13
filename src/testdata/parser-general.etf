@@ -23,14 +23,14 @@ let x.y = false;
 
 [
     PTStatement {
-        value: LetStatement([(x,[])],[Constant(Boolean(true))]),
+        value: LetStatement([(x,[])],[Constant(true)]),
         file: ["test"],
         line_no: 2,
         context: 1
 
     },
     PTStatement {
-        value: LetStatement([(x.y,[])],[Constant(Boolean(false))]),
+        value: LetStatement([(x.y,[])],[Constant(false)]),
         file: ["test"],
         line_no: 3,
         context: 1
@@ -53,7 +53,7 @@ let x = test!("macro");
             [(x,[])],
             [Call(PTCall{
                 name: "test",
-                args: [Constant(String("macro"))],
+                args: [Constant("macro")],
                 is_macro: true
             })]
         ),
@@ -100,7 +100,7 @@ let x : length(a) length(bb...) total(ccc) ref(dddd) = [1,2,3];
                 total(ccc),
                 ref(dddd)
             ])],
-            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
+            [FiniteSequence([Constant(1),Constant(2),Constant(3)])]
         ),
         file: ["test"],
         line_no: 2,
@@ -135,7 +135,7 @@ x = [4,5,6];
     PTStatement {
         value: LetStatement(
             [(x,[])],
-            [FiniteSequence([Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))])]
+            [FiniteSequence([Constant(1),Constant(2),Constant(3)])]
         ),
         file: ["test"],
         line_no: 2,
@@ -144,7 +144,7 @@ x = [4,5,6];
     PTStatement {
         value: ModifyStatement(
             [x],
-            [FiniteSequence([Constant(Number(4.0)),Constant(Number(5.0)),Constant(Number(6.0))])]
+            [FiniteSequence([Constant(4),Constant(5),Constant(6)])]
         ),
         file: ["test"],
         line_no: 3,
@@ -167,9 +167,9 @@ c(1,2,3);
         value: BareCall(PTCall{
             name: "c",
             args: [
-                Constant(Number(1.0)),
-                Constant(Number(2.0)),
-                Constant(Number(3.0))
+                Constant(1),
+                Constant(2),
+                Constant(3)
             ],
             is_macro: false
         }),
@@ -191,7 +191,7 @@ test!("123");
 
 [
     PTStatement {
-        value: BareCall(PTCall{name:"test",args:[Constant(String("123"))],is_macro:true}),
+        value: BareCall(PTCall{name:"test",args:[Constant("123")],is_macro:true}),
         file: ["test"],
         line_no: 2,
         context: 1

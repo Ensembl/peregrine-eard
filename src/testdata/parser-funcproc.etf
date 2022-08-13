@@ -25,7 +25,7 @@ export function first(a: seq(?X)) -> ?X {
                     value: BareCall(PTCall{
                         name: "print",
                         args: [
-                            Constant(String("gettingfirstelement"))
+                            Constant("gettingfirstelement")
                         ],
                         is_macro: false
                     }),
@@ -38,7 +38,7 @@ export function first(a: seq(?X)) -> ?X {
                 name: "entry",
                 args: [
                     Variable(a),
-                    Constant(Number(0.0))
+                    Constant(0)
                 ],
                 is_macro: false
             }),
@@ -73,7 +73,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             ],
             captures: [],
             block: [],
-            value: Constant(Number(42.0)),
+            value: Constant(42),
             value_type: Some(seq(?Z) ref(X))
         }),
         file: ["test"],
@@ -115,7 +115,7 @@ function inc(a) {
             args: [a],
             captures: [],
             block: [],
-            value: Infix(Variable(a),"+",Constant(Number(1.0))),
+            value: Infix(Variable(a),"+",Constant(1)),
             value_type: None
         }),
         file: ["test"],
@@ -146,7 +146,7 @@ function more(a: number length(?X)) {
             ],
             captures: [],
             block: [],
-            value: Constant(Number(3.0)),
+            value: Constant(3),
             value_type: None
         }),
         file: ["test"],
@@ -214,7 +214,7 @@ function x() { 42 }
             args: [],
             captures: [],
             block: [],
-            value: Constant(Number(42.0)),
+            value: Constant(42),
             value_type: None
         }),
         file: ["test"],
@@ -459,7 +459,7 @@ procedure x(a, b: length(?X...), *c) {
                 PTStatement{
                     value:ModifyStatement(
                         [c.x],
-                        [Constant(Number(1.0))]
+                        [Constant(1)]
                     ),
                     file:["test"],
                     line_no:3,
@@ -496,7 +496,7 @@ procedure test(a) {
     PTStatement{
         value:LetStatement(
             [(x,[])],
-            [Constant(Number(2.0))]
+            [Constant(2)]
         ),
         file:["test"],
         line_no:2,
@@ -505,7 +505,7 @@ procedure test(a) {
     PTStatement{
         value:LetStatement(
             [(y,[])],
-            [Constant(Number(20.0))]
+            [Constant(20)]
         ),
         file:["test"],
         line_no:3,
@@ -526,7 +526,7 @@ procedure test(a) {
                         Variable(y)
                     ),
                     "+",
-                    Constant(Number(1.0))
+                    Constant(1)
                 )
             ],
             ret_type:None
@@ -565,7 +565,7 @@ procedure x(a, b: length(?X...), *c) {
                 PTStatement {
                     value: ModifyStatement(
                         [c.x],
-                        [Constant(Number(1.0))]
+                        [Constant(1)]
                     ),
                     file: ["test"],
                     line_no: 3,
@@ -664,23 +664,23 @@ print(a.a);
 >> built strip
 
 0:proc (a) {
-  (Number(0.0))
+  (0)
 }
 
 1:func (*a) {
   test:3 (0#1 a.c)
-  (Number(0.0))
+  (0)
 }
 
 test:2 define 0
 test:3 define 1
-test:5 (r1) <- #2 Number(1.0)
+test:5 (r1) <- #2 1
 test:5 let a.a
 test:5 (a.a) <- #3 r1
-test:6 (r2) <- #4 Number(2.0)
+test:6 (r2) <- #4 2
 test:6 let a.b
 test:6 (a.b) <- #5 r2
-test:7 (r3) <- #6 Number(3.0)
+test:7 (r3) <- #6 3
 test:7 let a.c
 test:7 (a.c) <- #7 r3
 test:8 #9 (1#8 *a)

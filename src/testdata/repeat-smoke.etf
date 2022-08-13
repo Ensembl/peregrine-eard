@@ -1,0 +1,64 @@
+>> test
+
+repeater proc smoke
+
+0 = print
+1 = thru [#8]
+2 = drain [#10]
+
+>> input
+
+procedure print(a) { 0 }
+function f(x) { x }
+procedure p(x,y) { x }
+
+let b.a = 1;
+let b.b = 2;
+let b.c = 3;
+
+let **a = p(f(**b,1),2);
+
+print(a.a);
+print(a.c);
+
+>> built strip
+
+0:proc (a) {
+  (0)
+}
+
+1:func (x) {
+  (x)
+}
+
+2:proc (x,y) {
+  (x)
+}
+
+test:2 define 0
+test:3 define 1
+test:4 define 2
+test:6 (r1) <- #1 1
+test:6 let b.a
+test:6 (b.a) <- #2 r1
+test:7 (r2) <- #3 2
+test:7 let b.b
+test:7 (b.b) <- #4 r2
+test:8 (r3) <- #5 3
+test:8 let b.c
+test:8 (b.c) <- #6 r3
+test:10 (**a) <- (2#8 (1#7 **b 1) 2)
+test:10 let **a
+test:12 (0#9 a.a)
+test:13 (0#10 a.c)
+
+
+>> xunbundle trim
+
+>> test
+
+repeater func smoke
+
+>> test
+
+repeater let smoke

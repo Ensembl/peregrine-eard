@@ -213,12 +213,18 @@ impl BuildContext {
         /* Step 1: allocate temporaries */
         let mut regs = vec![];
         for v in vv.iter() {
-            let reg = self.allocate_register();
-            let typ = match v {
-                OrBundleRepeater::Bundle(_) => BTRegisterType::Bundle,
-                _ => BTRegisterType::Normal
+            let reg = match v {
+                OrBundleRepeater::Normal(_) => { 
+                    OrBundleRepeater::Normal(BTLValue::Register(self.allocate_register(),BTRegisterType::Normal))
+                },
+                OrBundleRepeater::Bundle(_) => {
+                    OrBundleRepeater::Normal(BTLValue::Register(self.allocate_register(),BTRegisterType::Bundle))
+                },
+                OrBundleRepeater::Repeater(r) => {
+                    OrBundleRepeater::Repeater(r.clone())
+                }
             };
-            regs.push(OrBundleRepeater::Normal(BTLValue::Register(reg,typ)));
+            regs.push(reg);
         }
         /* Step 2: evaluate expressions and put into temporaries */
         if xx.len() == 1 && self.is_procedure(&xx[0],bt)? {
@@ -257,11 +263,13 @@ impl BuildContext {
         /* Step 4: assign from temporaries to variables */
         for (v,reg) in vv.iter().zip(regs.iter()) {
             let lvalue = match v {
-                OrBundleRepeater::Normal((v,_)) => Some(OrBundleRepeater::Normal(BTLValue::Variable(v.clone()))),
+                OrBundleRepeater::Normal((v,_)) => {
+                    Some(OrBundleRepeater::Normal(BTLValue::Variable(v.clone())))
+                },
                 OrBundleRepeater::Bundle(b) => { 
                     Some(OrBundleRepeater::Bundle(b.to_string()))
                 },
-                OrBundleRepeater::Repeater(_) => { todo!() }
+                OrBundleRepeater::Repeater(_) => { None }
             };
             if let Some(lvalue) = lvalue {
                 let stmt = self.make_statement_value(None,vec![

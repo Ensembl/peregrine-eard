@@ -1,10 +1,22 @@
 use std::fmt;
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum Constant {
     Number(f64),
     String(String),
     Boolean(bool)
+}
+
+impl fmt::Debug for Constant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{}",match self {
+            Constant::Number(n) => n.to_string(),
+            Constant::String(s) => format!("{:?}",s),
+            Constant::Boolean(b) => {
+                (if *b { "true" } else { "false" }).to_string()
+            }
+        })
+    }
 }
 
 #[derive(Debug,Clone)]

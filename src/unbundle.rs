@@ -216,15 +216,6 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn unbundle_repeater(&self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        let source = match &call.rets.as_ref().expect("unbundling repeater from non-repeater")[0] {
-            OrBundleRepeater::Repeater(r) => r,
-            _ => { panic!("unbundling repeater from non-repeater {:?}",call); }
-        };
-        let target = list_repeaters(&call.args)?[0].to_string();
-        Ok(())
-    }
-
     fn unbundle_function(&mut self, outside: &Option<BundleHandle>, call: &BTFuncCall) -> Result<(),String> {
         let defn = self.bt.get_function(call)?;
         self.bundles.push_level();
@@ -275,10 +266,11 @@ impl<'a> Unbundle<'a> {
             OrBundle::Normal(BTExpression::Function(f)) => {
                 self.add_transit(outside,Position::Return(arg_index));
                 self.unbundle_function(outside,f)?;
-            }
+            },
             OrBundle::Normal(BTExpression::RegisterValue(r,BTRegisterType::Bundle)) => {
                 let handle = self.bundles.get_by_register(*r);
                 self.process_match(&Some(handle),outside)?;
+                self.add_transit(outside,Position::Return(arg_index));
             },
             OrBundle::Normal(_) => {}
         }
@@ -354,6 +346,15 @@ impl<'a> Unbundle<'a> {
         })
     }
 
+    fn unbundle_repeater(&self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        let source = match &call.rets.as_ref().expect("unbundling repeater from non-repeater")[0] {
+            OrBundleRepeater::Repeater(r) => r,
+            _ => { panic!("unbundling repeater from non-repeater {:?}",call); }
+        };
+        let target = list_repeaters(&call.args)?[0].to_string();
+        Ok(())
+    }
+
     /* Handles bundles passed in procedure return. For real procedures, these can be
      * 1. explicitly specified as a bundle; or
      * 2. the return of a function call.
@@ -369,19 +370,27 @@ impl<'a> Unbundle<'a> {
             /* real procedure */
             self.bundles.push_level();
             self.call_stack.push(call.call_index);
-            /* record return transit */
+            /* We have some usage of a bundle at the outside level so we need to record this for
+             * the transit out of the procedure for each argument.
+             */
             for (i,outside) in outside_ret.iter().enumerate() {
                 self.add_transit(&outside,Position::Return(i));
             }
-            /* bind retuns */
+            /* Within the procedure, the return expression may call functions which need to be
+             * processed at this point (capturing transits, recursing through contents, etc).
+             */
             for (i,(inside,outside)) in defn.ret.iter().zip(outside_ret.iter()).enumerate() {
                 self.unbundle_return(inside,outside,i)?;
             }
-            /* usage in return expressions */
+            /* Ensure expressions used in function arguments in return expression are captured as
+             * usages. Note, separate loop as the previous can terminate early if returns are
+             * discarded.
+             */
             for ret in &defn.ret {
                 self.find_usage_expr(ret)?;
             }
-            /* process each statement */
+            /* Recursively process each statement contained in the procedure.
+             */
             for stmt in defn.block.iter().rev() {
                 self.unbundle_stmt(stmt)?;
             }
@@ -415,7 +424,9 @@ impl<'a> Unbundle<'a> {
             /* usage in rhs */
             self.find_usage_expr(&call.args[0].no_repeater()?)?;
         }
-        /* find usage in args to this call */
+        /* Record the usage of any variables at the call-site of this proc in the arguments to the 
+         * call.
+         */
         self.find_usage_proc(call)?;
         Ok(())
     }

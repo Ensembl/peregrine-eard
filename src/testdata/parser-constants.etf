@@ -13,8 +13,8 @@ let x = [true,false];
         value: LetStatement(
             [(x,[])],
             [FiniteSequence([
-                Constant(Boolean(true)),
-                Constant(Boolean(false))
+                Constant(true),
+                Constant(false)
             ])]
         ),
         file: ["test"],
@@ -28,7 +28,7 @@ let x = [true,false];
 Number parsing
 
 >> input
-let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
+let x = [1, 2, -3, 4e1, 5.5e-1, -6.5e-2, 7e-3];
 
 >> parse strip
 [
@@ -36,13 +36,13 @@ let x = [1, 2.0, -3.0, 4.0e1, 5.5e-1, -6.5e-2, 7e-3];
         value: LetStatement(
             [(x,[])],
             [FiniteSequence([
-                Constant(Number(1.0)),
-                Constant(Number(2.0)),
-                Constant(Number(-3.0)),
-                Constant(Number(40.0)),
-                Constant(Number(0.55)),
-                Constant(Number(-0.065)),
-                Constant(Number(0.007))
+                Constant(1),
+                Constant(2),
+                Constant(-3),
+                Constant(40),
+                Constant(0.55),
+                Constant(-0.065),
+                Constant(0.007)
             ])]
         ),
         file: ["test"],
@@ -66,15 +66,15 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
         value: LetStatement(
             [(x,[])],
             [FiniteSequence([
-                Constant(String("hello")),
-                Constant(String("")),
-                Constant(String("\"")),
-                Constant(String("\\\"")),
-                Constant(String(".")),
-                Constant(String("/")),
-                Constant(String("€")),
-                Constant(String("\n\r\u{8}\t\u{12}")),
-                Constant(String("01"))
+                Constant("hello"),
+                Constant(""),
+                Constant("\""),
+                Constant("\\\""),
+                Constant("."),
+                Constant("/"),
+                Constant("€"),
+                Constant("\n\r\u{8}\t\u{12}"),
+                Constant("01")
             ])]
         ),
         file: ["test"],
@@ -110,17 +110,17 @@ let x = [
         value: LetStatement(
             [(x,[])],
             [FiniteSequence([
-                Constant(String("hello")),
-                Constant(String("")),
-                Constant(String("\"")),
-                Constant(String("\\\"")),
-                Constant(String(".")),
-                Constant(String("/")),
-                Constant(String("€")),
-                Constant(String("\n\r\u{8}\t\u{12}")),
-                Constant(String("01")),
-                Constant(String("\"hello")),
-                Constant(String("h\"e\"l\"l\"o"))
+                Constant("hello"),
+                Constant(""),
+                Constant("\""),
+                Constant("\\\""),
+                Constant("."),
+                Constant("/"),
+                Constant("€"),
+                Constant("\n\r\u{8}\t\u{12}"),
+                Constant("01"),
+                Constant("\"hello"),
+                Constant("h\"e\"l\"l\"o")
             ])]
         ),
         file: ["test"],
@@ -144,8 +144,8 @@ let x = [true,false,frue,talse];
         value: LetStatement(
             [(x,[])],
             [FiniteSequence([
-                Constant(Boolean(true)),
-                Constant(Boolean(false)),
+                Constant(true),
+                Constant(false),
                 Variable(frue),
                 Variable(talse)
             ])]
@@ -179,7 +179,7 @@ let e = [0,x,y,z];
     },
     PTStatement {
         value: LetStatement([(b,[])],[FiniteSequence([
-                Constant(Number(1.0)),Constant(Number(2.0)),Constant(Number(3.0))
+                Constant(1),Constant(2),Constant(3)
         ])]),
         file: ["test"],
         line_no: 3,
@@ -187,7 +187,7 @@ let e = [0,x,y,z];
     },
     PTStatement {
         value: LetStatement([(c,[])],[FiniteSequence([
-            Constant(Boolean(false)),Constant(Boolean(false)),Constant(Boolean(true))
+            Constant(false),Constant(false),Constant(true)
         ])]),
         file: ["test"],
         line_no: 4,
@@ -195,7 +195,7 @@ let e = [0,x,y,z];
     },
     PTStatement {
         value: LetStatement([(d,[])],[FiniteSequence([
-            Constant(String("hello")),Constant(String("world"))
+            Constant("hello"),Constant("world")
         ])]),
         file: ["test"],
         line_no: 5,
@@ -203,7 +203,7 @@ let e = [0,x,y,z];
     },
     PTStatement {
         value: LetStatement([(e,[])],[FiniteSequence([
-            Constant(Number(0.0)),
+            Constant(0),
             Variable(x),
             Variable(y),
             Variable(z)

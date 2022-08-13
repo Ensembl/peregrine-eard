@@ -195,7 +195,7 @@ code test_string(r1: boolean, "hello") {
             name: "test_bool",
             arguments: [
                 Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant(Boolean(false))
+                Constant(false)
             ],
             results: [],
             commands: [Opcode(42,[1,2])],
@@ -210,7 +210,7 @@ code test_string(r1: boolean, "hello") {
             name: "test_number",
             arguments: [
                 Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant(Number(42.0))
+                Constant(42)
             ],
             results: [],
             commands: [Opcode(42,[1,2])],
@@ -224,7 +224,7 @@ code test_string(r1: boolean, "hello") {
         value: Code(CodeBlock{name: "test_string",
             arguments: [
                 Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant(String("hello"))
+                Constant("hello")
             ],
             results:[],
             commands:[Opcode(42,[1,2])],

@@ -55,3 +55,8 @@ fn test_buildtree_smoke() {
 fn test_bundle_smoke() {
     run_parse_tests(include_str!("testdata/bundle-smoke.etf"));
 }
+
+#[test]
+fn test_repeat_smoke() {
+    run_parse_tests(include_str!("testdata/repeat-smoke.etf"));
+}

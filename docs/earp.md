@@ -24,7 +24,7 @@ Earp is essentially a procedural syntax for a declarative task.
 
 ## Types
 
-Earp has a highly restircted range of types. Thiskeeps operations very fast and data compact despite the small and primitive interpreter. Atomic types are
+Earp has a highly restircted range of types. This keeps operations very fast and data compact despite the small and primitive interpreter. Atomic types are
 
 * boolean
 * string
@@ -35,7 +35,7 @@ Handles can be minted by a library and passed around as opaque pointers, allowin
 
 In addition to atomic types, sequences of each atomic type can be defined. Note that there are no sequences of sequences: they are "one-dimensional" only.
 
-A sequence may be finite or infinite. A finite sequence is like an array or list in other languages. An infinite sequence is a single, endlessly repeating value. THis isuseful for specifying unchanging attributes. For example, you may have 200 rectangles, all blue, or all 8px high. Or maybe the heights or colours vary. Accepting a sequence allows this flexibility. At least one argument in such functions accepts only *finite* sequences and determines the number of items.
+A sequence may be finite or infinite. A finite sequence is like an array or list in other languages. An infinite sequence is a single, endlessly repeating value. This is useful for specifying unchanging attributes. For example, you may have 200 rectangles, all blue, or all 8px high. Or maybe the heights or colours vary. Accepting a sequence allows this flexibility. At least one argument in such functions accepts only *finite* sequences and determines the number of items.
 
 The length of a sequence can be important. earp provides syntax which maximises the chance of any mistakes being caught at compile time.
 
@@ -72,7 +72,7 @@ let filter_protein_coding = ( tr.biotype == "protein_coding");
 let colour_of_pc_transcripts = filter(tr.colour,filter_protein_coding);
 
 // 3
-colour_of_pc_transcripts = ["blue"...];`
+colour_of_pc_transcripts = ["blue"...];
 ```
 
 Filters can also be applied to non-sequence types in which case they take a single boolean. If true the filter points to the value, if false to a "black-hole".
@@ -135,7 +135,7 @@ let gn.tr_count = [1,4,2];
 let tr.gene = count_to_index(gn.tr_count); //[0111122]
 ```
 
-`enumerate` is useful when we are concerned about the n-th of the contained object, for example only the first transcript of each gene. To get a list of namesof "first" transcripts.
+`enumerate` is useful when we are concerned about the n-th of the contained object, for example only the first transcript of each gene. To get a list of names of "first" transcripts.
 
 ```
 let gn.tr_count = [1,4,2];
@@ -201,14 +201,14 @@ Earp allows file inclusion with the `include "...."` statement. The file is incl
 
 ## Procedures and Functions
 
-Earp does not have "proper" procedures and functions in the style of a traditional language. This keeps its execution linear and all the positive effects on performance, predictability, memory-management, etc, which that entails. However it does have two constructs, funcitons and procedures, which look very much like functions for the purpose of organising and compartmentalising code. This is analagous to the situation in many embedded domain languages, such as GLSL.
+Earp does not have "proper" procedures and functions in the style of a traditional language. This keeps its execution linear and all the positive effects on performance, predictability, memory-management, etc, which that entails. However it does have two constructs, functions and procedures, which look very much like functions for the purpose of organising and compartmentalising code. This is analagous to the situation in many embedded domain languages, such as GLSL.
 
 Procedures and functions are nearly identical. The differences are:
 
 * *procedures* can return multiple values (or none!) but can't be used nested inside expressions, only at the top level of a let statement.
 * *functions* can only return exactly one value, but can be used nested inside expressions.
 
-Functions and procedures introduce a lexical scope for `let` statements. Values enter via arguments and exit via results. Variables in the lexical globabl scope (including via inclusion) are also visible and modfiable. Functions and procedures work as if they are hygenically lexically replaced at the poibnt of their use. They cannot call themselves transitively.
+Functions and procedures introduce a lexical scope for `let` statements. Values enter via arguments and exit via results. Variables in the lexical globabl scope (including via inclusion) are also visible and modifiable. Functions and procedures work as if they are hygenically lexically replaced at the point of their use. They cannot call themselves transitively.
 
 Functions and procedures contain semi-colon separated statements. The last semicolon is followed by an expression in the case of a function and a comma-separated list of expressions in the case of a procedure.
 
@@ -235,7 +235,7 @@ Macros are evaluated at compile time but are not strictly part of the core langu
 
 ## Variable Groups
 
-Variable names can include a dot, such as `abc.xyz`. Where such variables exist, there cannot be a variable with a name equalling a prefix split at the dot(in this case no `abc`, though `ab` and `abc.x` are fine). Otherwise dots *can* be treated as normal parts of the variable name. However, by using the prefix on its own, you can write instructions to simplify your code which work on all variables with that prefix in bulk:
+Variable names can include a dot, such as `abc.xyz`. Where such variables exist, there cannot be a variable with a name equalling a prefix split at the dot (in this case no `abc`, though `ab` and `abc.x` are fine). Otherwise dots *can* be treated as normal parts of the variable name. However, by using the prefix on its own, you can write instructions to simplify your code which work on all variables with that prefix in bulk:
 
 1. Reducing arguments and return values from functions.
 2. Allowing multiple identical expressions to be implicitly repeated.
@@ -297,7 +297,7 @@ As `tr.gn #tr ^gn` is decduced from the call to `count_to_index` on a variable o
 
 All instructions ultimately map down to a `code` definition. code definitions don't contain normal statements but instead various special statements defining the mapping onto bytecode. Their arguments are special placeholders for variables. `code` blocks should *not* appear in earp as written by the end user.
 
-Opcodes are rpresented by the `opcode` statements in `code` blocks. Note that all constants must be "passed into" code blocks.
+Opcodes are represented by the `opcode` statements in `code` blocks. Note that all constants must be "passed into" code blocks.
 
 Code blocks which "modify the world", ie update state outside the interpreter, must have the "world" prefix to prevent various optimisations.
 
@@ -385,4 +385,4 @@ The whole file is serilized as cbor. The header is a hash object with string key
 
 ## Composition
 
-It can sometimes be useful to compose operations at the RTL level into more efficient opcodes. In general, this cannot be epxressed in the language itself. Such optimisations are identified with strings and are declared with `flag "..."` in the earp source, almost always of thepatch file.
+It can sometimes be useful to compose operations at the RTL level into more efficient opcodes. In general, this cannot be epxressed in the language itself. Such optimisations are identified with strings and are declared with `flag "..."` in the earp source, almost always of the patch file.

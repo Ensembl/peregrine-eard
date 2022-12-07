@@ -1,6 +1,6 @@
 use std::{sync::Arc, collections::{HashMap, HashSet}};
 
-use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue, BTRegisterType, BTFuncCall}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable, OrRepeater}, repeater::{list_repeaters, uses_repeater, is_good_repeater}};
+use crate::{buildtree::{BTStatement, BuildTree, BTStatementValue, BTProcCall, BTExpression, BTFuncProcDefinition, BTDefinition, BTLValue, BTRegisterType, BTFuncCall}, parsetree::at, model::{OrBundle, OrBundleRepeater, Variable, OrRepeater}, repeater::{list_repeaters, uses_repeater, is_good_repeater, remove_repeater}};
 
 struct Bundle {
     debug_name: BundleKey,
@@ -18,6 +18,7 @@ impl Bundle {
     }
 
     fn name_used(&mut self, name: &str) {
+        println!("name used {:?} in {:?}",name,self.debug_name);
         self.used.insert(name.to_string());
     }
 
@@ -131,14 +132,27 @@ impl BundleStack {
 #[derive(Clone,Debug,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub(crate) enum Position {
     Arg(usize),
-    Return(usize)
+    Return(usize),
+    Repeater
 }
 
 pub(crate) struct Unbundle<'a> {
     bt: &'a BuildTree,
+    /* bundles is a stack of scopes for naming of bundles. Missed names will recurse down the
+     * stack to outer contexts.
+     */
     bundles: BundleStack,
+    /* transits records that in the given circumstances (call index stack and Position enum
+     * indicating argument number, etc), the bundle required usage of the set of elements
+     * given in the value.
+     */
     transits: HashMap<(Vec<usize>,Position),HashSet<String>>,
+    /* The filepath / line number, for use in error handling.
+     */
     position: Option<(Arc<Vec<String>>,usize)>,
+    /* call stack is a stack of call indexes used to uniquely identify a context for a bundle's
+     * use which functions as a key for later lookup of the bundle contents.
+     */
     call_stack: Vec<usize>
 }
 
@@ -172,7 +186,11 @@ impl<'a> Unbundle<'a> {
                 let bundle = self.bundles.get_mut(&handle);
                 bundle.kill();
             },
-            OrBundleRepeater::Repeater(_) => todo!(),
+            OrBundleRepeater::Repeater(r) => {
+                let handle = self.bundles.get_by_name(r);
+                let bundle = self.bundles.get_mut(&handle);
+                bundle.kill();
+            }
         }
         Ok(())
     }
@@ -186,7 +204,8 @@ impl<'a> Unbundle<'a> {
         }).collect::<Vec<_>>()
     }
 
-    fn find_usage_expr(&mut self, expr: &OrBundle<BTExpression>) -> Result<(),String> {
+    fn find_usage_expr(&mut self, outside: &Option<BundleHandle>, expr: &OrBundle<BTExpression>) -> Result<(),String> {
+        println!("fue {:?}",expr);
         match expr {
             OrBundle::Normal(BTExpression::Variable(v)) => {
                 if let Some(prefix) = &v.prefix {
@@ -196,8 +215,12 @@ impl<'a> Unbundle<'a> {
             },
             OrBundle::Normal(BTExpression::Function(call)) => {
                 for arg in &call.args {
-                    self.find_usage_expr(&arg.no_repeater()?)?;
+                    if !arg.is_repeater() {
+                        println!("219 {:?}",arg);
+                        self.find_usage_expr(outside,&arg.no_repeater()?)?;
+                    }
                 }
+                self.unbundle_function(outside,call)?;
             },
             OrBundle::Normal(_) => {},
             OrBundle::Bundle(_) => {
@@ -209,17 +232,11 @@ impl<'a> Unbundle<'a> {
         Ok(())
     }
 
-    fn find_usage_proc(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        for arg in &call.args {
-            self.find_usage_expr(&arg.no_repeater()?)?;
-        }
-        Ok(())
-    }
-
     fn unbundle_function(&mut self, outside: &Option<BundleHandle>, call: &BTFuncCall) -> Result<(),String> {
         let defn = self.bt.get_function(call)?;
         self.bundles.push_level();
         self.call_stack.push(call.call_index);
+        println!("unbundle function {:?}",self.call_stack);
         self.unbundle_return(&defn.ret[0],outside,0)?;
         for stmt in defn.block.iter().rev() {
             self.unbundle_stmt(stmt)?;
@@ -230,6 +247,7 @@ impl<'a> Unbundle<'a> {
                 OrBundle::Bundle(b) => Some(self.bundles.get_by_name(b)),
             }
         }).collect::<Vec<_>>();
+        println!("248 {:?}",inside_args);
         self.bundles.pop_level();
         for (i,(inside,outside)) in inside_args.iter().zip(call.args.iter()).enumerate() {
             self.unbundle_arg(outside, inside, i)?;
@@ -295,11 +313,12 @@ impl<'a> Unbundle<'a> {
                 self.add_transit(bundle_from_inside,Position::Arg(arg_index));
             },
             OrBundleRepeater::Bundle(b) => {
+                println!("314 bundle_from_inside = {:?}",bundle_from_inside); // ???
                 let handle = self.bundles.get_by_name(b);
                 self.process_match(&Some(handle),&bundle_from_inside)?;
                 self.add_transit(bundle_from_inside,Position::Arg(arg_index));
             },
-            OrBundleRepeater::Repeater(_) => { todo!() },
+            OrBundleRepeater::Repeater(_) => { /* An argument is never a bundle */ },
             OrBundleRepeater::Normal(_) => {},
         }
         Ok(())
@@ -324,6 +343,15 @@ impl<'a> Unbundle<'a> {
         }
     }
 
+    /* Build a list of which arguments in the return of a procedure are used by the caller. If
+     * the results are disacrded, we need to create fake, anonymous bundles so that the rest of
+     * the algorithm can proceed without special cases. Note that bundle can *either* bun register
+     * *or* directly in the source.
+     * 
+     * eg (a,b) = test(); returns (None,None) : 1st branch; not discarded, but not bundles either
+     *    (*a,b) = test(); returns (Some(..),None) : 1st branch; first arg is bundle
+     *    test(); procedure test() { ...  (*a) } returns (Some(...)) : 2nd branch 
+     */
     fn build_proc_return_bundles(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Vec<Option<BundleHandle>>,String> {
         Ok(if let Some(rets) = &call.rets {
             /* returns consumed */
@@ -331,30 +359,90 @@ impl<'a> Unbundle<'a> {
                 match x {
                     OrBundleRepeater::Normal(n) => self.get_bundle_from_lvalue(n),
                     OrBundleRepeater::Bundle(b) => Some(self.bundles.get_by_name(b)),
-                    OrBundleRepeater::Repeater(_) => { todo!(); }
+                    OrBundleRepeater::Repeater(_) => { None /* a repeater is never a bundle */ }
                 }
             }).collect::<Vec<_>>()
         } else {
             /* returns not consumed */
             if let Some(defn) = self.bt.get_procedure(call)? {
+                /* proper procedure */
                 defn.ret.iter().map(|x| {
                     self.make_ret_bundle(x)
                 }).collect::<Result<Vec<_>,_>>()?
             } else {
+                /* assignment */
+                println!("-A");
                 vec![self.make_ret_bundle(&call.args[0].no_repeater()?)?]
             }
         })
     }
 
-    fn unbundle_repeater(&self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        let source = match &call.rets.as_ref().expect("unbundling repeater from non-repeater")[0] {
-            OrBundleRepeater::Repeater(r) => r,
-            _ => { panic!("unbundling repeater from non-repeater {:?}",call); }
-        };
-        let target = list_repeaters(&call.args)?[0].to_string();
-        Ok(())
+    fn list_lhs_repeaters(&self,rets: &[OrBundleRepeater<BTLValue>]) -> Result<Vec<String>,String> {
+        let mut repeaters = vec![];
+        for ret in rets {
+            match ret {
+                OrBundleRepeater::Normal(_) => {},
+                OrBundleRepeater::Bundle(_) => {},
+                OrBundleRepeater::Repeater(r) => { repeaters.push(r.to_string()); },
+            }
+        }
+        Ok(repeaters)
     }
 
+
+    fn list_rhs_repeaters(&self,args: &[OrBundleRepeater<BTExpression>]) -> Result<Vec<String>,String> {
+        let mut repeaters = vec![];
+        for arg in args {
+            match arg {
+                OrBundleRepeater::Normal(x) => {
+                    match x {
+                        BTExpression::Function(f) => {
+                            repeaters.append(&mut self.list_rhs_repeaters(&f.args)?);
+                        },
+                        _ => {},
+                    }
+                },
+                OrBundleRepeater::Bundle(_) => {},
+                OrBundleRepeater::Repeater(r) => { repeaters.push(r.to_string()) }
+            }
+        }
+        Ok(repeaters)
+    }
+    
+    fn find_repeater_arguments(&self,call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<(String,String)>,String> {
+        /* A good repeater has a single use of the repeater glyph (**) on each side and has a
+         * single lhs variable.
+         */
+        let lhs = match &call.rets {
+            Some(x) => {
+                let lhs_repeaters = self.list_lhs_repeaters(call.rets.as_ref().unwrap_or(&vec![]))?;
+                if lhs_repeaters.len() > 1 {
+                    return Err("too many repeaters in lvalue".to_string());
+                } else if lhs_repeaters.len() == 0 {
+                    None
+                } else if call.rets.as_ref().unwrap_or(&vec![]).len() != 1 {
+                    return Err("repeater must be the only result in lvalue".to_string());
+                } else {
+                    match &x[0] {
+                        OrBundleRepeater::Repeater(r) => { Some(r) },
+                        _ => { None } // lhs is not repeater
+                    }
+                }
+            },
+            _ => { None }
+        };
+        let rhs_repeaters = self.list_rhs_repeaters(&call.args)?;
+        if rhs_repeaters.len() > 1 {
+            return Err("too many repeaters in rvalue".to_string());
+        }
+        let rhs = rhs_repeaters.first();
+        Ok(match (lhs,rhs) {
+            (Some(lhs),Some(rhs)) => Some((lhs.to_string(),rhs.to_string())),
+            (None,None) => None,
+            _ => { return Err("must be single repeater on left and right".to_string()); }
+        })
+    }
+    
     /* Handles bundles passed in procedure return. For real procedures, these can be
      * 1. explicitly specified as a bundle; or
      * 2. the return of a function call.
@@ -370,6 +458,7 @@ impl<'a> Unbundle<'a> {
             /* real procedure */
             self.bundles.push_level();
             self.call_stack.push(call.call_index);
+            println!("unbundle at stack {:?}",self.call_stack);
             /* We have some usage of a bundle at the outside level so we need to record this for
              * the transit out of the procedure for each argument.
              */
@@ -383,11 +472,17 @@ impl<'a> Unbundle<'a> {
                 self.unbundle_return(inside,outside,i)?;
             }
             /* Ensure expressions used in function arguments in return expression are captured as
-             * usages. Note, separate loop as the previous can terminate early if returns are
+             * usages. Note: separate loop, as the previous can terminate early if returns are
              * discarded.
              */
             for ret in &defn.ret {
-                self.find_usage_expr(ret)?;
+                let bundle = match ret {
+                    OrBundle::Normal(BTExpression::Function(call)) => {
+                        todo!()
+                    },
+                    _ => { None }
+                };
+                self.find_usage_expr(&bundle,ret)?;
             }
             /* Recursively process each statement contained in the procedure.
              */
@@ -413,6 +508,14 @@ impl<'a> Unbundle<'a> {
                 self.unbundle_arg(at_call_site,bundle_from_inside,i)?;
             }
             self.call_stack.pop();
+            for (arg,defn) in call.args.iter().zip(defn.args.iter()) {
+                let bundle = match defn {
+                    OrBundle::Normal(_) => None,
+                    OrBundle::Bundle(b) => Some(self.bundles.get_by_name(b)),
+                };
+                println!("515 on {:?}",arg);
+                self.find_usage_expr(&bundle,&arg.no_repeater()?)?;
+            }    
         } else {
             /* assignment procedure */
             /* record return transit */
@@ -422,24 +525,28 @@ impl<'a> Unbundle<'a> {
             self.unbundle_return(&call.args[0].no_repeater()?,&outside_ret[0],0)?;
             self.call_stack.pop();
             /* usage in rhs */
-            self.find_usage_expr(&call.args[0].no_repeater()?)?;
+            self.find_usage_expr(&outside_ret[0],&call.args[0].no_repeater()?)?;
         }
-        /* Record the usage of any variables at the call-site of this proc in the arguments to the 
-         * call.
-         */
-        self.find_usage_proc(call)?;
         Ok(())
     }
 
     fn unbundle_proccall(&mut self, call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        if uses_repeater(call)? {
-            if is_good_repeater(call)? {
-                self.unbundle_repeater(call)?;
-            } else {
-                return Err(self.error_at("bad repeater statement"));
+        match self.find_repeater_arguments(call)? {
+            Some((lhs,rhs)) => {
+                /* repeater */
+                println!("UNBUNDLE REPEATER lhs={} rhs={}",lhs,rhs);
+                /* Repeat the unbundling process iteratively across targets */
+                let lhs_handle = self.bundles.get_by_name(&lhs);
+                let rhs_handle = self.bundles.get_by_name(&rhs);
+                self.call_stack.push(call.call_index);
+                self.bundles.merge(&rhs_handle,&lhs_handle);
+                self.add_transit(&Some(lhs_handle),Position::Repeater);
+                self.call_stack.pop();
+                self.unbundle_proc(call)?;
+            },
+            _ => {
+                self.unbundle_proc(call)?;
             }
-        } else {
-            self.unbundle_proc(call)?;
         }
         Ok(())
     }

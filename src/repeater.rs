@@ -43,3 +43,6 @@ pub(crate) fn uses_repeater(call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Re
     }
     Ok(list_repeaters(&call.args)?.len() > 0)
 }
+
+pub(crate) fn remove_repeater(args: &[OrBundleRepeater<BTExpression>]) {
+}

@@ -221,6 +221,7 @@ impl BuildContext {
                     OrBundleRepeater::Normal(BTLValue::Register(self.allocate_register(),BTRegisterType::Bundle))
                 },
                 OrBundleRepeater::Repeater(r) => {
+                    self.build_declare(bt,v)?; /* repeaters are used directly so need to be declared first */
                     OrBundleRepeater::Repeater(r.clone())
                 }
             };
@@ -257,7 +258,10 @@ impl BuildContext {
         if declare {
             /* Step 3: declare variables */
             for v in vv.iter() {
-                self.build_declare(bt,v)?;
+                match v {
+                    OrBundleRepeater::Repeater(_) => {},
+                    _ => { self.build_declare(bt,v)? },
+                }
             }
         }
         /* Step 4: assign from temporaries to variables */

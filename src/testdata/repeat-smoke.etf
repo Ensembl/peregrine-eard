@@ -1,3 +1,55 @@
+>> test bundle regression
+
+>> input
+
+function __operator_add(x,y) { /* dummy */ 0 }
+
+procedure print(a) { 0 }
+function f(m,*n) { m+n.x }
+procedure p(x) { x }
+
+let b = 1;
+let c.x = 4;
+
+let a = p(f(b,*c));
+
+print(a);
+
+>> built strip
+
+0:func (x,y) {
+  (0)
+}
+
+1:proc (a) {
+  (0)
+}
+
+2:func (m,*n) {
+  ((0#1 m n.x))
+}
+
+3:proc (x) {
+  (x)
+}
+
+test:2 define 0
+test:4 define 1
+test:5 define 2
+test:6 define 3
+test:8 (r1) <- #2 1
+test:8 let b
+test:8 (b) <- #3 r1
+test:9 (r2) <- #4 4
+test:9 let c.x
+test:9 (c.x) <- #5 r2
+test:11 (r3) <- (3#7 (2#6 b *c))
+test:11 let a
+test:11 (a) <- #8 r3
+test:13 (1#9 a)
+
+>> unbundle strip
+
 >> test
 
 repeater proc smoke
@@ -47,18 +99,76 @@ test:7 (b.b) <- #4 r2
 test:8 (r3) <- #5 3
 test:8 let b.c
 test:8 (b.c) <- #6 r3
-test:10 (**a) <- (2#8 (1#7 **b 1) 2)
 test:10 let **a
+test:10 (**a) <- (2#8 (1#7 **b 1) 2)
 test:12 (0#9 a.a)
 test:13 (0#10 a.c)
 
+>> unbundle trim
 
->> xunbundle trim
-
->> test
-
-repeater func smoke
+8/Repeater: a c
 
 >> test
 
-repeater let smoke
+repeater with bundle smoke
+
+>> input
+
+function __operator_add(x,y) { /* dummy */ 0 }
+
+procedure print(a) { 0 }
+function f(x,*y) { x+y.x }
+procedure p(x,y) { x }
+
+let b.a = 1;
+let b.b = 2;
+let b.c = 3;
+let c.x = 4;
+
+let **a = p(f(**b,*c),2);
+
+print(a.a);
+print(a.c);
+
+>> built strip
+
+0:func (x,y) {
+  (0)
+}
+
+1:proc (a) {
+  (0)
+}
+
+2:func (x,*y) {
+  ((0#1 x y.x))
+}
+
+3:proc (x,y) {
+  (x)
+}
+
+test:2 define 0
+test:4 define 1
+test:5 define 2
+test:6 define 3
+test:8 (r1) <- #2 1
+test:8 let b.a
+test:8 (b.a) <- #3 r1
+test:9 (r2) <- #4 2
+test:9 let b.b
+test:9 (b.b) <- #5 r2
+test:10 (r3) <- #6 3
+test:10 let b.c
+test:10 (b.c) <- #7 r3
+test:11 (r4) <- #8 4
+test:11 let c.x
+test:11 (c.x) <- #9 r4
+test:13 let **a
+test:13 (**a) <- (3#11 (2#10 **b *c) 2)
+test:15 (1#12 a.a)
+test:16 (1#13 a.c)
+
+>> unbundle trim
+
+11/Repeater: a c

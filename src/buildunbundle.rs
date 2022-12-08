@@ -53,7 +53,7 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundleaux::{BundleNamespace, Transits, Position}};
+use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundleaux::{BundleNamespace, Transits, Position}, unbundle::Unbundle};
 
 // TODO global bundles
 
@@ -97,7 +97,7 @@ impl<'a> BuildUnbundle<'a> {
     fn error_at(&self, msg: &str) -> String {
         self.positions.last().map(|(file,line)|
             at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon".to_string())
+        ).unwrap_or("*anon*".to_string())
     }
 
     fn list_lhs_repeaters(&self,rets: &[OrBundleRepeater<BTLValue>]) -> Vec<String> {
@@ -170,6 +170,7 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn declare(&mut self, var: &OrBundleRepeater<Variable>) -> Result<(),String> {
+        self.trace(&format!("  declare = {:?}",var));
         match var {
             OrBundleRepeater::Normal(v) => {
                 if let Some(prefix) = &v.prefix {
@@ -213,13 +214,18 @@ impl<'a> BuildUnbundle<'a> {
         Ok(())
     }
 
-    fn return_bundles(&self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Vec<Option<HashSet<String>>> {
+    fn return_bundles(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Vec<Option<HashSet<String>>> {
         let mut out = vec![];
         if let Some(rets) = &stmt.rets {
             for ret in rets {
                 match ret {
-                    OrBundleRepeater::Normal(_) => {
-                        out.push(None);
+                    OrBundleRepeater::Normal(value) => {
+                        out.push(match value {
+                            BTLValue::Register(r,BTRegisterType::Bundle) => {
+                                Some(self.register_bundles.get(r).cloned().unwrap_or_else(|| HashSet::new()))
+                            }
+                            _ => None
+                        });
                     },
                     OrBundleRepeater::Bundle(prefix) => {
                         if let Some(bundle) = self.namespace.get(&prefix) {
@@ -267,6 +273,7 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn expr(&mut self, expr: &OrBundle<BTExpression>, caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
+        self.trace(&format!("  expr = {:?} expect = {:?}",expr,caller_expects));
         match expr {
             OrBundle::Normal(expr) => {
                 match expr {
@@ -274,6 +281,7 @@ impl<'a> BuildUnbundle<'a> {
                     BTExpression::Variable(v) => { 
                         non_bundle(caller_expects)?;
                         if let Some(prefix) = &v.prefix {
+                            self.trace(&format!("      use of {:?}",v));
                             self.namespace.add(prefix,&v.name);
                         }
                     },
@@ -356,16 +364,19 @@ impl<'a> BuildUnbundle<'a> {
 
     // TODO too many/few args
     fn procedure(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        self.trace(&format!("  procedure = {:?}",stmt));
         self.check_for_repeater(stmt)?;
-        self.clear_lvalue_bundles(stmt)?;
         /* Make list of caller returns to match in callee */
         let caller_return_bundles = self.return_bundles(stmt);
+        self.clear_lvalue_bundles(stmt)?;
+        self.trace(&format!("    ret bundles={:?}",caller_return_bundles));
         /* Enter procedure */
         self.transits.push(stmt.call_index);
-        self.namespace.push();
         let defn = self.tree.get_procedure(stmt)?;
         /* Process return expressions */
         if let Some(defn) = defn {
+            self.namespace.push();
+            self.trace("  regular procedure");
             self.return_exprs(&defn.ret, &caller_return_bundles)?;
             /* Process nested statements */
             for stmt in defn.block.iter().rev() {
@@ -373,9 +384,11 @@ impl<'a> BuildUnbundle<'a> {
             }
             /* Process arguments */
             let expected_args = self.arg_bundles(&defn.args)?;
+            self.trace(&format!("    arg bundles = {:?}",expected_args));
             self.namespace.pop();
             self.args(&expected_args,&stmt.args)?;
         } else {
+            self.trace("  assignment");
             if let Some(expr) = stmt.args[0].skip_repeater() {
                 self.return_exprs(&[expr], &caller_return_bundles)?;
             }
@@ -386,6 +399,7 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
+        self.trace(&format!("statement = {:?}",stmt));
         self.positions.push((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             BTStatementValue::Declare(d) => self.declare(d)?,
@@ -395,4 +409,23 @@ impl<'a> BuildUnbundle<'a> {
         self.positions.pop();
         Ok(())
     }
+}
+
+fn do_build_unbundle(tree: &BuildTree) -> Result<BuildUnbundle,String> {
+    let mut unbundle = BuildUnbundle::new(tree);
+    for stmt in tree.statements.iter().rev() {
+        unbundle.statement(stmt).map_err(|e| unbundle.error_at(&e))?;
+    }
+    Ok(unbundle)
+}
+
+pub(crate) fn build_unbundle(tree: &BuildTree) -> Result<HashMap<(Vec<usize>,Position),HashSet<String>>,String> {
+    let unbundle = do_build_unbundle(tree)?;
+    Ok(unbundle.transits.take())
+}
+
+#[cfg(test)]
+pub(crate) fn trace_build_unbundle(tree: &BuildTree) -> Result<(HashMap<(Vec<usize>,Position),HashSet<String>>,Vec<String>),String> {
+    let unbundle = do_build_unbundle(tree)?;
+    Ok((unbundle.transits.take(),unbundle.trace.clone()))
 }

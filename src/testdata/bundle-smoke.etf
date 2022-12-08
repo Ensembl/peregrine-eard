@@ -202,7 +202,7 @@ argument passing return check smoke
 
 function f1() { let a.a = 1; let a.b = 2; *a }
 function f2() { f1() }
-procedure p(*a) { (a.a,a.b) }
+procedure p(*a) { *a }
 procedure print(a) { 0 }
 
 let *x = p(f2());
@@ -227,7 +227,7 @@ print(x.b);
 }
 
 2:proc (*a) {
-  (a.a,a.b)
+  (*a)
 }
 
 3:proc (a) {
@@ -254,7 +254,84 @@ test:10 (3#10 x.b)
 
 >> test
 
-test returns of nested bundles
+test returns of nested bundles regression
+
+>> input
+
+procedure print(a) { 0 }
+
+function func1() { 
+    let a.a = 0;
+    let a.b = 1;
+    let a.c = 2;
+    *a
+}
+
+function func2() { func1() }
+
+procedure p() {
+    (func1(),func1())
+}
+
+let (*x,*y) = p();
+
+print(x.a);
+print(x.c);
+print(y.b);
+print(y.c);
+//print(z.d);
+
+>> built strip
+
+0:proc (a) {
+  (0)
+}
+
+1:func () {
+  test:4 (r1) <- #1 0
+  test:4 let a.a
+  test:4 (a.a) <- #2 r1
+  test:4 (r2) <- #3 1
+  test:4 let a.b
+  test:4 (a.b) <- #4 r2
+  test:4 (r3) <- #5 2
+  test:4 let a.c
+  test:4 (a.c) <- #6 r3
+  (*a)
+}
+
+2:func () {
+  ((1#7))
+}
+
+3:proc () {
+  ((1#8),(1#9))
+}
+
+test:2 define 0
+test:4 define 1
+test:11 define 2
+test:13 define 3
+test:17 (*r4 *r5) <- (3#10)
+test:17 let *x
+test:17 let *y
+test:17 (*x) <- #11 *r4
+test:17 (*y) <- #12 *r5
+test:19 (0#13 x.a)
+test:20 (0#14 x.c)
+test:21 (0#15 y.b)
+test:22 (0#16 y.c)
+
+>> unbundle trim
+
+10/Return(0): a c
+10/Return(1): b c
+10,8/Return(0): a c
+10,9/Return(0): b c
+11/Return(0): a c
+12/Return(0): b c
+
+>> test
 
 >> input
 

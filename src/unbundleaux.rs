@@ -24,7 +24,7 @@ pub(super) struct BundleNamespace {
 impl BundleNamespace {
     pub(super) fn new() -> BundleNamespace {
         BundleNamespace {
-            bundles: vec![]
+            bundles: vec![HashMap::new()]
         }
     }
 
@@ -113,5 +113,9 @@ impl Transits {
 
     pub(super) fn pop(&mut self) {
         self.call_stack.pop();
+    }
+
+    pub(super) fn take(self) -> HashMap<(Vec<usize>,Position),HashSet<String>> {
+        self.transits
     }
 }

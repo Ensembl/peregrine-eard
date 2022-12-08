@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{self, Unbundle}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{self, Unbundle}, buildunbundle::{build_unbundle, trace_build_unbundle}};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -109,6 +109,7 @@ pub(super) fn run_parse_tests(data: &str) {
         let compiler = make_compiler(inputs.clone()).ok().unwrap();
         let mut compilation = make_compilation(&compiler);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
+        println!("\n\n\n{}\n",input);
         let parse_tree = compilation.parse(&Arc::new(vec!["test".to_string()]));
         if let Some((parse_options,parse)) = sections.get("parse-fail") {
             match parse_tree {
@@ -200,10 +201,8 @@ pub(super) fn run_parse_tests(data: &str) {
         }
         if let Some((unbundle_options,unbundle_correct)) = sections.get("unbundle") {
             let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
-            let mut unbundle = Unbundle::new(&processed);
-            unbundle.unbundle().expect("unbundle failed");
-            let bundles = unbundle.bundle_stack();
-            let transits = unbundle.transits();
+            let (transits,trace) = trace_build_unbundle(&processed).expect("unbundle failed");
+            print!("{}",trace.join("\n"));
             let mut keys = transits.keys().cloned().collect::<Vec<_>>();
             keys.sort();
             let mut lines = vec![];
@@ -221,8 +220,7 @@ pub(super) fn run_parse_tests(data: &str) {
         }
         if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
-            let mut unbundle = Unbundle::new(&processed);
-            let error = unbundle.unbundle().expect_err("unbundle unexpectedly succeeded");
+            let error = trace_build_unbundle(&processed).err().expect("unbundle unexpectedly succeeded");
             assert_eq!(process_ws(&error,unbundle_options),process_ws(&unbundle_err,unbundle_options));
         }
     }

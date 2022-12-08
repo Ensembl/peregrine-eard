@@ -50,6 +50,8 @@ test:13 (1#9 a)
 
 >> unbundle strip
 
+7,6/Arg(1): x
+
 >> test
 
 repeater proc smoke
@@ -172,3 +174,4 @@ test:16 (1#13 a.c)
 >> unbundle trim
 
 11/Repeater: a c
+11,10/Arg(1): x

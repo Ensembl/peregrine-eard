@@ -176,6 +176,15 @@ impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
             OrBundleRepeater::Repeater(_) => { return Err(format!("unexpected repeater")) }
         })
     }
+
+    pub(crate) fn skip_repeater(&self) -> Option<OrBundle<T>> {
+        match self {
+            OrBundleRepeater::Normal(n) => Some(OrBundle::Normal(n.clone())),
+            OrBundleRepeater::Bundle(b) => Some(OrBundle::Bundle(b.clone())),
+            OrBundleRepeater::Repeater(_) => { None }
+        }
+
+    }
 }
 
 #[derive(Clone)]

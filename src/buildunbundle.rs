@@ -40,14 +40,359 @@
  * Algorithm:
  *   For each statment in reverse order:
  *     1. If it is a repeater statement, copy from the lhs repeater to the rhs repeater.
- *     2. Mark as used any bundle.name uses in the lvalue.
- *     3. For each argument to the call:
+ *     2. Clear any bundles used in the lvalue.
+ *     3. For each return argument to the call:
  *        a. if callee confirms it is a bundle return, add a transit from the caller's bundle
  *           to a new bundle for the callee. If the caller discards, use an empty, anonymous bundle.
  *        b. in the callee, iterate through the return expression, recursing all of step 3 for
- *           functions and step 2 for bundle.names.
+ *           functions and recording bundle.names as used.
  *        c. iterate through the statements, recursing all of step 1.
  *        d. iterate through the arguments, for each which is a bundle add an argument transit
  *           into the caller. If the expression for the argument in the caller is a function,
- *           recurse step 3; if it is a bundle.name, step 2.
+ *           recurse step 3 and recording bundle.names as used.
  */
+
+use std::{sync::Arc, collections::{HashSet, HashMap}};
+use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundleaux::{BundleNamespace, Transits, Position}};
+
+// TODO global bundles
+
+fn non_bundle(caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
+    if caller_expects.is_some() { Err("unexpected bundle".to_string()) } else { Ok(( ))}
+}
+
+fn bundle(caller_expects: Option<&HashSet<String>>) -> Result<&HashSet<String>,String> {
+    if let Some(x) = caller_expects { Ok(x) } else { Err("expected bundle".to_string())}
+}
+
+struct BuildUnbundle<'a> {
+    trace: Vec<String>,
+    tree: &'a BuildTree,
+    positions: Vec<(Arc<Vec<String>>,usize)>,
+    namespace: BundleNamespace,
+    register_bundles: HashMap<usize,HashSet<String>>,
+    transits: Transits
+}
+
+impl<'a> BuildUnbundle<'a> {
+    fn new(tree: &'a BuildTree) -> BuildUnbundle<'a> {
+        BuildUnbundle {
+            trace: vec![],
+            tree,
+            positions: vec![],
+            namespace: BundleNamespace::new(),
+            register_bundles: HashMap::new(),
+            transits: Transits::new()
+        }
+    }
+
+    #[cfg(test)]
+    fn trace(&mut self, msg: &str) {
+        self.trace.push(msg.to_string());
+    }
+    
+    #[cfg(not(test))]
+    fn trace(&mut self, msg: &str) {}
+    
+    fn error_at(&self, msg: &str) -> String {
+        self.positions.last().map(|(file,line)|
+            at(msg,Some((file.as_ref(),*line)))
+        ).unwrap_or("*anon".to_string())
+    }
+
+    fn list_lhs_repeaters(&self,rets: &[OrBundleRepeater<BTLValue>]) -> Vec<String> {
+        rets.iter().filter_map(|ret| {
+            match ret {
+                OrBundleRepeater::Repeater(r)=> { Some(r.to_string()) },
+                _ => None
+            }
+        }).collect()
+    }
+
+    fn list_rhs_repeaters(&self,args: &[OrBundleRepeater<BTExpression>]) -> Result<Vec<String>,String> {
+        let mut repeaters = vec![];
+        for arg in args {
+            match arg {
+                OrBundleRepeater::Normal(BTExpression::Function(f)) => {
+                    repeaters.append(&mut self.list_rhs_repeaters(&f.args)?);
+                },
+                OrBundleRepeater::Repeater(r) => { repeaters.push(r.to_string()) },
+                _ => {}
+            }
+        }
+        Ok(repeaters)
+    }
+    
+    fn find_repeater_arguments(&self,call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<(String,String)>,String> {
+        /* A good repeater has a single use of the repeater glyph (**) on each side and has a
+         * single lhs variable.
+         */
+        let lhs = match &call.rets {
+            Some(x) => {
+                let lhs_repeaters = self.list_lhs_repeaters(call.rets.as_ref().unwrap_or(&vec![]));
+                if lhs_repeaters.len() > 1 {
+                    return Err("too many repeaters in lvalue".to_string());
+                } else if lhs_repeaters.len() == 0 {
+                    None
+                } else if call.rets.as_ref().unwrap_or(&vec![]).len() != 1 {
+                    return Err("repeater must be the only result in lvalue".to_string());
+                } else {
+                    match &x[0] {
+                        OrBundleRepeater::Repeater(r) => { Some(r) },
+                        _ => { None } // lhs is not repeater
+                    }
+                }
+            },
+            _ => { None }
+        };
+        let rhs_repeaters = self.list_rhs_repeaters(&call.args)?;
+        if rhs_repeaters.len() > 1 {
+            return Err("too many repeaters in rvalue".to_string());
+        }
+        let rhs = rhs_repeaters.first();
+        Ok(match (lhs,rhs) {
+            (Some(lhs),Some(rhs)) => Some((lhs.to_string(),rhs.to_string())),
+            (None,None) => None,
+            _ => { return Err("must be single repeater on left and right".to_string()); }
+        })
+    }
+
+    fn check_for_repeater(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        if let Some((left,right)) = self.find_repeater_arguments(stmt)? {
+            self.transits.push(stmt.call_index);
+            let copied = self.namespace.get(&left).map(|x| x.get_used().clone()).unwrap_or_else(|| HashSet::new());
+            self.transits.add(Position::Repeater,copied);
+            self.transits.pop();
+            self.namespace.merge(&right,&left);
+            self.namespace.clear(&left);
+        }
+        Ok(())
+    }
+
+    fn declare(&mut self, var: &OrBundleRepeater<Variable>) -> Result<(),String> {
+        match var {
+            OrBundleRepeater::Normal(v) => {
+                if let Some(prefix) = &v.prefix {
+                    self.namespace.remove(prefix,&v.name);
+                }
+            },
+            OrBundleRepeater::Bundle(prefix) => {
+                self.namespace.clear(prefix);
+            },
+            OrBundleRepeater::Repeater(prefix) => {
+                self.namespace.clear(prefix);
+            }
+        }
+        Ok(())
+    }
+
+    fn clear_lvalue_bundles(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        for ret in stmt.rets.as_ref().unwrap_or(&vec![]) {
+            match ret {
+                OrBundleRepeater::Normal(lvalue) => {
+                    match lvalue {
+                        BTLValue::Variable(v) => {
+                            if let Some(prefix) = &v.prefix {
+                                self.namespace.remove(prefix,&v.name);
+                            }            
+                        },
+                        BTLValue::Register(_,BTRegisterType::Normal) => {},
+                        BTLValue::Register(r,BTRegisterType::Bundle) => {
+                            self.register_bundles.remove(r);
+                        },
+                    }
+                },
+                OrBundleRepeater::Bundle(prefix) => {
+                    self.namespace.clear(prefix);                    
+                },
+                OrBundleRepeater::Repeater(prefix) => {
+                    self.namespace.clear(prefix);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn return_bundles(&self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Vec<Option<HashSet<String>>> {
+        let mut out = vec![];
+        if let Some(rets) = &stmt.rets {
+            for ret in rets {
+                match ret {
+                    OrBundleRepeater::Normal(_) => {
+                        out.push(None);
+                    },
+                    OrBundleRepeater::Bundle(prefix) => {
+                        if let Some(bundle) = self.namespace.get(&prefix) {
+                            out.push(Some(bundle.get_used().clone()));
+                        } else {
+                            out.push(Some(HashSet::new()));
+                        }
+                    },
+                    OrBundleRepeater::Repeater(_) => {
+                        out.push(None);
+                    }
+                }
+            }
+        }
+        out
+    }
+
+    fn arg_bundles(&self, args: &[OrBundle<TypedArgument>]) -> Result<Vec<Option<HashSet<String>>>,String> {
+        Ok(args.iter().map(|arg| {
+            match arg {
+                OrBundle::Normal(_) => None,
+                OrBundle::Bundle(prefix) => {
+                    Some(self.namespace.get(&prefix).map(|x| x.get_used().clone()).unwrap_or_else(|| HashSet::new()))
+                }
+            }
+        }).collect::<Vec<_>>())
+    }
+
+    fn expr_returns_bundle(&self, expr: &OrBundle<BTExpression>) -> Result<bool,String> {
+        Ok(match expr {
+            OrBundle::Normal(expr) => {
+                match expr {
+                    BTExpression::Constant(_) => false,
+                    BTExpression::Variable(_) => false,
+                    BTExpression::RegisterValue(_,BTRegisterType::Normal) => false,
+                    BTExpression::RegisterValue(_,BTRegisterType::Bundle) => true,
+                    BTExpression::Function(func) => {
+                        let defn = self.tree.get_function(func)?;
+                        self.expr_returns_bundle(&defn.ret[0])?
+                    }
+                }
+            }
+            OrBundle::Bundle(_) => true
+        })
+    }
+
+    fn expr(&mut self, expr: &OrBundle<BTExpression>, caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
+        match expr {
+            OrBundle::Normal(expr) => {
+                match expr {
+                    BTExpression::Constant(_) => { non_bundle(caller_expects)?; },
+                    BTExpression::Variable(v) => { 
+                        non_bundle(caller_expects)?;
+                        if let Some(prefix) = &v.prefix {
+                            self.namespace.add(prefix,&v.name);
+                        }
+                    },
+                    BTExpression::RegisterValue(_,BTRegisterType::Normal) => { non_bundle(caller_expects)?; },
+                    BTExpression::RegisterValue(r,BTRegisterType::Bundle) => {
+                        self.register_bundles.insert(*r,bundle(caller_expects)?.clone());
+                    },
+                    BTExpression::Function(func) => {
+                        self.function(func, caller_expects)?;
+                    }
+                }
+            },
+            OrBundle::Bundle(prefix) => {
+                let caller_expects = caller_expects.ok_or_else(|| "unexpected bundle".to_string())?;
+                // TODO check: clear?
+                self.namespace.add_all(&prefix,caller_expects);
+            }
+        }
+        Ok(())
+    }
+
+    fn return_exprs(&mut self, exprs: &[OrBundle<BTExpression>], caller_bundles: &[Option<HashSet<String>>]) -> Result<(),String> {
+        let mut caller_bundles = caller_bundles.iter();
+        for (i,ret) in exprs.iter().enumerate() {
+            let caller_bundle = caller_bundles.next();
+            if self.expr_returns_bundle(ret)? {
+                let caller_expects = match caller_bundle {
+                    Some(Some(x)) => x.clone(),
+                    Some(None) => { return Err("return argument expected to be bundle".to_string()) },
+                    None => HashSet::new()
+                };
+                self.transits.add(Position::Return(i),caller_expects.clone());
+                self.expr(ret,Some(&caller_expects))?;
+            } else {
+                match caller_bundle {
+                    Some(Some(_)) => { return Err("return argument expected to be non-bundle".to_string()) },
+                    _ => {}
+                }
+                self.expr(ret,None)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn args(&mut self, expected: &[Option<HashSet<String>>], stmts: &[OrBundleRepeater<BTExpression>]) -> Result<(),String> {
+        for (i,(expected,stmt_arg)) in expected.iter().zip(stmts.iter()).enumerate() {
+            if let Some(expr) = stmt_arg.skip_repeater() {
+                if let Some(expected) = &expected {
+                    self.transits.add(Position::Arg(i),expected.clone());
+                }
+                self.expr(&expr,expected.as_ref())?;
+            }
+        }
+        Ok(())
+    }
+
+    fn function(&mut self, func: &BTFuncCall, caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
+        self.transits.push(func.call_index);
+        self.namespace.push();
+        let defn = self.tree.get_function(func)?;
+        /* Return expression */
+        if self.expr_returns_bundle(&defn.ret[0])? {
+            let bundle = bundle(caller_expects)?;
+            self.expr(&defn.ret[0],Some(bundle))?;
+            self.transits.add(Position::Return(0),bundle.clone());
+        } else {
+            self.expr(&defn.ret[0],None)?;
+        }
+        /* Process nested statements */
+        for stmt in defn.block.iter().rev() {
+            self.statement(stmt)?;
+        }
+        /* process arguments */
+        let expected_args = self.arg_bundles(&defn.args)?;
+        self.namespace.pop();
+        self.args(&expected_args, &func.args)?;
+        self.transits.pop();
+        Ok(())
+    }
+
+    // TODO too many/few args
+    fn procedure(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        self.check_for_repeater(stmt)?;
+        self.clear_lvalue_bundles(stmt)?;
+        /* Make list of caller returns to match in callee */
+        let caller_return_bundles = self.return_bundles(stmt);
+        /* Enter procedure */
+        self.transits.push(stmt.call_index);
+        self.namespace.push();
+        let defn = self.tree.get_procedure(stmt)?;
+        /* Process return expressions */
+        if let Some(defn) = defn {
+            self.return_exprs(&defn.ret, &caller_return_bundles)?;
+            /* Process nested statements */
+            for stmt in defn.block.iter().rev() {
+                self.statement(stmt)?;
+            }
+            /* Process arguments */
+            let expected_args = self.arg_bundles(&defn.args)?;
+            self.namespace.pop();
+            self.args(&expected_args,&stmt.args)?;
+        } else {
+            if let Some(expr) = stmt.args[0].skip_repeater() {
+                self.return_exprs(&[expr], &caller_return_bundles)?;
+            }
+        }
+        /**/
+        self.transits.pop();
+        Ok(())
+    }
+
+    fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
+        self.positions.push((stmt.file.clone(),stmt.line_no));
+        match &stmt.value {
+            BTStatementValue::Declare(d) => self.declare(d)?,
+            BTStatementValue::BundledStatement(s) => self.procedure(s)?,
+            _ => {}
+        }
+        self.positions.pop();
+        Ok(())
+    }
+}

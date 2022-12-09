@@ -1,0 +1,391 @@
+>> test
+
+baseline stmt 1
+
+>> input
+
+let x = 0;
+
+>> built strip
+
+test:2 (r1) <- #1 0
+test:2 let x
+test:2 (x) <- #2 r1
+
+>> unbundle trim
+
+>> trace strip
+
+statement = test:2 (x) <- #2 r1
+  procedure = (x) <- #2 r1
+    ret bundles=[None]
+  assignment
+  exprs = [r1]
+  expr = r1 expect = None
+
+statement = test:2 let x
+  declare = x
+
+statement = test:2 (r1) <- #1 0
+  procedure = (r1) <- #1 0
+    ret bundles=[None]
+  assignment
+  exprs = [0]
+  expr = 0 expect = None
+
+>> test
+
+baseline stmt 2
+
+>> input
+
+procedure x() { (1,2) }
+let (a,b) = x();
+
+>> built strip
+
+0:proc () {
+  (1,2)
+}
+
+test:2 define 0
+test:3 (r1 r2) <- (0#1)
+test:3 let a
+test:3 let b
+test:3 (a) <- #2 r1
+test:3 (b) <- #3 r2
+
+>> unbundle trim
+
+>> trace strip
+
+statement = test:3 (b) <- #3 r2
+  procedure = (b) <- #3 r2
+    ret bundles=[None]
+  assignment
+  exprs = [r2]
+  expr = r2 expect = None
+
+statement = test:3 (a) <- #2 r1
+  procedure = (a) <- #2 r1
+    ret bundles=[None]
+  assignment
+  exprs = [r1]
+  expr = r1 expect = None
+
+statement = test:3 let b
+  declare = b
+
+statement = test:3 let a
+  declare = a
+
+statement = test:3 (r1 r2) <- (0#1)
+  procedure = (r1 r2) <- (0#1)
+    ret bundles=[None, None]
+    push namespace
+  regular procedure
+  exprs = [1, 2]
+  expr = 1 expect = None
+  expr = 2 expect = None
+    arg bundles = []
+    pop namespace
+
+statement = test:2 define 0
+
+
+>> test
+
+wildcard stmt 1
+
+>> input
+
+procedure p(*a) { a.x }
+
+let a.x = 0;
+p(*a);
+
+>> built strip
+
+0:proc (*a) {
+  (a.x)
+}
+
+test:2 define 0
+test:4 (r1) <- #1 0
+test:4 let a.x
+test:4 (a.x) <- #2 r1
+test:5 (0#3 *a)
+
+>> unbundle trim
+
+3/Arg(0): x
+
+>> trace strip
+
+statement = test:5 (0#3 *a)
+  procedure = (0#3 *a)
+    ret bundles=[]
+    push namespace
+  regular procedure
+  exprs = [a.x]
+  expr = a.x expect = None
+      use of a.x
+    arg bundles = [Some({"x"})]
+    pop namespace
+  expr = *a expect = Some({"x"})
+
+statement = test:4 (a.x) <- #2 r1
+  procedure = (a.x) <- #2 r1
+    ret bundles=[None]
+  assignment
+  exprs = [r1]
+  expr = r1 expect = None
+
+statement = test:4 let a.x
+  declare = a.x
+
+statement = test:4 (r1) <- #1 0
+  procedure = (r1) <- #1 0
+    ret bundles=[None]
+  assignment
+  exprs = [0]
+  expr = 0 expect = None
+
+statement = test:2 define 0
+
+>> test
+
+wildcard stmt 2
+
+>> input
+
+procedure p(*a) { let b.a = a.x; *b }
+
+let a.x = 0;
+let *b = p(*a);
+let z = b.a;
+
+>> built strip
+
+0:proc (*a) {
+  test:2 (r1) <- #1 a.x
+  test:2 let b.a
+  test:2 (b.a) <- #2 r1
+  (*b)
+}
+
+test:2 define 0
+test:4 (r2) <- #3 0
+test:4 let a.x
+test:4 (a.x) <- #4 r2
+test:5 (*r3) <- (0#5 *a)
+test:5 let *b
+test:5 (*b) <- #6 *r3
+test:6 (r4) <- #7 b.a
+test:6 let z
+test:6 (z) <- #8 r4
+
+>> unbundle trim
+
+5/Arg(0): x
+5/Return(0): a
+6/Return(0): a
+
+>> trace strip
+
+statement = test:6 (z) <- #8 r4
+  procedure = (z) <- #8 r4
+    ret bundles=[None]
+  assignment
+  exprs = [r4]
+  expr = r4 expect = None
+
+statement = test:6 let z
+  declare = z
+
+statement = test:6 (r4) <- #7 b.a
+  procedure = (r4) <- #7 b.a
+    ret bundles=[None]
+  assignment
+  exprs = [b.a]
+  expr = b.a expect = None
+      use of b.a
+
+statement = test:5 (*b) <- #6 *r3
+  procedure = (*b) <- #6 *r3
+    ret bundles=[Some({"a"})]
+  assignment
+  exprs = [*r3]
+  expr = *r3 expect = Some({"a"})
+
+statement = test:5 let *b
+  declare = *b
+
+statement = test:5 (*r3) <- (0#5 *a)
+  procedure = (*r3) <- (0#5 *a)
+    ret bundles=[Some({"a"})]
+    push namespace
+  regular procedure
+  exprs = [*b]
+  expr = *b expect = Some({"a"})
+
+statement = test:2 (b.a) <- #2 r1
+  procedure = (b.a) <- #2 r1
+    ret bundles=[None]
+  assignment
+  exprs = [r1]
+  expr = r1 expect = None
+
+statement = test:2 let b.a
+  declare = b.a
+
+statement = test:2 (r1) <- #1 a.x
+  procedure = (r1) <- #1 a.x
+    ret bundles=[None]
+  assignment
+  exprs = [a.x]
+  expr = a.x expect = None
+      use of a.x
+    arg bundles = [Some({"x"})]
+    pop namespace
+  expr = *a expect = Some({"x"})
+
+statement = test:4 (a.x) <- #4 r2
+  procedure = (a.x) <- #4 r2
+    ret bundles=[None]
+  assignment
+  exprs = [r2]
+  expr = r2 expect = None
+
+statement = test:4 let a.x
+  declare = a.x
+
+statement = test:4 (r2) <- #3 0
+  procedure = (r2) <- #3 0
+    ret bundles=[None]
+  assignment
+  exprs = [0]
+  expr = 0 expect = None
+
+statement = test:2 define 0
+
+>> test
+
+recursive
+
+>> input
+
+function f(*x) { x.f }
+procedure p(*a) { (a.p,f(*a)) }
+
+let a.p = 1;
+let a.f = 2;
+let (x,y) = p(*a);
+
+>> built strip
+
+0:func (*x) {
+  (x.f)
+}
+
+1:proc (*a) {
+  (a.p,(0#1 *a))
+}
+
+test:2 define 0
+test:3 define 1
+test:5 (r1) <- #2 1
+test:5 let a.p
+test:5 (a.p) <- #3 r1
+test:6 (r2) <- #4 2
+test:6 let a.f
+test:6 (a.f) <- #5 r2
+test:7 (r3 r4) <- (1#6 *a)
+test:7 let x
+test:7 let y
+test:7 (x) <- #7 r3
+test:7 (y) <- #8 r4
+
+>> unbundle trim
+
+6/Arg(0): f p
+6,1/Arg(0): f
+
+>> trace strip
+
+statement = test:7 (y) <- #8 r4
+  procedure = (y) <- #8 r4
+    ret bundles=[None]
+  assignment
+  exprs = [r4]
+  expr = r4 expect = None
+
+statement = test:7 (x) <- #7 r3
+  procedure = (x) <- #7 r3
+    ret bundles=[None]
+  assignment
+  exprs = [r3]
+  expr = r3 expect = None
+
+statement = test:7 let y
+  declare = y
+
+statement = test:7 let x
+  declare = x
+
+statement = test:7 (r3 r4) <- (1#6 *a)
+  procedure = (r3 r4) <- (1#6 *a)
+    ret bundles=[None, None]
+    push namespace
+  regular procedure
+  exprs = [a.p, (0#1 *a)]
+  expr = a.p expect = None
+      use of a.p
+  expr = (0#1 *a) expect = None
+  function = (0#1 *a)
+    push namespace
+  expr = x.f expect = None
+      use of x.f
+    pop namespace
+  expr = *a expect = Some({"f"})
+    arg bundles = [Some({"f", "p"})]
+    pop namespace
+  expr = *a expect = Some({"f", "p"})
+
+statement = test:6 (a.f) <- #5 r2
+  procedure = (a.f) <- #5 r2
+    ret bundles=[None]
+  assignment
+  exprs = [r2]
+  expr = r2 expect = None
+
+statement = test:6 let a.f
+  declare = a.f
+
+statement = test:6 (r2) <- #4 2
+  procedure = (r2) <- #4 2
+    ret bundles=[None]
+  assignment
+  exprs = [2]
+  expr = 2 expect = None
+
+statement = test:5 (a.p) <- #3 r1
+  procedure = (a.p) <- #3 r1
+    ret bundles=[None]
+  assignment
+  exprs = [r1]
+  expr = r1 expect = None
+
+statement = test:5 let a.p
+  declare = a.p
+
+statement = test:5 (r1) <- #2 1
+  procedure = (r1) <- #2 1
+    ret bundles=[None]
+  assignment
+  exprs = [1]
+  expr = 1 expect = None
+
+statement = test:3 define 1
+
+statement = test:2 define 0

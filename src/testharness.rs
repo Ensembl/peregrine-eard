@@ -216,12 +216,16 @@ pub(super) fn run_parse_tests(data: &str) {
             }
             let unbundle_got = lines.join("\n");
             assert_eq!(process_ws(&unbundle_got,unbundle_options),process_ws(unbundle_correct,unbundle_options));
-            print!("{}",lines.join("\n"));
+            println!("{}\n",lines.join("\n"));
+            if let Some((trace_options,trace_expected)) = sections.get("trace") {
+                assert_eq!(process_ws(&trace.join("\n"),trace_options),process_ws(&trace_expected,trace_options));
+            }
         }
         if let Some((unbundle_options,unbundle_err)) = sections.get("unbundle-fail") {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
             let error = trace_build_unbundle(&processed).err().expect("unbundle unexpectedly succeeded");
             assert_eq!(process_ws(&error,unbundle_options),process_ws(&unbundle_err,unbundle_options));
+            continue;
         }
     }
 }    

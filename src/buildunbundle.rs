@@ -304,6 +304,7 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn return_exprs(&mut self, exprs: &[OrBundle<BTExpression>], caller_bundles: &[Option<HashSet<String>>]) -> Result<(),String> {
+        self.trace(&format!("  exprs = {:?}",exprs));
         let mut caller_bundles = caller_bundles.iter();
         for (i,ret) in exprs.iter().enumerate() {
             let caller_bundle = caller_bundles.next();
@@ -339,7 +340,9 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn function(&mut self, func: &BTFuncCall, caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
+        self.trace(&format!("  function = {:?}",func));
         self.transits.push(func.call_index);
+        self.trace("    push namespace");
         self.namespace.push();
         let defn = self.tree.get_function(func)?;
         /* Return expression */
@@ -356,6 +359,7 @@ impl<'a> BuildUnbundle<'a> {
         }
         /* process arguments */
         let expected_args = self.arg_bundles(&defn.args)?;
+        self.trace("    pop namespace");
         self.namespace.pop();
         self.args(&expected_args, &func.args)?;
         self.transits.pop();
@@ -375,6 +379,7 @@ impl<'a> BuildUnbundle<'a> {
         let defn = self.tree.get_procedure(stmt)?;
         /* Process return expressions */
         if let Some(defn) = defn {
+            self.trace("    push namespace");
             self.namespace.push();
             self.trace("  regular procedure");
             self.return_exprs(&defn.ret, &caller_return_bundles)?;
@@ -385,6 +390,7 @@ impl<'a> BuildUnbundle<'a> {
             /* Process arguments */
             let expected_args = self.arg_bundles(&defn.args)?;
             self.trace(&format!("    arg bundles = {:?}",expected_args));
+            self.trace("    pop namespace");
             self.namespace.pop();
             self.args(&expected_args,&stmt.args)?;
         } else {

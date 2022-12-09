@@ -57,6 +57,11 @@ fn test_bundle_smoke() {
 }
 
 #[test]
+fn test_bundle_inch() {
+    run_parse_tests(include_str!("testdata/bundle-inch.etf"));
+}
+
+#[test]
 fn test_repeat_smoke() {
     run_parse_tests(include_str!("testdata/repeat-smoke.etf"));
 }

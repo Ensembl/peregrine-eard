@@ -75,8 +75,6 @@ impl PTCall {
     }
 }
 
-// PTLetAssign -> OrBundleRepeater<(Variable,Vec<Check>)>
-
 impl OrBundle<(Variable,Vec<Check>)> {
     fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
         let declare = match self {

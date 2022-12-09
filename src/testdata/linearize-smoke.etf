@@ -372,6 +372,10 @@ test:9 29 <copy-from> 28
 test:9 30 <copy-from> 29
 test:9 3 <copy-from> 30
 
+>> test
+
+linearize 8
+
 >> input
 
 function f(*x) { let c.g = x.b; *c }
@@ -452,3 +456,95 @@ test:9 27 <copy-from> 26
 test:9 28 <copy-from> 27
 test:9 29 <copy-from> 28
 test:9 3 <copy-from> 29
+
+>> test
+
+linearize 9
+
+>> input
+
+function f(x,y) { x }
+procedure p(z) { z }
+
+let x.a = 1;
+let x.b = 2;
+let x.c = 3;
+let z = 4;
+let **y = f(**x,z);
+let (m,n) = (y.a,y.b);
+
+>> built strip
+
+0:func (x,y) {
+  (x)
+}
+
+1:proc (z) {
+  (z)
+}
+
+test:2 define 0
+test:3 define 1
+test:5 (r1) <- #1 1
+test:5 let x.a
+test:5 (x.a) <- #2 r1
+test:6 (r2) <- #3 2
+test:6 let x.b
+test:6 (x.b) <- #4 r2
+test:7 (r3) <- #5 3
+test:7 let x.c
+test:7 (x.c) <- #6 r3
+test:8 (r4) <- #7 4
+test:8 let z
+test:8 (z) <- #8 r4
+test:9 let **y
+test:9 (**y) <- #10 (0#9 **x z)
+test:10 (r5) <- #11 y.a
+test:10 (r6) <- #12 y.b
+test:10 let m
+test:10 let n
+test:10 (m) <- #13 r5
+test:10 (n) <- #14 r6
+
+>> linearize strip
+
+test:5 1 <constant> 1
+test:5 2 <copy-from> 1
+test:5 4 <copy-from> 2
+test:5 3 <copy-from> 4
+
+test:6 5 <constant> 2
+test:6 6 <copy-from> 5
+test:6 8 <copy-from> 6
+test:6 7 <copy-from> 8
+
+test:7 9 <constant> 3
+test:7 10 <copy-from> 9
+test:7 12 <copy-from> 10
+test:7 11 <copy-from> 12
+
+test:8 13 <constant> 4
+test:8 14 <copy-from> 13
+test:8 16 <copy-from> 14
+test:8 15 <copy-from> 16
+
+test:9 17 <copy-from> 3
+test:9 18 <copy-from> 15
+test:9 19 <copy-from> 17
+test:9 20 <copy-from> 18
+test:9 21 <copy-from> 19
+
+test:9 22 <copy-from> 7
+test:9 23 <copy-from> 15
+test:9 24 <copy-from> 22
+test:9 25 <copy-from> 23
+test:9 26 <copy-from> 24
+
+test:10 27 <copy-from> 21
+test:10 28 <copy-from> 27
+test:10 29 <copy-from> 26
+test:10 30 <copy-from> 29
+test:10 33 <copy-from> 28
+test:10 31 <copy-from> 33
+test:10 34 <copy-from> 30
+test:10 32 <copy-from> 34

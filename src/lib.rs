@@ -1,6 +1,7 @@
 mod unbundle {
     pub(crate) mod buildunbundle;
     mod unbundleaux;
+    mod repeater;
     pub(crate) mod linearize;
 }
 

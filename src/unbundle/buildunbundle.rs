@@ -54,6 +54,7 @@
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
 use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
+use super::repeater::find_repeater_arguments;
 
 // TODO global bundles
 
@@ -106,7 +107,7 @@ impl<'a> BuildUnbundle<'a> {
     }
     
     #[cfg(not(test))]
-    fn trace(&mut self, msg: &str) {}
+    fn trace(&mut self, _msg: &str) {}
     
     fn error_at(&self, msg: &str) -> String {
         self.positions.last().map(|(file,line)|
@@ -114,65 +115,8 @@ impl<'a> BuildUnbundle<'a> {
         ).unwrap_or("*anon*".to_string())
     }
 
-    fn list_lhs_repeaters(&self,rets: &[OrBundleRepeater<BTLValue>]) -> Vec<String> {
-        rets.iter().filter_map(|ret| {
-            match ret {
-                OrBundleRepeater::Repeater(r)=> { Some(r.to_string()) },
-                _ => None
-            }
-        }).collect()
-    }
-
-    fn list_rhs_repeaters(&self,args: &[OrBundleRepeater<BTExpression>]) -> Result<Vec<String>,String> {
-        let mut repeaters = vec![];
-        for arg in args {
-            match arg {
-                OrBundleRepeater::Normal(BTExpression::Function(f)) => {
-                    repeaters.append(&mut self.list_rhs_repeaters(&f.args)?);
-                },
-                OrBundleRepeater::Repeater(r) => { repeaters.push(r.to_string()) },
-                _ => {}
-            }
-        }
-        Ok(repeaters)
-    }
-    
-    fn find_repeater_arguments(&self,call: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<(String,String)>,String> {
-        /* A good repeater has a single use of the repeater glyph (**) on each side and has a
-         * single lhs variable.
-         */
-        let lhs = match &call.rets {
-            Some(x) => {
-                let lhs_repeaters = self.list_lhs_repeaters(call.rets.as_ref().unwrap_or(&vec![]));
-                if lhs_repeaters.len() > 1 {
-                    return Err("too many repeaters in lvalue".to_string());
-                } else if lhs_repeaters.len() == 0 {
-                    None
-                } else if call.rets.as_ref().unwrap_or(&vec![]).len() != 1 {
-                    return Err("repeater must be the only result in lvalue".to_string());
-                } else {
-                    match &x[0] {
-                        OrBundleRepeater::Repeater(r) => { Some(r) },
-                        _ => { None } // lhs is not repeater
-                    }
-                }
-            },
-            _ => { None }
-        };
-        let rhs_repeaters = self.list_rhs_repeaters(&call.args)?;
-        if rhs_repeaters.len() > 1 {
-            return Err("too many repeaters in rvalue".to_string());
-        }
-        let rhs = rhs_repeaters.first();
-        Ok(match (lhs,rhs) {
-            (Some(lhs),Some(rhs)) => Some((lhs.to_string(),rhs.to_string())),
-            (None,None) => None,
-            _ => { return Err("must be single repeater on left and right".to_string()); }
-        })
-    }
-
     fn check_for_repeater(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        if let Some((left,right)) = self.find_repeater_arguments(stmt)? {
+        if let Some((left,right)) = find_repeater_arguments(stmt)? {
             self.transits.push(stmt.call_index);
             let copied = self.namespace.get(&left).map(|x| x.get_used().clone()).unwrap_or_else(|| HashSet::new());
             self.transits.add(Position::Repeater,copied);

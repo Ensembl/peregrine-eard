@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
-use super::unbundleaux::Position;
+use super::{unbundleaux::Position, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 type Bundles = HashMap<(Vec<usize>,Position),Vec<String>>;
 
@@ -258,12 +258,22 @@ impl<'a> Linearize<'a> {
 
     fn procedure(&mut self, proc: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         self.call_stack.push(proc.call_index);
-        let arg_regs = self.caller_args(&proc.args)?;
-        if let Some(defn) = self.tree.get_procedure(proc)? {
-            let callee_rets = self.callee(defn,&arg_regs)?;
-            self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
+        if let Some((left_prefix,right_prefix)) = find_repeater_arguments(proc)? {
+            let key = &(self.call_stack.clone(),Position::Repeater);
+            for name in self.bundles.get(key).expect("missing repeater data") {
+                let left = Variable { prefix: Some(left_prefix.clone()), name: name.to_string() };
+                let right = Variable { prefix: Some(right_prefix.clone()), name: name.to_string() };
+                let call = rewrite_repeater(proc,&left,&right)?;
+                self.procedure(&call)?;
+            }
         } else {
-            self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&arg_regs)?;
+            let arg_regs = self.caller_args(&proc.args)?;
+            if let Some(defn) = self.tree.get_procedure(proc)? {
+                let callee_rets = self.callee(defn,&arg_regs)?;
+                self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
+            } else {
+                self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&arg_regs)?;
+            }
         }
         self.call_stack.pop();
         Ok(())

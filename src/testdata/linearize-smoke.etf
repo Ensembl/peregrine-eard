@@ -154,9 +154,9 @@ test:4 2 <copy-from> 1
 test:4 4 <copy-from> 2
 test:4 3 <copy-from> 4
 test:5 5 <constant> 1
-test:5 7 <copy-from> 5
-test:5 6 <copy-from> 7
-test:5 8 <copy-from> 6
+test:5 6 <copy-from> 5
+test:5 7 <copy-from> 6
+test:5 8 <copy-from> 7
 test:5 3 <copy-from> 8
 
 >> test
@@ -197,21 +197,22 @@ test:4 1 <constant> 0
 test:4 2 <copy-from> 1
 test:4 4 <copy-from> 2
 test:4 3 <copy-from> 4
+
 test:5 5 <constant> 1
 test:5 6 <copy-from> 5
 test:5 8 <copy-from> 6
 test:5 7 <copy-from> 8
+
 test:6 9 <constant> 2
 test:6 10 <copy-from> 9
 test:6 12 <copy-from> 10
 test:6 11 <copy-from> 12
+
 test:7 13 <copy-from> 7
-test:7 15 <copy-from> 13
-test:7 14 <copy-from> 15
-test:7 16 <copy-from> 14
+test:7 14 <copy-from> 13
+test:7 15 <copy-from> 14
+test:7 16 <copy-from> 15
 test:7 3 <copy-from> 16
-
-
 
 >> test
 
@@ -270,15 +271,184 @@ test:6 12 <copy-from> 10
 test:6 11 <copy-from> 12
 
 test:7 13 <copy-from> 7
-test:7 15 <copy-from> 13
+test:7 14 <copy-from> 13
+
+test:2 15 <copy-from> 14
 test:2 16 <copy-from> 15
-test:2 17 <copy-from> 16
-test:2 19 <copy-from> 17
-test:2 18 <copy-from> 19
-test:7 14 <copy-from> 18
-test:7 20 <copy-from> 14
+test:2 18 <copy-from> 16
+test:2 17 <copy-from> 18
+
+test:7 19 <copy-from> 17
+test:7 20 <copy-from> 19
 test:7 21 <copy-from> 20
+
 test:8 22 <copy-from> 21
 test:8 23 <copy-from> 22
 test:8 24 <copy-from> 23
 test:8 3 <copy-from> 24
+
+>> test 
+
+linearize 7
+
+>> input
+
+function f(*x) { let c.g = x.w; *c }
+procedure p(*x) { let b.w = x.a; f(*b) }
+
+let a = 0;
+let x.a = 1;
+let x.b = 2;
+let *z = p(*x);
+a = z.g;
+
+>> built strip
+
+0:func (*x) {
+  test:2 (r1) <- #1 x.w
+  test:2 let c.g
+  test:2 (c.g) <- #2 r1
+  (*c)
+}
+
+1:proc (*x) {
+  test:3 (r2) <- #3 x.a
+  test:3 let b.w
+  test:3 (b.w) <- #4 r2
+  ((0#5 *b))
+}
+
+test:2 define 0
+test:3 define 1
+test:5 (r3) <- #6 0
+test:5 let a
+test:5 (a) <- #7 r3
+test:6 (r4) <- #8 1
+test:6 let x.a
+test:6 (x.a) <- #9 r4
+test:7 (r5) <- #10 2
+test:7 let x.b
+test:7 (x.b) <- #11 r5
+test:8 (*r6) <- (1#12 *x)
+test:8 let *z
+test:8 (*z) <- #13 *r6
+test:9 (r7) <- #14 z.g
+test:9 (a) <- #15 r7
+
+>> linearize strip
+
+test:5 1 <constant> 0
+test:5 2 <copy-from> 1
+test:5 4 <copy-from> 2
+test:5 3 <copy-from> 4
+
+test:6 5 <constant> 1
+test:6 6 <copy-from> 5
+test:6 8 <copy-from> 6
+test:6 7 <copy-from> 8
+
+test:7 9 <constant> 2
+test:7 10 <copy-from> 9
+test:7 12 <copy-from> 10
+test:7 11 <copy-from> 12
+
+test:8 13 <copy-from> 7
+test:8 14 <copy-from> 13
+test:3 15 <copy-from> 14
+test:3 16 <copy-from> 15
+test:3 18 <copy-from> 16
+test:3 17 <copy-from> 18
+test:8 19 <copy-from> 17
+test:8 20 <copy-from> 19
+test:2 21 <copy-from> 20
+test:2 22 <copy-from> 21
+test:2 24 <copy-from> 22
+test:2 23 <copy-from> 24
+test:8 25 <copy-from> 23
+test:8 26 <copy-from> 25
+test:8 27 <copy-from> 26
+test:9 28 <copy-from> 27
+test:9 29 <copy-from> 28
+test:9 30 <copy-from> 29
+test:9 3 <copy-from> 30
+
+>> input
+
+function f(*x) { let c.g = x.b; *c }
+procedure p(*x) { let b.w = x.g; *b }
+
+let a = 0;
+let x.a = 1;
+let x.b = 2;
+let *z = p(f(*x));
+a = z.w;
+
+>> built strip
+
+0:func (*x) {
+  test:2 (r1) <- #1 x.b
+  test:2 let c.g
+  test:2 (c.g) <- #2 r1
+  (*c)
+}
+
+1:proc (*x) {
+  test:3 (r2) <- #3 x.g
+  test:3 let b.w
+  test:3 (b.w) <- #4 r2
+  (*b)
+}
+
+test:2 define 0
+test:3 define 1
+test:5 (r3) <- #5 0
+test:5 let a
+test:5 (a) <- #6 r3
+test:6 (r4) <- #7 1
+test:6 let x.a
+test:6 (x.a) <- #8 r4
+test:7 (r5) <- #9 2
+test:7 let x.b
+test:7 (x.b) <- #10 r5
+test:8 (*r6) <- (1#12 (0#11 *x))
+test:8 let *z
+test:8 (*z) <- #13 *r6
+test:9 (r7) <- #14 z.w
+test:9 (a) <- #15 r7
+
+>> linearize strip
+
+test:5 1 <constant> 0
+test:5 2 <copy-from> 1
+test:5 4 <copy-from> 2
+test:5 3 <copy-from> 4
+
+test:6 5 <constant> 1
+test:6 6 <copy-from> 5
+test:6 8 <copy-from> 6
+test:6 7 <copy-from> 8
+
+test:7 9 <constant> 2
+test:7 10 <copy-from> 9
+test:7 12 <copy-from> 10
+test:7 11 <copy-from> 12
+
+test:8 13 <copy-from> 11
+test:8 14 <copy-from> 13
+test:2 15 <copy-from> 14
+test:2 16 <copy-from> 15
+test:2 18 <copy-from> 16
+test:2 17 <copy-from> 18
+test:8 19 <copy-from> 17
+test:3 20 <copy-from> 19
+test:3 21 <copy-from> 20
+test:3 23 <copy-from> 21
+test:3 22 <copy-from> 23
+test:8 24 <copy-from> 22
+test:8 25 <copy-from> 24
+test:8 26 <copy-from> 25
+
+test:9 27 <copy-from> 26
+test:9 28 <copy-from> 27
+test:9 29 <copy-from> 28
+test:9 3 <copy-from> 29

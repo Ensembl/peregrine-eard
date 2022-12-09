@@ -1,14 +1,16 @@
+mod unbundle {
+    pub(crate) mod buildunbundle;
+    mod unbundleaux;
+    pub(crate) mod linearize;
+}
+
 mod buildtree;
 mod buildtreebuilder;
-mod buildunbundle;
 mod compiler;
 mod model;
 mod preprocess;
 mod parser;
 mod parsetree;
-mod repeater;
-mod unbundle;
-mod unbundleaux;
 
 #[cfg(test)]
 mod test;

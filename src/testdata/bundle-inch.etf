@@ -22,6 +22,7 @@ statement = test:2 (x) <- #2 r1
   assignment
   exprs = [r1]
   expr = r1 expect = None
+  expr = r1 expect = None
 
 statement = test:2 let x
   declare = x
@@ -31,6 +32,7 @@ statement = test:2 (r1) <- #1 0
     ret bundles=[None]
   assignment
   exprs = [0]
+  expr = 0 expect = None
   expr = 0 expect = None
 
 >> test
@@ -65,12 +67,14 @@ statement = test:3 (b) <- #3 r2
   assignment
   exprs = [r2]
   expr = r2 expect = None
+  expr = r2 expect = None
 
 statement = test:3 (a) <- #2 r1
   procedure = (a) <- #2 r1
     ret bundles=[None]
   assignment
   exprs = [r1]
+  expr = r1 expect = None
   expr = r1 expect = None
 
 statement = test:3 let b
@@ -91,7 +95,6 @@ statement = test:3 (r1 r2) <- (0#1)
     pop namespace
 
 statement = test:2 define 0
-
 
 >> test
 
@@ -130,15 +133,16 @@ statement = test:5 (0#3 *a)
   exprs = [a.x]
   expr = a.x expect = None
       use of a.x
-    arg bundles = [Some({"x"})]
+    arg bundles = [Some(["x"])]
     pop namespace
-  expr = *a expect = Some({"x"})
+  expr = *a expect = Some(["x"])
 
 statement = test:4 (a.x) <- #2 r1
   procedure = (a.x) <- #2 r1
     ret bundles=[None]
   assignment
   exprs = [r1]
+  expr = r1 expect = None
   expr = r1 expect = None
 
 statement = test:4 let a.x
@@ -149,6 +153,7 @@ statement = test:4 (r1) <- #1 0
     ret bundles=[None]
   assignment
   exprs = [0]
+  expr = 0 expect = None
   expr = 0 expect = None
 
 statement = test:2 define 0
@@ -189,6 +194,7 @@ test:6 (z) <- #8 r4
 
 5/Arg(0): x
 5/Return(0): a
+6/Arg(0): a
 6/Return(0): a
 
 >> trace strip
@@ -198,6 +204,7 @@ statement = test:6 (z) <- #8 r4
     ret bundles=[None]
   assignment
   exprs = [r4]
+  expr = r4 expect = None
   expr = r4 expect = None
 
 statement = test:6 let z
@@ -210,30 +217,34 @@ statement = test:6 (r4) <- #7 b.a
   exprs = [b.a]
   expr = b.a expect = None
       use of b.a
+  expr = b.a expect = None
+      use of b.a
 
 statement = test:5 (*b) <- #6 *r3
   procedure = (*b) <- #6 *r3
-    ret bundles=[Some({"a"})]
+    ret bundles=[Some(["a"])]
   assignment
   exprs = [*r3]
-  expr = *r3 expect = Some({"a"})
+  expr = *r3 expect = Some(["a"])
+  expr = *r3 expect = Some(["a"])
 
 statement = test:5 let *b
   declare = *b
 
 statement = test:5 (*r3) <- (0#5 *a)
   procedure = (*r3) <- (0#5 *a)
-    ret bundles=[Some({"a"})]
+    ret bundles=[Some(["a"])]
     push namespace
   regular procedure
   exprs = [*b]
-  expr = *b expect = Some({"a"})
+  expr = *b expect = Some(["a"])
 
 statement = test:2 (b.a) <- #2 r1
   procedure = (b.a) <- #2 r1
     ret bundles=[None]
   assignment
   exprs = [r1]
+  expr = r1 expect = None
   expr = r1 expect = None
 
 statement = test:2 let b.a
@@ -246,15 +257,18 @@ statement = test:2 (r1) <- #1 a.x
   exprs = [a.x]
   expr = a.x expect = None
       use of a.x
-    arg bundles = [Some({"x"})]
+  expr = a.x expect = None
+      use of a.x
+    arg bundles = [Some(["x"])]
     pop namespace
-  expr = *a expect = Some({"x"})
+  expr = *a expect = Some(["x"])
 
 statement = test:4 (a.x) <- #4 r2
   procedure = (a.x) <- #4 r2
     ret bundles=[None]
   assignment
   exprs = [r2]
+  expr = r2 expect = None
   expr = r2 expect = None
 
 statement = test:4 let a.x
@@ -266,7 +280,7 @@ statement = test:4 (r2) <- #3 0
   assignment
   exprs = [0]
   expr = 0 expect = None
-
+  expr = 0 expect = None
 statement = test:2 define 0
 
 >> test
@@ -319,12 +333,14 @@ statement = test:7 (y) <- #8 r4
   assignment
   exprs = [r4]
   expr = r4 expect = None
+  expr = r4 expect = None
 
 statement = test:7 (x) <- #7 r3
   procedure = (x) <- #7 r3
     ret bundles=[None]
   assignment
   exprs = [r3]
+  expr = r3 expect = None
   expr = r3 expect = None
 
 statement = test:7 let y
@@ -347,16 +363,17 @@ statement = test:7 (r3 r4) <- (1#6 *a)
   expr = x.f expect = None
       use of x.f
     pop namespace
-  expr = *a expect = Some({"f"})
-    arg bundles = [Some({"f", "p"})]
+  expr = *a expect = Some(["f"])
+    arg bundles = [Some(["f", "p"])]
     pop namespace
-  expr = *a expect = Some({"f", "p"})
+  expr = *a expect = Some(["f", "p"])
 
 statement = test:6 (a.f) <- #5 r2
   procedure = (a.f) <- #5 r2
     ret bundles=[None]
   assignment
   exprs = [r2]
+  expr = r2 expect = None
   expr = r2 expect = None
 
 statement = test:6 let a.f
@@ -368,12 +385,14 @@ statement = test:6 (r2) <- #4 2
   assignment
   exprs = [2]
   expr = 2 expect = None
+  expr = 2 expect = None
 
 statement = test:5 (a.p) <- #3 r1
   procedure = (a.p) <- #3 r1
     ret bundles=[None]
   assignment
   exprs = [r1]
+  expr = r1 expect = None
   expr = r1 expect = None
 
 statement = test:5 let a.p
@@ -384,6 +403,7 @@ statement = test:5 (r1) <- #2 1
     ret bundles=[None]
   assignment
   exprs = [1]
+  expr = 1 expect = None
   expr = 1 expect = None
 
 statement = test:3 define 1

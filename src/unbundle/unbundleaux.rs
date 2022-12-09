@@ -115,7 +115,11 @@ impl Transits {
         self.call_stack.pop();
     }
 
-    pub(super) fn take(self) -> HashMap<(Vec<usize>,Position),HashSet<String>> {
-        self.transits
+    pub(super) fn take(mut self) -> HashMap<(Vec<usize>,Position),Vec<String>> {
+        self.transits.drain().map(|(k,mut v)|  {
+            let mut out = v.drain().collect::<Vec<_>>();
+            out.sort(); // important to be sorted so as stable, as sequence is used in linearization
+            (k,out)
+        }).collect::<HashMap<_,_>>()
     }
 }

@@ -53,9 +53,23 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundleaux::{BundleNamespace, Transits, Position}, unbundle::Unbundle};
+use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
 
 // TODO global bundles
+
+fn sorted<T: Clone+Ord>(set: Option<&HashSet<T>>) -> Option<Vec<T>> {
+    set.as_ref().map(|set| {
+        let mut out : Vec<T> = set.iter().cloned().collect();
+        out.sort();
+        out
+    })
+}
+
+fn all_sorted<T: Clone+Ord>(list: &[Option<HashSet<T>>]) -> Vec<Option<Vec<T>>> {
+    list.iter().map(|set| {
+        sorted(set.as_ref())
+    }).collect()
+}
 
 fn non_bundle(caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
     if caller_expects.is_some() { Err("unexpected bundle".to_string()) } else { Ok(( ))}
@@ -273,7 +287,7 @@ impl<'a> BuildUnbundle<'a> {
     }
 
     fn expr(&mut self, expr: &OrBundle<BTExpression>, caller_expects: Option<&HashSet<String>>) -> Result<(),String> {
-        self.trace(&format!("  expr = {:?} expect = {:?}",expr,caller_expects));
+        self.trace(&format!("  expr = {:?} expect = {:?}",expr,sorted(caller_expects)));
         match expr {
             OrBundle::Normal(expr) => {
                 match expr {
@@ -373,7 +387,7 @@ impl<'a> BuildUnbundle<'a> {
         /* Make list of caller returns to match in callee */
         let caller_return_bundles = self.return_bundles(stmt);
         self.clear_lvalue_bundles(stmt)?;
-        self.trace(&format!("    ret bundles={:?}",caller_return_bundles));
+        self.trace(&format!("    ret bundles={:?}",all_sorted(&caller_return_bundles)));
         /* Enter procedure */
         self.transits.push(stmt.call_index);
         let defn = self.tree.get_procedure(stmt)?;
@@ -389,7 +403,7 @@ impl<'a> BuildUnbundle<'a> {
             }
             /* Process arguments */
             let expected_args = self.arg_bundles(&defn.args)?;
-            self.trace(&format!("    arg bundles = {:?}",expected_args));
+            self.trace(&format!("    arg bundles = {:?}",all_sorted(&expected_args)));
             self.trace("    pop namespace");
             self.namespace.pop();
             self.args(&expected_args,&stmt.args)?;
@@ -398,6 +412,7 @@ impl<'a> BuildUnbundle<'a> {
             if let Some(expr) = stmt.args[0].skip_repeater() {
                 self.return_exprs(&[expr], &caller_return_bundles)?;
             }
+            self.args(&caller_return_bundles, &stmt.args)?;
         }
         /**/
         self.transits.pop();
@@ -425,13 +440,13 @@ fn do_build_unbundle(tree: &BuildTree) -> Result<BuildUnbundle,String> {
     Ok(unbundle)
 }
 
-pub(crate) fn build_unbundle(tree: &BuildTree) -> Result<HashMap<(Vec<usize>,Position),HashSet<String>>,String> {
+pub(crate) fn build_unbundle(tree: &BuildTree) -> Result<HashMap<(Vec<usize>,Position),Vec<String>>,String> {
     let unbundle = do_build_unbundle(tree)?;
     Ok(unbundle.transits.take())
 }
 
 #[cfg(test)]
-pub(crate) fn trace_build_unbundle(tree: &BuildTree) -> Result<(HashMap<(Vec<usize>,Position),HashSet<String>>,Vec<String>),String> {
+pub(crate) fn trace_build_unbundle(tree: &BuildTree) -> Result<(HashMap<(Vec<usize>,Position),Vec<String>>,Vec<String>),String> {
     let unbundle = do_build_unbundle(tree)?;
     Ok((unbundle.transits.take(),unbundle.trace.clone()))
 }

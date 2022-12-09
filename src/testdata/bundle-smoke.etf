@@ -54,6 +54,7 @@ test:10 (2#10 *a)
 
 8/Arg(0): c
 8/Return(0): c
+9/Arg(0): c
 9/Return(0): c
 10/Arg(0): c
 
@@ -91,9 +92,11 @@ test:6 (0#6 x.a)
 
 >> unbundle trim
 
+4/Arg(0): a
 4/Return(0): a
 4,3/Arg(0): a
 4,3/Return(0): a
+5/Arg(0): a
 5/Return(0): a
 
 >> test
@@ -176,8 +179,10 @@ test:16 (0#19 x.a)
 
 >> unbundle trim
 
+14/Arg(0): a c
 14/Return(0): a c
 14,13/Return(0): a c
+15/Arg(0): a c
 15/Return(0): a c
 17/Arg(0): c
 17,11,10/Arg(0): c
@@ -250,6 +255,7 @@ test:10 (3#10 x.b)
 7/Return(0): a b
 7,6/Return(0): a b
 7,6,5/Return(0): a b
+8/Arg(0): a b
 8/Return(0): a b
 
 >> test
@@ -328,7 +334,9 @@ test:22 (0#16 y.c)
 10/Return(1): b c
 10,8/Return(0): a c
 10,9/Return(0): b c
+11/Arg(0): a c
 11/Return(0): a c
+12/Arg(0): b c
 12/Return(0): b c
 
 >> test
@@ -429,15 +437,22 @@ test:29 (0#30 z.d)
 12,10/Return(0): a c
 12,11/Return(0): b c
 12,11,7/Return(0): b c
+13/Arg(0): a c
 13/Return(0): a c
+14/Arg(0): b c
 14/Return(0): b c
+15/Arg(0): d
 15/Return(0): d
+17/Arg(0): a b c
 17/Return(0): a b c
 17,16/Return(0): a b c
+19/Arg(0): a
 19/Return(0): a
 19,18/Return(0): a
 19,18,7/Return(0): a
+20/Arg(0): a b c
 20/Return(0): a b c
+21/Arg(0): a
 21/Return(0): a
 
 >> test
@@ -480,6 +495,7 @@ test:9 (0#6 b.a)
 >> unbundle trim
 
 3/Return(0): a
+4/Arg(0): a
 4/Return(0): a
 
 >> test
@@ -520,6 +536,62 @@ test:10 (0#6 b.z)
 
 >> unbundle trim
 
+4/Arg(0): z
 4/Return(0): z
 4,3/Return(0): z
+5/Arg(0): z
 5/Return(0): z
+
+>> test bundle regression
+
+>> input
+
+function __operator_add(x,y) { /* dummy */ 0 }
+
+procedure print(a) { 0 }
+function f(m,*n) { m+n.x }
+procedure p(x) { x }
+
+let b = 1;
+let c.x = 4;
+
+let a = p(f(b,*c));
+
+print(a);
+
+>> built strip
+
+0:func (x,y) {
+  (0)
+}
+
+1:proc (a) {
+  (0)
+}
+
+2:func (m,*n) {
+  ((0#1 m n.x))
+}
+
+3:proc (x) {
+  (x)
+}
+
+test:2 define 0
+test:4 define 1
+test:5 define 2
+test:6 define 3
+test:8 (r1) <- #2 1
+test:8 let b
+test:8 (b) <- #3 r1
+test:9 (r2) <- #4 4
+test:9 let c.x
+test:9 (c.x) <- #5 r2
+test:11 (r3) <- (3#7 (2#6 b *c))
+test:11 let a
+test:11 (a) <- #8 r3
+test:13 (1#9 a)
+
+>> unbundle strip
+
+7,6/Arg(1): x

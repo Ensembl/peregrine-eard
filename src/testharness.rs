@@ -1,6 +1,5 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
-
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{self, Unbundle}, buildunbundle::{build_unbundle, trace_build_unbundle}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
@@ -227,5 +226,13 @@ pub(super) fn run_parse_tests(data: &str) {
             assert_eq!(process_ws(&error,unbundle_options),process_ws(&unbundle_err,unbundle_options));
             continue;
         }
+        if let Some((linearized_options,linearized_correct)) = sections.get("linearize") {
+            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
+            let bundles = build_unbundle(&processed).expect("unbundle failed");
+            let linear = linearize(&processed,&bundles).expect("linearize failed");
+            let linear = linear.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
+            println!("{}",linear.join("\n"));
+            assert_eq!(process_ws(&linear.join("\n"),linearized_options),process_ws(linearized_correct,linearized_options));
+        }
     }
-}    
+}

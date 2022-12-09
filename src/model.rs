@@ -1,4 +1,6 @@
-use std::fmt;
+use std::{fmt, sync::Arc};
+
+use crate::buildtree::{BTProcCall, BTLValue};
 
 #[derive(Clone)]
 pub enum Constant {
@@ -48,7 +50,7 @@ pub enum FuncProcModifier {
     Export
 }
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Eq,Hash)]
 pub struct Variable {
     pub prefix: Option<String>,
     pub name: String
@@ -269,4 +271,35 @@ pub struct CodeBlock {
     pub results: Vec<CodeReturn>,
     pub commands: Vec<CodeCommand>,
     pub modifiers: Vec<CodeModifier>
+}
+
+#[derive(Clone)]
+pub enum LinearStatementValue {
+    Check(usize,Check),
+    Constant(usize,Constant),
+    Copy(usize,usize), // to,from
+}
+
+impl fmt::Debug for LinearStatementValue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Check(v, c) => write!(f,"{:?} <check> {:?}",v,c),
+            Self::Constant(v,c) => write!(f,"{:?} <constant> {:?}",v,c),
+            Self::Copy(to,from) => write!(f,"{:?} <copy-from> {:?}",*to,*from),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct LinearStatement {
+    pub value: LinearStatementValue,
+    pub file: Arc<Vec<String>>,
+    pub line_no: usize
+}
+
+impl fmt::Debug for LinearStatement {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let file = self.file.as_ref().last().map(|x| x.as_str()).unwrap_or("");
+        write!(f,"{}:{} {:?}",file,self.line_no,self.value)
+    }
 }

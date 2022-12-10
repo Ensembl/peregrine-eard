@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
 use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
-use super::{unbundleaux::Position, repeater::{find_repeater_arguments, rewrite_repeater}};
+use super::{unbundleaux::{Position, VarRegisters}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 type Bundles = HashMap<(Vec<usize>,Position),Vec<String>>;
 
@@ -10,7 +10,7 @@ struct Linearize<'a> {
     output: Vec<LinearStatement>,
     positions: Vec<(Arc<Vec<String>>,usize)>,
     next_register: usize,
-    var_registers: Vec<HashMap<Variable,usize>>,
+    var_registers: VarRegisters,
     bt_registers: HashMap<(usize,Option<String>),usize>,
     call_stack: Vec<usize>
 }
@@ -21,7 +21,7 @@ impl<'a> Linearize<'a> {
             tree, bundles, 
             output: vec![], 
             positions: vec![],
-            var_registers: vec![HashMap::new()],
+            var_registers: VarRegisters::new(),
             bt_registers: HashMap::new(),
             next_register: 0,
             call_stack: vec![]
@@ -39,24 +39,6 @@ impl<'a> Linearize<'a> {
             *next_register += 1;
             *next_register
         })
-    }
-
-    fn var_register_new(&mut self, variable: &Variable) -> usize {
-        let reg = self.anon_register();
-        if let Some(registers) = self.var_registers.last_mut() {
-            registers.insert(variable.clone(),reg);
-        } else {
-            panic!("empty name stack: should be impossible");
-        }
-        reg
-    }
-
-    fn var_register_old(&self, variable: &Variable) -> Result<usize,String> {
-        if let Some(registers) = self.var_registers.last() {
-            registers.get(variable).cloned().ok_or_else(|| format!("unknown variable '{}'",variable))
-        } else {
-            panic!("empty name stack: should be impossible");
-        }        
     }
 
     fn add(&mut self, value: LinearStatementValue) {
@@ -79,7 +61,8 @@ impl<'a> Linearize<'a> {
         for (i,arg) in defn_args.iter().enumerate() {
             match arg {
                 OrBundle::Normal(arg) => {
-                    let var_reg = self.var_register_new(&Variable { name: arg.id.clone(), prefix: None });
+                    let var_reg = self.anon_register();
+                    self.var_registers.add(&Variable { name: arg.id.clone(), prefix: None },var_reg);
                     self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
                 },
                 OrBundle::Bundle(bundle_name) => {
@@ -87,7 +70,8 @@ impl<'a> Linearize<'a> {
                     let bundle = self.bundles.get(&key)
                         .ok_or_else(|| "cannot find bundle/A")?;
                     for name in bundle {
-                        let var_reg = self.var_register_new(&Variable { name: name.clone(), prefix: Some(bundle_name.clone()) });
+                        let var_reg = self.anon_register();
+                        self.var_registers.add(&Variable { name: name.clone(), prefix: Some(bundle_name.clone()) },var_reg);
                         self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
                     }
                 }
@@ -108,7 +92,7 @@ impl<'a> Linearize<'a> {
                             self.add(LinearStatementValue::Constant(reg,c.clone()));
                         },
                         BTExpression::Variable(variable) => {
-                            regs.push(self.var_register_old(variable)?);
+                            regs.push(self.var_registers.get(variable)?);
                         },
                         BTExpression::RegisterValue(src,BTRegisterType::Normal) => {
                             regs.push(*src);
@@ -133,11 +117,14 @@ impl<'a> Linearize<'a> {
                     }
                 },
                 OrBundle::Bundle(prefix) => {
+                    if !self.var_registers.check_used(prefix) {
+                        return Err(format!("empty bundle return '{}'",prefix));
+                    }
                     let key = &(self.call_stack.clone(),Position::Return(i));
                     let bundle = self.bundles.get(&key)
                         .ok_or_else(|| "cannot find bundle/G")?;
                     for name in bundle {
-                        let var_reg = self.var_register_old(&Variable { name: name.clone(), prefix: Some(prefix.clone()) })?;
+                        let var_reg = self.var_registers.get(&Variable { name: name.clone(), prefix: Some(prefix.clone()) })?;
                         regs.push(var_reg);
                     }
                 }
@@ -146,10 +133,9 @@ impl<'a> Linearize<'a> {
         Ok(regs)
     }
 
-    // TODO catch unknown vairables in ver_variable when expected known
     // TODO type checking!
     fn callee(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
-        self.var_registers.push(HashMap::new());
+        self.var_registers.push();
         self.callee_args(&defn.args,arg_regs)?;
         for stmt in &defn.block {
             self.statement(stmt)?;
@@ -172,7 +158,7 @@ impl<'a> Linearize<'a> {
                         },
                         BTExpression::Variable(variable) => {
                             let arg_reg = self.anon_register();
-                            let src_reg = self.var_register_old(variable)?;
+                            let src_reg = self.var_registers.get(variable)?;
                             self.add(LinearStatementValue::Copy(arg_reg,src_reg));
                             arg_regs.push(arg_reg);
                         },
@@ -204,12 +190,15 @@ impl<'a> Linearize<'a> {
                     }
                 },
                 OrBundleRepeater::Bundle(bundle_name) =>  {
+                    if !self.var_registers.check_used(bundle_name) {
+                        return Err(format!("empty bundle argument '{}'",bundle_name));
+                    }
                     let key = &(self.call_stack.clone(),Position::Arg(i));
                     let bundle = self.bundles.get(&key)
                         .ok_or_else(|| "cannot find bundle/C")?;
                     for bundle_arg in bundle {
                         let arg_reg = self.anon_register();
-                        let variable = self.var_register_old(&Variable {
+                        let variable = self.var_registers.get(&Variable {
                             prefix: Some(bundle_name.to_string()),
                             name: bundle_arg.to_string()
                         })?;
@@ -217,7 +206,7 @@ impl<'a> Linearize<'a> {
                         arg_regs.push(arg_reg);
                     }
                 },
-                OrBundleRepeater::Repeater(_) => todo!(),
+                OrBundleRepeater::Repeater(_) => { panic!("Should be no repeaters here/A") },
             }
         }
         Ok(arg_regs)
@@ -228,7 +217,8 @@ impl<'a> Linearize<'a> {
         for (i,ret) in rets.iter().enumerate() {
             match ret {
                 OrBundleRepeater::Normal(BTLValue::Variable(variable)) => {
-                    let dst = self.var_register_new(&variable);
+                    let dst = self.anon_register();
+                    self.var_registers.add(&variable,dst);
                     self.add(LinearStatementValue::Copy(dst,*src.next().unwrap()));
                 },
                 OrBundleRepeater::Normal(BTLValue::Register(register,BTRegisterType::Normal)) => {
@@ -249,11 +239,12 @@ impl<'a> Linearize<'a> {
                     let bundle = self.bundles.get(&key)
                         .ok_or_else(|| "cannot find bundle/E")?;
                     for bundle_arg in bundle {
-                        let variable = self.var_register_new(&Variable {
+                        let dst = self.anon_register();
+                        self.var_registers.add(&Variable {
                             prefix: Some(bundle_name.to_string()),
                             name: bundle_arg.to_string()
-                        });
-                        self.add(LinearStatementValue::Copy(variable,*src.next().unwrap()));
+                        },dst);
+                        self.add(LinearStatementValue::Copy(dst,*src.next().unwrap()));
                     }
                 },
                 OrBundleRepeater::Repeater(_) => todo!(),
@@ -265,6 +256,9 @@ impl<'a> Linearize<'a> {
     fn procedure(&mut self, proc: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         self.call_stack.push(proc.call_index);
         if let Some((left_prefix,right_prefix)) = find_repeater_arguments(proc)? {
+            if !self.var_registers.check_used(&right_prefix) {
+                return Err(format!("empty bundle used in repeater '{}'",right_prefix));
+            }
             /* repeaters (recurses back in) */
             let key = &(self.call_stack.clone(),Position::Repeater);
             for name in self.bundles.get(key).expect("missing repeater data") {
@@ -295,7 +289,7 @@ impl<'a> Linearize<'a> {
             BTStatementValue::Define(_) => { /*todo!()*/ },
             BTStatementValue::Declare(_) => {},
             BTStatementValue::Check(variable,check) => {
-                let register = self.var_register_old(variable)?;
+                let register = self.var_registers.get(variable)?;
                 self.add(LinearStatementValue::Check(register,check.clone()));
             },
             BTStatementValue::BundledStatement(proc) => {

@@ -1,0 +1,81 @@
+>> test
+
+bad variable 1
+
+>> input
+
+procedure p(x) { (y) }
+
+p(0);
+
+>> linearize-fail trim
+
+unknown variable 'y' at test:4
+
+>> test
+
+bad variable 2
+
+>> input
+
+procedure p(x) { (y) }
+
+p(x);
+
+>> linearize-fail trim
+
+unknown variable 'x' at test:4
+
+>> test
+
+bad variable 3
+
+>> input
+
+let y = x;
+
+>> linearize-fail trim
+
+unknown variable 'x' at test:2
+
+>> test
+
+bad variable 4
+
+>> input
+
+procedure p(x) { (*y) }
+
+p(0);
+
+>> linearize-fail trim
+
+empty bundle return 'y' at test:4
+
+>> test
+
+bad variable 5
+
+>> input
+
+procedure p(*x) { (*x) }
+
+p(*a);
+
+>> linearize-fail trim
+
+empty bundle argument 'a' at test:4
+
+>> test
+
+bad variable 6
+
+>> input
+
+procedure p(x) { (x) }
+
+let **a = p(**b);
+
+>> linearize-fail trim
+
+empty bundle used in repeater 'b' at test:4

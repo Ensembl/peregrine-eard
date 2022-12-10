@@ -172,7 +172,7 @@ impl<'a> BuildUnbundle<'a> {
         Ok(())
     }
 
-    fn return_bundles(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Vec<Option<HashSet<String>>> {
+    fn return_bundles(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Vec<Option<HashSet<String>>>,String> {
         let mut out = vec![];
         if let Some(rets) = &stmt.rets {
             for ret in rets {
@@ -198,7 +198,7 @@ impl<'a> BuildUnbundle<'a> {
                 }
             }
         }
-        out
+        Ok(out)
     }
 
     fn arg_bundles(&self, args: &[OrBundle<TypedArgument>]) -> Result<Vec<Option<HashSet<String>>>,String> {
@@ -216,14 +216,12 @@ impl<'a> BuildUnbundle<'a> {
         Ok(match expr {
             OrBundle::Normal(expr) => {
                 match expr {
-                    BTExpression::Constant(_) => false,
-                    BTExpression::Variable(_) => false,
-                    BTExpression::RegisterValue(_,BTRegisterType::Normal) => false,
                     BTExpression::RegisterValue(_,BTRegisterType::Bundle) => true,
                     BTExpression::Function(func) => {
                         let defn = self.tree.get_function(func)?;
                         self.expr_returns_bundle(&defn.ret[0])?
-                    }
+                    },
+                    _ => false
                 }
             }
             OrBundle::Bundle(_) => true
@@ -329,7 +327,7 @@ impl<'a> BuildUnbundle<'a> {
         self.trace(&format!("  procedure = {:?}",stmt));
         self.check_for_repeater(stmt)?;
         /* Make list of caller returns to match in callee */
-        let caller_return_bundles = self.return_bundles(stmt);
+        let caller_return_bundles = self.return_bundles(stmt)?;
         self.clear_lvalue_bundles(stmt)?;
         self.trace(&format!("    ret bundles={:?}",all_sorted(&caller_return_bundles)));
         /* Enter procedure */

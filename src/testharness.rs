@@ -227,12 +227,20 @@ pub(super) fn run_parse_tests(data: &str) {
             continue;
         }
         if let Some((linearized_options,linearized_correct)) = sections.get("linearize") {
-            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
-            let bundles = build_unbundle(&processed).expect("unbundle failed");
-            let linear = linearize(&processed,&bundles).expect("linearize failed");
+            let tree = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
+            let bundles = build_unbundle(&tree).expect("unbundle failed");
+            let linear = linearize(&tree,&bundles).expect("linearize failed");
             let linear = linear.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
             println!("{}",linear.join("\n"));
             assert_eq!(process_ws(&linear.join("\n"),linearized_options),process_ws(linearized_correct,linearized_options));
+        }
+        if let Some((linearized_options,linearized_correct)) = sections.get("linearize-fail") {
+            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
+            let bundles = build_unbundle(&processed).expect("unbundle failed");
+            let error = linearize(&processed,&bundles).err().expect("linearize unexpectedly succeeded");
+            println!("{}",error);
+            assert_eq!(process_ws(&error,linearized_options),process_ws(linearized_correct,linearized_options));
+            continue;
         }
     }
 }

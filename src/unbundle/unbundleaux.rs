@@ -1,5 +1,7 @@
 use std::collections::{HashSet, HashMap};
 
+use crate::model::Variable;
+
 #[derive(Clone)]
 pub(super) struct Bundle {
     name: String,
@@ -121,5 +123,71 @@ impl Transits {
             out.sort(); // important to be sorted so as stable, as sequence is used in linearization
             (k,out)
         }).collect::<HashMap<_,_>>()
+    }
+}
+
+struct VarRegisterLevel {
+    regs: HashMap<Variable,usize>,
+    prefixes: HashSet<String>
+}
+
+impl VarRegisterLevel {
+    fn new() -> VarRegisterLevel {
+        VarRegisterLevel { regs: HashMap::new(), prefixes: HashSet::new() }
+    }
+
+    fn add(&mut self, variable: &Variable, reg: usize) {
+        self.regs.insert(variable.clone(),reg);
+        if let Some(prefix) = &variable.prefix {
+            self.prefixes.insert(prefix.to_string());
+        }
+    }
+
+    fn get(&self, variable: &Variable) -> Result<usize,String> {
+        self.regs.get(variable).cloned().ok_or_else(|| format!("unknown variable '{}'",variable))
+    }
+
+    fn check_used(&self, prefix: &str) -> bool {
+        self.prefixes.contains(prefix)
+    }
+}
+
+pub(super) struct VarRegisters {
+    regs: Vec<VarRegisterLevel>
+}
+
+impl VarRegisters {
+    pub(super) fn new() -> VarRegisters {
+        VarRegisters {
+            regs: vec![VarRegisterLevel::new()]
+        }
+    }
+
+    pub(super) fn push(&mut self) {
+        self.regs.push(VarRegisterLevel::new());
+    }
+
+    pub(super) fn pop(&mut self) {
+        self.regs.pop();
+    }
+
+    fn top(&self) -> &VarRegisterLevel {
+        self.regs.last().expect("empty name stack: should be impossible")
+    }
+
+    fn top_mut(&mut self) -> &mut VarRegisterLevel {
+        self.regs.last_mut().expect("empty name stack: should be impossible")
+    }
+
+    pub(super) fn add(&mut self, variable: &Variable, reg: usize) {
+        self.top_mut().add(variable,reg);
+    }
+
+    pub(super) fn get(&self, variable: &Variable) -> Result<usize,String> {
+        self.top().get(variable)
+    }
+
+    pub(super) fn check_used(&self, prefix: &str) -> bool {
+        self.top().check_used(prefix)
     }
 }

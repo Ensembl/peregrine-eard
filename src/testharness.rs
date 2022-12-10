@@ -198,6 +198,12 @@ pub(super) fn run_parse_tests(data: &str) {
                 }
             }
         }
+        if let Some((built_options,built_fail)) = sections.get("built-fail") {
+            let processed = compilation.build(processed.clone().expect("processing failed")).err().expect("build unexpectedly succeeded");
+            println!("{}\n",processed);
+            assert_eq!(process_ws(built_fail,built_options),process_ws(&processed,built_options));
+            continue;
+        }
         if let Some((unbundle_options,unbundle_correct)) = sections.get("unbundle") {
             let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let (transits,trace) = trace_build_unbundle(&processed).expect("unbundle failed");

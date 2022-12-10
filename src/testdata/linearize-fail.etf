@@ -181,3 +181,88 @@ p();
 test:2 1 <constant> 1
 test:2 2 <constant> 2
 
+>> test
+
+bad ret assign 1
+
+>> input
+
+let (a,b) = (1,2,3);
+
+>> built-fail trim
+
+let tuples differ in length: 2 lvalues but 3 rvalues at test:2
+
+>> test
+
+bad ret assign 2
+
+>> input
+
+let (a,b) = (1,1);
+(a,b) = (1,2,3);
+
+>> built-fail trim
+
+let tuples differ in length: 2 lvalues but 3 rvalues at test:3
+
+>> test
+
+bundle arg match 1
+
+>> input
+
+procedure p(*p) { p.a }
+
+p(2);
+
+>> unbundle-fail trim
+
+unexpected bundle at test:4
+
+>> test
+
+bundle arg match 2
+
+>> input
+
+procedure p(p) { p }
+
+let a.x = 1;
+p(*a);
+
+>> unbundle-fail trim
+
+unexpected bundle at test:5
+
+>> test
+
+bundle arg match 3
+
+>> input
+
+function f(x) { x }
+procedure p(*x) { f(*x) }
+
+let a.x = 1;
+p(*a);
+
+>> unbundle-fail trim
+
+unexpected bundle at test:6
+
+>> test
+
+bundle arg match 3
+
+>> input
+
+function f(*x) { *x }
+procedure p(x) { x }
+
+let a.x = 1;
+p(f(*a));
+
+>> unbundle-fail trim
+
+expected bundle at test:6

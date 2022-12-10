@@ -138,3 +138,46 @@ p();
 
 definition at test:2 has 1 args; call passes 3 at test:3
 
+>> test
+
+bad ret 1
+
+>> input
+
+procedure p() { (1,2) }
+
+let x = p();
+
+>> linearize-fail trim
+
+definition at test:2 has 2 return values; call expects 1 at test:4
+
+>> test
+
+bad ret 2
+
+>> input
+
+procedure p() { (1,2) }
+
+let (x,y,z) = p();
+
+>> linearize-fail trim
+
+definition at test:2 has 2 return values; call expects 3 at test:4
+
+>> test
+
+bad ret counter 1
+
+>> input
+
+procedure p() { (1,2) }
+
+p();
+
+>> linearize trim
+
+test:2 1 <constant> 1
+test:2 2 <constant> 2
+

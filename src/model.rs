@@ -1,6 +1,4 @@
-use std::{fmt, sync::Arc};
-
-use crate::buildtree::{BTProcCall, BTLValue};
+use std::{fmt::{self, Display}, sync::Arc};
 
 #[derive(Clone)]
 pub enum Constant {
@@ -63,6 +61,12 @@ impl fmt::Debug for Variable {
         } else {
             write!(f,"{}",self.name)
         }
+    }
+}
+
+impl Display for Variable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{:?}",self)
     }
 }
 

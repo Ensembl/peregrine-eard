@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, sync::Arc};
+use std::{collections::{HashMap}, sync::Arc};
 use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
 use super::{unbundleaux::{Position, VarRegisters}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -80,6 +80,13 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
+    fn check_arg_match(&self, defn: &BTFuncProcDefinition, args: &[OrBundleRepeater<BTExpression>]) -> Result<(),String> {
+        if defn.args.len() != args.len() {
+            return Err(format!("definition at {} has {} args; call passes {}",defn.at(),defn.args.len(),args.len()));
+        }
+        Ok(())
+    }
+
     fn callee_rets(&mut self, defn_ret: &[OrBundle<BTExpression>]) -> Result<Vec<usize>,String> {
         let mut regs = vec![];
         for (i,ret) in defn_ret.iter().enumerate() {
@@ -110,6 +117,7 @@ impl<'a> Linearize<'a> {
                             self.call_stack.push(func.call_index);
                             let func_args = self.caller_args(&func.args)?;
                             let defn = self.tree.get_function(func)?;
+                            self.check_arg_match(defn,&func.args)?;
                             let mut ret_regs = self.callee(&defn,&func_args)?;
                             regs.append(&mut ret_regs);
                             self.call_stack.pop();
@@ -137,10 +145,12 @@ impl<'a> Linearize<'a> {
     fn callee(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
         self.callee_args(&defn.args,arg_regs)?;
+        self.positions.push(defn.position.clone());
         for stmt in &defn.block {
             self.statement(stmt)?;
         }
         let callee_rets = self.callee_rets(&defn.ret)?;
+        self.positions.pop();
         self.var_registers.pop();
         Ok(callee_rets)
     }
@@ -183,6 +193,7 @@ impl<'a> Linearize<'a> {
                             self.call_stack.push(func.call_index);
                             let func_args = self.caller_args(&func.args)?;
                             let defn = self.tree.get_function(func)?;
+                            self.check_arg_match(defn,&func.args)?;
                             let mut ret_regs = self.callee(&defn,&func_args)?;
                             arg_regs.append(&mut ret_regs);
                             self.call_stack.pop();
@@ -272,6 +283,7 @@ impl<'a> Linearize<'a> {
             let arg_regs = self.caller_args(&proc.args)?;
             if let Some(defn) = self.tree.get_procedure(proc)? {
                 /* normal procedure */
+                self.check_arg_match(defn,&proc.args)?;
                 let callee_rets = self.callee(defn,&arg_regs)?;
                 self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
             } else {

@@ -10,6 +10,7 @@ pub(super) enum DefName {
 }
 
 struct CurrentFuncProcDefinition {
+    position: (Arc<Vec<String>>,usize),
     block: Vec<BTStatement>,
     name: String,
     export: bool,
@@ -22,6 +23,7 @@ struct CurrentFuncProcDefinition {
 impl CurrentFuncProcDefinition {
     fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> BTFuncProcDefinition {
         BTFuncProcDefinition {
+            position: self.position.clone(),
             args: self.args.clone(),
             captures: self.captures.clone(),
             ret_type: self.ret_type.clone(),
@@ -59,6 +61,7 @@ impl BuildContext {
             export: bool, bt: &mut BuildTree) {
         let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
         self.funcproc_target = Some(CurrentFuncProcDefinition {
+            position: self.location.clone(),
             name: name.to_string(),
             args: args.to_vec(),
             captures: captures.to_vec(),

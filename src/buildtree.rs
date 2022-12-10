@@ -141,11 +141,18 @@ impl BTCodeDefinition {
 
 #[derive(Clone)]
 pub struct BTFuncProcDefinition {
+    pub(crate) position: (Arc<Vec<String>>,usize),
     pub(crate) args: Vec<OrBundle<TypedArgument>>,
     pub(crate) captures: Vec<OrBundle<Variable>>,
     pub(crate) block: Vec<BTStatement>,
     pub(crate) ret: Vec<OrBundle<BTExpression>>,
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
+}
+
+impl BTFuncProcDefinition {
+    pub(crate) fn at(&self) -> String {
+        format!("{}:{}",self.position.0.last().map(|x| x.as_str()).unwrap_or("*anon*"),self.position.1)
+    }
 }
 
 impl fmt::Debug for BTFuncProcDefinition {

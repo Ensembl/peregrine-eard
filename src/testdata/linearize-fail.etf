@@ -10,7 +10,7 @@ p(0);
 
 >> linearize-fail trim
 
-unknown variable 'y' at test:4
+unknown variable 'y' at test:2
 
 >> test
 
@@ -50,7 +50,7 @@ p(0);
 
 >> linearize-fail trim
 
-empty bundle return 'y' at test:4
+empty bundle return 'y' at test:2
 
 >> test
 
@@ -79,3 +79,62 @@ let **a = p(**b);
 >> linearize-fail trim
 
 empty bundle used in repeater 'b' at test:4
+
+>> test
+
+bad args 1
+
+>> input
+
+procedure p() { 0 }
+
+p(0);
+
+>> linearize-fail trim
+
+definition at test:2 has 0 args; call passes 1 at test:4
+
+>> test
+
+bad args 2
+
+>> input
+
+procedure p(x) { 0 }
+
+p();
+
+>> linearize-fail trim
+
+definition at test:2 has 1 args; call passes 0 at test:4
+
+>> test
+
+bad args 3
+
+>> input
+
+function f(s) { 0 }
+procedure p() { 0 }
+
+p(f(0,1));
+
+>> linearize-fail trim
+
+definition at test:2 has 1 args; call passes 2 at test:5
+
+>> test
+
+bad args 4
+
+>> input
+
+function f(s) { 0 }
+procedure p() { f(0,1,2) }
+
+p();
+
+>> linearize-fail trim
+
+definition at test:2 has 1 args; call passes 3 at test:3
+

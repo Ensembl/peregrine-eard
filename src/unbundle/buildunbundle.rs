@@ -53,7 +53,7 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall}, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
+use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
 use super::repeater::find_repeater_arguments;
 
 // TODO global bundles
@@ -322,7 +322,13 @@ impl<'a> BuildUnbundle<'a> {
         Ok(())
     }
 
-    // TODO too many/few args
+    fn code(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
+        for arg in &stmt.args {
+            self.expr(&arg.no_repeater()?,None)?;
+        }
+        Ok(())
+    }
+
     fn procedure(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         self.trace(&format!("  procedure = {:?}",stmt));
         self.check_for_repeater(stmt)?;
@@ -332,31 +338,38 @@ impl<'a> BuildUnbundle<'a> {
         self.trace(&format!("    ret bundles={:?}",all_sorted(&caller_return_bundles)));
         /* Enter procedure */
         self.transits.push(stmt.call_index);
-        let defn = self.tree.get_procedure(stmt)?;
-        /* Process return expressions */
-        if let Some(defn) = defn {
-            self.trace("    push namespace");
-            self.namespace.push();
-            self.trace("  regular procedure");
-            self.return_exprs(&defn.ret, &caller_return_bundles)?;
-            /* Process nested statements */
-            for stmt in defn.block.iter().rev() {
-                self.statement(stmt)?;
-            }
-            /* Process arguments */
-            let expected_args = self.arg_bundles(&defn.args)?;
-            self.trace(&format!("    arg bundles = {:?}",all_sorted(&expected_args)));
-            self.trace("    pop namespace");
-            self.namespace.pop();
-            self.args(&expected_args,&stmt.args)?;
-        } else {
-            self.trace("  assignment");
-            if let Some(expr) = stmt.args[0].skip_repeater() {
-                self.return_exprs(&[expr], &caller_return_bundles)?;
-            }
-            self.args(&caller_return_bundles, &stmt.args)?;
+        eprintln!("{:?}",stmt);
+        match self.tree.get_any(stmt)? {
+            Some(BTTopDefn::FuncProc(defn)) => {
+                self.trace("    push namespace");
+                self.namespace.push();
+                self.trace("  regular procedure");
+                self.return_exprs(&defn.ret, &caller_return_bundles)?;
+                /* Process nested statements */
+                for stmt in defn.block.iter().rev() {
+                    self.statement(stmt)?;
+                }
+                /* Process arguments */
+                let expected_args = self.arg_bundles(&defn.args)?;
+                self.trace(&format!("    arg bundles = {:?}",all_sorted(&expected_args)));
+                self.trace("    pop namespace");
+                self.namespace.pop();
+                self.args(&expected_args,&stmt.args)?;    
+            },
+            Some(BTTopDefn::Code(_)) => {
+                if caller_return_bundles.iter().any(|x| x.is_some()) {
+                    return Err(format!("code call cannot return bundle"));
+                }
+                self.code(stmt)?;
+            },
+            None => {
+                self.trace("  assignment");
+                if let Some(expr) = stmt.args[0].skip_repeater() {
+                    self.return_exprs(&[expr], &caller_return_bundles)?;
+                }
+                self.args(&caller_return_bundles, &stmt.args)?;    
+            },
         }
-        /**/
         self.transits.pop();
         Ok(())
     }

@@ -7,6 +7,7 @@ mod unbundle {
 
 mod buildtree;
 mod buildtreebuilder;
+mod codeblocks;
 mod compiler;
 mod model;
 mod preprocess;

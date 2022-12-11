@@ -178,8 +178,8 @@ p();
 
 >> linearize trim
 
-test:2 1 <constant> 1
-test:2 2 <constant> 2
+test:2 r1 <constant> 1
+test:2 r2 <constant> 2
 
 >> test
 

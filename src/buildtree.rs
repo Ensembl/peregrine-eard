@@ -1,6 +1,6 @@
 use std::{sync::Arc, fmt};
 
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock, OrBundleRepeater, OrRepeater}};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock, OrBundleRepeater, OrRepeater}, codeblocks::CodeDefinition};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {
@@ -128,17 +128,6 @@ impl fmt::Debug for BTStatement {
     }
 }
 
-#[derive(Debug,Clone)]
-pub struct BTCodeDefinition {
-    pub(crate) blocks: Vec<CodeBlock>
-}
-
-impl BTCodeDefinition {
-    fn add(&mut self, alt: CodeBlock) {
-        self.blocks.push(alt);
-    }
-}
-
 #[derive(Clone)]
 pub struct BTFuncProcDefinition {
     pub(crate) position: (Arc<Vec<String>>,usize),
@@ -191,7 +180,7 @@ pub enum BTDefinitionVariety { Func, Proc }
 pub enum BTDefinition {
     Func(BTFuncProcDefinition),
     Proc(BTFuncProcDefinition),
-    Code(BTCodeDefinition)
+    Code(CodeDefinition)
 }
 
 impl fmt::Debug for BTDefinition {
@@ -199,9 +188,14 @@ impl fmt::Debug for BTDefinition {
          match self {
             Self::Func(v) => write!(f,"func {:?}",v),
             Self::Proc(v) => write!(f,"proc {:?}",v),
-            Self::Code(v) => write!(f,"code {:?}",v)
+            Self::Code(v) => write!(f,"{:?}",v)
         }
     }
+}
+
+pub enum BTTopDefn<'a> {
+    FuncProc(&'a BTFuncProcDefinition),
+    Code(&'a CodeDefinition)
 }
 
 #[derive(Clone)]
@@ -224,7 +218,7 @@ impl BuildTree {
     pub(crate) fn add_code(&mut self, id: usize, block: &CodeBlock) -> Result<(),String> {
         match &mut self.definitions[id] {
             BTDefinition::Code(c) => {
-                c.add(block.clone());
+                c.add(block.clone())?;
             },
             _ => {
                 panic!("Incorrectly indexed definition");
@@ -246,15 +240,16 @@ impl BuildTree {
         })
     }
 
-    pub(crate) fn get_procedure(&self, p: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<&BTFuncProcDefinition>,String> {
-        if let Some(index) = p.proc_index {
-            Ok(match &self.definitions[index] {
-                BTDefinition::Proc(p) => Some(p),
-                _ => { return Err(format!("expected function, got non-function")); }
-            })
-        } else {
-            Ok(None)
-        }
+    pub(crate) fn get_by_index<'a>(&'a self, index: usize) -> Result<BTTopDefn<'a>,String> {
+        Ok(match &self.definitions[index] {
+            BTDefinition::Proc(p) => BTTopDefn::FuncProc(p),
+            BTDefinition::Func(f) => BTTopDefn::FuncProc(f),
+            BTDefinition::Code(c) => BTTopDefn::Code(c),
+        })
+    }
+
+    pub(crate) fn get_any<'a>(&'a self, p: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<Option<BTTopDefn<'a>>,String> {
+        p.proc_index.map(|index| self.get_by_index(index)).transpose()
     }
 }
 

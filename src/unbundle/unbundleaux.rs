@@ -144,7 +144,9 @@ impl VarRegisterLevel {
     }
 
     fn get(&self, variable: &Variable) -> Result<usize,String> {
-        self.regs.get(variable).cloned().ok_or_else(|| format!("unknown variable '{}'",variable))
+//        self.regs.get(variable).cloned().ok_or_else(|| format!("unknown variable '{}'",variable))
+        Ok(self.regs.get(variable).cloned().expect(&format!("unknown variable '{}'",variable)))
+
     }
 
     fn check_used(&self, prefix: &str) -> bool {

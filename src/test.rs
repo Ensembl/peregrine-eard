@@ -75,3 +75,13 @@ fn test_linearize_smoke() {
 fn test_linearize_fail_smoke() {
     run_parse_tests(include_str!("testdata/linearize-fail.etf"));
 }
+
+#[test]
+fn test_linearize_code_smoke() {
+    run_parse_tests(include_str!("testdata/linearize-code.etf"));
+}
+
+#[test]
+fn test_capture_smoke() {
+    run_parse_tests(include_str!("testdata/linearize-capture.etf"));
+}

@@ -13,41 +13,15 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...
 
 [
     PTStatement{
-        value: Code(CodeBlock{
-            name: "test",
-            arguments: [
-                Register(CodeRegisterArgument{
-                    reg_id: 1,
-                    arg_types: [seq(number),seq(string)],
-                    checks: [length(X)]
-                }),
-                Register(CodeRegisterArgument{
-                    reg_id: 2,
-                    arg_types: [boolean],
-                    checks: [length(X...)]
-                })
-            ],
-            results: [
-                Register(CodeRegisterArgument{
-                    reg_id: 3,
-                    arg_types: [seq(boolean)],
-                    checks: [ref(X)]
-                }),
-                Register(CodeRegisterArgument{
-                    reg_id: 5,
-                    arg_types: [boolean],
-                    checks:[]
-                })
-            ],
-            commands:[
-                Register(4),
-                Opcode(44,[1,2,3,4,5])
-            ],
-            modifiers:[World]
-        }),
-        file: ["test"],
-        line_no: 2,
-        context: 1
+        value: Code(
+            world code test(r1:seq(number)|seq(string)length(X),r2:booleanlength(X...)) -> (r3 : seq(boolean) ref(X),r5: boolean) {
+                register r4;
+                opcode 44,r1,r2,r3,r4,r5;
+            }
+        ),
+        file:["test"],
+        line_no:2,
+        context:1
     }
 ]
 
@@ -65,30 +39,14 @@ code test(r1: seq(?X)) -> (r2: seq(?X)) {
 
 [
     PTStatement{
-        value: Code(CodeBlock{
-            name: "test",
-            arguments: [
-                Register(CodeRegisterArgument{
-                    reg_id: 1,
-                    arg_types: [seq(?X)],
-                    checks: []
-                })
-            ],
-            results: [
-                Register(CodeRegisterArgument{
-                    reg_id: 2,
-                    arg_types:[seq(?X)],
-                    checks: []
-                })
-            ],
-            commands:[
-                Opcode(42,[1,2])
-            ],
-            modifiers:[]
-        }),
-        file: ["test"],
-        line_no: 2,
-        context: 1
+        value: Code(
+            code test(r1:seq(?X)) -> (r2:seq(?X)){
+                opcode42,r1,r2;
+            }
+        ),
+        file:["test"],
+        line_no:2,
+        context:1
     }
 ]
 
@@ -106,35 +64,14 @@ code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) r
 
 [
     PTStatement{
-        value: Code(CodeBlock{
-            name: "test",
-            arguments: [
-                Register(CodeRegisterArgument{
-                    reg_id: 1,
-                    arg_types: [seq(?X)],
-                    checks: [length(Y)]
-                })
-            ],
-            results: [
-                Register(CodeRegisterArgument{
-                    reg_id: 2,
-                    arg_types: [seq(?X)],
-                    checks: [length(Y)]
-                }),
-                Register(CodeRegisterArgument{
-                    reg_id: 3,
-                    arg_types: [seq(boolean)],
-                    checks: [ref(Y)]
-                })
-            ],
-            commands: [
-                Opcode(42,[1,2])
-            ],
-            modifiers: []
-        }),
-        file: ["test"],
+        value:Code(
+            code test(r1 : seq(?X)length(Y))->(r2 : seq(?X)length(Y), r3 : seq(boolean)ref(Y)) {
+                opcode42,r1,r2;
+            }
+        ),
+        file:["test"],
         line_no: 2,
-        context: 1
+        context:1
     }
 ]
 
@@ -151,19 +88,13 @@ code test(r1: boolean) -> r2: seq(boolean) {
 >> parse strip
 
 [
-    PTStatement {
-        value: Code(CodeBlock{
-            name: "test",
-            arguments:[
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]})
-            ],
-            results:[
-                Register(CodeRegisterArgument{reg_id:2,arg_types:[seq(boolean)],checks:[]})
-            ],
-            commands:[Opcode(42,[1,2])],
-            modifiers:[]
-        }),
-        file: ["test"],
+    PTStatement{
+        value: Code(
+            code test(r1:boolean) -> (r2:seq(boolean)) {
+                opcode42,r1,r2;
+            }
+        ),
+        file:["test"],
         line_no: 2,
         context: 1
     }
@@ -191,48 +122,34 @@ code test_string(r1: boolean, "hello") {
 
 [
     PTStatement {
-        value: Code(CodeBlock{
-            name: "test_bool",
-            arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant(false)
-            ],
-            results: [],
-            commands: [Opcode(42,[1,2])],
-            modifiers: []
-        }),
-        file: ["test"],
-        line_no: 2,
-        context: 1
+        value: Code(
+            code test_bool(r1:boolean,false) {
+                opcode 42,r1,r2;
+            }
+        ),
+        file:["test"],
+        line_no:2,
+        context:1
     },
     PTStatement {
-        value: Code(CodeBlock{
-            name: "test_number",
-            arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant(42)
-            ],
-            results: [],
-            commands: [Opcode(42,[1,2])],
-            modifiers: []
-        }),
-        file: ["test"],
-        line_no: 6,
-        context: 1
+        value:Code(
+            code test_number(r1:boolean,42){
+                opcode42,r1,r2;
+            }
+        ),
+        file:["test"],
+        line_no:6,
+        context:1
     },
-    PTStatement {
-        value: Code(CodeBlock{name: "test_string",
-            arguments: [
-                Register(CodeRegisterArgument{reg_id:1,arg_types:[boolean],checks:[]}),
-                Constant("hello")
-            ],
-            results:[],
-            commands:[Opcode(42,[1,2])],
-            modifiers:[]
-        }),
-        file: ["test"],
-        line_no: 10,
-        context: 1
+    PTStatement{
+        value:Code(
+            code test_string(r1:boolean,"hello"){
+                opcode42,r1,r2;
+            }
+        ),
+        file:["test"],
+        line_no:10,
+        context:1
     }
 ]
 
@@ -263,16 +180,14 @@ code test_string() {
 >> parse strip
 
 [
-    PTStatement {
-        value: Code(CodeBlock{
-            name: "test_string",
-            arguments: [],
-            results: [],
-            commands: [Opcode(42,[])],
-            modifiers: []
-        }),
-        file: ["test"],
-        line_no: 2,
-        context: 1
+    PTStatement{
+        value:Code(
+            code test_string(){
+                opcode42;
+            }
+        ),
+        file:["test"],
+        line_no:2,
+        context:1
     }
 ]

@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
+use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
 use super::{unbundleaux::{Position, VarRegisters}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 type Bundles = HashMap<(Vec<usize>,Position),Vec<String>>;
@@ -12,7 +12,8 @@ struct Linearize<'a> {
     next_register: usize,
     var_registers: VarRegisters,
     bt_registers: HashMap<(usize,Option<String>),usize>,
-    call_stack: Vec<usize>
+    call_stack: Vec<usize>,
+    captures: HashMap<usize,Vec<(Variable,usize)>>
 }
 
 impl<'a> Linearize<'a> {
@@ -24,7 +25,8 @@ impl<'a> Linearize<'a> {
             var_registers: VarRegisters::new(),
             bt_registers: HashMap::new(),
             next_register: 0,
-            call_stack: vec![]
+            call_stack: vec![],
+            captures: HashMap::new(),
         }
     }
 
@@ -127,7 +129,7 @@ impl<'a> Linearize<'a> {
                             let func_args = self.caller_args(&func.args)?;
                             let defn = self.tree.get_function(func)?;
                             self.check_arg_match(defn,&func.args)?;
-                            let mut ret_regs = self.callee(&defn,&func_args)?;
+                            let mut ret_regs = self.callee(func.func_index,&defn,&func_args)?;
                             regs.append(&mut ret_regs);
                             self.call_stack.pop();
                         }
@@ -150,11 +152,23 @@ impl<'a> Linearize<'a> {
         Ok(regs)
     }
 
+    fn callee_captures(&mut self, index: usize) -> Result<(),String> {
+        if let Some(captures) = self.captures.get(&index).cloned() {
+            for (variable, reg) in captures {
+                let arg = self.anon_register();
+                self.add(LinearStatementValue::Copy(arg,reg));
+                self.var_registers.add(&variable,arg);
+            }
+        }
+        Ok(())
+    }
+
     // TODO type checking!
-    fn callee(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
+    fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
         self.callee_args(&defn.args,arg_regs)?;
         self.positions.push(defn.position.clone());
+        self.callee_captures(index)?;
         for stmt in &defn.block {
             self.statement(stmt)?;
         }
@@ -203,7 +217,7 @@ impl<'a> Linearize<'a> {
                             let func_args = self.caller_args(&func.args)?;
                             let defn = self.tree.get_function(func)?;
                             self.check_arg_match(defn,&func.args)?;
-                            let mut ret_regs = self.callee(&defn,&func_args)?;
+                            let mut ret_regs = self.callee(func.func_index,&defn,&func_args)?;
                             arg_regs.append(&mut ret_regs);
                             self.call_stack.pop();
                         }
@@ -267,7 +281,7 @@ impl<'a> Linearize<'a> {
                         self.add(LinearStatementValue::Copy(dst,*src.next().unwrap()));
                     }
                 },
-                OrBundleRepeater::Repeater(_) => todo!(),
+                OrBundleRepeater::Repeater(_) => { panic!("got repeater after elimination"); }
             };
         }
         Ok(())
@@ -275,15 +289,24 @@ impl<'a> Linearize<'a> {
 
     fn non_repeater_procedure(&mut self, proc: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         let arg_regs = self.caller_args(&proc.args)?;
-        if let Some(defn) = self.tree.get_procedure(proc)? {
-            /* normal procedure */
-            self.check_arg_match(defn,&proc.args)?;
-            self.check_ret_match(defn,&proc.rets)?;
-            let callee_rets = self.callee(defn,&arg_regs)?;
-            self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
-        } else {
-            /* assignment */
-            self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&arg_regs)?;
+        match self.tree.get_any(proc)? {
+            Some(BTTopDefn::FuncProc(defn)) => {
+                /* normal procedure */
+                self.check_arg_match(defn,&proc.args)?;
+                self.check_ret_match(defn,&proc.rets)?;
+                let callee_rets = self.callee(proc.proc_index.unwrap(),defn,&arg_regs)?;
+                self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
+            },
+            Some(BTTopDefn::Code(defn)) => {
+                /* code */
+                let callee_rets = (0..defn.ret_count()).map(|_| self.anon_register()).collect::<Vec<_>>();
+                self.add(LinearStatementValue::Code(proc.call_index,callee_rets.clone(),arg_regs,defn.world()));
+                self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
+            },
+            None => {
+                /* assignment */
+                self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&arg_regs)?;
+            }
         }
         Ok(())
     }
@@ -308,10 +331,34 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
+    fn define(&mut self, index: usize) -> Result<(),String> {
+        match self.tree.get_by_index(index)? {
+            BTTopDefn::FuncProc(defn) => {
+                let mut captures = vec![];                
+                for capture in &defn.captures {
+                    match capture {
+                        OrBundle::Normal(variable) => {
+                            let dst = self.anon_register();
+                            captures.push((variable.clone(),dst));
+                            let src = self.var_registers.get(variable)?;
+                            self.add(LinearStatementValue::Copy(dst,src));
+                        },
+                        OrBundle::Bundle(_) => todo!(),
+                    }
+                }
+                self.captures.insert(index,captures);
+            },
+            BTTopDefn::Code(_) => {}
+        }
+        Ok(())
+    }
+
     fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
         self.positions.push((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
-            BTStatementValue::Define(_) => { /*todo!()*/ },
+            BTStatementValue::Define(index) => {
+                self.define(*index)?;
+            },
             BTStatementValue::Declare(_) => {},
             BTStatementValue::Check(variable,check) => {
                 let register = self.var_registers.get(variable)?;

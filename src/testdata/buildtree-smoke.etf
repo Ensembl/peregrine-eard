@@ -16,113 +16,14 @@ world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...
 
 >> built strip skip-commas
 
-0: code
-            BTCodeDefinition {
-                blocks: [
-                    CodeBlock {
-                        name: "test",
-                        arguments: [
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 1,
-                                    arg_types: [seq(number),seq(string)],
-                                    checks: [length(X)]
-                                },
-                            ),
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 2,
-                                    arg_types: [boolean],
-                                    checks: [length(X...)]
-                                },
-                            ),
-                        ],
-                        results: [
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 3,
-                                    arg_types: [seq(boolean)],
-                                    checks: [ref(X)]
-                                },
-                            ),
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 5,
-                                    arg_types: [boolean],
-                                    checks: [],
-                                },
-                            ),
-                        ],
-                        commands: [
-                            Register(
-                                4,
-                            ),
-                            Opcode(
-                                44,
-                                [
-                                    1,
-                                    2,
-                                    3,
-                                    4,
-                                    5,
-                                ],
-                            ),
-                        ],
-                        modifiers: [
-                            World,
-                        ],
-                    },
-                    CodeBlock {
-                        name: "test",
-                        arguments: [
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 1,
-                                    arg_types: [seq(number),seq(string)],
-                                    checks: [length(X)]
-                                },
-                            ),
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 2,
-                                    arg_types: [boolean],
-                                    checks: [length(X...)]
-                                },
-                            ),
-                        ],
-                        results: [
-                            Register(
-                                CodeRegisterArgument {
-                                    reg_id: 3,
-                                    arg_types: [seq(boolean)],
-                                    checks: [ref(X)]
-                                },
-                            ),
-                            Repeat(
-                                1,
-                            ),
-                        ],
-                        commands: [
-                            Register(
-                                4,
-                            ),
-                            Opcode(
-                                45,
-                                [
-                                    1,
-                                    2,
-                                    3,
-                                    4,
-                                ],
-                            ),
-                        ],
-                        modifiers: [
-                            World,
-                        ],
-                    },
-                ],
-            }
-        
+0: world code test(r1 : seq(number)|seq(string) length(X), r2 : boolean length(X...)) -> (r3 : seq(boolean) ref(X), r5 : boolean){
+    register r4;
+    opcode 44,r1,r2,r3,r4,r5;
+}
+world code test(r1 : seq(number)|seq(string) length(X), r2: boolean length(X...)) -> (r3 : seq(boolean) ref(X),r1) {
+    register r4;
+    opcode 45,r1,r2,r3,r4;
+}
 
 >> test
 

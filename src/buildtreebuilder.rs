@@ -1,6 +1,5 @@
 use std::{sync::Arc, collections::BTreeMap};
-
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTCodeDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}, codeblocks::CodeDefinition};
 
 #[derive(Debug,Clone)]
 pub(super) enum DefName {
@@ -81,7 +80,7 @@ impl BuildContext {
                 self.define_funcproc(&ctx.name,ctx.to_funcproc(ret),true,bt,ctx.export)?
             }
         };
-        self.add_statement(bt,defn);
+        self.add_statement(bt,defn)?;
         Ok(())
     }
 
@@ -114,10 +113,11 @@ impl BuildContext {
         }
     }
 
-    pub(crate) fn lookup_proc(&self, name: &str) -> Result<usize,String> {
+    pub(crate) fn lookup_top(&self, name: &str) -> Result<usize,String> {
         match self.lookup(name) {
             Ok(DefName::Proc(x)) => Ok(x),
-            _ => Err(format!("cannot find procedure {}",name))
+            Ok(DefName::Code(x)) => Ok(x),
+            _ => Err(format!("cannot find procedure/code {}",name))
         }
     }
 
@@ -142,9 +142,7 @@ impl BuildContext {
     pub(crate) fn define_code(&mut self, block: &CodeBlock, bt: &mut BuildTree) -> Result<(),String> {
         let key = (Some(self.file_context),block.name.to_string());
         if !self.defnames.contains_key(&key) {
-            let id = bt.add_definition(BTDefinition::Code(BTCodeDefinition {
-                blocks: vec![]
-            }));
+            let id = bt.add_definition(BTDefinition::Code(CodeDefinition::new()));
             let name_id = DefName::Code(id);
             self.defnames.insert(key.clone(),name_id);
         }
@@ -173,12 +171,13 @@ impl BuildContext {
         Ok(())
     }
 
-    fn is_procedure(&self, x: &OrBundle<PTExpression>, bt: &mut BuildTree) -> Result<bool,String> {
+    fn is_top(&self, x: &OrBundle<PTExpression>, bt: &mut BuildTree) -> Result<bool,String> {
         Ok(match x {
             OrBundle::Normal(PTExpression::Call(c)) => {
                 match self.lookup(&c.name)? {
                     DefName::Proc(_) => true,
-                    _ => false
+                    DefName::Code(_) => true,
+                    DefName::Func(_) => false
                 }
             },
             _ => false
@@ -231,10 +230,10 @@ impl BuildContext {
             regs.push(reg);
         }
         /* Step 2: evaluate expressions and put into temporaries */
-        if xx.len() == 1 && self.is_procedure(&xx[0],bt)? {
+        if xx.len() == 1 && self.is_top(&xx[0],bt)? {
             match &xx[0] {
                 OrBundle::Normal(PTExpression::Call(call)) => {
-                    self.build_proc(Some(regs.clone()),bt,call)?;
+                    self.build_top(Some(regs.clone()),bt,call)?;
                 },
                 _ => {
                     return Err(format!("let tuples differ in length: {} lvalues but {} rvalues",vv.len(),xx.len()));
@@ -300,8 +299,8 @@ impl BuildContext {
         })
     }
 
-    fn build_proc(&mut self, rets: Option<Vec<OrBundleRepeater<BTLValue>>>, bt: &mut BuildTree, call: &PTCall) -> Result<(),String> {
-        let index = self.lookup_proc(&call.name)?;
+    fn build_top(&mut self, rets: Option<Vec<OrBundleRepeater<BTLValue>>>, bt: &mut BuildTree, call: &PTCall) -> Result<(),String> {
+        let index = self.lookup_top(&call.name)?;
         let args = call.args.iter().map(|a| self.build_call(bt,a.clone())).collect::<Result<_,_>>()?;
         let stmt = self.make_statement_value(Some(index),args,rets);
         self.add_statement(bt,stmt)?;
@@ -342,7 +341,7 @@ impl BuildContext {
                 self.add_statement(bt,stmt)?;
                 for item in items {
                     let built = self.build_expression(bt,item)?;
-                    let stmt = self.make_statement_value(Some(self.lookup_proc("__operator_push")?), vec![
+                    let stmt = self.make_statement_value(Some(self.lookup_top("__operator_push")?), vec![
                         OrBundleRepeater::Normal(BTExpression::RegisterValue(reg,BTRegisterType::Normal)),
                         OrBundleRepeater::Normal(built)
                     ], Some(vec![OrBundleRepeater::Normal(BTLValue::Register(reg,BTRegisterType::Normal))]));
@@ -412,7 +411,6 @@ impl BuildContext {
             PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; }
             PTStatementValue::Code(c) => { self.define_code(c,bt)?; },
 
-            // XXX declare after eval
             PTStatementValue::LetStatement(vv,xx) => {
                 self.make_statement(vv,xx,true,bt)?;
             },
@@ -431,8 +429,8 @@ impl BuildContext {
                         let stmt = self.make_statement_value(None,vec![ret],None);
                         self.add_statement(bt,stmt)?;
                     },
-                    DefName::Proc(_) => { self.build_proc(None,bt,c)? },
-                    DefName::Code(_) => todo!(),
+                    DefName::Proc(_) => { self.build_top(None,bt,c)? },
+                    DefName::Code(_) => { self.build_top(None,bt,c)? },
                 }
             },
         }

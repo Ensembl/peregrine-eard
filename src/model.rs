@@ -1,5 +1,10 @@
 use std::{fmt::{self, Display}, sync::Arc};
 
+fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
+    input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
+
+}
+
 #[derive(Clone)]
 pub enum Constant {
     Number(f64),
@@ -19,28 +24,68 @@ impl fmt::Debug for Constant {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
     World
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for CodeModifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CodeModifier::World => write!(f,"world")?
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
 pub struct CodeRegisterArgument {
     pub reg_id: usize,
     pub arg_types: Vec<TypeSpec>,
     pub checks: Vec<Check>
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for CodeRegisterArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"r{}",self.reg_id)?;
+        if self.arg_types.len() > 0 || self.checks.len() > 0 {
+            write!(f," : {} {}",
+                sepfmt(&mut self.arg_types.iter(),"|",""),
+                sepfmt(&mut self.checks.iter()," ","")
+            )?;
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
 pub enum CodeArgument {
     Register(CodeRegisterArgument),
     Constant(Constant)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for CodeArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Register(r) => write!(f,"{:?}",r),
+            Self::Constant(c) => write!(f,"{:?}",c),
+        }
+    }
+}
+
+#[derive(Clone)]
 pub enum CodeReturn {
     Register(CodeRegisterArgument),
     Repeat(usize)
+}
+
+impl fmt::Debug for CodeReturn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Register(r) => write!(f,"{:?}",r),
+            Self::Repeat(r) => write!(f,"r{}",*r),
+        }
+    }
 }
 
 #[derive(Debug,Clone,PartialEq,Eq)]
@@ -262,13 +307,26 @@ impl fmt::Debug for TypedArgument {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum CodeCommand {
     Opcode(usize,Vec<usize>),
     Register(usize)
 }
 
-#[derive(Debug,Clone)]
+impl fmt::Debug for CodeCommand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Opcode(opcode,args) => write!(f,"opcode {}{}{};",
+                *opcode,
+                if args.len() > 0 { ", " } else { "" },
+                sepfmt(&mut args.iter(),", ","r")
+            ),
+            Self::Register(r) => write!(f,"register r{};",*r)
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct CodeBlock {
     pub name: String,
     pub arguments: Vec<CodeArgument>,
@@ -277,19 +335,42 @@ pub struct CodeBlock {
     pub modifiers: Vec<CodeModifier>
 }
 
+impl fmt::Debug for CodeBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{}",sepfmt(&mut self.modifiers.iter()," ",""))?;
+        write!(f," code {}({})",
+            self.name,
+            sepfmt(&mut self.arguments.iter(),", ","")
+        )?;
+        if self.results.len() > 0 {
+            write!(f," -> ({}) ",
+                sepfmt(&mut self.results.iter(),", ","")
+            )?;
+        }
+        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
+        Ok(())
+    }
+}
+
 #[derive(Clone)]
 pub enum LinearStatementValue {
     Check(usize,Check),
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
+    Code(usize,Vec<usize>,Vec<usize>,bool) // name,rets,args
 }
 
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Check(v, c) => write!(f,"{:?} <check> {:?}",v,c),
-            Self::Constant(v,c) => write!(f,"{:?} <constant> {:?}",v,c),
-            Self::Copy(to,from) => write!(f,"{:?} <copy-from> {:?}",*to,*from),
+            Self::Check(v, c) => write!(f,"r{:?} <check> {:?}",v,c),
+            Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
+            Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
+            Self::Code(name,rets,args,world) => {
+                let world = if *world { "w" } else { "" };
+                write!(f,"{} ({}){} {}",
+                    sepfmt(&mut rets.iter()," ","r"),name,world,sepfmt(&mut args.iter()," ","r"))
+            }
         }
     }
 }

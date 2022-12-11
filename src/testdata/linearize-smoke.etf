@@ -15,11 +15,11 @@ test:2 x <check> length(tr)
 
 >> linearize strip
 
-test:2 1 <constant> 0
-test:2 2 <copy-from> 1
-test:2 3 <copy-from> 2
-test:2 4 <copy-from> 3
-test:2 4 <check> length(tr)
+test:2 r1 <constant> 0
+test:2 r2 <copy-from> r1
+test:2 r3 <copy-from> r2
+test:2 r4 <copy-from> r3
+test:2 r4 <check> length(tr)
 
 >> test
 
@@ -42,15 +42,15 @@ test:3 (y) <- #4 r2
 
 >> linearize strip
 
-test:2 1 <constant> 0
-test:2 2 <copy-from> 1
-test:2 3 <copy-from> 2
-test:2 4 <copy-from> 3
-test:2 4 <check> length(tr)
-test:3 5 <copy-from> 4
-test:3 6 <copy-from> 5
-test:3 7 <copy-from> 6
-test:3 8 <copy-from> 7
+test:2 r1 <constant> 0
+test:2 r2 <copy-from> r1
+test:2 r3 <copy-from> r2
+test:2 r4 <copy-from> r3
+test:2 r4 <check> length(tr)
+test:3 r5 <copy-from> r4
+test:3 r6 <copy-from> r5
+test:3 r7 <copy-from> r6
+test:3 r8 <copy-from> r7
 
 >> test
 
@@ -88,40 +88,40 @@ test:7 (y) <- #12 r6
 
 >> linearize strip
 
-test:2 1 <constant> 1
-test:2 2 <copy-from> 1
-test:2 3 <copy-from> 2
-test:2 4 <copy-from> 3
+test:2 r1 <constant> 1
+test:2 r2 <copy-from> r1
+test:2 r3 <copy-from> r2
+test:2 r4 <copy-from> r3
 
-test:3 5 <constant> 2
-test:3 6 <copy-from> 5
-test:3 7 <copy-from> 6
-test:3 8 <copy-from> 7
+test:3 r5 <constant> 2
+test:3 r6 <copy-from> r5
+test:3 r7 <copy-from> r6
+test:3 r8 <copy-from> r7
 
-test:4 9 <constant> 3
-test:4 10 <copy-from> 9
-test:4 11 <copy-from> 10
-test:4 12 <copy-from> 11
+test:4 r9 <constant> 3
+test:4 r10 <copy-from> r9
+test:4 r11 <copy-from> r10
+test:4 r12 <copy-from> r11
 
-test:5 13 <copy-from> 4
-test:5 14 <copy-from> 8
-test:5 15 <copy-from> 13
-test:5 16 <copy-from> 14
+test:5 r13 <copy-from> r4
+test:5 r14 <copy-from> r8
+test:5 r15 <copy-from> r13
+test:5 r16 <copy-from> r14
 
-test:5 17 <copy-from> 15
-test:5 18 <copy-from> 16
-test:5 19 <copy-from> 17
-test:5 20 <copy-from> 18
+test:5 r17 <copy-from> r15
+test:5 r18 <copy-from> r16
+test:5 r19 <copy-from> r17
+test:5 r20 <copy-from> r18
 
-test:6 21 <copy-from> 19
-test:6 22 <copy-from> 21
-test:6 23 <copy-from> 22
-test:6 24 <copy-from> 23
+test:6 r21 <copy-from> r19
+test:6 r22 <copy-from> r21
+test:6 r23 <copy-from> r22
+test:6 r24 <copy-from> r23
 
-test:7 25 <copy-from> 20
-test:7 26 <copy-from> 25
-test:7 27 <copy-from> 26
-test:7 28 <copy-from> 27
+test:7 r25 <copy-from> r20
+test:7 r26 <copy-from> r25
+test:7 r27 <copy-from> r26
+test:7 r28 <copy-from> r27
 
 >> test
 
@@ -149,16 +149,16 @@ test:5 (z) <- #4 r2
 
 >> linearize strip
 
-test:4 1 <constant> 0
-test:4 2 <copy-from> 1
-test:4 3 <copy-from> 2
-test:4 4 <copy-from> 3
+test:4 r1 <constant> 0
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
 
-test:5 5 <constant> 1
-test:5 6 <copy-from> 5
-test:5 7 <copy-from> 6
-test:5 8 <copy-from> 7
-test:5 9 <copy-from> 8
+test:5 r5 <constant> 1
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
+test:5 r8 <copy-from> r7
+test:5 r9 <copy-from> r8
 
 >> test
 
@@ -194,26 +194,26 @@ test:7 (a) <- #8 r4
 
 >> linearize strip
 
-test:4 1 <constant> 0
-test:4 2 <copy-from> 1
-test:4 3 <copy-from> 2
-test:4 4 <copy-from> 3
+test:4 r1 <constant> 0
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
 
-test:5 5 <constant> 1
-test:5 6 <copy-from> 5
-test:5 7 <copy-from> 6
-test:5 8 <copy-from> 7
+test:5 r5 <constant> 1
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
+test:5 r8 <copy-from> r7
 
-test:6 9 <constant> 2
-test:6 10 <copy-from> 9
-test:6 11 <copy-from> 10
-test:6 12 <copy-from> 11
+test:6 r9 <constant> 2
+test:6 r10 <copy-from> r9
+test:6 r11 <copy-from> r10
+test:6 r12 <copy-from> r11
 
-test:7 13 <copy-from> 8
-test:7 14 <copy-from> 13
-test:7 15 <copy-from> 14
-test:7 16 <copy-from> 15
-test:7 17 <copy-from> 16
+test:7 r13 <copy-from> r8
+test:7 r14 <copy-from> r13
+test:7 r15 <copy-from> r14
+test:7 r16 <copy-from> r15
+test:7 r17 <copy-from> r16
 
 >> test
 
@@ -256,37 +256,37 @@ test:8 (a) <- #12 r6
 
 >> linearize strip
 
-test:4 1 <constant> 0
-test:4 2 <copy-from> 1
-test:4 3 <copy-from> 2
-test:4 4 <copy-from> 3
+test:4 r1 <constant> 0
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
 
-test:5 5 <constant> 1
-test:5 6 <copy-from> 5
-test:5 7 <copy-from> 6
-test:5 8 <copy-from> 7
+test:5 r5 <constant> 1
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
+test:5 r8 <copy-from> r7
 
-test:6 9 <constant> 2
-test:6 10 <copy-from> 9
-test:6 11 <copy-from> 10
-test:6 12 <copy-from> 11
+test:6 r9 <constant> 2
+test:6 r10 <copy-from> r9
+test:6 r11 <copy-from> r10
+test:6 r12 <copy-from> r11
 
-test:7 13 <copy-from> 8
-test:7 14 <copy-from> 13
+test:7 r13 <copy-from> r8
+test:7 r14 <copy-from> r13
 
-test:2 15 <copy-from> 14
-test:2 16 <copy-from> 15
-test:2 17 <copy-from> 16
-test:2 18 <copy-from> 17
+test:2 r15 <copy-from> r14
+test:2 r16 <copy-from> r15
+test:2 r17 <copy-from> r16
+test:2 r18 <copy-from> r17
 
-test:7 19 <copy-from> 18
-test:7 20 <copy-from> 19
-test:7 21 <copy-from> 20
+test:7 r19 <copy-from> r18
+test:7 r20 <copy-from> r19
+test:7 r21 <copy-from> r20
 
-test:8 22 <copy-from> 21
-test:8 23 <copy-from> 22
-test:8 24 <copy-from> 23
-test:8 25 <copy-from> 24
+test:8 r22 <copy-from> r21
+test:8 r23 <copy-from> r22
+test:8 r24 <copy-from> r23
+test:8 r25 <copy-from> r24
 
 >> test 
 
@@ -338,40 +338,40 @@ test:9 (a) <- #15 r7
 
 >> linearize strip
 
-test:5 1 <constant> 0
-test:5 2 <copy-from> 1
-test:5 3 <copy-from> 2
-test:5 4 <copy-from> 3
+test:5 r1 <constant> 0
+test:5 r2 <copy-from> r1
+test:5 r3 <copy-from> r2
+test:5 r4 <copy-from> r3
 
-test:6 5 <constant> 1
-test:6 6 <copy-from> 5
-test:6 7 <copy-from> 6
-test:6 8 <copy-from> 7
+test:6 r5 <constant> 1
+test:6 r6 <copy-from> r5
+test:6 r7 <copy-from> r6
+test:6 r8 <copy-from> r7
 
-test:7 9 <constant> 2
-test:7 10 <copy-from> 9
-test:7 11 <copy-from> 10
-test:7 12 <copy-from> 11
+test:7 r9 <constant> 2
+test:7 r10 <copy-from> r9
+test:7 r11 <copy-from> r10
+test:7 r12 <copy-from> r11
 
-test:8 13 <copy-from> 8
-test:8 14 <copy-from> 13
-test:3 15 <copy-from> 14
-test:3 16 <copy-from> 15
-test:3 17 <copy-from> 16
-test:3 18 <copy-from> 17
-test:3 19 <copy-from> 18
-test:3 20 <copy-from> 19
-test:2 21 <copy-from> 20
-test:2 22 <copy-from> 21
-test:2 23 <copy-from> 22
-test:2 24 <copy-from> 23
-test:8 25 <copy-from> 24
-test:8 26 <copy-from> 25
-test:8 27 <copy-from> 26
-test:9 28 <copy-from> 27
-test:9 29 <copy-from> 28
-test:9 30 <copy-from> 29
-test:9 31 <copy-from> 30
+test:8 r13 <copy-from> r8
+test:8 r14 <copy-from> r13
+test:3 r15 <copy-from> r14
+test:3 r16 <copy-from> r15
+test:3 r17 <copy-from> r16
+test:3 r18 <copy-from> r17
+test:3 r19 <copy-from> r18
+test:3 r20 <copy-from> r19
+test:2 r21 <copy-from> r20
+test:2 r22 <copy-from> r21
+test:2 r23 <copy-from> r22
+test:2 r24 <copy-from> r23
+test:8 r25 <copy-from> r24
+test:8 r26 <copy-from> r25
+test:8 r27 <copy-from> r26
+test:9 r28 <copy-from> r27
+test:9 r29 <copy-from> r28
+test:9 r30 <copy-from> r29
+test:9 r31 <copy-from> r30
 
 >> test
 
@@ -423,40 +423,40 @@ test:9 (a) <- #15 r7
 
 >> linearize strip
 
-test:5 1 <constant> 0
-test:5 2 <copy-from> 1
-test:5 3 <copy-from> 2
-test:5 4 <copy-from> 3
+test:5 r1 <constant> 0
+test:5 r2 <copy-from> r1
+test:5 r3 <copy-from> r2
+test:5 r4 <copy-from> r3
 
-test:6 5 <constant> 1
-test:6 6 <copy-from> 5
-test:6 7 <copy-from> 6
-test:6 8 <copy-from> 7
+test:6 r5 <constant> 1
+test:6 r6 <copy-from> r5
+test:6 r7 <copy-from> r6
+test:6 r8 <copy-from> r7
 
-test:7 9 <constant> 2
-test:7 10 <copy-from> 9
-test:7 11 <copy-from> 10
-test:7 12 <copy-from> 11
+test:7 r9 <constant> 2
+test:7 r10 <copy-from> r9
+test:7 r11 <copy-from> r10
+test:7 r12 <copy-from> r11
 
-test:8 13 <copy-from> 12
-test:8 14 <copy-from> 13
-test:2 15 <copy-from> 14
-test:2 16 <copy-from> 15
-test:2 17 <copy-from> 16
-test:2 18 <copy-from> 17
-test:8 19 <copy-from> 18
-test:3 20 <copy-from> 19
-test:3 21 <copy-from> 20
-test:3 22 <copy-from> 21
-test:3 23 <copy-from> 22
-test:8 24 <copy-from> 23
-test:8 25 <copy-from> 24
-test:8 26 <copy-from> 25
+test:8 r13 <copy-from> r12
+test:8 r14 <copy-from> r13
+test:2 r15 <copy-from> r14
+test:2 r16 <copy-from> r15
+test:2 r17 <copy-from> r16
+test:2 r18 <copy-from> r17
+test:8 r19 <copy-from> r18
+test:3 r20 <copy-from> r19
+test:3 r21 <copy-from> r20
+test:3 r22 <copy-from> r21
+test:3 r23 <copy-from> r22
+test:8 r24 <copy-from> r23
+test:8 r25 <copy-from> r24
+test:8 r26 <copy-from> r25
 
-test:9 27 <copy-from> 26
-test:9 28 <copy-from> 27
-test:9 29 <copy-from> 28
-test:9 30 <copy-from> 29
+test:9 r27 <copy-from> r26
+test:9 r28 <copy-from> r27
+test:9 r29 <copy-from> r28
+test:9 r30 <copy-from> r29
 
 >> test
 
@@ -509,43 +509,43 @@ test:10 (n) <- #14 r6
 
 >> linearize strip
 
-test:5 1 <constant> 1
-test:5 2 <copy-from> 1
-test:5 3 <copy-from> 2
-test:5 4 <copy-from> 3
+test:5 r1 <constant> 1
+test:5 r2 <copy-from> r1
+test:5 r3 <copy-from> r2
+test:5 r4 <copy-from> r3
 
-test:6 5 <constant> 2
-test:6 6 <copy-from> 5
-test:6 7 <copy-from> 6
-test:6 8 <copy-from> 7
+test:6 r5 <constant> 2
+test:6 r6 <copy-from> r5
+test:6 r7 <copy-from> r6
+test:6 r8 <copy-from> r7
 
-test:7 9 <constant> 3
-test:7 10 <copy-from> 9
-test:7 11 <copy-from> 10
-test:7 12 <copy-from> 11
+test:7 r9 <constant> 3
+test:7 r10 <copy-from> r9
+test:7 r11 <copy-from> r10
+test:7 r12 <copy-from> r11
 
-test:8 13 <constant> 4
-test:8 14 <copy-from> 13
-test:8 15 <copy-from> 14
-test:8 16 <copy-from> 15
+test:8 r13 <constant> 4
+test:8 r14 <copy-from> r13
+test:8 r15 <copy-from> r14
+test:8 r16 <copy-from> r15
 
-test:9 17 <copy-from> 4
-test:9 18 <copy-from> 16
-test:9 19 <copy-from> 17
-test:9 20 <copy-from> 18
-test:9 21 <copy-from> 19
+test:9 r17 <copy-from> r4
+test:9 r18 <copy-from> r16
+test:9 r19 <copy-from> r17
+test:9 r20 <copy-from> r18
+test:9 r21 <copy-from> r19
 
-test:9 22 <copy-from> 8
-test:9 23 <copy-from> 16
-test:9 24 <copy-from> 22
-test:9 25 <copy-from> 23
-test:9 26 <copy-from> 24
+test:9 r22 <copy-from> r8
+test:9 r23 <copy-from> r16
+test:9 r24 <copy-from> r22
+test:9 r25 <copy-from> r23
+test:9 r26 <copy-from> r24
 
-test:10 27 <copy-from> 21
-test:10 28 <copy-from> 27
-test:10 29 <copy-from> 26
-test:10 30 <copy-from> 29
-test:10 31 <copy-from> 28
-test:10 32 <copy-from> 31
-test:10 33 <copy-from> 30
-test:10 34 <copy-from> 33
+test:10 r27 <copy-from> r21
+test:10 r28 <copy-from> r27
+test:10 r29 <copy-from> r26
+test:10 r30 <copy-from> r29
+test:10 r31 <copy-from> r28
+test:10 r32 <copy-from> r31
+test:10 r33 <copy-from> r30
+test:10 r34 <copy-from> r33

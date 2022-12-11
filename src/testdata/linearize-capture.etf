@@ -1,0 +1,61 @@
+>> test
+
+capture 1
+
+>> input
+
+let a = 1;
+let b = 2;
+
+procedure p() {
+    capture a,b;
+
+    (a,b)
+}
+
+let (x,y) = p();
+
+>> built strip
+
+0:proc () {
+  capture a
+  capture b
+  (a,b)
+}
+
+test:2 (r1) <- #1 1
+test:2 let a
+test:2 (a) <- #2 r1
+test:3 (r2) <- #3 2
+test:3 let b
+test:3 (b) <- #4 r2
+test:5 define 0
+test:11 (r3 r4) <- (0#5)
+test:11 let x
+test:11 let y
+test:11 (x) <- #6 r3
+test:11 (y) <- #7 r4
+
+>> linearize strip
+
+test:2 r1 <constant> 1
+test:2 r2 <copy-from> r1
+test:2 r3 <copy-from> r2
+test:2 r4 <copy-from> r3
+
+test:3 r5 <constant> 2
+test:3 r6 <copy-from> r5
+test:3 r7 <copy-from> r6
+test:3 r8 <copy-from> r7
+
+test:5 r9 <copy-from> r4
+test:5 r10 <copy-from> r8
+test:5 r11 <copy-from> r9
+test:5 r12 <copy-from> r10
+
+test:11 r13 <copy-from> r11
+test:11 r14 <copy-from> r12
+test:11 r15 <copy-from> r13
+test:11 r16 <copy-from> r15
+test:11 r17 <copy-from> r14
+test:11 r18 <copy-from> r17

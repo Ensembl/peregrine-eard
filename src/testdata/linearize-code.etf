@@ -1,0 +1,143 @@
+>> test
+
+code smoke 1
+
+>> input
+
+code __code_infseq(r1: ?X) -> r2: seq(?X) {}
+code __code_finseq() -> r1: seq(?X) {}
+code __code_push(r1: seq(?X), r2: ?X) -> r3: seq(?X) {}
+
+function __operator_infseq(x) { let y = __code_infseq(x); y }
+function __operator_finseq() { let y = __code_finseq(); y }
+procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean) -> (r3: seq(boolean) ref(?X), r1) {
+    register r4;
+    opcode 45, r1, r2, r3, r4;
+}
+
+world code test(r1: seq(number)|seq(string) length(?X), 0) -> (r3: seq(boolean) ref(?X), r1) {
+    register r4;
+    opcode 46, r1, r2, r3, r4;
+}
+
+let y = [1,2,3];
+let x = test(y,true);
+
+>> built strip
+
+0: code __code_infseq(r1 : ?X ) -> (r2 : seq(?X) )  {
+
+}
+
+
+
+1: code __code_finseq() -> (r1 : seq(?X) )  {
+
+}
+
+
+
+2: code __code_push(r1 : seq(?X) , r2 : ?X ) -> (r3 : seq(?X) )  {
+
+}
+
+
+
+3:func (x) {
+  test:6 (r1) <- (0#1 x)
+  test:6 let y
+  test:6 (y) <- #2 r1
+  (y)
+}
+
+4:func () {
+  test:7 (r2) <- (1#3)
+  test:7 let y
+  test:7 (y) <- #4 r2
+  (y)
+}
+
+5:proc (x,y) {
+  test:8 (r3) <- (2#5 x y)
+  test:8 let y
+  test:8 (y) <- #6 r3
+  (y)
+}
+
+6:world code test(r1 : seq(number)|seq(string) length(X), r2 : boolean ) -> (r3 : seq(boolean) ref(X), r1)  {
+  register r4;
+  opcode 45, r1, r2, r3, r4;
+}
+
+
+world code test(r1 : seq(number)|seq(string) length(X), 0) -> (r3 : seq(boolean) ref(X), r1)  {
+  register r4;
+  opcode 46, r1, r2, r3, r4;
+}
+
+test:6 define 3
+test:7 define 4
+test:8 define 5
+test:20 (r5) <- (4#7)
+test:20 (r5) <- (5#8 r5 1)
+test:20 (r5) <- (5#9 r5 2)
+test:20 (r5) <- (5#10 r5 3)
+test:20 (r4) <- #11 r5
+test:20 let y
+test:20 (y) <- #12 r4
+test:21 (r6) <- (6#13 y true)
+test:21 let x
+test:21 (x) <- #14 r6
+
+>> linearize strip
+
+test:7 r1 (3) 
+test:7 r2 <copy-from> r1
+test:7 r3 <copy-from> r2
+test:7 r4 <copy-from> r3
+test:20 r5 <copy-from> r4
+test:20 r6 <copy-from> r5
+test:20 r7 <constant> 1
+test:20 r8 <copy-from> r6
+test:20 r9 <copy-from> r7
+test:8 r10 <copy-from> r8
+test:8 r11 <copy-from> r9
+test:8 r12 (5) r10 r11
+test:8 r13 <copy-from> r12
+test:8 r14 <copy-from> r13
+test:8 r15 <copy-from> r14
+test:20 r5 <copy-from> r15
+test:20 r16 <copy-from> r5
+test:20 r17 <constant> 2
+test:20 r18 <copy-from> r16
+test:20 r19 <copy-from> r17
+test:8 r20 <copy-from> r18
+test:8 r21 <copy-from> r19
+test:8 r22 (5) r20 r21
+test:8 r13 <copy-from> r22
+test:8 r23 <copy-from> r13
+test:8 r24 <copy-from> r23
+test:20 r5 <copy-from> r24
+test:20 r25 <copy-from> r5
+test:20 r26 <constant> 3
+test:20 r27 <copy-from> r25
+test:20 r28 <copy-from> r26
+test:8 r29 <copy-from> r27
+test:8 r30 <copy-from> r28
+test:8 r31 (5) r29 r30
+test:8 r13 <copy-from> r31
+test:8 r32 <copy-from> r13
+test:8 r33 <copy-from> r32
+test:20 r5 <copy-from> r33
+test:20 r34 <copy-from> r5
+test:20 r35 <copy-from> r34
+test:20 r36 <copy-from> r35
+test:20 r37 <copy-from> r36
+test:21 r38 <copy-from> r37
+test:21 r39 <constant> true
+test:21 r40 r41 (13)w r38 r39
+test:21 r42 <copy-from> r40
+test:21 r43 <copy-from> r42
+test:21 r44 <copy-from> r43

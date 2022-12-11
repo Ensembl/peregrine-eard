@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashSet, HashMap, BTreeMap};
 
 use crate::model::Variable;
 
@@ -92,14 +92,29 @@ pub(crate) enum Position {
     Repeater
 }
 
-pub(super) struct Transits {
-    transits: HashMap<(Vec<usize>,Position),HashSet<String>>,
-    call_stack: Vec<usize>
+pub(crate) struct Transits {
+    transits: HashMap<(Vec<usize>,Position),Vec<String>>,
 }
 
 impl Transits {
-    pub(super) fn new() -> Transits {
-        Transits {
+    pub(crate) fn keys(&self) -> Vec<(Vec<usize>,Position)> {
+        self.transits.keys().cloned().collect::<Vec<_>>()
+    }
+
+    pub(crate) fn get(&self, stack: &[usize], position: &Position) -> Result<&[String],String> {
+        let key = (stack.to_vec(),position.clone());
+        self.transits.get(&key).map(|x| x.as_slice()).ok_or_else(|| format!("missing bundle"))
+    }
+}
+
+pub(crate) struct TransitsBuilder {
+    transits: HashMap<(Vec<usize>,Position),HashSet<String>>,
+    pub(crate) call_stack: Vec<usize> // XXX
+}
+
+impl TransitsBuilder {
+    pub(super) fn new() -> TransitsBuilder {
+        TransitsBuilder {
             transits: HashMap::new(),
             call_stack: vec![]
         }
@@ -117,40 +132,46 @@ impl Transits {
         self.call_stack.pop();
     }
 
-    pub(super) fn take(mut self) -> HashMap<(Vec<usize>,Position),Vec<String>> {
-        self.transits.drain().map(|(k,mut v)|  {
+    pub(super) fn build(mut self) -> Transits {
+        let transits = self.transits.drain().map(|(k,mut v)|  {
             let mut out = v.drain().collect::<Vec<_>>();
             out.sort(); // important to be sorted so as stable, as sequence is used in linearization
             (k,out)
-        }).collect::<HashMap<_,_>>()
+        }).collect::<HashMap<_,_>>();
+        Transits { transits }
     }
 }
 
+#[derive(Debug)]
 struct VarRegisterLevel {
-    regs: HashMap<Variable,usize>,
-    prefixes: HashSet<String>
+    regs: BTreeMap<Option<String>,BTreeMap<String,usize>>,
 }
 
 impl VarRegisterLevel {
     fn new() -> VarRegisterLevel {
-        VarRegisterLevel { regs: HashMap::new(), prefixes: HashSet::new() }
+        VarRegisterLevel { regs: BTreeMap::new() }
     }
 
     fn add(&mut self, variable: &Variable, reg: usize) {
-        self.regs.insert(variable.clone(),reg);
-        if let Some(prefix) = &variable.prefix {
-            self.prefixes.insert(prefix.to_string());
-        }
+        self.regs.entry(variable.prefix.clone())
+            .or_insert_with(|| BTreeMap::new())
+            .insert(variable.name.clone(),reg);
     }
 
     fn get(&self, variable: &Variable) -> Result<usize,String> {
-//        self.regs.get(variable).cloned().ok_or_else(|| format!("unknown variable '{}'",variable))
-        Ok(self.regs.get(variable).cloned().expect(&format!("unknown variable '{}'",variable)))
+        self.regs.get(&variable.prefix)
+            .and_then(|x| x.get(&variable.name).cloned())
+            .ok_or_else(|| format!("unknown variable '{}'",variable))
+    }
 
+    fn all_prefix(&self, prefix: &str) -> Vec<String> {
+        self.regs.get(&Some(prefix.to_string()))
+            .map(|x| x.keys().cloned().collect::<Vec<_>>())
+            .unwrap_or_else(|| vec![])
     }
 
     fn check_used(&self, prefix: &str) -> bool {
-        self.prefixes.contains(prefix)
+        self.regs.contains_key(&Some(prefix.to_string()))
     }
 }
 
@@ -177,6 +198,10 @@ impl VarRegisters {
         self.regs.last().expect("empty name stack: should be impossible")
     }
 
+    fn bottom(&self) -> &VarRegisterLevel {
+        self.regs.first().expect("empty name stack: should be impossible")
+    }
+
     fn top_mut(&mut self) -> &mut VarRegisterLevel {
         self.regs.last_mut().expect("empty name stack: should be impossible")
     }
@@ -187,6 +212,14 @@ impl VarRegisters {
 
     pub(super) fn get(&self, variable: &Variable) -> Result<usize,String> {
         self.top().get(variable)
+    }
+
+    pub(super) fn get_outer(&self, variable: &Variable) -> Result<usize,String> {
+        self.bottom().get(variable)
+    }
+
+    pub(super) fn outer_all_prefix(&self, prefix: &str) -> Vec<String> {
+        self.bottom().all_prefix(prefix)
     }
 
     pub(super) fn check_used(&self, prefix: &str) -> bool {

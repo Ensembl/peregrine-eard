@@ -53,8 +53,8 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
-use super::repeater::find_repeater_arguments;
+use crate::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn, BTFuncProcDefinition }, model::{OrBundleRepeater, Variable, OrBundle, TypedArgument}, parsetree::at, unbundle::unbundleaux::{BundleNamespace, Transits, Position}};
+use super::{repeater::find_repeater_arguments, unbundleaux::TransitsBuilder};
 
 // TODO global bundles
 
@@ -86,7 +86,7 @@ struct BuildUnbundle<'a> {
     positions: Vec<(Arc<Vec<String>>,usize)>,
     namespace: BundleNamespace,
     register_bundles: HashMap<usize,HashSet<String>>,
-    transits: Transits
+    transits: TransitsBuilder
 }
 
 impl<'a> BuildUnbundle<'a> {
@@ -97,7 +97,7 @@ impl<'a> BuildUnbundle<'a> {
             positions: vec![],
             namespace: BundleNamespace::new(),
             register_bundles: HashMap::new(),
-            transits: Transits::new()
+            transits: TransitsBuilder::new()
         }
     }
 
@@ -322,13 +322,6 @@ impl<'a> BuildUnbundle<'a> {
         Ok(())
     }
 
-    fn code(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
-        for arg in &stmt.args {
-            self.expr(&arg.no_repeater()?,None)?;
-        }
-        Ok(())
-    }
-
     fn procedure(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         self.trace(&format!("  procedure = {:?}",stmt));
         self.check_for_repeater(stmt)?;
@@ -338,7 +331,6 @@ impl<'a> BuildUnbundle<'a> {
         self.trace(&format!("    ret bundles={:?}",all_sorted(&caller_return_bundles)));
         /* Enter procedure */
         self.transits.push(stmt.call_index);
-        eprintln!("{:?}",stmt);
         match self.tree.get_any(stmt)? {
             Some(BTTopDefn::FuncProc(defn)) => {
                 self.trace("    push namespace");
@@ -354,13 +346,15 @@ impl<'a> BuildUnbundle<'a> {
                 self.trace(&format!("    arg bundles = {:?}",all_sorted(&expected_args)));
                 self.trace("    pop namespace");
                 self.namespace.pop();
-                self.args(&expected_args,&stmt.args)?;    
+                self.args(&expected_args,&stmt.args)?;
             },
             Some(BTTopDefn::Code(_)) => {
                 if caller_return_bundles.iter().any(|x| x.is_some()) {
                     return Err(format!("code call cannot return bundle"));
                 }
-                self.code(stmt)?;
+                for arg in &stmt.args {
+                    self.expr(&arg.no_repeater()?,None)?;
+                }
             },
             None => {
                 self.trace("  assignment");
@@ -395,13 +389,13 @@ fn do_build_unbundle(tree: &BuildTree) -> Result<BuildUnbundle,String> {
     Ok(unbundle)
 }
 
-pub(crate) fn build_unbundle(tree: &BuildTree) -> Result<HashMap<(Vec<usize>,Position),Vec<String>>,String> {
+pub(crate) fn build_unbundle(tree: &BuildTree) -> Result<Transits,String> {
     let unbundle = do_build_unbundle(tree)?;
-    Ok(unbundle.transits.take())
+    Ok(unbundle.transits.build())
 }
 
 #[cfg(test)]
-pub(crate) fn trace_build_unbundle(tree: &BuildTree) -> Result<(HashMap<(Vec<usize>,Position),Vec<String>>,Vec<String>),String> {
+pub(crate) fn trace_build_unbundle(tree: &BuildTree) -> Result<(Transits,Vec<String>),String> {
     let unbundle = do_build_unbundle(tree)?;
-    Ok((unbundle.transits.take(),unbundle.trace.clone()))
+    Ok((unbundle.transits.build(),unbundle.trace.clone()))
 }

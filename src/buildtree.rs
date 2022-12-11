@@ -227,8 +227,6 @@ impl BuildTree {
         Ok(())
     }
 
-    // XXX check during build for proc/func/code
-
     pub(super) fn add_statement(&mut self, stmt: BTStatement) {
         self.statements.push(stmt);
     }

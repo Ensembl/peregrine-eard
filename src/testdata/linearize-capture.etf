@@ -59,3 +59,75 @@ test:11 r15 <copy-from> r13
 test:11 r16 <copy-from> r15
 test:11 r17 <copy-from> r14
 test:11 r18 <copy-from> r17
+
+>> test
+
+capture 2
+
+>> input
+
+let x.a = 1;
+let x.b = 2;
+let x.c = 3;
+
+procedure p() {
+    capture *x;
+
+    (x.a,x.b)
+}
+
+let (x,y) = p();
+
+>> built strip
+
+0:proc () {
+  capture *x
+  (x.a,x.b)
+}
+
+test:2 (r1) <- #1 1
+test:2 let x.a
+test:2 (x.a) <- #2 r1
+test:3 (r2) <- #3 2
+test:3 let x.b
+test:3 (x.b) <- #4 r2
+test:4 (r3) <- #5 3
+test:4 let x.c
+test:4 (x.c) <- #6 r3
+test:6 define 0
+test:12 (r4 r5) <- (0#7)
+test:12 let x
+test:12 let y
+test:12 (x) <- #8 r4
+test:12 (y) <- #9 r5
+
+>> linearize strip
+
+test:2 r1 <constant> 1
+test:2 r2 <copy-from> r1
+test:2 r3 <copy-from> r2
+test:2 r4 <copy-from> r3
+
+test:3 r5 <constant> 2
+test:3 r6 <copy-from> r5
+test:3 r7 <copy-from> r6
+test:3 r8 <copy-from> r7
+
+test:4 r9 <constant> 3
+test:4 r10 <copy-from> r9
+test:4 r11 <copy-from> r10
+test:4 r12 <copy-from> r11
+
+test:6 r13 <copy-from> r4
+test:6 r14 <copy-from> r8
+test:6 r15 <copy-from> r12
+test:6 r16 <copy-from> r13
+test:6 r17 <copy-from> r14
+test:6 r18 <copy-from> r15
+
+test:12 r19 <copy-from> r16
+test:12 r20 <copy-from> r17
+test:12 r21 <copy-from> r19
+test:12 r22 <copy-from> r21
+test:12 r23 <copy-from> r20
+test:12 r24 <copy-from> r23

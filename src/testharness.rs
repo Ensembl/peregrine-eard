@@ -208,16 +208,16 @@ pub(super) fn run_parse_tests(data: &str) {
             let processed = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let (transits,trace) = trace_build_unbundle(&processed).expect("unbundle failed");
             print!("{}",trace.join("\n"));
-            let mut keys = transits.keys().cloned().collect::<Vec<_>>();
+            let mut keys = transits.keys();
             keys.sort();
             let mut lines = vec![];
-            for key in keys {
-                let mut values = transits.get(&key).unwrap().iter().cloned().collect::<Vec<_>>();
+            for (stack,position) in keys {
+                let mut values = transits.get(&stack,&position).unwrap().iter().cloned().collect::<Vec<_>>();
                 values.sort();
-                let key_path = key.0.iter().map(|c|{
+                let key_path = stack.iter().map(|c|{
                     c.to_string()
                 }).collect::<Vec<_>>();
-                lines.push(format!("{}/{:?}: {}",key_path.join(","),key.1,values.join(" ")));
+                lines.push(format!("{}/{:?}: {}",key_path.join(","),position,values.join(" ")));
             }
             let unbundle_got = lines.join("\n");
             assert_eq!(process_ws(&unbundle_got,unbundle_options),process_ws(unbundle_correct,unbundle_options));

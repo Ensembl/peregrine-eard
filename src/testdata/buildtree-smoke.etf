@@ -4,25 +4,54 @@ Code blocks
 
 >> input
 
-world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
+world code test(seq(?X) length(?X), boolean length(?X...)) -> (seq(boolean) ref(?X), boolean) {
+
+  impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r5: boolean) {
     register r4;
     opcode 44, r1, r2, r3, r4, r5;
-}
+  }
 
-world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r1) {
+  impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r5: boolean) {
+    register r4;
+    opcode 44, r1, r2, r3, r4, r5;
+  }
+
+  impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r1) {
     register r4;
     opcode 45, r1, r2, r3, r4;
+  }
+
+  impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r1) {
+    register r4;
+    opcode 45, r1, r2, r3, r4;
+  }
 }
 
 >> built strip skip-commas
 
-0: world code test(r1 : seq(number)|seq(string) length(X), r2 : boolean length(X...)) -> (r3 : seq(boolean) ref(X), r5 : boolean){
+0: 
+world code test(seq(?X) length(X), boolean length(X...)) -> (seq(boolean) ref(X), boolean )  {
+
+  impl (r1 : seq(number), r2 : boolean) -> (r3 : seq(boolean), r5 : boolean)  {
+     register r4;
+     opcode 44, r1, r2, r3, r4, r5;
+  }
+
+  impl (r1 : seq(string), r2 : boolean) -> (r3 : seq(boolean), r5 : boolean)  {
     register r4;
-    opcode 44,r1,r2,r3,r4,r5;
-}
-world code test(r1 : seq(number)|seq(string) length(X), r2: boolean length(X...)) -> (r3 : seq(boolean) ref(X),r1) {
+    opcode 44, r1, r2, r3, r4, r5;
+  }
+
+  impl (r1 : seq(number), r2 : boolean) -> (r3 : seq(boolean), r1)  {
     register r4;
-    opcode 45,r1,r2,r3,r4;
+    opcode 45, r1, r2, r3, r4;
+  }
+
+  impl (r1 : seq(string), r2 : boolean) -> (r3 : seq(boolean), r1)  {
+    register r4;
+    opcode 45, r1, r2, r3, r4;
+  }
+
 }
 
 >> test

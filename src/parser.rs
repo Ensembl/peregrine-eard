@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeArgument, CodeRegisterArgument, CodeCommand, CodeBlock, CodeReturn, OrBundleRepeater}};
+use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeBlock, CodeImplArgument, CodeReturn, CodeArgument, ImplBlock, CodeImplVariable}};
 
 #[derive(Parser)]
 #[grammar = "earp.pest"]
@@ -359,40 +359,6 @@ impl EarpParser {
         ))
     }
 
-    fn code_variable(input: Node) -> PestResult<CodeRegisterArgument> {
-        Ok(match_nodes!(input.into_children();
-            [register(r),arg_types(t),arg_check(c)..] => {
-                CodeRegisterArgument {
-                    reg_id: r,
-                    arg_types: t,
-                    checks: c.collect()
-                }
-            }
-        ))
-    }
-
-    fn code_return_variable(input: Node) -> PestResult<CodeReturn> {
-        Ok(match_nodes!(input.into_children();
-            [code_variable(v)] => CodeReturn::Register(v),
-            [register(c)] => CodeReturn::Repeat(c)
-        ))
-    }
-
-    fn code_argument(input: Node) -> PestResult<CodeArgument> {
-        Ok(match_nodes!(input.into_children();
-            [code_variable(v)] => CodeArgument::Register(v),
-            [constant(c)] => CodeArgument::Constant(c)
-        ))
-    }
-
-    fn code_arguments(input: Node) -> PestResult<Vec<CodeArgument>> {
-        let mut out = vec![];
-        for child in input.into_children() {
-            out.push(Self::code_argument(child)?);
-        }
-        Ok(out)
-    }
-
     fn code_modifiers(input: Node) -> PestResult<Vec<CodeModifier>> {
         let mut out = vec![];
         for child in input.into_children() {
@@ -405,14 +371,6 @@ impl EarpParser {
         let mut out = vec![];
         for child in input.into_children() {
             out.push(Self::funcproc_modifier(child)?);
-        }
-        Ok(out)
-    }
-
-    fn code_return(input: Node) -> PestResult<Vec<CodeReturn>> {
-        let mut out = vec![];
-        for child in input.into_children() {
-            out.push(Self::code_return_variable(child)?);
         }
         Ok(out)
     }
@@ -463,6 +421,33 @@ impl EarpParser {
         ))
     }
 
+    fn code_arg(input: Node) -> PestResult<CodeArgument> {
+        Ok(match_nodes!(input.into_children();
+            [arg_type(t),arg_check(c)..] => {
+                CodeArgument {
+                    arg_type: t,
+                    checks: c.collect()
+                }
+            }
+        ))
+    }
+
+    fn code_arguments(input: Node) -> PestResult<Vec<CodeArgument>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::code_arg(child)?);
+        }
+        Ok(out)
+    }
+
+    fn code_return(input: Node) -> PestResult<Vec<CodeArgument>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::code_arg(child)?);
+        }
+        Ok(out)
+    }
+
     fn code_header(input: Node) -> PestResult<CodeBlock> {
         Ok(match_nodes!(input.into_children();
             [code_modifiers(m),identifier(id),code_arguments(args),code_return(r)] => {
@@ -470,17 +455,79 @@ impl EarpParser {
                     name: id,
                     arguments: args,
                     results: r,
-                    commands: vec![],
+                    impls: vec![],
                     modifiers: m
                 }
             }
         ))
     }
 
+    fn impl_real_arg(input: Node) -> PestResult<CodeImplVariable> {
+        Ok(match_nodes!(input.into_children();
+            [register(r),arg_type(t)] => {
+                CodeImplVariable {
+                    reg_id: r,
+                    arg_type: t
+                }
+            }
+        ))
+    }
+
+    fn impl_arg_var(input: Node) -> PestResult<CodeImplArgument> {
+        Ok(match_nodes!(input.into_children();
+            [impl_real_arg(v)] => CodeImplArgument::Register(v),
+            [constant(c)] => CodeImplArgument::Constant(c)
+        ))
+    }
+
+    fn impl_arguments(input: Node) -> PestResult<Vec<CodeImplArgument>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::impl_arg_var(child)?);
+        }
+        Ok(out)
+    }
+
+    fn impl_return_var(input: Node) -> PestResult<CodeReturn> {
+        Ok(match_nodes!(input.into_children();
+            [impl_real_arg(v)] => CodeReturn::Register(v),
+            [register(c)] => CodeReturn::Repeat(c)
+        ))
+    }
+
+    fn impl_return(input: Node) -> PestResult<Vec<CodeReturn>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::impl_return_var(child)?);
+        }
+        Ok(out)
+    }
+
+    fn impl_header(input: Node) -> PestResult<ImplBlock> {
+        Ok(match_nodes!(input.into_children();
+            [impl_arguments(args),impl_return(rets)] => {
+                ImplBlock {
+                    arguments: args, 
+                    results: rets, 
+                    commands: vec![]
+                }
+            }
+        ))
+    }
+
+    fn code_impl(input: Node) -> PestResult<ImplBlock> {
+        Ok(match_nodes!(input.into_children();
+            [impl_header(mut block),code_statement(stmt)..] => {
+                block.commands = stmt.collect();
+                block
+            }
+        ))
+    }
+
     fn code_block(input: Node) -> PestResult<CodeBlock> {
         Ok(match_nodes!(input.into_children();
-            [code_header(mut block),code_statement(stmt)..] => {
-                block.commands = stmt.collect();
+            [code_header(mut block),code_impl(stmt)..] => {
+                block.impls = stmt.collect();
                 block
             }
         ))

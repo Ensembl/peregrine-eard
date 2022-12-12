@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::BTreeMap};
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, CodeBlock, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}, codeblocks::CodeDefinition};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater, CodeBlock}, buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}, codeblocks::{CodeDefinition}};
 
 #[derive(Debug,Clone)]
 pub(super) enum DefName {
@@ -133,7 +133,7 @@ impl BuildContext {
         let context = if export { None } else { Some(self.file_context) };
         let key = (context,name.to_string());
         if self.defnames.contains_key(&key) {
-            return Err(format!("duplciate definition for {}",name));
+            return Err(format!("duplicate definition for {}",name));
         }
         self.defnames.insert(key,name_id);
         Ok(BTStatementValue::Define(id))
@@ -152,7 +152,7 @@ impl BuildContext {
                 Ok(())
             },
             _ => {
-                Err(format!("duplciate definition for {}",block.name))
+                Err(format!("duplicate definition for {}",block.name))
             }
         }
     }
@@ -408,7 +408,7 @@ impl BuildContext {
             },
 
             PTStatementValue::FuncDef(f) => { self.build_funcdef(bt,f)?; },
-            PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; }
+            PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; },
             PTStatementValue::Code(c) => { self.define_code(c,bt)?; },
 
             PTStatementValue::LetStatement(vv,xx) => {

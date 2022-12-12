@@ -73,23 +73,33 @@ arg_ref_check = { "ref(" ~ "?" ~ arg_check_variable ~ ")" }
 arg_check = { arg_length_check | arg_lengthorinf_check | arg_total_check | arg_ref_check }
 
 /* code blocks */
-code_block = { code_header ~ "{" ~ code_statement* ~ "}" }
-
+code_block = { code_header ~ "{" ~ code_impl* ~ "}" }
 code_header = {
      code_modifiers ~ "code" ~ identifier ~ "(" ~ code_arguments ~ ")" ~ code_return
 }
+
+code_return =  { ("->" ~ (("(" ~ code_return_arguments ~ ")")|code_arg))? }
+code_return_arguments = _{ code_arg ~ ("," ~ code_arg)* }
+code_arguments = { (code_arg ~ ("," ~ code_arg)*)? }
+code_arg = { arg_type ~ arg_check* }
+
+code_impl = { impl_header ~ "{" ~  code_statement* ~ "}" }
+impl_header = { "impl" ~ "(" ~ impl_arguments ~ ")" ~ impl_return }
+
+impl_return =  { ("->" ~ (("(" ~ impl_return_arguments ~ ")")|impl_return_var))? }
+impl_return_arguments = _{ impl_return_var ~ ("," ~ impl_return_var)* }
+impl_arguments = { (impl_arg_var ~ ("," ~ impl_arg_var)*)? }
+
+impl_return_var = { (impl_real_arg|register) }
+impl_arg_var = { (impl_real_arg|constant) }
+
+impl_real_arg = { register ~ ":" ~ arg_type }
+
+/* code blocks */
 code_modifier = { "world" }
 code_modifiers = { code_modifier* }
 
-code_return = { ("->" ~ (("(" ~ code_return_arguments ~ ")")|code_return_variable))? }
-code_arguments = { (code_argument ~ ("," ~ code_argument)*)? }
-code_return_arguments = _{ code_return_variable ~ ("," ~ code_return_variable)* }
-
-code_argument = { (code_variable|constant) }
 register = { "r" ~ ASCII_DIGIT+ }
-
-code_variable = { register ~ ":" ~ arg_types ~ arg_check* }
-code_return_variable = { code_variable | register }
 
 opcode_opcode = { ASCII_DIGIT+ }
 opcode_statement = { "opcode" ~ opcode_opcode ~ opcode_args }

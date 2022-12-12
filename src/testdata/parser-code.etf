@@ -4,19 +4,32 @@ Code block smoke
 
 >> input
 
-world code test(r1: seq(number)|seq(string) length(?X), r2: boolean length(?X...)) -> (r3: seq(boolean) ref(?X), r5: boolean) {
-    register r4;
-    opcode 44, r1, r2, r3, r4, r5;
+world code test(seq(?X) length(?X), boolean length(?X)) -> (seq(boolean) ref(?X), boolean) {
+    impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r4: boolean) {
+      register r4;
+      opcode 44, r1, r2, r3, r4, r5;
+    }
+
+    impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r4: boolean) {
+      register r4;
+      opcode 44, r1, r2, r3, r4, r5;
+    }
 }
 
 >> parse strip
 
 [
-    PTStatement{
+    PTStatement {
         value: Code(
-            world code test(r1:seq(number)|seq(string)length(X),r2:booleanlength(X...)) -> (r3 : seq(boolean) ref(X),r5: boolean) {
-                register r4;
-                opcode 44,r1,r2,r3,r4,r5;
+            world code test( seq(?X) length(X), boolean length(X))->(seq(boolean) ref(X), boolean) {
+                impl (r1:seq(number), r2:boolean) -> (r3:seq(boolean), r4:boolean) {
+                    register r4;
+                    opcode 44,r1,r2,r3,r4,r5;
+                }
+                impl (r1:seq(string), r2:boolean) -> (r3:seq(boolean), r4:boolean) {
+                    register r4;
+                    opcode 44,r1,r2,r3,r4,r5;
+                }
             }
         ),
         file:["test"],
@@ -31,22 +44,26 @@ Code wild types
 
 >> input
 
-code test(r1: seq(?X)) -> (r2: seq(?X)) {
-    opcode 42, r1, r2;
+code test(seq(?X)) -> (seq(?X)) {
+    impl (r1: seq(?X)) -> (r2: seq(?X)) {
+        opcode 42, r1, r2;
+    }
 }
 
 >> parse strip
 
 [
-    PTStatement{
+    PTStatement {
         value: Code(
-            code test(r1:seq(?X)) -> (r2:seq(?X)){
-                opcode42,r1,r2;
+            code test (seq(?X)) -> (seq(?X)) {
+                impl (r1:seq(?X)) -> (r2:seq(?X)) {
+                    opcode 42,r1,r2;
+                }
             }
         ),
-        file:["test"],
-        line_no:2,
-        context:1
+        file: ["test"],
+        line_no: 2,
+        context: 1
     }
 ]
 
@@ -56,22 +73,26 @@ Code wild checks
 
 >> input
 
-code test(r1: seq(?X) length(?Y)) -> (r2: seq(?X) length(?Y), r3: seq(boolean) ref(?Y)) {
-    opcode 42, r1, r2;
+code test1( seq(?X) length(?Y) ) -> (seq(?X) length(?Y), seq(boolean) ref(?Y)) {
+    impl (r1: seq(?X)) -> (r2: seq(?X), r3: seq(boolean)) {
+        opcode 42, r1, r2;
+    }
 }
 
 >> parse strip
 
 [
-    PTStatement{
-        value:Code(
-            code test(r1 : seq(?X)length(Y))->(r2 : seq(?X)length(Y), r3 : seq(boolean)ref(Y)) {
-                opcode42,r1,r2;
+    PTStatement {
+        value: Code(
+            code test1(seq(?X) length(Y))->(seq(?X) length(Y), seq(boolean) ref(Y)) {
+                impl (r1:seq(?X)) -> (r2:seq(?X), r3:seq(boolean)) {
+                    opcode42,r1,r2;
+                }
             }
         ),
-        file:["test"],
+        file: ["test"],
         line_no: 2,
-        context:1
+        context: 1
     }
 ]
 
@@ -81,20 +102,24 @@ Code unbracketed return
 
 >> input
 
-code test(r1: boolean) -> r2: seq(boolean) {
-    opcode 42, r1, r2;
+code test(boolean) -> seq(boolean) {
+    impl (r1: boolean) -> r2: seq(boolean) {
+        opcode 42, r1, r2;
+    }
 }
 
 >> parse strip
 
 [
-    PTStatement{
+    PTStatement {
         value: Code(
-            code test(r1:boolean) -> (r2:seq(boolean)) {
-                opcode42,r1,r2;
+            code test(boolean)-> (seq(boolean)) {
+                impl (r1:boolean) -> (r2:seq(boolean)) {
+                    opcode 42,r1,r2;
+                }
             }
         ),
-        file:["test"],
+        file: ["test"],
         line_no: 2,
         context: 1
     }
@@ -106,16 +131,22 @@ Code constants
 
 >> input
 
-code test_bool(r1: boolean, false) {
-    opcode 42, r1, r2;
+code test_bool(boolean, boolean) {
+    impl (r1:boolean, false) {
+        opcode 42, r1, r2;
+    }
 }
 
-code test_number(r1: boolean, 42) {
-    opcode 42, r1, r2;
+code test_number(boolean, number) {
+    impl (r1:boolean, 42) {
+        opcode 42, r1, r2;
+    }
 }
 
-code test_string(r1: boolean, "hello") {
-    opcode 42, r1, r2;
+code test_string(boolean, string) {
+    impl (r1:boolean, "hello") {
+        opcode 42, r1, r2;
+    }
 }
 
 >> parse strip
@@ -123,33 +154,39 @@ code test_string(r1: boolean, "hello") {
 [
     PTStatement {
         value: Code(
-            code test_bool(r1:boolean,false) {
-                opcode 42,r1,r2;
+            code test_bool(boolean,boolean) {
+                impl (r1:boolean, false) {
+                    opcode 42,r1,r2;
+                }
             }
         ),
-        file:["test"],
+        file: ["test"],
         line_no:2,
         context:1
     },
     PTStatement {
-        value:Code(
-            code test_number(r1:boolean,42){
-                opcode42,r1,r2;
+        value: Code(
+            code test_number(boolean,number) {
+                impl (r1:boolean,42) {
+                    opcode 42,r1,r2;
+                }
             }
         ),
-        file:["test"],
-        line_no:6,
-        context:1
+        file: ["test"],
+        line_no: 8,
+        context: 1
     },
     PTStatement{
-        value:Code(
-            code test_string(r1:boolean,"hello"){
-                opcode42,r1,r2;
+        value: Code(
+            code test_string(boolean,string) {
+                impl (r1:boolean,"hello") {
+                    opcode42,r1,r2;
+                }
             }
         ),
-        file:["test"],
-        line_no:10,
-        context:1
+        file: ["test"],
+        line_no: 14,
+        context: 1
     }
 ]
 
@@ -165,7 +202,7 @@ code test_string(r1) {
 
 >> parse-fail strip
 
-expected code_argument
+expected arg_type
 
 >> test
 
@@ -174,20 +211,24 @@ Code no args, no return
 >> input
 
 code test_string() {
-    opcode 42;
+    impl () {
+        opcode 42;
+    }
 }
 
 >> parse strip
 
 [
-    PTStatement{
-        value:Code(
-            code test_string(){
-                opcode42;
+    PTStatement {
+        value: Code(
+            code test_string() {
+                impl () {
+                    opcode42;
+                }
             }
         ),
-        file:["test"],
-        line_no:2,
-        context:1
+        file: ["test"],
+        line_no: 2,
+        context: 1
     }
 ]

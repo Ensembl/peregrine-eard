@@ -1,0 +1,39 @@
+>> test
+
+>> input
+
+/*
+world code test(seq(?X), boolean) -> (seq(boolean), seq(?X)) {
+    impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r1: seq(string)) {
+        register r4;
+        opcode 45, r1, r2, r3, r4;
+    }
+
+    impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r1: seq(number)) {
+        register r4;
+        opcode 45, r1, r2, r3, r4;
+    }
+}
+
+world code test(seq(?X), number) -> (seq(boolean), seq(?X)) {
+    impl (r1: seq(string), r2: number) -> (r3: seq(boolean), r1: seq(string)) {
+        register r4;
+        opcode 45, r1, r2, r3, r4;
+    }
+
+    impl (r1: seq(number), r2: number) -> (r3: seq(boolean), r1: seq(number)) {
+        register r4;
+        opcode 45, r1, r2, r3, r4;
+    }
+}
+*/
+
+world code test(r1: seq(number)|seq(string) length(?X), r2: boolean) -> (r3: seq(boolean) ref(?X), r1) {
+    register r4;
+    opcode 45, r1, r2, r3, r4;
+}
+
+world code test(r1: seq(number)|seq(string) length(?X), 0) -> (r3: seq(boolean) ref(?X), r1) {
+    register r4;
+    opcode 46, r1, r2, r3, r4;
+}

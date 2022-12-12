@@ -13,6 +13,7 @@ mod model;
 mod preprocess;
 mod parser;
 mod parsetree;
+mod typing;
 
 #[cfg(test)]
 mod test;

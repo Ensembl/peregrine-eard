@@ -1,6 +1,5 @@
 use std::{sync::Arc, fmt};
-
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, CodeBlock, OrBundleRepeater, OrRepeater}, codeblocks::CodeDefinition};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, OrRepeater, CodeBlock}, codeblocks::{CodeDefinition}};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {
@@ -242,7 +241,7 @@ impl BuildTree {
         Ok(match &self.definitions[index] {
             BTDefinition::Proc(p) => BTTopDefn::FuncProc(p),
             BTDefinition::Func(f) => BTTopDefn::FuncProc(f),
-            BTDefinition::Code(c) => BTTopDefn::Code(c),
+            BTDefinition::Code(c) => BTTopDefn::Code(c)
         })
     }
 

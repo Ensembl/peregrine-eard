@@ -38,6 +38,7 @@ impl fmt::Debug for CodeModifier {
     }
 }
 
+/*
 #[derive(Clone)]
 pub struct CodeRegisterArgument {
     pub reg_id: usize,
@@ -57,14 +58,47 @@ impl fmt::Debug for CodeRegisterArgument {
         Ok(())
     }
 }
+*/
 
 #[derive(Clone)]
-pub enum CodeArgument {
-    Register(CodeRegisterArgument),
-    Constant(Constant)
+pub struct CodeArgument {
+    pub arg_type: TypeSpec,
+    pub checks: Vec<Check>
 }
 
 impl fmt::Debug for CodeArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{:?} {}",
+            self.arg_type,
+            sepfmt(&mut self.checks.iter()," ","")
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct CodeImplVariable {
+    pub reg_id: usize,
+    pub arg_type: TypeSpec
+}
+
+impl fmt::Debug for CodeImplVariable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"r{} : {:?}",
+            self.reg_id,
+            self.arg_type
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub enum CodeImplArgument {
+    Register(CodeImplVariable),
+    Constant(Constant)
+}
+
+impl fmt::Debug for CodeImplArgument {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Register(r) => write!(f,"{:?}",r),
@@ -75,7 +109,7 @@ impl fmt::Debug for CodeArgument {
 
 #[derive(Clone)]
 pub enum CodeReturn {
-    Register(CodeRegisterArgument),
+    Register(CodeImplVariable),
     Repeat(usize)
 }
 
@@ -327,11 +361,33 @@ impl fmt::Debug for CodeCommand {
 }
 
 #[derive(Clone)]
+pub struct ImplBlock {
+    pub arguments: Vec<CodeImplArgument>,
+    pub results: Vec<CodeReturn>,
+    pub commands: Vec<CodeCommand>,
+}
+
+impl fmt::Debug for ImplBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f," impl ({})",
+            sepfmt(&mut self.arguments.iter(),", ","")
+        )?;
+        if self.results.len() > 0 {
+            write!(f," -> ({}) ",
+                sepfmt(&mut self.results.iter(),", ","")
+            )?;
+        }
+        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
 pub struct CodeBlock {
     pub name: String,
     pub arguments: Vec<CodeArgument>,
-    pub results: Vec<CodeReturn>,
-    pub commands: Vec<CodeCommand>,
+    pub results: Vec<CodeArgument>,
+    pub impls: Vec<ImplBlock>,
     pub modifiers: Vec<CodeModifier>
 }
 
@@ -347,7 +403,7 @@ impl fmt::Debug for CodeBlock {
                 sepfmt(&mut self.results.iter(),", ","")
             )?;
         }
-        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
+        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.impls.iter(),"\n","  "))?;
         Ok(())
     }
 }

@@ -1,5 +1,6 @@
 use std::fmt;
-use crate::model::{CodeBlock, CodeModifier};
+use crate::model::{CodeModifier, CodeBlock};
+
 
 #[derive(Clone)]
 pub struct CodeDefinition {

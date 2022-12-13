@@ -1,9 +1,10 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeBlock, CodeImplArgument, CodeReturn, CodeArgument, ImplBlock, CodeImplVariable}};
+use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeBlock, CodeImplArgument, CodeReturn, CodeArgument, ImplBlock, CodeImplVariable}};
+use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
-#[grammar = "earp.pest"]
+#[grammar = "frontend/earp.pest"]
 struct EarpParser;
 
 #[derive(Clone)]

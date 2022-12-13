@@ -1,3 +1,11 @@
+mod frontend {
+    pub(crate) mod buildtree;
+    mod buildtreebuilder;    
+    pub(crate) mod preprocess;
+    pub(crate) mod parser;
+    pub(crate) mod parsetree;    
+}
+
 mod unbundle {
     pub(crate) mod buildunbundle;
     mod unbundleaux;
@@ -5,14 +13,9 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
-mod buildtree;
-mod buildtreebuilder;
 mod codeblocks;
 mod compiler;
 mod model;
-mod preprocess;
-mod parser;
-mod parsetree;
 mod typing;
 
 #[cfg(test)]

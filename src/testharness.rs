@@ -1,5 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, parsetree::{PTExpression, PTStatement, PTStatementValue}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}};
+use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())

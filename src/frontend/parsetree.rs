@@ -1,5 +1,7 @@
 use std::sync::Arc;
-use crate::{buildtree::{BuildTree, BTStatementValue}, model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeBlock}, buildtreebuilder::BuildContext};
+use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeBlock}};
+use super::buildtree::{BuildTree, BTStatementValue};
+use super::buildtreebuilder::BuildContext;
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     if let Some((parents, line_no)) = pos {

@@ -1,5 +1,6 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc};
-use crate::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree, model::{OrBundleRepeater}};
+use crate::frontend::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree};
+use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
     source_loader: Box<dyn Fn(&str) -> Result<String,String>>,

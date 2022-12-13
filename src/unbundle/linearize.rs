@@ -1,5 +1,6 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at, model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}};
+use crate::model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument};
+use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
 use super::{unbundleaux::{Position, VarRegisters, Transits}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 struct Linearize<'a> {

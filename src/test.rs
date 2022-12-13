@@ -1,4 +1,5 @@
-use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, parsetree::{PTExpression}, model::Constant};
+use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, model::Constant};
+use crate::frontend::parsetree::{PTExpression};
 
 #[test]
 fn test_parse_smoke() {

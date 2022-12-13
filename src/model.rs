@@ -137,7 +137,7 @@ impl Display for Variable {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub enum CheckType {
     Length,
     LengthOrInfinite,
@@ -372,7 +372,7 @@ impl fmt::Debug for ImplBlock {
 
 #[derive(Clone)]
 pub enum LinearStatementValue {
-    Check(usize,Check),
+    Check(usize,CheckType,usize), // reg, type, index
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,Vec<usize>,Vec<usize>,bool), // name,rets,args
@@ -382,7 +382,7 @@ pub enum LinearStatementValue {
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Check(v, c) => write!(f,"r{:?} <check> {:?}",v,c),
+            Self::Check(v, ct, c) => write!(f,"r{:?} <check> {:?} {:?}",v,ct,c),
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),

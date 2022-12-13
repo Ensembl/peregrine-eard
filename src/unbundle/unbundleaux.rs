@@ -1,6 +1,6 @@
 use std::collections::{HashSet, HashMap, BTreeMap};
 
-use crate::model::Variable;
+use crate::model::{Variable, CheckType};
 
 #[derive(Clone)]
 pub(super) struct Bundle {
@@ -224,5 +224,54 @@ impl VarRegisters {
 
     pub(super) fn check_used(&self, prefix: &str) -> bool {
         self.top().check_used(prefix)
+    }
+}
+
+struct ChecksOfType {
+    check_names: HashMap<String,usize>,
+    next_check: usize
+}
+
+impl ChecksOfType {
+    pub(super) fn new() -> ChecksOfType {
+        ChecksOfType {
+            check_names: HashMap::new(),
+            next_check: 0
+        }
+    }
+
+    fn get(&mut self,name: &str) -> usize {
+        let (checks,next_check) = (&mut self.check_names,&mut self.next_check);
+        *checks.entry(name.to_string()).or_insert_with(|| {
+           *next_check += 1;
+           *next_check 
+        })
+    }
+}
+
+pub(crate) struct Checks {
+    checks: Vec<HashMap<CheckType,ChecksOfType>>
+}
+
+impl Checks {
+    pub(crate) fn new() -> Checks {
+        Checks { checks: vec![HashMap::new()] }
+    }
+
+    pub(super) fn push(&mut self) {
+        self.checks.push(HashMap::new());
+    }
+
+    pub(super) fn pop(&mut self) {
+        self.checks.pop();
+    }
+
+    fn top<'a>(&'a mut self, ct: &CheckType) -> &'a mut ChecksOfType {
+        self.checks.last_mut().expect("checks stack should never be empty")
+            .entry(ct.clone()).or_insert_with(|| ChecksOfType::new())
+    }
+
+    pub(super) fn get(&mut self, ct: &CheckType, name: &str) -> usize {
+        self.top(ct).get(name)
     }
 }

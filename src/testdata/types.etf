@@ -22,71 +22,31 @@ procedure p(x: number, y: seq(boolean) length(?X)) -> (number, seq(boolean) leng
     (x,f(y))
 }
 
-let w = [true,false];
-let (z1,z2) = p(1,w);
+let w : length(w) = [true,false];
+let (z1,z2 : length(w)) = p(1,w);
 
->> linearize strip
+>> linearize strip reduce
 
 test:6 r1 (1) 
-test:6 r2 <copy-from> r1
-test:6 r3 <copy-from> r2
-test:6 r4 <copy-from> r3
-test:20 r5 <copy-from> r4
-test:20 r6 <copy-from> r5
 test:20 r7 <constant> true
-test:7 r8 <copy-from> r6
-test:7 r9 <copy-from> r7
-test:7 r10 <copy-from> r8
-test:7 r11 <copy-from> r9
-test:7 r12 (2) r10 r11
-test:7 r13 <copy-from> r12
-test:7 r14 <copy-from> r13
-test:7 r15 <copy-from> r14
-test:20 r5 <copy-from> r15
-test:20 r16 <copy-from> r5
+test:7 r12 (2) r1 r7
 test:20 r17 <constant> false
-test:7 r18 <copy-from> r16
-test:7 r19 <copy-from> r17
-test:7 r20 <copy-from> r18
-test:7 r21 <copy-from> r19
-test:7 r22 (2) r20 r21
-test:7 r13 <copy-from> r22
-test:7 r23 <copy-from> r13
-test:7 r24 <copy-from> r23
-test:20 r5 <copy-from> r24
-test:20 r25 <copy-from> r5
-test:20 r26 <copy-from> r25
-test:20 r27 <copy-from> r26
-test:20 r28 <copy-from> r27
-
+test:7 r22 (2) r12 r17
+test:20 r22 <check> Length 1
 test:21 r29 <constant> 1
-test:21 r30 <copy-from> r28
-test:16 r31 <copy-from> r29
-test:16 r31 <type> [number]
-test:16 r32 <copy-from> r30
-test:16 r32 <type> [seq(boolean)]
-test:16 r32 <check> length(X)
-test:16 r31 <type> [number]
-test:16 r33 <copy-from> r32
-test:15 r34 <copy-from> r33
-test:15 r34 <type> [?X]
-test:15 r35 <copy-from> r34
-test:15 r36 (6)w r35
-test:15 r37 <copy-from> r36
-test:15 r38 <copy-from> r37
-test:15 r39 <copy-from> r38
-test:15 r39 <type> [?X]
-test:16 r39 <type> [seq(boolean)]
-test:16 r39 <check> length(X)
-test:21 r40 <copy-from> r31
-test:21 r41 <copy-from> r39
-test:21 r42 <copy-from> r40
-test:21 r43 <copy-from> r42
-test:21 r44 <copy-from> r41
-test:21 r45 <copy-from> r44
+test:16 r29 <type> [number]
+test:16 r22 <type> [seq(boolean)]
+test:16 r22 <check> Length 1
+test:16 r29 <type> [number]
+test:15 r22 <type> [?X]
+test:15 r36 (6)w r22
+test:15 r36 <type> [?X]
+test:16 r36 <type> [seq(boolean)]
+test:16 r36 <check> Length 1
+test:21 r36 <check> Length 1
 
 >> broad strip
 
-boolean: 7, 9, 11, 17, 19, 21
-number: 29, 31, 40, 42, 43
-seq: 1, 2, 3, 4, 5, 6, 8, 10, 12, 13, 14, 15, 16, 18, 20, 22, 23, 24, 25, 26, 27, 28, 30, 32, 33, 34, 35, 36, 37, 38, 39, 41, 44, 45
+boolean: 7, 17
+number: 29
+seq: 1, 12, 22, 36

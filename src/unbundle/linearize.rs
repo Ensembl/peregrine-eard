@@ -1,7 +1,7 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument};
+use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}, reduce::reduce};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
-use super::{unbundleaux::{Position, VarRegisters, Transits}, repeater::{find_repeater_arguments, rewrite_repeater}};
+use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 struct Linearize<'a> {
     tree: &'a BuildTree,
@@ -12,7 +12,8 @@ struct Linearize<'a> {
     var_registers: VarRegisters,
     bt_registers: HashMap<(usize,Option<String>),usize>,
     call_stack: Vec<usize>,
-    captures: HashMap<usize,Vec<(Variable,usize)>>
+    captures: HashMap<usize,Vec<(Variable,usize)>>,
+    checks: Checks
 }
 
 impl<'a> Linearize<'a> {
@@ -26,6 +27,7 @@ impl<'a> Linearize<'a> {
             next_register: 0,
             call_stack: vec![],
             captures: HashMap::new(),
+            checks: Checks::new(),
         }
     }
 
@@ -69,7 +71,8 @@ impl<'a> Linearize<'a> {
                         self.add(LinearStatementValue::Type(var_reg,arg.typespec.arg_types.clone()));
                     }
                     for check in &arg.typespec.checks {
-                        self.add(LinearStatementValue::Check(var_reg,check.clone()));
+                        let check_index = self.checks.get(&check.check_type,&check.name);
+                        self.add(LinearStatementValue::Check(var_reg,check.check_type.clone(),check_index));
                     }
                 },
                 OrBundle::Bundle(bundle_name) => {
@@ -107,7 +110,8 @@ impl<'a> Linearize<'a> {
                 self.add(LinearStatementValue::Type(reg,type_spec.arg_types.clone()));
             }
             for check in &type_spec.checks {
-                self.add(LinearStatementValue::Check(reg,check.clone()));
+                let check_index = self.checks.get(&check.check_type,&check.name);
+                self.add(LinearStatementValue::Check(reg,check.check_type.clone(),check_index));
             }
         }
         Ok(())
@@ -184,6 +188,7 @@ impl<'a> Linearize<'a> {
     // TODO type checking!
     fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
+        self.checks.push();
         self.positions.push(defn.position.clone());
         self.callee_args(&defn.args,arg_regs)?;
         self.callee_captures(index)?;
@@ -192,6 +197,7 @@ impl<'a> Linearize<'a> {
         }
         let callee_rets = self.callee_rets(&defn)?;
         self.positions.pop();
+        self.checks.pop();
         self.var_registers.pop();
         Ok(callee_rets)
     }
@@ -382,7 +388,8 @@ impl<'a> Linearize<'a> {
             BTStatementValue::Declare(_) => {},
             BTStatementValue::Check(variable,check) => {
                 let register = self.var_registers.get(variable)?;
-                self.add(LinearStatementValue::Check(register,check.clone()));
+                let check_index = self.checks.get(&check.check_type,&check.name);
+                self.add(LinearStatementValue::Check(register,check.check_type.clone(),check_index));
             },
             BTStatementValue::BundledStatement(proc) => {
                 self.procedure(proc)?;
@@ -392,7 +399,6 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 }
-
 
 pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<Vec<LinearStatement>,String> {
     let mut linearize = Linearize::new(tree,bundles);

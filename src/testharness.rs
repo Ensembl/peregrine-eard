@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type, reduce::reduce};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -242,7 +242,10 @@ pub(super) fn run_parse_tests(data: &str) {
         if let Some((linearized_options,linearized_correct)) = sections.get("linearize") {
             let tree = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let bundles = build_unbundle(&tree).expect("unbundle failed");
-            let linear = linearize(&tree,&bundles).expect("linearize failed");
+            let mut linear = linearize(&tree,&bundles).expect("linearize failed");
+            if linearized_options.contains("reduce") {
+                linear = reduce(&linear);
+            }
             let linear = linear.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
             println!("{}",linear.join("\n"));
             assert_eq!(process_ws(&linear.join("\n"),linearized_options),process_ws(linearized_correct,linearized_options));
@@ -259,6 +262,7 @@ pub(super) fn run_parse_tests(data: &str) {
             let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
             let bundles = build_unbundle(&processed).expect("unbundle failed");
             let linear = linearize(&processed,&bundles).expect("linearize failed");
+            let linear = reduce(&linear);
             println!("{}",sepfmt(&mut linear.iter(),"\n",""));
             let typing = broad_type(&processed,&linear).expect("typing failed");
             let mut report = BTreeMap::new();

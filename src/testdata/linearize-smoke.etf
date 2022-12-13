@@ -19,7 +19,7 @@ test:2 r1 <constant> 0
 test:2 r2 <copy-from> r1
 test:2 r3 <copy-from> r2
 test:2 r4 <copy-from> r3
-test:2 r4 <check> length(tr)
+test:2 r4 <check> Length 1
 
 >> test
 
@@ -46,7 +46,7 @@ test:2 r1 <constant> 0
 test:2 r2 <copy-from> r1
 test:2 r3 <copy-from> r2
 test:2 r4 <copy-from> r3
-test:2 r4 <check> length(tr)
+test:2 r4 <check> Length 1
 test:3 r5 <copy-from> r4
 test:3 r6 <copy-from> r5
 test:3 r7 <copy-from> r6

@@ -13,9 +13,11 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
+mod checking;
 mod codeblocks;
 mod compiler;
 mod model;
+mod reduce;
 mod typing;
 
 #[cfg(test)]

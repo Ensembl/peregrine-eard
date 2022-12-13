@@ -64,6 +64,12 @@ impl<'a> Linearize<'a> {
                     let var_reg = self.anon_register();
                     self.var_registers.add(&Variable { name: arg.id.clone(), prefix: None },var_reg);
                     self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
+                    if arg.typespec.arg_types.len() > 0 {
+                        self.add(LinearStatementValue::Type(var_reg,arg.typespec.arg_types.clone()));
+                    }
+                    for check in &arg.typespec.checks {
+                        self.add(LinearStatementValue::Check(var_reg,check.clone()));
+                    }
                 },
                 OrBundle::Bundle(bundle_name) => {
                     let bundle = self.bundles.get(&self.call_stack,&Position::Arg(i))?;
@@ -94,9 +100,21 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
-    fn callee_rets(&mut self, defn_ret: &[OrBundle<BTExpression>]) -> Result<Vec<usize>,String> {
+    fn ret_checks(&mut self, index: usize, reg: usize, defn: &BTFuncProcDefinition) -> Result<(),String> {
+        if let Some(type_spec) = defn.ret_type.as_ref().and_then(|v| v.get(index)) {
+            if type_spec.arg_types.len() > 0 {
+                self.add(LinearStatementValue::Type(reg,type_spec.arg_types.clone()));
+            }
+            for check in &type_spec.checks {
+                self.add(LinearStatementValue::Check(reg,check.clone()));
+            }
+        }
+        Ok(())
+    }
+
+    fn callee_rets(&mut self, defn: &BTFuncProcDefinition) -> Result<Vec<usize>,String> {
         let mut regs = vec![];
-        for (i,ret) in defn_ret.iter().enumerate() {
+        for (i,ret) in defn.ret.iter().enumerate() {
             match ret {
                 OrBundle::Normal(expr) => {
                     match expr {
@@ -104,12 +122,16 @@ impl<'a> Linearize<'a> {
                             let reg = self.anon_register();
                             regs.push(reg);
                             self.add(LinearStatementValue::Constant(reg,c.clone()));
+                            self.ret_checks(i,reg,defn)?;
                         },
                         BTExpression::Variable(variable) => {
-                            regs.push(self.var_registers.get(variable)?);
+                            let reg = self.var_registers.get(variable)?;
+                            regs.push(reg);
+                            self.ret_checks(i,reg,defn)?;
                         },
                         BTExpression::RegisterValue(src,BTRegisterType::Normal) => {
                             regs.push(*src);
+                            self.ret_checks(i,*src,defn)?;
                         },
                         BTExpression::RegisterValue(src,BTRegisterType::Bundle) => {
                             let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;
@@ -121,9 +143,12 @@ impl<'a> Linearize<'a> {
                         BTExpression::Function(func) => {
                             self.call_stack.push(func.call_index);
                             let func_args = self.caller_args(&func.args)?;
-                            let defn = self.tree.get_function(func)?;
-                            self.check_arg_match(defn,&func.args)?;
-                            let mut ret_regs = self.callee(func.func_index,&defn,&func_args)?;
+                            let fdefn = self.tree.get_function(func)?;
+                            self.check_arg_match(fdefn,&func.args)?;
+                            let mut ret_regs = self.callee(func.func_index,&fdefn,&func_args)?;
+                            if ret_regs.len() == 1 { // only excludes some bundles, which are untyped
+                                self.ret_checks(i,ret_regs[0],defn)?;
+                            }
                             regs.append(&mut ret_regs);
                             self.call_stack.pop();
                         }
@@ -158,13 +183,13 @@ impl<'a> Linearize<'a> {
     // TODO type checking!
     fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
-        self.callee_args(&defn.args,arg_regs)?;
         self.positions.push(defn.position.clone());
+        self.callee_args(&defn.args,arg_regs)?;
         self.callee_captures(index)?;
         for stmt in &defn.block {
             self.statement(stmt)?;
         }
-        let callee_rets = self.callee_rets(&defn.ret)?;
+        let callee_rets = self.callee_rets(&defn)?;
         self.positions.pop();
         self.var_registers.pop();
         Ok(callee_rets)

@@ -214,7 +214,9 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn arg_check_variable(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+    fn arg_check_variable(input: Node) -> PestResult<String> { 
+        Ok(input.as_str().trim().to_string())
+    }
 
     fn arg_wild_type(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children();

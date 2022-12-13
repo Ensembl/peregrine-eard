@@ -413,13 +413,15 @@ pub enum LinearStatementValue {
     Check(usize,Check),
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
-    Code(usize,Vec<usize>,Vec<usize>,bool) // name,rets,args
+    Code(usize,Vec<usize>,Vec<usize>,bool), // name,rets,args
+    Type(usize,Vec<TypeSpec>)
 }
 
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Check(v, c) => write!(f,"r{:?} <check> {:?}",v,c),
+            Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
             Self::Code(name,rets,args,world) => {

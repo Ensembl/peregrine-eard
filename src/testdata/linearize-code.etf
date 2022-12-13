@@ -131,8 +131,8 @@ test:15 r4 <copy-from> r3
 test:42 r5 <copy-from> r4
 test:42 r6 <copy-from> r5
 test:42 r7 <constant> 1
-test:42 r8 <copy-from> r6
-test:42 r9 <copy-from> r7
+test:16 r8 <copy-from> r6
+test:16 r9 <copy-from> r7
 test:16 r10 <copy-from> r8
 test:16 r11 <copy-from> r9
 test:16 r12 (5) r10 r11
@@ -142,8 +142,8 @@ test:16 r15 <copy-from> r14
 test:42 r5 <copy-from> r15
 test:42 r16 <copy-from> r5
 test:42 r17 <constant> 2
-test:42 r18 <copy-from> r16
-test:42 r19 <copy-from> r17
+test:16 r18 <copy-from> r16
+test:16 r19 <copy-from> r17
 test:16 r20 <copy-from> r18
 test:16 r21 <copy-from> r19
 test:16 r22 (5) r20 r21
@@ -153,8 +153,8 @@ test:16 r24 <copy-from> r23
 test:42 r5 <copy-from> r24
 test:42 r25 <copy-from> r5
 test:42 r26 <constant> 3
-test:42 r27 <copy-from> r25
-test:42 r28 <copy-from> r26
+test:16 r27 <copy-from> r25
+test:16 r28 <copy-from> r26
 test:16 r29 <copy-from> r27
 test:16 r30 <copy-from> r28
 test:16 r31 (5) r29 r30

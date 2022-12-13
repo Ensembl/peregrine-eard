@@ -155,7 +155,7 @@ test:4 r3 <copy-from> r2
 test:4 r4 <copy-from> r3
 
 test:5 r5 <constant> 1
-test:5 r6 <copy-from> r5
+test:2 r6 <copy-from> r5
 test:5 r7 <copy-from> r6
 test:5 r8 <copy-from> r7
 test:5 r9 <copy-from> r8
@@ -210,7 +210,7 @@ test:6 r11 <copy-from> r10
 test:6 r12 <copy-from> r11
 
 test:7 r13 <copy-from> r8
-test:7 r14 <copy-from> r13
+test:2 r14 <copy-from> r13
 test:7 r15 <copy-from> r14
 test:7 r16 <copy-from> r15
 test:7 r17 <copy-from> r16
@@ -272,8 +272,7 @@ test:6 r11 <copy-from> r10
 test:6 r12 <copy-from> r11
 
 test:7 r13 <copy-from> r8
-test:7 r14 <copy-from> r13
-
+test:2 r14 <copy-from> r13
 test:2 r15 <copy-from> r14
 test:2 r16 <copy-from> r15
 test:2 r17 <copy-from> r16
@@ -354,13 +353,13 @@ test:7 r11 <copy-from> r10
 test:7 r12 <copy-from> r11
 
 test:8 r13 <copy-from> r8
-test:8 r14 <copy-from> r13
+test:3 r14 <copy-from> r13
 test:3 r15 <copy-from> r14
 test:3 r16 <copy-from> r15
 test:3 r17 <copy-from> r16
 test:3 r18 <copy-from> r17
 test:3 r19 <copy-from> r18
-test:3 r20 <copy-from> r19
+test:2 r20 <copy-from> r19
 test:2 r21 <copy-from> r20
 test:2 r22 <copy-from> r21
 test:2 r23 <copy-from> r22
@@ -368,6 +367,7 @@ test:2 r24 <copy-from> r23
 test:8 r25 <copy-from> r24
 test:8 r26 <copy-from> r25
 test:8 r27 <copy-from> r26
+
 test:9 r28 <copy-from> r27
 test:9 r29 <copy-from> r28
 test:9 r30 <copy-from> r29
@@ -439,12 +439,12 @@ test:7 r11 <copy-from> r10
 test:7 r12 <copy-from> r11
 
 test:8 r13 <copy-from> r12
-test:8 r14 <copy-from> r13
+test:2 r14 <copy-from> r13
 test:2 r15 <copy-from> r14
 test:2 r16 <copy-from> r15
 test:2 r17 <copy-from> r16
 test:2 r18 <copy-from> r17
-test:8 r19 <copy-from> r18
+test:3 r19 <copy-from> r18
 test:3 r20 <copy-from> r19
 test:3 r21 <copy-from> r20
 test:3 r22 <copy-from> r21
@@ -531,14 +531,14 @@ test:8 r16 <copy-from> r15
 
 test:9 r17 <copy-from> r4
 test:9 r18 <copy-from> r16
-test:9 r19 <copy-from> r17
-test:9 r20 <copy-from> r18
+test:2 r19 <copy-from> r17
+test:2 r20 <copy-from> r18
 test:9 r21 <copy-from> r19
 
 test:9 r22 <copy-from> r8
 test:9 r23 <copy-from> r16
-test:9 r24 <copy-from> r22
-test:9 r25 <copy-from> r23
+test:2 r24 <copy-from> r22
+test:2 r25 <copy-from> r23
 test:9 r26 <copy-from> r24
 
 test:10 r27 <copy-from> r21

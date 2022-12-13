@@ -1,0 +1,99 @@
+use std::{collections::HashMap, sync::Arc, fmt};
+
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}};
+
+#[derive(Clone,PartialEq,Eq)]
+pub(crate) enum BroadType {
+    Atomic(AtomicTypeSpec),
+    Sequence
+}
+
+impl BroadType {
+    pub(crate) fn from_typespec(spec: &TypeSpec) -> Result<BroadType,String> {
+        match spec {
+            TypeSpec::Atomic(a) => Ok(BroadType::Atomic(a.clone())),
+            TypeSpec::Sequence(_) => Ok(BroadType::Sequence),
+            TypeSpec::Wildcard(w) => Err(w.to_string()),
+            TypeSpec::SequenceWildcard(_) => Ok(BroadType::Sequence),
+        }
+    }
+}
+
+impl fmt::Debug for BroadType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Atomic(t) => write!(f,"{:?}",t),
+            Self::Sequence => write!(f, "seq"),
+        }
+    }
+}
+
+pub(crate) struct BroadTyping<'a> {
+    bt: &'a BuildTree,
+    position: Option<(Arc<Vec<String>>,usize)>,
+    types: HashMap<usize,BroadType>
+}
+
+impl<'a> BroadTyping<'a> {
+    fn new(bt: &'a BuildTree) -> BroadTyping<'a> {
+        BroadTyping { bt, types: HashMap::new(), position: None }
+    }
+
+    fn error_at(&self, msg: &str) -> String {
+        self.position.as_ref().map(|(file,line)|
+            at(msg,Some((file.as_ref(),*line)))
+        ).unwrap_or("*anon*".to_string())
+    }
+
+    fn get(&self, reg: usize) -> BroadType {
+        self.types.get(&reg).expect(&format!("register r{} used before set",reg)).clone()
+    }
+
+    fn add(&mut self, stmt: &LinearStatement) -> Result<(),String> {
+        self.position = Some((stmt.file.clone(),stmt.line_no));
+        match &stmt.value {
+            LinearStatementValue::Constant(reg,c) => {
+                self.types.insert(*reg,BroadType::Atomic(c.to_atomic_type()));
+            },
+            LinearStatementValue::Copy(dst,src) => {
+                self.types.insert(*dst,self.get(*src));
+            },
+            LinearStatementValue::Code(index,dst,src, world) => {
+                let defn = match self.bt.get_by_index(*index)? {
+                    BTTopDefn::FuncProc(_) => { panic!("code index did not refer to code!") },
+                    BTTopDefn::Code(defn) => defn
+                };
+                let src_types = src.iter().map(|r| self.get(*r)).collect::<Vec<_>>();
+                let dst_types = defn.broad_typing(&src_types)?;
+                if dst.len() != dst_types.len() {
+                    return Err(format!("code did not return expected argument count"));
+                }
+                for (reg,broad) in dst.iter().zip(dst_types.iter()) {
+                    self.types.insert(*reg,broad.clone());
+                }
+            },
+            LinearStatementValue::Type(reg,spec) => {
+                let got = self.get(*reg);
+                for broad in spec {
+                    if let Ok(want) = BroadType::from_typespec(broad) {
+                        if want != got {
+                            return Err(format!("type check failed: expected {:?} got {:?}",want,got));
+                        }
+                    }
+                }
+            },
+            LinearStatementValue::Check(_, _) => {},
+        }
+        Ok(())
+    }
+
+    fn take(self) -> HashMap<usize,BroadType> { self.types }
+}
+
+pub(crate) fn broad_type(bt: &BuildTree, stmts: &[LinearStatement]) -> Result<HashMap<usize,BroadType>,String> {
+    let mut typing = BroadTyping::new(bt);
+    for stmt in stmts {
+        typing.add(stmt).map_err(|e| typing.error_at(&e))?;
+    }
+    Ok(typing.take())
+}

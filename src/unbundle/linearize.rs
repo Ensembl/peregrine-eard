@@ -310,7 +310,7 @@ impl<'a> Linearize<'a> {
             Some(BTTopDefn::Code(defn)) => {
                 /* code */
                 let callee_rets = (0..defn.ret_count()).map(|_| self.anon_register()).collect::<Vec<_>>();
-                self.add(LinearStatementValue::Code(proc.call_index,callee_rets.clone(),arg_regs,defn.world()));
+                self.add(LinearStatementValue::Code(proc.proc_index.expect("assignment/non-assignment"),callee_rets.clone(),arg_regs,defn.world()));
                 self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
             },
             None => {

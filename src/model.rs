@@ -1,6 +1,6 @@
 use std::{fmt::{self, Display}, sync::Arc};
 
-fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
+pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
 
 }
@@ -10,6 +10,16 @@ pub enum Constant {
     Number(f64),
     String(String),
     Boolean(bool)
+}
+
+impl Constant {
+    pub(crate) fn to_atomic_type(&self) -> AtomicTypeSpec {
+        match self {
+            Constant::Number(_) => AtomicTypeSpec::Number,
+            Constant::String(_) => AtomicTypeSpec::String,
+            Constant::Boolean(_) => AtomicTypeSpec::Boolean
+        }
+    }
 }
 
 impl fmt::Debug for Constant {
@@ -37,28 +47,6 @@ impl fmt::Debug for CodeModifier {
         Ok(())
     }
 }
-
-/*
-#[derive(Clone)]
-pub struct CodeRegisterArgument {
-    pub reg_id: usize,
-    pub arg_types: Vec<TypeSpec>,
-    pub checks: Vec<Check>
-}
-
-impl fmt::Debug for CodeRegisterArgument {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"r{}",self.reg_id)?;
-        if self.arg_types.len() > 0 || self.checks.len() > 0 {
-            write!(f," : {} {}",
-                sepfmt(&mut self.arg_types.iter(),"|",""),
-                sepfmt(&mut self.checks.iter()," ","")
-            )?;
-        }
-        Ok(())
-    }
-}
-*/
 
 #[derive(Clone)]
 pub struct CodeArgument {
@@ -272,7 +260,7 @@ impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Eq)]
 pub enum AtomicTypeSpec {
     Number,
     String,
@@ -378,32 +366,6 @@ impl fmt::Debug for ImplBlock {
             )?;
         }
         write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
-        Ok(())
-    }
-}
-
-#[derive(Clone)]
-pub struct CodeBlock {
-    pub name: String,
-    pub arguments: Vec<CodeArgument>,
-    pub results: Vec<CodeArgument>,
-    pub impls: Vec<ImplBlock>,
-    pub modifiers: Vec<CodeModifier>
-}
-
-impl fmt::Debug for CodeBlock {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"{}",sepfmt(&mut self.modifiers.iter()," ",""))?;
-        write!(f," code {}({})",
-            self.name,
-            sepfmt(&mut self.arguments.iter(),", ","")
-        )?;
-        if self.results.len() > 0 {
-            write!(f," -> ({}) ",
-                sepfmt(&mut self.results.iter(),", ","")
-            )?;
-        }
-        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.impls.iter(),"\n","  "))?;
         Ok(())
     }
 }

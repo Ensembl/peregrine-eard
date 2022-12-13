@@ -1,5 +1,5 @@
 use std::{sync::Arc, fmt};
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, OrRepeater, CodeBlock}, codeblocks::{CodeDefinition}};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, OrRepeater}, codeblocks::{CodeDefinition, CodeBlock}};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {

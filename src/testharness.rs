@@ -1,9 +1,15 @@
-use std::{collections::{HashMap, HashSet}, sync::Arc};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}};
+use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
     move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
+}
+
+fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
+    let mut keys = h.keys().collect::<Vec<_>>();
+    keys.sort();
+    keys.iter().map(|k| (*k,h.get(k).unwrap())).collect()
 }
 
 pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompiler,String> {
@@ -248,6 +254,20 @@ pub(super) fn run_parse_tests(data: &str) {
             println!("{}",error);
             assert_eq!(process_ws(&error,linearized_options),process_ws(linearized_correct,linearized_options));
             continue;
+        }
+        if let Some((broad_options,broad_correct)) = sections.get("broad") {
+            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
+            let bundles = build_unbundle(&processed).expect("unbundle failed");
+            let linear = linearize(&processed,&bundles).expect("linearize failed");
+            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
+            let typing = broad_type(&processed,&linear).expect("typing failed");
+            let mut report = BTreeMap::new();
+            for (reg,broad) in sort_map(&typing) {
+                report.entry(format!("{:?}",broad)).or_insert(vec![]).push(reg.to_string());
+            }
+            let report = report.iter().map(|(k,v)| format!("{}: {}",k,v.join(", "))).collect::<Vec<_>>().join("\n");
+            println!("{}",report);
+            assert_eq!(process_ws(&report,broad_options),process_ws(broad_correct,broad_options));
         }
     }
 }

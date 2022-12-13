@@ -124,7 +124,7 @@ test:43 (x) <- #14 r6
 
 >> linearize strip
 
-test:15 r1 (3) 
+test:15 r1 (1) 
 test:15 r2 <copy-from> r1
 test:15 r3 <copy-from> r2
 test:15 r4 <copy-from> r3
@@ -135,7 +135,7 @@ test:16 r8 <copy-from> r6
 test:16 r9 <copy-from> r7
 test:16 r10 <copy-from> r8
 test:16 r11 <copy-from> r9
-test:16 r12 (5) r10 r11
+test:16 r12 (2) r10 r11
 test:16 r13 <copy-from> r12
 test:16 r14 <copy-from> r13
 test:16 r15 <copy-from> r14
@@ -146,7 +146,7 @@ test:16 r18 <copy-from> r16
 test:16 r19 <copy-from> r17
 test:16 r20 <copy-from> r18
 test:16 r21 <copy-from> r19
-test:16 r22 (5) r20 r21
+test:16 r22 (2) r20 r21
 test:16 r13 <copy-from> r22
 test:16 r23 <copy-from> r13
 test:16 r24 <copy-from> r23
@@ -157,7 +157,7 @@ test:16 r27 <copy-from> r25
 test:16 r28 <copy-from> r26
 test:16 r29 <copy-from> r27
 test:16 r30 <copy-from> r28
-test:16 r31 (5) r29 r30
+test:16 r31 (2) r29 r30
 test:16 r13 <copy-from> r31
 test:16 r32 <copy-from> r13
 test:16 r33 <copy-from> r32
@@ -168,7 +168,7 @@ test:42 r36 <copy-from> r35
 test:42 r37 <copy-from> r36
 test:43 r38 <copy-from> r37
 test:43 r39 <constant> true
-test:43 r40 r41 (13) r38 r39
+test:43 r40 r41 (6) r38 r39
 test:43 r42 <copy-from> r40
 test:43 r43 <copy-from> r42
 test:43 r44 <copy-from> r43

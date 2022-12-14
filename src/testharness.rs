@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type, reduce::reduce};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type, reduce::reduce, frontend::buildtree::BuildTree, checking::run_checking};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -78,6 +78,14 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     } else {
         input.to_string()
     }
+}
+
+fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>) {
+
+    let tree = compilation.build(processed.to_vec()).expect("build failed");
+    let bundles = build_unbundle(&tree).expect("unbundle failed");
+    let linear = linearize(&tree,&bundles).expect("linearize failed");
+    (tree,reduce(&linear))
 }
 
 pub(super) fn run_parse_tests(data: &str) {
@@ -251,20 +259,18 @@ pub(super) fn run_parse_tests(data: &str) {
             assert_eq!(process_ws(&linear.join("\n"),linearized_options),process_ws(linearized_correct,linearized_options));
         }
         if let Some((linearized_options,linearized_correct)) = sections.get("linearize-fail") {
-            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
-            let bundles = build_unbundle(&processed).expect("unbundle failed");
-            let error = linearize(&processed,&bundles).err().expect("linearize unexpectedly succeeded");
+            let tree = compilation.build(processed.expect("processing failed")).expect("build failed");
+            let bundles = build_unbundle(&tree).expect("unbundle failed");
+            let error = linearize(&tree,&bundles).err().expect("linearize unexpectedly succeeded");
             println!("{}",error);
             assert_eq!(process_ws(&error,linearized_options),process_ws(linearized_correct,linearized_options));
             continue;
         }
         if let Some((broad_options,broad_correct)) = sections.get("broad") {
-            let processed = compilation.build(processed.expect("processing failed")).expect("build failed");
-            let bundles = build_unbundle(&processed).expect("unbundle failed");
-            let linear = linearize(&processed,&bundles).expect("linearize failed");
-            let linear = reduce(&linear);
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
             println!("{}",sepfmt(&mut linear.iter(),"\n",""));
-            let typing = broad_type(&processed,&linear).expect("typing failed");
+            let (typing,_) = broad_type(&tree,&linear).expect("typing failed");
             let mut report = BTreeMap::new();
             for (reg,broad) in sort_map(&typing) {
                 report.entry(format!("{:?}",broad)).or_insert(vec![]).push(reg.to_string());
@@ -272,6 +278,19 @@ pub(super) fn run_parse_tests(data: &str) {
             let report = report.iter().map(|(k,v)| format!("{}: {}",k,v.join(", "))).collect::<Vec<_>>().join("\n");
             println!("{}",report);
             assert_eq!(process_ws(&report,broad_options),process_ws(broad_correct,broad_options));
+        }
+        if let Some((_checking_options,_checking_correct)) = sections.get("checking") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
+            let (_typing,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
+            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+        }
+        if let Some((checking_options,checking_expected)) = sections.get("checking-fail") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
+            let (_typing,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
+            let error = run_checking(&tree,&linear,&block_indexes).err().expect("checking unexpectedly succeeded");
+            assert_eq!(process_ws(&error,checking_options),process_ws(checking_expected,checking_options));
         }
     }
 }

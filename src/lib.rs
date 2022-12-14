@@ -16,6 +16,7 @@ mod unbundle {
 mod checking;
 mod codeblocks;
 mod compiler;
+mod equiv;
 mod model;
 mod reduce;
 mod typing;

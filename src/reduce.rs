@@ -28,10 +28,10 @@ impl Reduce {
             LinearStatementValue::Type(reg,typ) => {
                 Some(LinearStatementValue::Type(self.canon(*reg),typ.clone()))
             }
-            LinearStatementValue::Code(name,rets,args,world) => {
+            LinearStatementValue::Code(index,name,rets,args,world) => {
                 let rets = rets.iter().map(|reg| self.canon(*reg)).collect::<Vec<_>>();
                 let args = args.iter().map(|reg| self.canon(*reg)).collect::<Vec<_>>();
-                Some(LinearStatementValue::Code(*name,rets,args,*world))
+                Some(LinearStatementValue::Code(*index,*name,rets,args,*world))
             },
             LinearStatementValue::Copy(dst,src) => {
                 let src = self.equiv.get(src).unwrap_or(src);

@@ -85,14 +85,16 @@ impl CodeDefinition {
 
     pub(crate) fn world(&self) -> bool { self.world }
 
-    pub(crate) fn broad_typing(&self, src: &[BroadType]) -> Result<Vec<BroadType>,String> {
-        for block in &self.blocks {
+    pub(crate) fn broad_typing(&self, src: &[BroadType]) -> Result<(Vec<BroadType>,usize),String> {
+        for (i,block) in self.blocks.iter().enumerate() {
             if let Some(dst) = block.broad_typing(src)? {
-                return Ok(dst);
+                return Ok((dst,i));
             }
         }
         Err(format!("could not find appropriate implementation"))
     }
+
+    pub(crate) fn get_block(&self, index: usize) -> &CodeBlock { &self.blocks[index] }
 }
 
 impl fmt::Debug for CodeDefinition {

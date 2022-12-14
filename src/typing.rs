@@ -31,12 +31,13 @@ impl fmt::Debug for BroadType {
 pub(crate) struct BroadTyping<'a> {
     bt: &'a BuildTree,
     position: Option<(Arc<Vec<String>>,usize)>,
-    types: HashMap<usize,BroadType>
+    types: HashMap<usize,BroadType>,
+    blocks: HashMap<usize,usize>
 }
 
 impl<'a> BroadTyping<'a> {
     fn new(bt: &'a BuildTree) -> BroadTyping<'a> {
-        BroadTyping { bt, types: HashMap::new(), position: None }
+        BroadTyping { bt, types: HashMap::new(), position: None, blocks: HashMap::new() }
     }
 
     fn error_at(&self, msg: &str) -> String {
@@ -58,16 +59,17 @@ impl<'a> BroadTyping<'a> {
             LinearStatementValue::Copy(dst,src) => {
                 self.types.insert(*dst,self.get(*src));
             },
-            LinearStatementValue::Code(index,dst,src, world) => {
+            LinearStatementValue::Code(call,index,dst,src, world) => {
                 let defn = match self.bt.get_by_index(*index)? {
                     BTTopDefn::FuncProc(_) => { panic!("code index did not refer to code!") },
                     BTTopDefn::Code(defn) => defn
                 };
                 let src_types = src.iter().map(|r| self.get(*r)).collect::<Vec<_>>();
-                let dst_types = defn.broad_typing(&src_types)?;
+                let (dst_types,block_index) = defn.broad_typing(&src_types)?;
                 if dst.len() != dst_types.len() {
                     return Err(format!("code did not return expected argument count"));
                 }
+                self.blocks.insert(*call,block_index);
                 for (reg,broad) in dst.iter().zip(dst_types.iter()) {
                     self.types.insert(*reg,broad.clone());
                 }
@@ -87,10 +89,10 @@ impl<'a> BroadTyping<'a> {
         Ok(())
     }
 
-    fn take(self) -> HashMap<usize,BroadType> { self.types }
+    fn take(self) -> (HashMap<usize,BroadType>,HashMap<usize,usize>) { (self.types,self.blocks) }
 }
 
-pub(crate) fn broad_type(bt: &BuildTree, stmts: &[LinearStatement]) -> Result<HashMap<usize,BroadType>,String> {
+pub(crate) fn broad_type(bt: &BuildTree, stmts: &[LinearStatement]) -> Result<(HashMap<usize,BroadType>,HashMap<usize,usize>),String> {
     let mut typing = BroadTyping::new(bt);
     for stmt in stmts {
         typing.add(stmt).map_err(|e| typing.error_at(&e))?;

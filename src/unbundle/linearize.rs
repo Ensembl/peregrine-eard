@@ -13,7 +13,8 @@ struct Linearize<'a> {
     bt_registers: HashMap<(usize,Option<String>),usize>,
     call_stack: Vec<usize>,
     captures: HashMap<usize,Vec<(Variable,usize)>>,
-    checks: Checks
+    checks: Checks,
+    next_call_index: usize
 }
 
 impl<'a> Linearize<'a> {
@@ -28,6 +29,7 @@ impl<'a> Linearize<'a> {
             call_stack: vec![],
             captures: HashMap::new(),
             checks: Checks::new(),
+            next_call_index: 0
         }
     }
 
@@ -316,7 +318,12 @@ impl<'a> Linearize<'a> {
             Some(BTTopDefn::Code(defn)) => {
                 /* code */
                 let callee_rets = (0..defn.ret_count()).map(|_| self.anon_register()).collect::<Vec<_>>();
-                self.add(LinearStatementValue::Code(proc.proc_index.expect("assignment/non-assignment"),callee_rets.clone(),arg_regs,defn.world()));
+                self.next_call_index += 1;
+                self.add(LinearStatementValue::Code(
+                    self.next_call_index,
+                    proc.proc_index.expect("assignment/non-assignment"),
+                    callee_rets.clone(),arg_regs,defn.world()
+                ));
                 self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
             },
             None => {

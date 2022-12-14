@@ -145,7 +145,7 @@ pub enum CheckType {
     Sum
 }
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Eq,Hash)]
 pub struct Check {
     pub check_type: CheckType,
     pub name: String
@@ -375,7 +375,7 @@ pub enum LinearStatementValue {
     Check(usize,CheckType,usize), // reg, type, index
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
-    Code(usize,Vec<usize>,Vec<usize>,bool), // name,rets,args
+    Code(usize,usize,Vec<usize>,Vec<usize>,bool), // call,name,rets,args
     Type(usize,Vec<TypeSpec>)
 }
 
@@ -386,10 +386,10 @@ impl fmt::Debug for LinearStatementValue {
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
-            Self::Code(name,rets,args,world) => {
+            Self::Code(call,name,rets,args,world) => {
                 let world = if *world { "w" } else { "" };
-                write!(f,"{} ({}){} {}",
-                    sepfmt(&mut rets.iter()," ","r"),name,world,sepfmt(&mut args.iter()," ","r"))
+                write!(f,"{} ({}#{}){} {}",
+                    sepfmt(&mut rets.iter()," ","r"),name,call,world,sepfmt(&mut args.iter()," ","r"))
             }
         }
     }

@@ -27,11 +27,11 @@ let (z1,z2 : length(w)) = p(1,w);
 
 >> linearize strip reduce
 
-test:6 r1 (1) 
+test:6 r1 (1#1) 
 test:20 r7 <constant> true
-test:7 r12 (2) r1 r7
+test:7 r12 (2#2) r1 r7
 test:20 r17 <constant> false
-test:7 r22 (2) r12 r17
+test:7 r22 (2#3) r12 r17
 test:20 r22 <check> Length 1
 test:21 r29 <constant> 1
 test:16 r29 <type> [number]
@@ -39,7 +39,7 @@ test:16 r22 <type> [seq(boolean)]
 test:16 r22 <check> Length 1
 test:16 r29 <type> [number]
 test:15 r22 <type> [?X]
-test:15 r36 (6)w r22
+test:15 r36 (6#4)w r22
 test:15 r36 <type> [?X]
 test:16 r36 <type> [seq(boolean)]
 test:16 r36 <check> Length 1
@@ -50,3 +50,79 @@ test:21 r36 <check> Length 1
 boolean: 7, 17
 number: 29
 seq: 1, 12, 22, 36
+
+>> checking
+
+>> test
+
+checking fail
+
+>> input
+
+code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
+code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
+code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
+function __operator_infseq(x) { let y = __code_infseq(x); y }
+function __operator_finseq() { let y = __code_finseq(); y }
+procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+world code c (seq(?X) length(?Y)) -> (seq(?X) length(?Y)) {
+    impl (r1: seq(boolean)) -> (r1) {
+        opcode 14, r1;
+    }
+}
+
+let a : length(a) = [1,2];
+let b : length(a) = [3,4];
+
+>> checking-fail trim
+
+checking error: cannot guarantee Length at test:16
+
+>> test
+
+checking success
+
+>> input
+
+code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
+code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
+code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
+function __operator_infseq(x) { let y = __code_infseq(x); y }
+function __operator_finseq() { let y = __code_finseq(); y }
+procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+world code c (seq(?X) length(?Y)) -> (seq(?X) length(?Y)) {
+    impl (r1: seq(boolean)) -> (r1) {
+        opcode 14, r1;
+    }
+}
+
+let a : length(a) = [1,2];
+let b : length(b) = [3,4];
+
+>> checking
+
+>> test
+
+checking success 2
+
+>> input
+
+code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
+code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
+code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
+function __operator_infseq(x) { let y = __code_infseq(x); y }
+function __operator_finseq() { let y = __code_finseq(); y }
+procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+world code c (seq(?X) length(?Y)) -> (seq(?X) length(?Y)) {
+    impl (r1: seq(boolean)) -> (r1) {
+        opcode 14, r1;
+    }
+}
+
+let a : length(a) = [1,2];
+let b : length(a) = c(a);
+
+>> checking

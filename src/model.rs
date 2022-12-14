@@ -1,4 +1,4 @@
-use std::{fmt::{self, Display}, sync::Arc};
+use std::{fmt::{self, Display}, sync::Arc, cmp::Ordering};
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
@@ -260,12 +260,23 @@ impl<T: std::fmt::Debug+Clone> OrBundleRepeater<T> {
     }
 }
 
-#[derive(Clone,PartialEq,Eq)]
+#[derive(Clone,PartialEq,Eq,Hash)]
 pub enum AtomicTypeSpec {
     Number,
     String,
     Boolean,
     Handle(String)
+}
+
+impl AtomicTypeSpec {
+    fn ord_key(&self) -> (usize,&str) {
+        match self {
+            AtomicTypeSpec::Boolean => (0,""),
+            AtomicTypeSpec::Number => (1,""),
+            AtomicTypeSpec::String => (2,""),
+            AtomicTypeSpec::Handle(s) => (3,s),
+        }
+    }
 }
 
 impl fmt::Debug for AtomicTypeSpec {
@@ -279,12 +290,52 @@ impl fmt::Debug for AtomicTypeSpec {
     }
 }
 
+impl PartialOrd for AtomicTypeSpec {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for AtomicTypeSpec {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.ord_key().cmp(&other.ord_key())
+    }
+}
+
+#[derive(Clone)]
+pub enum TypeRestriction {
+    Atomic(AtomicTypeSpec),
+    Sequence(AtomicTypeSpec),
+    AnySequence
+}
+
+impl fmt::Debug for TypeRestriction {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Atomic(v) => write!(f,"{:?}",v),
+            Self::Sequence(v) => write!(f,"seq({:?})",v),
+            Self::AnySequence => write!(f,"seq"),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum TypeSpec {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
     Wildcard(String),
     SequenceWildcard(String)
+}
+
+impl TypeSpec {
+    pub(crate) fn as_restriction(&self) -> Option<TypeRestriction> {
+        match self {
+            TypeSpec::Atomic(a) => Some(TypeRestriction::Atomic(a.clone())),
+            TypeSpec::Sequence(s) => Some(TypeRestriction::Sequence(s.clone())),
+            TypeSpec::Wildcard(_) => { None }
+            TypeSpec::SequenceWildcard(_) =>  { Some(TypeRestriction::AnySequence) },
+        }
+    }
 }
 
 impl fmt::Debug for TypeSpec {
@@ -376,7 +427,7 @@ pub enum LinearStatementValue {
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>,bool), // call,name,rets,args
-    Type(usize,Vec<TypeSpec>)
+    Type(usize,Vec<TypeRestriction>)
 }
 
 impl fmt::Debug for LinearStatementValue {

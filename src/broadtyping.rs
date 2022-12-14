@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, fmt};
 
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}};
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {
@@ -15,6 +15,14 @@ impl BroadType {
             TypeSpec::Sequence(_) => Ok(BroadType::Sequence),
             TypeSpec::Wildcard(w) => Err(w.to_string()),
             TypeSpec::SequenceWildcard(_) => Ok(BroadType::Sequence),
+        }
+    }
+
+    pub(crate) fn from_restriction(spec: &TypeRestriction) -> BroadType {
+        match spec {
+            TypeRestriction::Atomic(a) => BroadType::Atomic(a.clone()),
+            TypeRestriction::Sequence(s) => BroadType::Sequence,
+            TypeRestriction::AnySequence => BroadType::Sequence
         }
     }
 }
@@ -59,7 +67,7 @@ impl<'a> BroadTyping<'a> {
             LinearStatementValue::Copy(dst,src) => {
                 self.types.insert(*dst,self.get(*src));
             },
-            LinearStatementValue::Code(call,index,dst,src, world) => {
+            LinearStatementValue::Code(call,index,dst,src, _) => {
                 let defn = match self.bt.get_by_index(*index)? {
                     BTTopDefn::FuncProc(_) => { panic!("code index did not refer to code!") },
                     BTTopDefn::Code(defn) => defn
@@ -77,10 +85,9 @@ impl<'a> BroadTyping<'a> {
             LinearStatementValue::Type(reg,spec) => {
                 let got = self.get(*reg);
                 for broad in spec {
-                    if let Ok(want) = BroadType::from_typespec(broad) {
-                        if want != got {
-                            return Err(format!("type check failed: expected {:?} got {:?}",want,got));
-                        }
+                    let want = BroadType::from_restriction(broad);
+                    if want != got {
+                        return Err(format!("type check failed: expected {:?} got {:?}",want,got));
                     }
                 }
             },

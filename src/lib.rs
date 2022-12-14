@@ -19,7 +19,8 @@ mod compiler;
 mod equiv;
 mod model;
 mod reduce;
-mod typing;
+mod broadtyping;
+mod narrowtyping;
 
 #[cfg(test)]
 mod test;

@@ -57,8 +57,6 @@ use crate::frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTPro
 use crate::model::{OrBundleRepeater, Variable, OrBundle, TypedArgument};
 use super::{repeater::find_repeater_arguments, unbundleaux::{BundleNamespace, Transits, Position, TransitsBuilder}};
 
-// TODO global bundles
-
 fn sorted<T: Clone+Ord>(set: Option<&HashSet<T>>) -> Option<Vec<T>> {
     set.as_ref().map(|set| {
         let mut out : Vec<T> = set.iter().cloned().collect();

@@ -69,8 +69,11 @@ impl<'a> Linearize<'a> {
                     let var_reg = self.anon_register();
                     self.var_registers.add(&Variable { name: arg.id.clone(), prefix: None },var_reg);
                     self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
-                    if arg.typespec.arg_types.len() > 0 {
-                        self.add(LinearStatementValue::Type(var_reg,arg.typespec.arg_types.clone()));
+                    let types = arg.typespec.arg_types.iter().filter_map(|t| {
+                        t.as_restriction()
+                    }).collect::<Vec<_>>();
+                    if types.len() > 0 {
+                        self.add(LinearStatementValue::Type(var_reg,types));
                     }
                     for check in &arg.typespec.checks {
                         let check_index = self.checks.get(&check.check_type,&check.name);
@@ -108,8 +111,11 @@ impl<'a> Linearize<'a> {
 
     fn ret_checks(&mut self, index: usize, reg: usize, defn: &BTFuncProcDefinition) -> Result<(),String> {
         if let Some(type_spec) = defn.ret_type.as_ref().and_then(|v| v.get(index)) {
-            if type_spec.arg_types.len() > 0 {
-                self.add(LinearStatementValue::Type(reg,type_spec.arg_types.clone()));
+            let types = type_spec.arg_types.iter().filter_map(|t| {
+                t.as_restriction()
+            }).collect::<Vec<_>>();
+            if types.len() > 0 {
+                self.add(LinearStatementValue::Type(reg,types));
             }
             for check in &type_spec.checks {
                 let check_index = self.checks.get(&check.check_type,&check.name);
@@ -187,7 +193,6 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
-    // TODO type checking!
     fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
         self.checks.push();

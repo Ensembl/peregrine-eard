@@ -58,7 +58,7 @@ impl<'a> Checking<'a> {
             let reg1 = regs[*index];
             for (ret_not_arg,index) in &pos {
                 let src = if *ret_not_arg { rets } else { args }; 
-                self.equiv(&check.check_type).set(reg1,src[*index]);
+                self.equiv(&check.check_type).equiv(reg1,src[*index]);
             }
         }
         Ok(())

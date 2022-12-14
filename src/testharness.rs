@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, typing::broad_type, reduce::reduce, frontend::buildtree::BuildTree, checking::run_checking};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, broadtyping::broad_type, reduce::reduce, frontend::buildtree::BuildTree, checking::run_checking};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {

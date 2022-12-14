@@ -38,9 +38,7 @@ test:16 r29 <type> [number]
 test:16 r22 <type> [seq(boolean)]
 test:16 r22 <check> Length 1
 test:16 r29 <type> [number]
-test:15 r22 <type> [?X]
 test:15 r36 (6#4)w r22
-test:15 r36 <type> [?X]
 test:16 r36 <type> [seq(boolean)]
 test:16 r36 <check> Length 1
 test:21 r36 <check> Length 1

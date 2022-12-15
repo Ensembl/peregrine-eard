@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, broadtyping::broad_type, reduce::reduce, frontend::buildtree::BuildTree, checking::run_checking};
+use crate::{compiler::{EarpCompiler, EarpCompilation}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, broadtyping::broad_type, reduce::reduce, frontend::buildtree::BuildTree, checking::run_checking, narrowtyping::narrow_type};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -291,6 +291,20 @@ pub(super) fn run_parse_tests(data: &str) {
             let (_typing,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
             let error = run_checking(&tree,&linear,&block_indexes).err().expect("checking unexpectedly succeeded");
             assert_eq!(process_ws(&error,checking_options),process_ws(checking_expected,checking_options));
+        }
+        if let Some((narrow_options,narrow_correct)) = sections.get("narrow") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
+            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut report = BTreeMap::new();
+            for (reg,narrow) in sort_map(&narrow) {
+                report.entry(format!("{:?}",narrow)).or_insert(vec![]).push(reg.to_string());
+            }
+            let report = report.iter().map(|(k,v)| format!("{}: {}",k,v.join(", "))).collect::<Vec<_>>().join("\n");
+            println!("{}",report);
+            assert_eq!(process_ws(&report,narrow_options),process_ws(narrow_correct,narrow_options));
         }
     }
 }

@@ -143,8 +143,9 @@ impl<'a> Linearize<'a> {
                             self.ret_checks(i,reg,defn)?;
                         },
                         BTExpression::RegisterValue(src,BTRegisterType::Normal) => {
-                            regs.push(*src);
-                            self.ret_checks(i,*src,defn)?;
+                            let var_reg = self.bt_register(*src,None);
+                            regs.push(var_reg);
+                            self.ret_checks(i,var_reg,defn)?;
                         },
                         BTExpression::RegisterValue(src,BTRegisterType::Bundle) => {
                             let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;

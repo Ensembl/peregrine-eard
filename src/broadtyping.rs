@@ -87,7 +87,7 @@ impl<'a> BroadTyping<'a> {
                 for broad in spec {
                     let want = BroadType::from_restriction(broad);
                     if want != got {
-                        return Err(format!("type check failed: expected {:?} got {:?}",want,got));
+                        return Err(format!("type check failed: expected {:?} got {:?} : {:?}",want,got,stmt));
                     }
                 }
             },

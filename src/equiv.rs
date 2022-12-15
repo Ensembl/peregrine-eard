@@ -1,5 +1,6 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash};
+use std::{collections::{HashMap, HashSet}, hash::Hash, fmt};
 
+#[derive(Debug)]
 pub(crate) struct EquivalenceClass<X: PartialEq+Eq+Hash+Clone> {
     equiv: HashMap<X,X>
 }
@@ -48,6 +49,12 @@ pub(crate) struct EquivalenceMap<K: PartialEq+Eq+Hash+Clone,V,E> {
     keys: HashSet<K>
 }
 
+impl<K: PartialEq+Eq+Hash+Clone+fmt::Debug,V: fmt::Debug,E> fmt::Debug for EquivalenceMap<K,V,E> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EquivalenceMap").field("equiv", &self.equiv).field("values", &self.values).field("keys", &self.keys).finish()
+    }
+}
+
 impl<K: PartialEq+Eq+Hash+Clone,V,E> EquivalenceMap<K,V,E> {
     pub(crate) fn new<F>(merge: F) -> EquivalenceMap<K,V,E> where F: Fn(&mut V,&V) -> Result<(),E> + 'static {
         EquivalenceMap {
@@ -94,6 +101,6 @@ impl<K: PartialEq+Eq+Hash+Clone,V,E> EquivalenceMap<K,V,E> {
     }
 
     pub(crate) fn keys(&self) -> &HashSet<K> {
-        &self.keys()
+        &self.keys
     }
 }

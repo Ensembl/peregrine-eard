@@ -48,10 +48,12 @@ number = @{
 include = { "include" ~ string ~ ";" }
 
 /* checks */
-length_check = { "length(" ~ identifier ~ ")" }
-lengthorinf_check = { "length(" ~ identifier ~ "..." ~ ")" }
-total_check = { "total(" ~ identifier ~ ")" }
-ref_check = { "ref(" ~ identifier ~ ")" }
+maybe_force_check = { "!" | "" }
+
+length_check = { "length(" ~ maybe_force_check ~ identifier ~ ")" }
+lengthorinf_check = { "length(" ~ maybe_force_check ~ identifier ~ "..." ~ ")" }
+total_check = { "total(" ~ maybe_force_check ~ identifier ~ ")" }
+ref_check = { "ref(" ~ maybe_force_check ~ identifier ~ ")" }
 
 check_annotation = { length_check | lengthorinf_check | total_check | ref_check }
 

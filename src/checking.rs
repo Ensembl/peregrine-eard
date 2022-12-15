@@ -9,15 +9,16 @@
  * 
  */
 
-use std::{sync::Arc, collections::HashMap};
-use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeDefinition, CodeBlock}, equiv::EquivalenceClass};
+use std::{sync::Arc, collections::{HashMap, HashSet}};
+use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeDefinition, CodeBlock}, equiv::{EquivalenceClass, EquivalenceMap}};
 
 pub(crate) struct Checking<'a> {
     bt: &'a BuildTree,
     position: Option<(Arc<Vec<String>>,usize)>,
     block_indexes: &'a HashMap<usize,usize>,
     equiv: HashMap<CheckType,EquivalenceClass<usize>>,
-    group: HashMap<(CheckType,usize),usize>
+    group: HashMap<(CheckType,usize),HashSet<usize>>,
+    forced: HashSet<usize>
 }
 
 impl<'a> Checking<'a> {
@@ -26,7 +27,8 @@ impl<'a> Checking<'a> {
             bt, block_indexes,
             position: None,
             equiv: HashMap::new(),
-            group: HashMap::new()
+            group: HashMap::new(),
+            forced: HashSet::new()
         }
     }
 
@@ -88,17 +90,29 @@ impl<'a> Checking<'a> {
         }
     }
 
+    fn groupify(&mut self, stmt: &LinearStatement) -> Result<(),String> {
+        self.position = Some((stmt.file.clone(),stmt.line_no));
+        match &stmt.value {
+            LinearStatementValue::Check(reg,ct,ci,force) => {
+                let reg_group = *self.equiv(ct).get(reg);
+                self.group.entry((ct.clone(),*ci)).or_insert_with(|| HashSet::new()).insert(reg_group);
+                if *force {
+                    self.forced.insert(reg_group);
+                }
+            },
+            _ => {}
+        }
+        Ok(())
+    }
+
+    /* We iterate again so that we get the line number in the error message */
     fn check(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
-            LinearStatementValue::Check(reg,ct,ci) => {
-                let reg_group = *self.equiv(ct).get(reg);
-                if let Some(old_group) = self.group.get(&(ct.clone(),*ci)).cloned() {
-                    if reg_group != old_group {
-                        return Err(format!("checking error: cannot guarantee {:?}",ct));
-                    }
-                } else {
-                    self.group.insert((ct.clone(),*ci),reg_group);
+            LinearStatementValue::Check(reg,ct,ci,_) => {
+                let group = *self.equiv(ct).get(reg);
+                if !self.forced.contains(&group) {
+                    return Err(format!("checking error: cannot guarantee {:?}",ct));
                 }
             },
             _ => {}
@@ -113,6 +127,9 @@ pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_inde
         typing.make_equivs(stmt).map_err(|e| typing.error_at(&e))?;
     }
     typing.done_making_equivs();
+    for stmt in stmts {
+        typing.groupify(stmt).map_err(|e| typing.error_at(&e))?;
+    }
     for stmt in stmts {
         typing.check(stmt).map_err(|e| typing.error_at(&e))?;
     }

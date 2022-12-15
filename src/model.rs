@@ -148,7 +148,8 @@ pub enum CheckType {
 #[derive(Clone,PartialEq,Eq,Hash)]
 pub struct Check {
     pub check_type: CheckType,
-    pub name: String
+    pub name: String,
+    pub force: bool
 }
 
 impl fmt::Debug for Check {
@@ -423,7 +424,7 @@ impl fmt::Debug for ImplBlock {
 
 #[derive(Clone)]
 pub enum LinearStatementValue {
-    Check(usize,CheckType,usize), // reg, type, index
+    Check(usize,CheckType,usize, bool), // reg, type, index, force
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>,bool), // call,name,rets,args
@@ -434,7 +435,10 @@ pub enum LinearStatementValue {
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Check(v, ct, c) => write!(f,"r{:?} <check> {:?} {:?}",v,ct,c),
+            Self::Check(v, ct, c,force) => {
+                let force = if *force { "f" } else { "" };
+                write!(f,"r{:?} <check>{} {:?} {:?}",v,force,ct,c)
+            },
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
             Self::WildEquiv(r) => write!(f,"<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),

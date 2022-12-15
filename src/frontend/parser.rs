@@ -80,7 +80,14 @@ macro_rules! left_rec {
 }
 
 fn check(input: Node, check_type: CheckType) -> PestResult<Check> {
-    Ok(Check { check_type, name: input.into_children().next().unwrap().as_str().to_string() })
+    Ok(Check { check_type, name: input.into_children().next().unwrap().as_str().to_string(), force: false })
+}
+
+fn decl_check(input: Node, check_type: CheckType) -> PestResult<Check> {
+    let mut kids = input.into_children();
+    let force = kids.next().unwrap();
+    let id = kids.next().unwrap();
+    Ok(Check { check_type, name: id.as_str().to_string(), force: force.as_str() == "!" })
 }
 
 #[pest_consume::parser]
@@ -300,10 +307,10 @@ impl EarpParser {
         ))
     }
 
-    fn length_check(input: Node) -> PestResult<Check> { check(input,CheckType::Length) }
-    fn lengthorinf_check(input: Node) -> PestResult<Check> { check(input,CheckType::LengthOrInfinite) }
-    fn total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }
-    fn ref_check(input: Node) -> PestResult<Check> { check(input,CheckType::Reference) }
+    fn length_check(input: Node) -> PestResult<Check> { decl_check(input,CheckType::Length) }
+    fn lengthorinf_check(input: Node) -> PestResult<Check> { decl_check(input,CheckType::LengthOrInfinite) }
+    fn total_check(input: Node) -> PestResult<Check> { decl_check(input,CheckType::Sum) }
+    fn ref_check(input: Node) -> PestResult<Check> { decl_check(input,CheckType::Reference) }
     fn arg_length_check(input: Node) -> PestResult<Check> { check(input,CheckType::Length) }
     fn arg_lengthorinf_check(input: Node) -> PestResult<Check> { check(input,CheckType::LengthOrInfinite) }
     fn arg_total_check(input: Node) -> PestResult<Check> { check(input,CheckType::Sum) }

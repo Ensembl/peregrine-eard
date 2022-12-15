@@ -77,7 +77,7 @@ impl<'a> Linearize<'a> {
                     }
                     for check in &arg.typespec.checks {
                         let check_index = self.checks.get(&check.check_type,&check.name);
-                        self.add(LinearStatementValue::Check(var_reg,check.check_type.clone(),check_index));
+                        self.add(LinearStatementValue::Check(var_reg,check.check_type.clone(),check_index,check.force));
                     }
                 },
                 OrBundle::Bundle(bundle_name) => {
@@ -119,7 +119,7 @@ impl<'a> Linearize<'a> {
             }
             for check in &type_spec.checks {
                 let check_index = self.checks.get(&check.check_type,&check.name);
-                self.add(LinearStatementValue::Check(reg,check.check_type.clone(),check_index));
+                self.add(LinearStatementValue::Check(reg,check.check_type.clone(),check_index,check.force));
             }
         }
         Ok(())
@@ -442,7 +442,7 @@ impl<'a> Linearize<'a> {
             BTStatementValue::Check(variable,check) => {
                 let register = self.var_registers.get(variable)?;
                 let check_index = self.checks.get(&check.check_type,&check.name);
-                self.add(LinearStatementValue::Check(register,check.check_type.clone(),check_index));
+                self.add(LinearStatementValue::Check(register,check.check_type.clone(),check_index,check.force));
             },
             BTStatementValue::BundledStatement(proc) => {
                 self.procedure(proc)?;

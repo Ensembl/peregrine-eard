@@ -14,7 +14,9 @@ mod middleend {
     pub(crate) mod reduce;
     pub(crate) mod broadtyping;
     pub(crate) mod narrowtyping;
-    pub(crate) mod checking;    
+    pub(crate) mod checking;  
+    pub(crate) mod culdesac;
+    pub(crate) mod constfold;
 }
 
 mod unbundle {
@@ -24,9 +26,7 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
-mod culdesac;
 mod codeblocks;
-mod constfold;
 pub mod compiler;
 pub mod compilation;
 mod equiv;

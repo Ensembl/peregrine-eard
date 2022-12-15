@@ -1,10 +1,9 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash, sync::Arc, mem};
-use crate::{model::{Operation, CodeModifier}, equiv::EquivalenceMap, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
+use std::{collections::{HashMap, HashSet}, sync::Arc, mem};
+use crate::{model::{Operation, CodeModifier}, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
 
 struct CulDeSac<'a> {
     bt: &'a BuildTree,
     block_index: &'a HashMap<usize,usize>,
-    position: Option<(Arc<Vec<String>>,usize)>,
     roots: HashSet<usize>,
     requires: HashMap<usize,Arc<Vec<usize>>>,
     needed: HashSet<usize>,
@@ -15,7 +14,6 @@ impl<'a> CulDeSac<'a> {
     fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>) -> CulDeSac<'a> {
         CulDeSac { 
             bt, block_index,
-            position: None,
             roots: HashSet::new(),
             requires: HashMap::new(),
             needed: HashSet::new(),
@@ -91,7 +89,6 @@ impl<'a> CulDeSac<'a> {
         }
     }
 }
-
 
 pub(crate) fn culdesac(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation]) -> Vec<Operation> {
     let mut culdesac = CulDeSac::new(bt,block_index);

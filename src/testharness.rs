@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type}, compilation::EarpCompilation};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type}, compilation::EarpCompilation, constfold::const_fold};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -44,6 +44,20 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
             line_no: pos.1,
             context
         }])
+    })?;
+    compiler.add_constant_folder("test",|args| {
+        args.iter().cloned().collect::<Option<Vec<FullConstant>>>().and_then(|v| {
+            match (&v[0],&v[1]) {
+                (FullConstant::Atomic(Constant::Number(a)),FullConstant::Atomic(Constant::Number(b))) => {
+                    if *a+*b < 10. {
+                        Some(vec![FullConstant::Atomic(Constant::Number(*a+*b))])
+                    } else {
+                        None
+                    }        
+                },
+                _ => None
+            }
+        })
     })?;
     Ok(compiler)
 }
@@ -304,6 +318,16 @@ pub(super) fn run_parse_tests(data: &str) {
             let report = report.iter().map(|(k,v)| format!("{}: {}",k,v.join(", "))).collect::<Vec<_>>().join("\n");
             println!("{}",report);
             assert_eq!(process_ws(&report,narrow_options),process_ws(narrow_correct,narrow_options));
+        }
+        if let Some((constfold_options,constfold_correct)) = sections.get("constfold") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
+            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let opers = const_fold(&compilation,&tree,&block_indexes,&linear);
+            println!("{}",sepfmt(&mut opers.iter(),"\n",""));
+            assert_eq!(process_ws(&sepfmt(&mut opers.iter(),"\n",""),constfold_options),process_ws(constfold_correct,constfold_options));
         }
     }
 }

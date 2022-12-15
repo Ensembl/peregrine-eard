@@ -1,12 +1,12 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant, Operation}};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
     source_loader: Box<dyn Fn(&str) -> Result<String,String>>,
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],(&[String],usize),usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
-    constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<Operation>>>>
+    constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>>>>
 }
 
 impl EarpCompiler {
@@ -51,12 +51,18 @@ impl EarpCompiler {
     }
 
     pub fn add_constant_folder<F>(&mut self, name: &str, cb: F) -> Result<(),String>
-            where F: Fn(&[Option<FullConstant>]) -> Option<Vec<Operation>> + 'static {
+            where F: Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>> + 'static {
         if self.constant_folder.contains_key(name) {
             return Err(format!("Duplicate constant folder '{}'",name));
         }
         self.constant_folder.insert(name.to_string(),Box::new(cb));
         Ok(())
+    }
+
+    pub(crate) fn fold(&self, name: &str, input: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+        self.constant_folder.get(name).and_then(|cb| {
+            (cb)(input)
+        })
     }
 
     pub(crate) fn apply_block_macro(&self, name: &str, args: &[OrBundleRepeater<PTExpression>], pos: (&[String],usize), context: usize) -> Result<Vec<PTStatement>,String> {

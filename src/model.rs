@@ -40,23 +40,48 @@ pub enum FullConstant {
     Sequence(Vec<Constant>)
 }
 
+impl fmt::Debug for FullConstant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Atomic(a) => write!(f,"{:?}",a),
+            Self::Sequence(s) => write!(f,"[{}]",sepfmt(&mut s.iter(),",","")),
+        }
+    }
+}
+
 #[derive(Clone)]
 pub enum Operation {
-    Line(Arc<String>,usize),
+    Line(Arc<Vec<String>>,usize),
     Constant(usize,FullConstant),
-    Copy(usize,usize), // to,from
-    Code(usize,Vec<usize>,Vec<usize>,bool), // name,rets,args
+    Code(usize,Vec<usize>,Vec<usize>), // name,rets,args
+}
+
+impl fmt::Debug for Operation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Operation::Line(file,line) => write!(f,"# {}:{}",file.last().map(|x| x.as_str()).unwrap_or("*anon*"),line),
+            Operation::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
+            Operation::Code(name,rets,args) => 
+                write!(f,"{} ({}) {}",
+                    sepfmt(&mut rets.iter()," ","r"),
+                    *name,
+                    sepfmt(&mut args.iter()," ","r")
+                )
+        }
+    }
 }
 
 #[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
-    World
+    World,
+    Fold(String)
 }
 
 impl fmt::Debug for CodeModifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CodeModifier::World => write!(f,"world")?
+            CodeModifier::World => write!(f,"world")?,
+            CodeModifier::Fold(s) => write!(f,"fold({})",s)?
         }
         Ok(())
     }
@@ -417,7 +442,7 @@ pub enum LinearStatementValue {
     Check(usize,CheckType,usize, bool), // reg, type, index, force
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
-    Code(usize,usize,Vec<usize>,Vec<usize>,bool), // call,name,rets,args
+    Code(usize,usize,Vec<usize>,Vec<usize>), // name,call,index,rets,args
     Type(usize,Vec<TypeRestriction>),
     WildEquiv(Vec<usize>)
 }
@@ -433,10 +458,9 @@ impl fmt::Debug for LinearStatementValue {
             Self::WildEquiv(r) => write!(f,"<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
-            Self::Code(call,name,rets,args,world) => {
-                let world = if *world { "w" } else { "" };
-                write!(f,"{} ({}#{}){} {}",
-                    sepfmt(&mut rets.iter()," ","r"),name,call,world,sepfmt(&mut args.iter()," ","r"))
+            Self::Code(call,name,rets,args) => {
+                write!(f,"{} ({}#{}) {}",
+                    sepfmt(&mut rets.iter()," ","r"),name,call,sepfmt(&mut args.iter()," ","r"))
             }
         }
     }

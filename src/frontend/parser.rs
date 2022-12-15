@@ -107,11 +107,17 @@ impl EarpParser {
         ))
     }
 
+    fn world(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+
+    fn fold(input: Node) -> PestResult<String> {
+        Ok(match_nodes!(input.into_children(); [identifier(s)] => s ))
+    }
+
     fn code_modifier(input: Node) -> PestResult<CodeModifier> {
-        Ok(match input.as_str() {
-            "world" => CodeModifier::World,
-            _ => unreachable!()
-        })
+        Ok(match_nodes!(input.into_children();
+          [world(_)] => CodeModifier::World,
+          [fold(f)] => CodeModifier::Fold(f.to_string())
+        ))
     }
 
     fn funcproc_modifier(input: Node) -> PestResult<FuncProcModifier> {

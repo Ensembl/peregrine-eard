@@ -3,6 +3,14 @@ use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatement
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
+/* NOTE! After linearizing we are not yet in signle-assignment form as multiple consecutive calls
+ * to a function/procedure reuse registers (we can get away without rewriting or a stack because)
+ * we are non-recursive. It takes a call to reduce to convert to single-assignment form. This is
+ * also why reduce() is not an EquivelenceClass as the semantics are slightly different. (We are
+ * also lazy during sequence generation and reuse registers but this could be changed were it
+ * necessary that we are not in SAF anyway).
+ */
+
 struct Linearize<'a> {
     tree: &'a BuildTree,
     bundles: &'a Transits,
@@ -368,7 +376,7 @@ impl<'a> Linearize<'a> {
                 self.add(LinearStatementValue::Code(
                     self.next_call_index,
                     proc.proc_index.expect("assignment/non-assignment"),
-                    callee_rets.clone(),arg_regs,defn.world()
+                    callee_rets.clone(),arg_regs
                 ));
                 self.callee_to_caller(proc.rets.as_ref().unwrap_or(&vec![]),&callee_rets)?;
             },

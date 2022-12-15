@@ -98,7 +98,9 @@ impl_arg_var = { (impl_real_arg|constant) }
 impl_real_arg = { register ~ ":" ~ arg_type }
 
 /* code blocks */
-code_modifier = { "world" }
+world = { "world" }
+fold = { "fold(" ~ identifier ~ ")" }
+code_modifier = { world | fold }
 code_modifiers = { code_modifier* }
 
 register = { "r" ~ ASCII_DIGIT+ }

@@ -1,6 +1,13 @@
 use std::collections::HashMap;
-
 use crate::model::{LinearStatement, LinearStatementValue};
+
+/* NOTE! After linearizing we are not yet in signle-assignment form as multiple consecutive calls
+ * to a function/procedure reuse registers (we can get away without rewriting or a stack because)
+ * we are non-recursive. It takes a call to reduce to convert to single-assignment form. This is
+ * also why reduce() is not an EquivelenceClass as the semantics are slightly different. (We are
+ * also lazy during sequence generation and reuse registers but this could be changed were it
+ * necessary that we are not in SAF anyway).
+ */
 
 struct Reduce {
     equiv: HashMap<usize,usize>
@@ -38,10 +45,10 @@ impl Reduce {
             LinearStatementValue::Type(reg,typ) => {
                 Some(LinearStatementValue::Type(self.canon(*reg),typ.clone()))
             }
-            LinearStatementValue::Code(index,name,rets,args,world) => {
+            LinearStatementValue::Code(index,name,rets,args) => {
                 let rets = rets.iter().map(|reg| self.canon(*reg)).collect::<Vec<_>>();
                 let args = args.iter().map(|reg| self.canon(*reg)).collect::<Vec<_>>();
-                Some(LinearStatementValue::Code(*index,*name,rets,args,*world))
+                Some(LinearStatementValue::Code(*index,*name,rets,args))
             },
             LinearStatementValue::Copy(dst,src) => {
                 let src = self.equiv.get(src).unwrap_or(src);

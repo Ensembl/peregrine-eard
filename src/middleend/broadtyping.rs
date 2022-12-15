@@ -67,7 +67,7 @@ impl<'a> BroadTyping<'a> {
             LinearStatementValue::Copy(dst,src) => {
                 self.types.insert(*dst,self.get(*src));
             },
-            LinearStatementValue::Code(call,index,dst,src, _) => {
+            LinearStatementValue::Code(call,index,dst,src) => {
                 let defn = match self.bt.get_by_index(*index)? {
                     BTTopDefn::FuncProc(_) => { panic!("code index did not refer to code!") },
                     BTTopDefn::Code(defn) => defn

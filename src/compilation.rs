@@ -1,6 +1,5 @@
 use std::collections::{HashSet, HashMap};
-
-use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::parse_earp}, model::LinearStatement, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}}};
+use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::parse_earp}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}}, constfold::const_fold};
 
 pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
@@ -16,6 +15,8 @@ impl<'a> EarpCompilation<'a> {
             context: 0
         }
     }
+
+    pub(crate) fn compiler(&self) -> &EarpCompiler { &self.compiler }
 
     pub fn set_flag(&mut self, flag: &str) {
         self.flags.insert(flag.to_string());
@@ -41,18 +42,19 @@ impl<'a> EarpCompilation<'a> {
         self.build(stmts)
     }
 
-    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<LinearStatement>,HashMap<usize,NarrowType>),String> {
+    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<Operation>,HashMap<usize,NarrowType>),String> {
         let bundles = build_unbundle(&tree)?;
         let linear = reduce(&linearize(&tree,&bundles)?);
         let (broad,block_indexes) = broad_type(&tree,&linear)?;
         run_checking(&tree,&linear,&block_indexes)?;
         let narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
-        Ok((linear,narrow))
+        let opers = const_fold(&self,tree,&block_indexes,&linear);
+        Ok((opers,narrow))
     }
 
-    pub fn compile(&mut self, filename: &str) -> Result<(Vec<LinearStatement>,HashMap<usize,NarrowType>),String> {
+    pub fn compile(&mut self, filename: &str) -> Result<(Vec<Operation>,HashMap<usize,NarrowType>),String> {
         let tree = self.frontend(filename)?;
-        let (stmts,typing) = self.middleend(&tree)?;
-        Ok((stmts,typing))
+        let (opers,typing) = self.middleend(&tree)?;
+        Ok((opers,typing))
     }
 }

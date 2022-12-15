@@ -70,7 +70,7 @@ impl<'a> Checking<'a> {
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             LinearStatementValue::Copy(_, _) => { panic!("copy in checking: should have been run after reduce") }
-            LinearStatementValue::Code(call,name,rets,args,_) => {
+            LinearStatementValue::Code(call,name,rets,args) => {
                 let defn = match self.bt.get_by_index(*name)? {
                     BTTopDefn::Code(defn) => defn,
                     _ => { panic!("definition is not code definition"); }

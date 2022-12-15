@@ -240,7 +240,7 @@ impl<'a> NarrowTyping<'a> {
     fn add(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
-            LinearStatementValue::Code(call,name,rets,args,_) => { 
+            LinearStatementValue::Code(call,name,rets,args) => { 
                 self.code(*call,*name,rets,args)?;
             },
             LinearStatementValue::Type(reg,restrs) => {

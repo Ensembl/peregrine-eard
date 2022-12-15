@@ -53,7 +53,6 @@ impl fmt::Debug for CodeBlock {
 
 #[derive(Clone)]
 pub struct CodeDefinition {
-    world: bool,
     ret_count: Option<usize>,
     blocks: Vec<CodeBlock>
 }
@@ -61,7 +60,6 @@ pub struct CodeDefinition {
 impl CodeDefinition {
     pub(crate) fn new() -> CodeDefinition {
         CodeDefinition {
-            world: false,
             ret_count: None,
             blocks: vec![]
         }
@@ -72,9 +70,6 @@ impl CodeDefinition {
         if *ret_count != alt.results.len() {
             return Err(format!("code blocks must match in return value count: {} vs {}",alt.results.len(),ret_count));
         }
-        if alt.modifiers.contains(&CodeModifier::World) {
-            self.world = true;
-        }
         self.blocks.push(alt);
         Ok(())
     }
@@ -82,8 +77,6 @@ impl CodeDefinition {
     pub(crate) fn ret_count(&self) -> usize {
         self.ret_count.expect("query on empty code block")
     }
-
-    pub(crate) fn world(&self) -> bool { self.world }
 
     pub(crate) fn broad_typing(&self, src: &[BroadType]) -> Result<(Vec<BroadType>,usize),String> {
         for (i,block) in self.blocks.iter().enumerate() {

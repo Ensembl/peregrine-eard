@@ -91,3 +91,8 @@ fn test_capture_smoke() {
 fn test_types() {
     run_parse_tests(include_str!("testdata/types.etf"));
 }
+
+#[test]
+fn test_const_fold() {
+    run_parse_tests(include_str!("testdata/constfold.etf"));
+}

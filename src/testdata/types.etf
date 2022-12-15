@@ -38,7 +38,7 @@ test:16 r29 <type> [number]
 test:16 r22 <type> [seq(boolean)]
 test:16 r22 <check> Length 1
 test:16 r29 <type> [number]
-test:15 r36 (6#4)w r22
+test:15 r36 (6#4) r22
 test:15 <wild-equiv> r22, r36
 test:16 r36 <type> [seq(boolean)]
 test:16 r36 <check> Length 1
@@ -304,12 +304,12 @@ test:16 r47 <type> [seq]
 test:16 r47 <type> [seq]
 test:17 r47 <type> [seq(number)]
 test:17 r56 <constant> 0
-test:10  (6#6)w r16
-test:10  (6#7)w r1
-test:10  (6#8)w r28
-test:10  (6#9)w r20
-test:10  (6#10)w r24
-test:10  (6#11)w r2
+test:10  (6#6) r16
+test:10  (6#7) r1
+test:10  (6#8) r28
+test:10  (6#9) r20
+test:10  (6#10) r24
+test:10  (6#11) r2
 
 >> narrow strip
 

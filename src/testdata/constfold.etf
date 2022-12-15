@@ -1,0 +1,41 @@
+>> test
+
+constfold smoke 1
+
+>> input
+
+world fold(test) code test(number,number) -> number {
+    impl (r1: number, r2: number) -> (r3: number) {
+        opcode 14, r1;
+    }
+}
+
+let a = test(5,4);
+
+>> constfold strip
+
+# test:8
+r1 <- 5
+r2 <- 4
+r3 <- 9
+
+>> test
+
+constfold smoke 2
+
+>> input
+
+world fold(test) code test(number,number) -> number {
+    impl (r1: number, r2: number) -> (r3: number) {
+        opcode 14, r1;
+    }
+}
+
+let a = test(5,5);
+
+>> constfold strip
+
+# test:8
+r1 <- 5
+r2 <- 5
+r3 (0) r1 r2

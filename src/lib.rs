@@ -21,6 +21,7 @@ mod unbundle {
 }
 
 mod codeblocks;
+mod constfold;
 pub mod compiler;
 pub mod compilation;
 mod equiv;

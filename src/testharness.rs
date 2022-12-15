@@ -13,7 +13,7 @@ fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'
 }
 
 pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompiler,String> {
-    let mut compiler = EarpCompiler::new();
+    let mut compiler = EarpCompiler::new()?;
     compiler.set_source_loader(source_loader(sources));
     compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
@@ -62,8 +62,12 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     Ok(compiler)
 }
 
-pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler) -> EarpCompilation<'a> {
-    EarpCompilation::new(compiler)
+pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler, libcore: bool) -> EarpCompilation<'a> {
+    let mut comp = EarpCompilation::new(compiler);
+    if !libcore {
+        comp.set_flag("no-libcore");
+    }
+    comp
 }
 
 fn split_on_space(input: &str) -> Vec<String> {
@@ -101,7 +105,7 @@ fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (Bu
     (tree,reduce(&linear))
 }
 
-pub(super) fn run_parse_tests(data: &str) {
+pub(super) fn run_parse_tests(data: &str, libcore: bool) {
     let mut tests = vec![];
     let mut cur_section = "".to_string();
     let mut cur_name = String::new();
@@ -134,7 +138,7 @@ pub(super) fn run_parse_tests(data: &str) {
     }
     for (sections,inputs) in tests {
         let compiler = make_compiler(inputs.clone()).ok().unwrap();
-        let mut compilation = make_compilation(&compiler);
+        let mut compilation = make_compilation(&compiler,libcore);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
         let parse_tree = compilation.parse(&Arc::new(vec!["test".to_string()]));

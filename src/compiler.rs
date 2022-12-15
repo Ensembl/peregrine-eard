@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}, libcore::libcore::libcore_add};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
@@ -10,13 +10,15 @@ pub struct EarpCompiler {
 }
 
 impl EarpCompiler {
-    pub fn new() -> EarpCompiler {
-        EarpCompiler {
+    pub fn new() -> Result<EarpCompiler,String> {
+        let mut out = EarpCompiler {
             source_loader: Box::new(|_| { Err("No source loader set".to_string()) }),
             block_macros: HashMap::new(),
             expression_macros: HashMap::new(),
             constant_folder: HashMap::new()
-        }
+        };
+        libcore_add(&mut out)?;
+        Ok(out)
     }
 
     pub fn set_source_loader<F>(&mut self, cb: F)

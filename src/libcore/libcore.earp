@@ -1,0 +1,50 @@
+/* 
+ * Sequence construction (used in [] literals)
+ */
+
+fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) { 
+    impl (r1: ?X) -> r2: seq(?X) {}
+}
+
+fold(libcore__finseq) code __code_finseq() -> seq(?X) {
+    impl () -> r1: seq(?X) {}    
+}
+
+fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
+    impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}
+}
+
+export function __operator_infseq(x) { let y = __code_infseq(x); y }
+export function __operator_finseq() { let y = __code_finseq(); y }
+export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+/*
+ * Maths
+ */
+
+fold(libcore__add) code __code_add(number,number) -> number {
+    impl (r1: number, r2: number) -> r3: number {}
+}
+
+fold(libcore__sub) code __code_sub(number,number) -> number {
+    impl (r1: number, r2: number) -> r3: number {}
+}
+
+export function __operator_add(a: number, b: number) -> number { let y = __code_add(a,b); y }
+export function __operator_sub(a: number, b: number) -> number { let y = __code_sub(a,b); y }
+
+/*
+ * Printing
+ */
+
+code __code_format(?X) -> string {
+    impl (r1: ?X) -> r2: string {}
+}
+
+export function format(x: ?X) -> string { let y = __code_format(x); y }
+
+world code __code_print(string) {
+    impl (r1: string) {}
+}
+
+export procedure print(x: string) { __code_print(x); }

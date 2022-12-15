@@ -38,4 +38,58 @@ let a = test(5,5);
 # test:8
 r1 <- 5
 r2 <- 5
-r3 (0) r1 r2
+r3 (14#1) r1 r2
+
+>> test
+
+constfold smoke 3
+
+>> input
+
+let a = [1,2,3];
+
+>> constfold strip
+
+# libcore:18
+r1 <- []
+# test:2
+r7 <- 1
+# libcore:19
+r12 <- [1]
+# test:2
+r17 <- 2
+# libcore:19
+r22 <- [1,2]
+# test:2
+r26 <- 3
+# libcore:19
+r31 <- [1,2,3]
+
+>> test
+
+constfold smoke 4
+
+>> input
+
+let x = 1;
+let a = [x-1,x,x+1];
+
+>> constfold strip
+
+# test:2
+r1 <- 1
+# libcore:18
+r5 <- []
+# test:3
+r12 <- 1
+# libcore:34
+r17 <- 0
+# libcore:19
+r25 <- [0]
+r35 <- [0,1]
+# test:3
+r40 <- 1
+# libcore:33
+r45 <- 2
+# libcore:19
+r53 <- [0,1,2]

@@ -37,14 +37,16 @@ impl fmt::Debug for Constant {
 #[derive(Clone)]
 pub enum FullConstant {
     Atomic(Constant),
-    Sequence(Vec<Constant>)
+    Finite(Vec<Constant>),
+    Infinite(Constant)
 }
 
 impl fmt::Debug for FullConstant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Atomic(a) => write!(f,"{:?}",a),
-            Self::Sequence(s) => write!(f,"[{}]",sepfmt(&mut s.iter(),",","")),
+            Self::Finite(s) => write!(f,"[{}]",sepfmt(&mut s.iter(),",","")),
+            Self::Infinite(a) => write!(f,"[{:?},...]",a),
         }
     }
 }
@@ -53,7 +55,7 @@ impl fmt::Debug for FullConstant {
 pub enum Operation {
     Line(Arc<Vec<String>>,usize),
     Constant(usize,FullConstant),
-    Code(usize,Vec<usize>,Vec<usize>), // name,rets,args
+    Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args
 }
 
 impl fmt::Debug for Operation {
@@ -61,10 +63,10 @@ impl fmt::Debug for Operation {
         match self {
             Operation::Line(file,line) => write!(f,"# {}:{}",file.last().map(|x| x.as_str()).unwrap_or("*anon*"),line),
             Operation::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
-            Operation::Code(name,rets,args) => 
-                write!(f,"{} ({}) {}",
+            Operation::Code(call,name,rets,args) => 
+                write!(f,"{} ({}#{}) {}",
                     sepfmt(&mut rets.iter()," ","r"),
-                    *name,
+                    *name,*call,
                     sepfmt(&mut args.iter()," ","r")
                 )
         }

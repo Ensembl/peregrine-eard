@@ -6,6 +6,10 @@ mod frontend {
     pub(crate) mod parsetree;    
 }
 
+mod libcore {
+    pub(crate) mod libcore;
+}
+
 mod middleend {
     pub(crate) mod reduce;
     pub(crate) mod broadtyping;

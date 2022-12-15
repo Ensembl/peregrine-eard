@@ -1,0 +1,105 @@
+>> test
+
+finite sequences
+
+>> input
+
+let a = [1,2,3];
+print(format(a));
+
+>> constfold strip
+
+# libcore:18
+r1 <- []
+# test:2
+r7 <- 1
+# libcore:19
+r12 <- [1]
+# test:2
+r17 <- 2
+# libcore:19
+r22 <- [1,2]
+# test:2
+r26 <- 3
+# libcore:19
+r31 <- [1,2,3]
+# libcore:44
+r41 (10#5) r31
+# libcore:50
+ (12#6) r41
+
+>> test
+
+empty sequence
+
+>> input
+
+print(format([]));
+
+>> constfold strip
+
+# libcore:18
+r1 <- []
+# libcore:44
+r9 (10#2) r1
+# libcore:50
+ (12#3) r9
+
+>> test
+
+infinite sequence
+
+>> input
+
+print(format([true,...]));
+
+>> constfold strip
+
+# test:2
+r1 <- true
+# libcore:17
+r4 <- [true,...]
+# libcore:44
+r10 (10#2) r4
+# libcore:50
+ (12#3) r10
+
+>> test
+
+addition
+
+>> input
+
+print(format(2+2));
+
+>> constfold strip
+
+# test:2
+r1 <- 2
+r2 <- 2
+# libcore:33
+r7 <- 4
+# libcore:44
+r13 (10#2) r7
+# libcore:50
+ (12#3) r13
+
+>> test
+
+subtraction
+
+>> input
+
+print(format(5-2));
+
+>> constfold strip
+
+# test:2
+r1 <- 5
+r2 <- 2
+# libcore:34
+r7 <- 3
+# libcore:44
+r13 (10#2) r7
+# libcore:50
+ (12#3) r13

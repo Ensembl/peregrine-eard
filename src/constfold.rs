@@ -42,7 +42,7 @@ impl<'a,'b> ConstFold<'a,'b> {
         }
     }
 
-    fn code(&mut self, block: &CodeBlock, name: usize, rets: &[usize], args: &[usize]) {
+    fn code(&mut self, block: &CodeBlock, call: usize, name: usize, rets: &[usize], args: &[usize]) {
         let folds = block.modifiers.iter().filter_map(|m| {
             match m {
                 CodeModifier::Fold(f) => Some(f.to_string()),
@@ -52,7 +52,7 @@ impl<'a,'b> ConstFold<'a,'b> {
         for fold in &folds {
             if self.fold(fold,rets,args) { return; }
         }
-        self.out.push(Operation::Code(name,rets.to_vec(),args.to_vec()));
+        self.out.push(Operation::Code(call,name,rets.to_vec(),args.to_vec()));
     }
 
     fn add_line_no(&mut self, stmt: &LinearStatement) {
@@ -79,7 +79,7 @@ impl<'a,'b> ConstFold<'a,'b> {
             LinearStatementValue::Copy(_, _) => { panic!("copy occurred in constfold") },
             LinearStatementValue::Code(call,name,rets,args) => {
                 let block = self.get_block(*call,*name).clone();
-                self.code(&block,*name,rets,args);
+                self.code(&block,*call,*name,rets,args);
             },
             LinearStatementValue::Type(_, _) => {},
             LinearStatementValue::WildEquiv(_) => {},

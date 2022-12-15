@@ -777,3 +777,8 @@ pub fn parse_earp(compiler: &EarpCompiler, filename: &[String], context: usize) 
     let input = compiler.load_source(filename.last().unwrap())?; // XXX
     do_parse_earp(&input,filename,context).map_err(|e| e.to_string())
 }
+
+pub(crate) fn parse_libcore(context: usize) -> Result<Vec<PTStatement>,String> {
+    let input = include_str!("../libcore/libcore.earp");
+    do_parse_earp(&input,&["libcore".to_string()],context).map_err(|e| e.to_string())
+}

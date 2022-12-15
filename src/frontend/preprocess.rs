@@ -63,7 +63,7 @@ impl<'a,'b> PTTransformer for RunIncludeOnce<'a,'b> {
         self.any = true;
         let mut full_path = pos.0.to_vec();
         full_path.push(path.to_string());
-        Ok(Some(self.compilation.parse(&full_path).map_err(|e| {
+        Ok(Some(self.compilation.parse_part(&full_path).map_err(|e| {
             at(&e,Some(pos))
         })?))
     }

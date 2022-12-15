@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap};
 use crate::{compiler::{EarpCompiler, EarpCompilation}, model::OrBundleRepeater};
 use super::parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at};
 
@@ -21,10 +21,6 @@ const PREFIX_OPERATORS : [(&'static str,&'static str);2] = [
     ("-","__operator_minus"),
     ("!","__operator_not")
 ];
-
-const CTOR_FINITE : &'static str = "__operator_finite";
-const CTOR_INFINITE : &'static str = "__operator_infinite";
-const CTOR_PUSH : &'static str = "__operator_push";
 
 struct RunMacrosOnce<'a> {
     compiler: &'a EarpCompiler,

@@ -6,12 +6,14 @@
  */
 
 use std::{collections::{HashMap, HashSet}, sync::Arc, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, CodeArgument}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, broadtyping::BroadType, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, broadtyping::BroadType, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
 
+/* Wildcards can never be constrained to be a non-wild seq(X) in a declaration, oddly,
+ * so the enum has no such arm though its meaning would be well-defined
+ */
 #[derive(Clone,Debug)]
 enum WildcardType {
     Atomic(AtomicTypeSpec),
-    Sequence(AtomicTypeSpec),
     AnySequence,
     AnyAtomic,
     Any
@@ -22,8 +24,6 @@ impl WildcardType {
         let ok = match (self.clone(),bt) {
             (WildcardType::Atomic(a), BroadType::Atomic(b)) => &a == b,
             (WildcardType::Atomic(_), BroadType::Sequence) => false,
-            (WildcardType::Sequence(_), BroadType::Atomic(_)) => false,
-            (WildcardType::Sequence(_), BroadType::Sequence) => true,
             (WildcardType::AnySequence, BroadType::Atomic(_)) => false,
             (WildcardType::AnySequence, BroadType::Sequence) => true,
             (WildcardType::AnyAtomic, BroadType::Atomic(a)) => {
@@ -46,7 +46,6 @@ impl WildcardType {
     fn atomic(&mut self) -> Result<(),String> {
         let ok = match self.clone() {
             WildcardType::Atomic(_) => true,
-            WildcardType::Sequence(_) => false,
             WildcardType::AnySequence => false,
             WildcardType::AnyAtomic => true,
             WildcardType::Any => {
@@ -148,13 +147,7 @@ impl<'a> NarrowTyping<'a> {
             TypeSpec::Sequence(s) => {
                 Some(vec![s.clone()])
             },
-            TypeSpec::Wildcard(w) => {
-                let wild = wilds.entry(w.to_string()).or_insert(WildcardType::Any);
-                match wild {
-                    WildcardType::Sequence(s) => Some(vec![s.clone()]),
-                    _ => None
-                }
-            },
+            TypeSpec::Wildcard(_) => None,
             TypeSpec::SequenceWildcard(w) => {
                 let wild = wilds.entry(w.to_string()).or_insert(WildcardType::Any);
                 let atom = match wild {

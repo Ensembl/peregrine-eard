@@ -353,3 +353,18 @@ procedure p(x: seq(number) | seq(?X)) {}
 >> built-fail trim
 
 cannot match wild and non-wild sequences in argument at test:2
+
+>> test
+
+sequence wildcard
+
+>> input
+
+code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
+code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
+code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
+function __operator_infseq(x) { let y = __code_infseq(x); y }
+function __operator_finseq() { let y = __code_finseq(); y }
+procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+
+procedure p(x: ?X, y: seq(?X)) {}

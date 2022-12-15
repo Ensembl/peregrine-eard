@@ -24,6 +24,7 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
+mod culdesac;
 mod codeblocks;
 mod constfold;
 pub mod compiler;

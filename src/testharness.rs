@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type}, compilation::EarpCompilation, constfold::const_fold};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type}, compilation::EarpCompilation, constfold::const_fold, culdesac::culdesac};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -329,7 +329,10 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
             let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
-            let opers = const_fold(&compilation,&tree,&block_indexes,&linear);
+            let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
+            if constfold_options.contains("culdesac") {
+                opers = culdesac(&tree,&block_indexes,&opers);
+            }
             println!("{}",sepfmt(&mut opers.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut opers.iter(),"\n",""),constfold_options),process_ws(constfold_correct,constfold_options));
         }

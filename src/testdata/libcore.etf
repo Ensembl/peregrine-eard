@@ -7,20 +7,14 @@ finite sequences
 let a = [1,2,3];
 print(format(a));
 
->> constfold strip
+>> constfold strip culdesac
 
 # libcore:18
-r1 <- []
 # test:2
-r7 <- 1
 # libcore:19
-r12 <- [1]
 # test:2
-r17 <- 2
 # libcore:19
-r22 <- [1,2]
 # test:2
-r26 <- 3
 # libcore:19
 r31 <- [1,2,3]
 # libcore:44
@@ -36,7 +30,7 @@ empty sequence
 
 print(format([]));
 
->> constfold strip
+>> constfold strip culdesac
 
 # libcore:18
 r1 <- []
@@ -53,10 +47,9 @@ infinite sequence
 
 print(format([true,...]));
 
->> constfold strip
+>> constfold strip culdesac
 
 # test:2
-r1 <- true
 # libcore:17
 r4 <- [true,...]
 # libcore:44
@@ -72,11 +65,9 @@ addition
 
 print(format(2+2));
 
->> constfold strip
+>> constfold strip culdesac
 
 # test:2
-r1 <- 2
-r2 <- 2
 # libcore:33
 r7 <- 4
 # libcore:44
@@ -92,11 +83,9 @@ subtraction
 
 print(format(5-2));
 
->> constfold strip
+>> constfold strip culdesac
 
 # test:2
-r1 <- 5
-r2 <- 2
 # libcore:34
 r7 <- 3
 # libcore:44

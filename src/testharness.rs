@@ -81,7 +81,6 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
 }
 
 fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>) {
-
     let tree = compilation.build(processed.to_vec()).expect("build failed");
     let bundles = build_unbundle(&tree).expect("unbundle failed");
     let linear = linearize(&tree,&bundles).expect("linearize failed");

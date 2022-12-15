@@ -1,17 +1,14 @@
 use std::collections::{HashSet, HashMap, BTreeMap};
-
 use crate::model::{Variable, CheckType};
 
 #[derive(Clone)]
 pub(super) struct Bundle {
-    name: String,
     used: HashSet<String>
 }
 
 impl Bundle {
-    fn new(name: &str) -> Bundle {
+    fn new() -> Bundle {
         Bundle {
-            name: name.to_string(),
             used: HashSet::new()
         }
     }
@@ -65,21 +62,21 @@ impl BundleNamespace {
 
     pub(super) fn add(&mut self, prefix: &str, name: &str) {
         if let Some(top) = self.bundles.last_mut() {
-            top.entry(prefix.to_string()).or_insert_with(|| Bundle::new(name)).used.insert(name.to_string());
+            top.entry(prefix.to_string()).or_insert_with(|| Bundle::new()).used.insert(name.to_string());
         }
     }
 
     pub(super) fn add_all(&mut self, to: &str, from: &HashSet<String>) {
         if let Some(top) = self.bundles.last_mut() {
-            let to = top.entry(to.to_string()).or_insert_with(|| Bundle::new(to));
+            let to = top.entry(to.to_string()).or_insert_with(|| Bundle::new());
             to.used.extend(&mut from.iter().cloned());
         }
     }
 
     pub(super) fn merge(&mut self, to: &str, from: &str) {
         if let Some(top) = self.bundles.last_mut() {
-            let mut from = top.get(from).cloned().unwrap_or(Bundle::new(from));
-            let to = top.entry(to.to_string()).or_insert_with(|| Bundle::new(to));
+            let mut from = top.get(from).cloned().unwrap_or(Bundle::new());
+            let to = top.entry(to.to_string()).or_insert_with(|| Bundle::new());
             to.used.extend(&mut from.used.drain());
         }
     }
@@ -97,6 +94,7 @@ pub(crate) struct Transits {
 }
 
 impl Transits {
+    #[cfg(test)]
     pub(crate) fn keys(&self) -> Vec<(Vec<usize>,Position)> {
         self.transits.keys().cloned().collect::<Vec<_>>()
     }

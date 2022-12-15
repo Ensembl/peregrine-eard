@@ -39,10 +39,10 @@ fn test_preprocess() {
 #[test]
 fn test_macro_clash() {
     let mut compiler = EarpCompiler::new();
-    assert!(compiler.add_block_macro("x", |expr,pos,_| { Ok(vec![])}).is_ok());
-    assert!(compiler.add_block_macro("y", |expr,pos,_| { Ok(vec![])}).is_ok());
-    assert!(compiler.add_block_macro("x", |expr,pos,_| { Ok(vec![])}).is_err());
-    assert!(compiler.add_expression_macro("x", |expr,_| { Ok(
+    assert!(compiler.add_block_macro("x", |_,_,_| { Ok(vec![])}).is_ok());
+    assert!(compiler.add_block_macro("y", |_,_,_| { Ok(vec![])}).is_ok());
+    assert!(compiler.add_block_macro("x", |_,_,_| { Ok(vec![])}).is_err());
+    assert!(compiler.add_expression_macro("x", |_,_| { Ok(
         PTExpression::Constant(Constant::Number(0.))
     )}).is_err());
 }

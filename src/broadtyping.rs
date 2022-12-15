@@ -21,7 +21,7 @@ impl BroadType {
     pub(crate) fn from_restriction(spec: &TypeRestriction) -> BroadType {
         match spec {
             TypeRestriction::Atomic(a) => BroadType::Atomic(a.clone()),
-            TypeRestriction::Sequence(s) => BroadType::Sequence,
+            TypeRestriction::Sequence(_) => BroadType::Sequence,
             TypeRestriction::AnySequence => BroadType::Sequence
         }
     }

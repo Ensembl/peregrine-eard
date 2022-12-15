@@ -1,5 +1,5 @@
-use std::{collections::{HashMap, HashSet}, sync::Arc};
-use crate::frontend::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree};
+use std::{collections::{HashMap, HashSet}};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree}, model::LinearStatement, narrowtyping::{NarrowType, narrow_type}, unbundle::{linearize::linearize, buildunbundle::build_unbundle}, reduce::reduce, broadtyping::broad_type, checking::run_checking};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
@@ -78,17 +78,38 @@ impl<'a> EarpCompilation<'a> {
         self.flags.insert(flag.to_string());
     }
 
-    pub fn parse(&mut self, filename: &[String]) -> Result<Vec<PTStatement>,String> {
+    pub(crate) fn parse(&mut self, filename: &[String]) -> Result<Vec<PTStatement>,String> {
         self.context += 1;
         let context = self.context;
         parse_earp(&self.compiler,filename,context)
     }
 
-    pub fn preprocess(&mut self, parse_tree: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
+    pub(crate) fn preprocess(&mut self, parse_tree: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
         preprocess(self,parse_tree)
     }
 
-    pub fn build(&mut self, input: Vec<PTStatement>) -> Result<BuildTree,String> {
+    pub(crate) fn build(&mut self, input: Vec<PTStatement>) -> Result<BuildTree,String> {
         PTStatement::to_build_tree(input)    
+    }
+
+    pub(crate) fn frontend(&mut self, filename: &str) -> Result<BuildTree,String> {
+        let stmts = self.parse(&[filename.to_string()])?;
+        let stmts = self.preprocess(stmts)?;
+        self.build(stmts)
+    }
+
+    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<LinearStatement>,HashMap<usize,NarrowType>),String> {
+        let bundles = build_unbundle(&tree)?;
+        let linear = reduce(&linearize(&tree,&bundles)?);
+        let (broad,block_indexes) = broad_type(&tree,&linear)?;
+        run_checking(&tree,&linear,&block_indexes)?;
+        let narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
+        Ok((linear,narrow))
+    }
+
+    pub fn compile(&mut self, filename: &str) -> Result<(Vec<LinearStatement>,HashMap<usize,NarrowType>),String> {
+        let tree = self.frontend(filename)?;
+        let (stmts,typing) = self.middleend(&tree)?;
+        Ok((stmts,typing))
     }
 }

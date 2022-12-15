@@ -178,30 +178,6 @@ impl<T: fmt::Debug+Clone> fmt::Debug for OrBundle<T> {
     }
 }
 
-impl<T: std::fmt::Debug+Clone> OrBundle<T> {
-    pub(crate) fn as_bundle(&self) -> Option<String> {
-        match self {
-            OrBundle::Normal(_) => None,
-            OrBundle::Bundle(b) => Some(b.to_string())
-        }
-    }
-}
-
-#[derive(Clone)]
-pub enum OrRepeater<T: std::fmt::Debug+Clone> {
-    Normal(T),
-    Repeater(String)
-}
-
-impl<T: fmt::Debug+Clone> fmt::Debug for OrRepeater<T> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Normal(v) => write!(f,"{:?}",v),
-            Self::Repeater(r) => write!(f,"**{}",r),
-        }
-    }
-}
-
 #[derive(Clone)]
 pub enum OrBundleRepeater<T: std::fmt::Debug+Clone> {
     Normal(T),

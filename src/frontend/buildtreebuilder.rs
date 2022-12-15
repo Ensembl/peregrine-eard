@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::BTreeMap};
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}};
 use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
 
 #[derive(Debug,Clone)]
@@ -100,7 +100,7 @@ impl BuildContext {
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
             captures: &[OrBundle<Variable>],
-            export: bool, bt: &mut BuildTree) {
+            export: bool) {
         let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
         self.funcproc_target = Some(CurrentFuncProcDefinition {
             position: self.location.clone(),
@@ -214,7 +214,7 @@ impl BuildContext {
         Ok(())
     }
 
-    fn is_top(&self, x: &OrBundle<PTExpression>, bt: &mut BuildTree) -> Result<bool,String> {
+    fn is_top(&self, x: &OrBundle<PTExpression>) -> Result<bool,String> {
         Ok(match x {
             OrBundle::Normal(PTExpression::Call(c)) => {
                 match self.lookup(&c.name)? {
@@ -273,7 +273,7 @@ impl BuildContext {
             regs.push(reg);
         }
         /* Step 2: evaluate expressions and put into temporaries */
-        if xx.len() == 1 && self.is_top(&xx[0],bt)? {
+        if xx.len() == 1 && self.is_top(&xx[0])? {
             match &xx[0] {
                 OrBundle::Normal(PTExpression::Call(call)) => {
                     self.build_top(Some(regs.clone()),bt,call)?;
@@ -423,7 +423,7 @@ impl BuildContext {
     fn build_funcdef(&mut self, bt: &mut BuildTree, def: &PTFuncDef) -> Result<(),String> {
         let ret_type = def.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export,bt);
+        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }
@@ -434,7 +434,7 @@ impl BuildContext {
 
     fn build_procdef(&mut self, bt: &mut BuildTree, def: &PTProcDef) -> Result<(),String> {
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export,bt);
+        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }
@@ -465,7 +465,7 @@ impl BuildContext {
             },
             PTStatementValue::BareCall(c) => {
                 match self.lookup(&c.name)? {
-                    DefName::Func(f) => {
+                    DefName::Func(_) => {
                         /* top level is function call with discarded result, add assign proc */
                         let expr = PTExpression::Call(c.clone());
                         let ret = OrBundleRepeater::Normal(self.build_expression(bt,&expr)?);

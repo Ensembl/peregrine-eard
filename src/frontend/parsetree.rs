@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater}, codeblocks::CodeBlock};
-use super::buildtree::{BuildTree, BTStatementValue};
+use super::buildtree::{BuildTree};
 use super::buildtreebuilder::BuildContext;
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
@@ -47,7 +47,7 @@ pub struct PTCall {
 }
 
 impl PTCall {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTCall,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTCall,String> {
         let mut args = vec![];
         for arg in self.args {
             args.push(arg.transform(transformer,pos,context)?);
@@ -67,36 +67,12 @@ impl PTCall {
         }
     }
 
-    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize, top: bool) -> Result<Option<Vec<PTStatement>>,String> {
+    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> {
         if let Some(repl) = transformer.call_to_block(&self,pos,context)? {
             Ok(Some(repl))
         } else {
             Ok(None)
         }
-    }
-}
-
-impl OrBundle<(Variable,Vec<Check>)> {
-    fn declare(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        let declare = match self {
-            OrBundle::Normal((v, _)) => OrBundleRepeater::Normal(v.clone()),
-            OrBundle::Bundle(b) => OrBundleRepeater::Bundle(b.to_string())
-        };
-        bc.add_statement(bt,BTStatementValue::Declare(declare))?;
-        Ok(())
-    }
-
-    fn checks(&self, bt: &mut BuildTree, bc: &mut BuildContext) -> Result<(),String> {
-        match self {
-            OrBundle::Normal((var,checks)) => {
-                for check in checks.iter() {
-                    let stmt = BTStatementValue::Check(var.clone(),check.clone());
-                    bc.add_statement(bt,stmt)?;
-                }
-            },
-            _ => {}
-        }
-        Ok(())
     }
 }
 
@@ -157,7 +133,7 @@ pub struct PTFuncDef {
 }
 
 impl PTFuncDef {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncDef,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncDef,String> {
         Ok(PTFuncDef {
             name: self.name,
             args: self.args,
@@ -173,7 +149,7 @@ impl PTFuncDef {
 impl OrBundle<PTExpression> {
     fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<OrBundle<PTExpression>,String> {
         Ok(match self {
-            OrBundle::Normal(mut expr) => {
+            OrBundle::Normal(expr) => {
                 OrBundle::Normal(expr.transform(transformer,pos,context)?)
             },
             x => x
@@ -254,7 +230,7 @@ impl PTStatement {
                 PTStatementValue::ModifyStatement(lvalues,rvalues)
             },
             PTStatementValue::BareCall(call) => {
-                if let Some(repl) = call.transform_block(transformer,pos,self.context,false)? {
+                if let Some(repl) = call.transform_block(transformer,pos,self.context)? {
                     return Ok(repl);
                 } else {
                     PTStatementValue::BareCall(call.transform(transformer,pos,self.context)?)

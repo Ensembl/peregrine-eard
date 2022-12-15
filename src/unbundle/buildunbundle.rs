@@ -53,7 +53,7 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn, BTFuncProcDefinition }, parsetree::at};
+use crate::frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, parsetree::at};
 use crate::model::{OrBundleRepeater, Variable, OrBundle, TypedArgument};
 use super::{repeater::find_repeater_arguments, unbundleaux::{BundleNamespace, Transits, Position, TransitsBuilder}};
 
@@ -80,12 +80,14 @@ fn bundle(caller_expects: Option<&HashSet<String>>) -> Result<&HashSet<String>,S
 }
 
 struct BuildUnbundle<'a> {
-    trace: Vec<String>,
     tree: &'a BuildTree,
     positions: Vec<(Arc<Vec<String>>,usize)>,
     namespace: BundleNamespace,
     register_bundles: HashMap<usize,HashSet<String>>,
-    transits: TransitsBuilder
+    transits: TransitsBuilder,
+
+    #[allow(unused)]
+    trace: Vec<String>
 }
 
 impl<'a> BuildUnbundle<'a> {

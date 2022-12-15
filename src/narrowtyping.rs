@@ -6,7 +6,7 @@
  */
 
 use std::{collections::{HashMap, HashSet}, sync::Arc, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, CodeArgument}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, broadtyping::BroadType, equiv::{EquivalenceClass, EquivalenceMap}, codeblocks::CodeBlock};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, CodeArgument}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, broadtyping::BroadType, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
 
 #[derive(Clone,Debug)]
 enum WildcardType {
@@ -84,15 +84,6 @@ impl fmt::Debug for NarrowType {
     }
 }
 
-impl NarrowType {
-    fn atomic_to_sequence(&self) -> Result<NarrowType,String> {
-        match self {
-            NarrowType::Atomic(a) => Ok(NarrowType::Sequence(a.clone())),
-            NarrowType::Sequence(_) => Err("type mismatch/A".to_string())
-        }
-    }
-}
-
 struct NarrowTyping<'a> {
     bt: &'a BuildTree,
     broad: &'a HashMap<usize,BroadType>,
@@ -128,17 +119,6 @@ impl<'a> NarrowTyping<'a> {
             BroadType::Atomic(_) => false,
             BroadType::Sequence => true,
         }
-    }
-
-    fn make_type(&self, spec: &TypeSpec, wilds: &HashMap<String,NarrowType>) -> Result<Option<NarrowType>,String> {
-        Ok(match spec {
-            TypeSpec::Atomic(a) => Some(NarrowType::Atomic(a.clone())),
-            TypeSpec::Sequence(s) => Some(NarrowType::Sequence(s.clone())),
-            TypeSpec::Wildcard(w) => { wilds.get(w).cloned() },
-            TypeSpec::SequenceWildcard(w) => {
-                wilds.get(w).map(|t| t.atomic_to_sequence()).transpose()?
-            }
-        })
     }
 
     fn make_wildcards(&mut self, block: &CodeBlock, args: &[usize]) -> Result<HashMap<String,WildcardType>,String> {

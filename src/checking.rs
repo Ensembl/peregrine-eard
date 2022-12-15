@@ -10,7 +10,7 @@
  */
 
 use std::{sync::Arc, collections::{HashMap, HashSet}};
-use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeDefinition, CodeBlock}, equiv::{EquivalenceClass, EquivalenceMap}};
+use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}};
 
 pub(crate) struct Checking<'a> {
     bt: &'a BuildTree,
@@ -70,7 +70,7 @@ impl<'a> Checking<'a> {
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             LinearStatementValue::Copy(_, _) => { panic!("copy in checking: should have been run after reduce") }
-            LinearStatementValue::Code(call,name,rets,args,world) => {
+            LinearStatementValue::Code(call,name,rets,args,_) => {
                 let defn = match self.bt.get_by_index(*name)? {
                     BTTopDefn::Code(defn) => defn,
                     _ => { panic!("definition is not code definition"); }
@@ -109,7 +109,7 @@ impl<'a> Checking<'a> {
     fn check(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
-            LinearStatementValue::Check(reg,ct,ci,_) => {
+            LinearStatementValue::Check(reg,ct,_,_) => {
                 let group = *self.equiv(ct).get(reg);
                 if !self.forced.contains(&group) {
                     return Err(format!("checking error: cannot guarantee {:?}",ct));

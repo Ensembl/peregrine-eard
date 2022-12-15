@@ -15,7 +15,7 @@ mod unbundle {
 
 mod checking;
 mod codeblocks;
-mod compiler;
+pub mod compiler;
 mod equiv;
 mod model;
 mod reduce;

@@ -22,6 +22,16 @@ impl Reduce {
             LinearStatementValue::Check(reg,ct,ci) => {
                 Some(LinearStatementValue::Check(self.canon(*reg),ct.clone(),*ci))
             },
+            LinearStatementValue::WildEquiv(regs) => {
+                let mut regs = regs.iter().map(|r| self.canon(*r)).collect::<Vec<_>>();
+                regs.sort();
+                regs.dedup();
+                if regs.len() > 1 {
+                    Some(LinearStatementValue::WildEquiv(regs))
+                } else {
+                    None
+                }
+            },
             LinearStatementValue::Constant(reg,c) => {
                 Some(LinearStatementValue::Constant(self.canon(*reg),c.clone()))
             },

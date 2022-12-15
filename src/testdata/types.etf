@@ -39,6 +39,7 @@ test:16 r22 <type> [seq(boolean)]
 test:16 r22 <check> Length 1
 test:16 r29 <type> [number]
 test:15 r36 (6#4)w r22
+test:15 <wild-equiv> r22, r36
 test:16 r36 <type> [seq(boolean)]
 test:16 r36 <check> Length 1
 test:21 r36 <check> Length 1
@@ -270,6 +271,7 @@ test:12 r16 <type> [seq]
 test:12 r28 <constant> ""
 test:12 r20 <type> [seq]
 test:12 r24 <type> [seq]
+test:12 <wild-equiv> r20, r24
 test:6 r47 (1#5) 
 test:16 r20 <type> [seq(string)]
 test:16 r47 <type> [seq]
@@ -286,7 +288,42 @@ test:10  (6#11)w r2
 >> narrow strip
 
 number: 1, 56
-seq(boolean): 24
 seq(number): 5, 16, 47
-seq(string): 20
+seq(string): 20, 24
 string: 2, 28
+
+>> test
+
+reject multi-wild 1 args
+
+>> input
+
+procedure p(x: ?X | ?Y) {}
+
+>> built-fail trim
+
+only one wildcard allowed per argument at test:2
+
+>> test
+
+reject multi-wild 2 args
+
+>> input
+
+procedure p(x: ?X | seq(?X)) {}
+
+>> built-fail trim
+
+only one wildcard allowed per argument at test:2
+
+>> test
+
+reject multi-wild 3 args
+
+>> input
+
+procedure p(x: seq(number) | seq(?X)) {}
+
+>> built-fail trim
+
+cannot match wild and non-wild sequences in argument at test:2

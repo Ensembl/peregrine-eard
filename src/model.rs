@@ -427,7 +427,8 @@ pub enum LinearStatementValue {
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>,bool), // call,name,rets,args
-    Type(usize,Vec<TypeRestriction>)
+    Type(usize,Vec<TypeRestriction>),
+    WildEquiv(Vec<usize>)
 }
 
 impl fmt::Debug for LinearStatementValue {
@@ -435,6 +436,7 @@ impl fmt::Debug for LinearStatementValue {
         match self {
             Self::Check(v, ct, c) => write!(f,"r{:?} <check> {:?} {:?}",v,ct,c),
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
+            Self::WildEquiv(r) => write!(f,"<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
             Self::Code(call,name,rets,args,world) => {

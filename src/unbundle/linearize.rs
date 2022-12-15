@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument}, reduce::reduce};
+use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec}};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -194,6 +194,45 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
+    fn get_wild(&self, spec: &[TypeSpec]) -> Option<(bool,String)> {
+        for arg in spec {
+            match arg {
+                TypeSpec::Atomic(_) => {},
+                TypeSpec::Sequence(_) => {},
+                TypeSpec::Wildcard(w) => { return Some((false,w.to_string())); },
+                TypeSpec::SequenceWildcard(w) => { return Some((true,w.to_string())); },
+            }
+        }
+        None
+    }
+
+    fn callee_matches(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize], ret_regs: &[usize]) -> Result<(),String> {
+        let mut wilds = HashMap::new();
+        for (i,arg) in defn.args.iter().enumerate() {
+            match arg {
+                OrBundle::Normal(defn) => {
+                    if let Some(wild_key) = self.get_wild(&defn.typespec.arg_types) {
+                        wilds.entry(wild_key).or_insert(vec![]).push(arg_regs[i]);
+                    }
+                },
+                OrBundle::Bundle(_) => {}
+            }
+        }
+        for (i,defn) in defn.ret_type.as_ref().unwrap_or(&vec![]).iter().enumerate() {
+            if let Some(wild_key) = self.get_wild(&defn.arg_types) {
+                wilds.entry(wild_key).or_insert(vec![]).push(ret_regs[i]);
+            }
+        }
+        for (_,mut equiv) in wilds.drain() {
+            equiv.sort();
+            equiv.dedup();
+            if equiv.len() > 1 {
+                self.add(LinearStatementValue::WildEquiv(equiv));
+            }
+        }
+        Ok(())
+    }
+
     fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
         self.checks.push();
@@ -204,6 +243,7 @@ impl<'a> Linearize<'a> {
             self.statement(stmt)?;
         }
         let callee_rets = self.callee_rets(&defn)?;
+        self.callee_matches(defn,&arg_regs,&callee_rets)?;
         self.positions.pop();
         self.checks.pop();
         self.var_registers.pop();

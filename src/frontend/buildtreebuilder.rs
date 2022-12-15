@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::BTreeMap};
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater}, codeblocks::{CodeDefinition, CodeBlock}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, OrRepeater, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}};
 use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
 
 #[derive(Debug,Clone)]
@@ -21,15 +21,57 @@ struct CurrentFuncProcDefinition {
 }
 
 impl CurrentFuncProcDefinition {
-    fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> BTFuncProcDefinition {
-        BTFuncProcDefinition {
+    /* only one wild per arg_spec and if seqwild then no other seq */
+    fn verify_argret(&self, spec: &[TypeSpec]) -> Result<(),String> {
+        let mut variety = [0,0,0,0];
+        for argtype in spec {
+            let index = match argtype {
+                TypeSpec::Atomic(_) => 0,
+                TypeSpec::Sequence(_) => 1,
+                TypeSpec::Wildcard(_) => 2,
+                TypeSpec::SequenceWildcard(_) => 3
+            };
+            variety[index] += 1;
+        }
+        if variety[2]+variety[3] > 1 {
+            return Err(format!("only one wildcard allowed per argument"));
+        }
+        if variety[3] > 0 && variety[1] > 0 {
+            return Err(format!("cannot match wild and non-wild sequences in argument"));
+        }
+        Ok(())
+    }
+
+    fn verify_args(&self) -> Result<(),String> {
+        for arg in &self.args {
+            match arg {
+                OrBundle::Normal(n) => {
+                    self.verify_argret(&n.typespec.arg_types)?;
+                },
+                OrBundle::Bundle(_) => {}
+            }
+        }
+        Ok(())
+    }
+
+    fn verify_rets(&self) -> Result<(),String> {
+        for ret in self.ret_type.as_ref().unwrap_or(&vec![]) {
+            self.verify_argret(&ret.arg_types)?;
+        }
+        Ok(())
+    }
+
+    fn to_funcproc(&self, ret: &[OrBundle<BTExpression>]) -> Result<BTFuncProcDefinition,String> {
+        self.verify_args()?;
+        self.verify_rets()?;
+        Ok(BTFuncProcDefinition {
             position: self.position.clone(),
             args: self.args.clone(),
             captures: self.captures.clone(),
             ret_type: self.ret_type.clone(),
             ret: ret.to_vec(),
             block: self.block.clone()
-        }
+        })
     }
 }
 
@@ -75,10 +117,10 @@ impl BuildContext {
         let ctx = self.funcproc_target.take().expect("pop without push");
         let defn = match &ctx.variety {
             BTDefinitionVariety::Func => {                
-                self.define_funcproc(&ctx.name,ctx.to_funcproc(ret),false,bt,ctx.export)?
+                self.define_funcproc(&ctx.name,ctx.to_funcproc(ret)?,false,bt,ctx.export)?
             },
             BTDefinitionVariety::Proc => {
-                self.define_funcproc(&ctx.name,ctx.to_funcproc(ret),true,bt,ctx.export)?
+                self.define_funcproc(&ctx.name,ctx.to_funcproc(ret)?,true,bt,ctx.export)?
             }
         };
         self.add_statement(bt,defn)?;

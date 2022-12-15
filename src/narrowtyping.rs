@@ -238,11 +238,9 @@ impl<'a> NarrowTyping<'a> {
          * We don't need to associate ?X with seq(?X) as that means ?X is atomic and so known
          *   completely by its broad type, and so seq(?X) will have just been bound.
          */
-        eprintln!("ties {:?}",ties);
         for regs in ties.values() {
             let reg1 = regs.first().unwrap();
             for reg in regs {
-                eprintln!("equiv(r{},r{})",reg1,reg);
                 self.possible.equiv(*reg1,*reg)?;
             }
         }
@@ -273,6 +271,12 @@ impl<'a> NarrowTyping<'a> {
             LinearStatementValue::Type(reg,restrs) => {
                 self.typestmt(*reg,&restrs)?;
             },
+            LinearStatementValue::WildEquiv(regs) => {
+                let reg1 = regs[0];
+                for reg in regs {
+                    self.possible.equiv(reg1,*reg)?;
+                }
+            }
             _ => {}
         }
         Ok(())

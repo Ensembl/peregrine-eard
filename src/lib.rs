@@ -22,6 +22,7 @@ mod unbundle {
 
 mod codeblocks;
 pub mod compiler;
+pub mod compilation;
 mod equiv;
 mod model;
 

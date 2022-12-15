@@ -34,6 +34,20 @@ impl fmt::Debug for Constant {
     }
 }
 
+#[derive(Clone)]
+pub enum FullConstant {
+    Atomic(Constant),
+    Sequence(Vec<Constant>)
+}
+
+#[derive(Clone)]
+pub enum Operation {
+    Line(Arc<String>,usize),
+    Constant(usize,FullConstant),
+    Copy(usize,usize), // to,from
+    Code(usize,Vec<usize>,Vec<usize>,bool), // name,rets,args
+}
+
 #[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
     World

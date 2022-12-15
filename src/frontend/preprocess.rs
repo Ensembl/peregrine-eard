@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{compiler::{EarpCompiler, EarpCompilation}, model::OrBundleRepeater};
+use crate::{compiler::{EarpCompiler}, model::OrBundleRepeater, compilation::EarpCompilation};
 use super::parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [

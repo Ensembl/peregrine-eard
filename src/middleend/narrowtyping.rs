@@ -6,7 +6,9 @@
  */
 
 use std::{collections::{HashMap, HashSet}, sync::Arc, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, broadtyping::BroadType, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
+
+use super::broadtyping::BroadType;
 
 /* Wildcards can never be constrained to be a non-wild seq(X) in a declaration, oddly,
  * so the enum has no such arm though its meaning would be well-defined

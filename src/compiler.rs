@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree}, model::LinearStatement, narrowtyping::{NarrowType, narrow_type}, unbundle::{linearize::linearize, buildunbundle::build_unbundle}, reduce::reduce, broadtyping::broad_type, checking::run_checking};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}, preprocess::{preprocess}, parser::parse_earp, buildtree::BuildTree}, model::LinearStatement,unbundle::{linearize::linearize, buildunbundle::build_unbundle}, middleend::{broadtyping::broad_type, reduce::reduce, checking::run_checking, narrowtyping::{narrow_type, NarrowType}}};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {

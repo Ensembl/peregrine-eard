@@ -6,6 +6,13 @@ mod frontend {
     pub(crate) mod parsetree;    
 }
 
+mod middleend {
+    pub(crate) mod reduce;
+    pub(crate) mod broadtyping;
+    pub(crate) mod narrowtyping;
+    pub(crate) mod checking;    
+}
+
 mod unbundle {
     pub(crate) mod buildunbundle;
     mod unbundleaux;
@@ -13,14 +20,10 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
-mod checking;
 mod codeblocks;
 pub mod compiler;
 mod equiv;
 mod model;
-mod reduce;
-mod broadtyping;
-mod narrowtyping;
 
 #[cfg(test)]
 mod test;

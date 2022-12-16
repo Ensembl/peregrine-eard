@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc, mem};
-use crate::{model::{Operation, CodeModifier}, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
+use crate::{model::{Operation, CodeModifier, OperationValue}, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
 
 struct CulDeSac<'a> {
     bt: &'a BuildTree,
@@ -31,10 +31,9 @@ impl<'a> CulDeSac<'a> {
     }
 
     fn add_oper(&mut self, oper: &Operation) {
-        match oper {
-            Operation::Line(_, _) => {},
-            Operation::Constant(_, _) => {},
-            Operation::Code(call,name,rets,args) => {
+        match &oper.value {
+            OperationValue::Constant(_, _) => {},
+            OperationValue::Code(call,name,rets,args) => {
                 let block = self.get_block(*call,*name);
                 if block.modifiers.contains(&CodeModifier::World) {
                     self.worlds.insert(*call);
@@ -67,26 +66,27 @@ impl<'a> CulDeSac<'a> {
     }
 
     fn include(&mut self, oper: &Operation) -> Option<Operation> {
-        match oper {
-            Operation::Line(file,line) => {
-                Some(Operation::Line(file.clone(),*line))
-            },
-            Operation::Constant(reg,c) => {
+        let value = match &oper.value {
+            OperationValue::Constant(reg,c) => {
                 if self.needed.contains(reg) {
-                    Some(Operation::Constant(*reg,c.clone()))
+                    Some(OperationValue::Constant(*reg,c.clone()))
                 } else {
                     None
                 }
             },
-            Operation::Code(call,name,dst,src) => {
+            OperationValue::Code(call,name,dst,src) => {
                 let regs_needed = dst.iter().any(|reg| self.needed.contains(reg));
                 if !regs_needed && !self.worlds.contains(call) { return None; }
                 let dsts = dst.iter().map(|reg| {
                     if self.needed.contains(reg) { *reg } else { 0 }
                 }).collect::<Vec<_>>();
-                Some(Operation::Code(*call,*name,dsts,src.to_vec()))
+                Some(OperationValue::Code(*call,*name,dsts,src.to_vec()))
             },
-        }
+        };
+        value.map(|value| Operation {
+            position: oper.position.clone(),
+            value
+        })
     }
 }
 

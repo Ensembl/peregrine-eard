@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::{HashMap}};
-use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
+use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
 
 struct ConstFold<'a,'b> {
     comp: &'b EarpCompilation<'a>,
@@ -29,12 +29,21 @@ impl<'a,'b> ConstFold<'a,'b> {
         code_block.get_block(block_index)
     }
 
+    fn out(&mut self, value: OperationValue) {
+        let position = if let Some(pos) = &self.position {
+            pos.clone()
+        } else {
+            (Arc::new(vec!["*anon*".to_string()]),0)
+        };
+        self.out.push(Operation { position, value });
+    }
+
     fn fold(&mut self, name: &str, rets: &[usize], args: &[usize]) -> bool {
         let inputs = args.iter().map(|a| self.values.get(a).cloned()).collect::<Vec<_>>();
         if let Some(outputs) = self.comp.compiler().fold(name,&inputs) {
             for (reg,c) in rets.iter().zip(outputs.iter()) {
                 self.values.insert(*reg,c.clone());
-                self.out.push(Operation::Constant(*reg,c.clone()));
+                self.out(OperationValue::Constant(*reg,c.clone()));
             }
             true
         } else {
@@ -52,28 +61,15 @@ impl<'a,'b> ConstFold<'a,'b> {
         for fold in &folds {
             if self.fold(fold,rets,args) { return; }
         }
-        self.out.push(Operation::Code(call,name,rets.to_vec(),args.to_vec()));
-    }
-
-    fn add_line_no(&mut self, stmt: &LinearStatement) {
-        let mut add = true;
-        if let Some(old_position) = &self.position {
-            if old_position.0 == stmt.file && old_position.1 == stmt.line_no {
-                add = false;
-            }
-        }
-        if add {
-            self.out.push(Operation::Line(stmt.file.clone(),stmt.line_no));
-            self.position = Some((stmt.file.clone(),stmt.line_no));
-        }
+        self.out(OperationValue::Code(call,name,rets.to_vec(),args.to_vec()));
     }
 
     fn add(&mut self, stmt: &LinearStatement) {
-        self.add_line_no(stmt);
+        self.position = Some((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             LinearStatementValue::Check(_, _, _, _) => {},
             LinearStatementValue::Constant(reg,c) => {
-                self.out.push(Operation::Constant(*reg,FullConstant::Atomic(c.clone())));
+                self.out(OperationValue::Constant(*reg,FullConstant::Atomic(c.clone())));
                 self.values.insert(*reg,FullConstant::Atomic(c.clone()));
             },
             LinearStatementValue::Copy(_, _) => { panic!("copy occurred in constfold") },

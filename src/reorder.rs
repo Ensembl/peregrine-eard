@@ -29,7 +29,7 @@
  */
 
 use std::collections::HashMap;
-use crate::{toposort::TopoSort, model::{Operation, CodeModifier}, frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::CodeBlock};
+use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue}, frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::CodeBlock};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
@@ -42,7 +42,8 @@ struct Reorder<'a> {
     block_index: &'a HashMap<usize,usize>,
     topo: TopoSort<ReorderNode>,
     reg_birth: HashMap<usize,usize>,
-    worlds: Vec<usize>
+    worlds: Vec<usize>,
+    credit: u32
 }
 
 impl<'a> Reorder<'a> {
@@ -51,7 +52,8 @@ impl<'a> Reorder<'a> {
             bt, block_index,
             topo: TopoSort::new(),
             reg_birth: HashMap::new(),
-            worlds: vec![]
+            worlds: vec![],
+            credit: limit
         }
     }
 
@@ -65,14 +67,13 @@ impl<'a> Reorder<'a> {
     }
 
     fn add_nodes(&mut self, index: usize, oper: &Operation) {
-        match oper {
-            Operation::Line(_, _) => {},
-            Operation::Constant(reg, _) => {
+        match &oper.value {
+            OperationValue::Constant(reg, _) => {
                 self.topo.node(ReorderNode::Tombstone(*reg));
                 self.topo.node(ReorderNode::Instruction(index));
                 self.reg_birth.insert(*reg,index);
             },
-            Operation::Code(call,name,rets, _) => {
+            OperationValue::Code(call,name,rets, _) => {
                 for reg in rets {
                     self.topo.node(ReorderNode::Tombstone(*reg));
                     self.reg_birth.insert(*reg,index);
@@ -100,10 +101,9 @@ impl<'a> Reorder<'a> {
     }
 
     fn add_main_arcs(&mut self, index: usize, oper: &Operation) {
-        match oper {
-            Operation::Line(_,_) => {},
-            Operation::Constant(_,_) => {}
-            Operation::Code(_,_,_,args) => {
+        match &oper.value {
+            OperationValue::Constant(_,_) => {}
+            OperationValue::Code(_,_,_,args) => {
                 for arg in args {
                     /* register edge */
                     self.topo.arc(
@@ -126,8 +126,8 @@ impl<'a> Reorder<'a> {
 }
 
 pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation]) -> Vec<Operation> {
-    let limit = 10_000_000 / (opers.len()+1);
-    let mut reorder = Reorder::new(bt,block_index,limit as u32);
+    /* populate and toposort initial graph */
+    let mut reorder = Reorder::new(bt,block_index,10_000_000);
     for (i,oper) in opers.iter().enumerate() {
         reorder.add_nodes(i,oper);
     }
@@ -136,5 +136,6 @@ pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers:
         reorder.add_main_arcs(i,oper);
     }
     reorder.build();
+    /* find instructions where we'd like to attempt a modifiable form */
     opers.to_vec()
 }

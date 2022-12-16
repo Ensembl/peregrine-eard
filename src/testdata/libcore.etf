@@ -9,18 +9,9 @@ print(format(a));
 
 >> constfold strip culdesac
 
-# libcore:18
-# test:2
-# libcore:19
-# test:2
-# libcore:19
-# test:2
-# libcore:19
-r31 <- [1,2,3]
-# libcore:44
-r41 (10#5) r31
-# libcore:50
- (12#6) r41
+libcore:19 r31 <- [1,2,3]
+libcore:44 r41 (10#5) r31
+libcore:50  (12#6) r41
 
 >> test
 
@@ -32,12 +23,9 @@ print(format([]));
 
 >> constfold strip culdesac
 
-# libcore:18
-r1 <- []
-# libcore:44
-r9 (10#2) r1
-# libcore:50
- (12#3) r9
+libcore:18 r1 <- []
+libcore:44 r9 (10#2) r1
+libcore:50  (12#3) r9
 
 >> test
 
@@ -49,13 +37,9 @@ print(format([true,...]));
 
 >> constfold strip culdesac
 
-# test:2
-# libcore:17
-r4 <- [true,...]
-# libcore:44
-r10 (10#2) r4
-# libcore:50
- (12#3) r10
+libcore:17 r4 <- [true,...]
+libcore:44 r10 (10#2) r4
+libcore:50  (12#3) r10
 
 >> test
 
@@ -67,13 +51,9 @@ print(format(2+2));
 
 >> constfold strip culdesac
 
-# test:2
-# libcore:33
-r7 <- 4
-# libcore:44
-r13 (10#2) r7
-# libcore:50
- (12#3) r13
+libcore:33 r7 <- 4
+libcore:44 r13 (10#2) r7
+libcore:50  (12#3) r13
 
 >> test
 
@@ -85,10 +65,6 @@ print(format(5-2));
 
 >> constfold strip culdesac
 
-# test:2
-# libcore:34
-r7 <- 3
-# libcore:44
-r13 (10#2) r7
-# libcore:50
- (12#3) r13
+libcore:34 r7 <- 3
+libcore:44 r13 (10#2) r7
+libcore:50  (12#3) r13

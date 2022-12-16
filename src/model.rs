@@ -52,24 +52,35 @@ impl fmt::Debug for FullConstant {
 }
 
 #[derive(Clone)]
-pub enum Operation {
-    Line(Arc<Vec<String>>,usize),
+pub enum OperationValue {
     Constant(usize,FullConstant),
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args
 }
 
-impl fmt::Debug for Operation {
+impl fmt::Debug for OperationValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Operation::Line(file,line) => write!(f,"# {}:{}",file.last().map(|x| x.as_str()).unwrap_or("*anon*"),line),
-            Operation::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
-            Operation::Code(call,name,rets,args) => 
+            OperationValue::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
+            OperationValue::Code(call,name,rets,args) => 
                 write!(f,"{} ({}#{}) {}",
                     sepfmt(&mut rets.iter()," ","r"),
                     *name,*call,
                     sepfmt(&mut args.iter()," ","r")
                 )
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct Operation {
+    pub(crate) position: (Arc<Vec<String>>,usize),
+    pub(crate) value: OperationValue
+}
+
+impl fmt::Debug for Operation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let file = self.position.0.as_ref().last().map(|x| x.as_str()).unwrap_or("");
+        write!(f,"{}:{} {:?}",file,self.position.1,self.value)
     }
 }
 

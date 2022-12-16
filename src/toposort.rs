@@ -56,7 +56,7 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
         }
     }
 
-    fn order(&self) -> Option<Vec<&V>> {
+    pub(crate) fn order(&self) -> Option<Vec<&V>> {
         self.sort.as_ref().map(|(sorting,_)| {
             sorting.iter().map(|idx| {
                 &self.nodes[*idx].value
@@ -64,7 +64,8 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
         })
     }
 
-    fn order_clone(&self) -> Option<Vec<V>> {
+    #[cfg(test)]
+    pub(crate) fn order_clone(&self) -> Option<Vec<V>> {
         self.sort.as_ref().map(|(sorting,_)| {
             sorting.iter().map(|idx| {
                 self.nodes[*idx].value.clone()
@@ -75,7 +76,8 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
     pub(crate) fn distance(&self, a: &V, b: &V) -> Option<usize> {
         if let  (Some(a_name),Some(b_name),Some(name_to_pos)) = 
                 (self.lookup.get(a),self.lookup.get(b),self.sort.as_ref().map(|x| &x.1)) {
-            Some(((name_to_pos[*a_name] as i64)-(name_to_pos[*b_name] as i64)).abs() as usize)
+            let (pos_a,pos_b) = (name_to_pos[*a_name],name_to_pos[*b_name]);
+            if pos_a < pos_b { Some(0) } else { Some(pos_a-pos_b) }
         } else {
             None
         }
@@ -92,6 +94,11 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
             value,
             flag: 0
         });
+        if self.next_flag > 1 {
+            let (pos_to_name,name_to_pos) = self.sort.as_mut().map(|x| (&mut x.0,&mut x.1)).unwrap();
+            pos_to_name.push(index);
+            name_to_pos.push(index);
+        }
     }
 
     fn reorder(&mut self, a: usize, b: usize) -> bool {
@@ -198,12 +205,12 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
 mod test {
     use super::*;
 
-    const nodes : &[usize] = &[2,3,5,7,8,9,10,11];
-    const from : &[usize] = &[5,7,7,3,3,11,11,11,8];
-    const to : &[usize] = &[11,11,8,8,10,2,9,10,9];
-
     #[test]
     fn topo_smoke() {
+        let nodes = &[2,3,5,7,8,9,10,11];
+        let from = &[5,7,7,3,3,11,11,11,8];
+        let to  = &[11,11,8,8,10,2,9,10,9];    
+
         let mut topo = TopoSort::new();
         for node in nodes {
             topo.node(*node);

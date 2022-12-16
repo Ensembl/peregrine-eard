@@ -28,12 +28,12 @@
  * end up being optimised due to time constraints.
  */
 
-use std::collections::HashMap;
-use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue}, frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::CodeBlock};
+use std::{collections::HashMap, sync::Arc, mem};
+use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant, sepfmt}, frontend::{buildtree::{BTTopDefn, BuildTree}, parsetree::at}, codeblocks::CodeBlock};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
-    Tombstone(usize),
+    Tombstone(usize,usize), // all uses of reg .0 except instr .1
     Instruction(usize)
 }
 
@@ -43,6 +43,10 @@ struct Reorder<'a> {
     topo: TopoSort<ReorderNode>,
     reg_birth: HashMap<usize,usize>,
     worlds: Vec<usize>,
+    constants: HashMap<usize,FullConstant>,
+    uses: HashMap<usize,Vec<usize>>,
+    useful_arcs: Vec<(ReorderNode,ReorderNode)>, // src -> dst
+    position: Option<(Arc<Vec<String>>,usize)>,
     credit: u32
 }
 
@@ -53,8 +57,18 @@ impl<'a> Reorder<'a> {
             topo: TopoSort::new(),
             reg_birth: HashMap::new(),
             worlds: vec![],
+            uses: HashMap::new(),
+            constants: HashMap::new(),
+            useful_arcs: vec![],
+            position: None,
             credit: limit
         }
+    }
+
+    fn error_at(&self, msg: &str) -> String {
+        self.position.as_ref().map(|(file,line)|
+            at(msg,Some((file.as_ref(),*line)))
+        ).unwrap_or("*anon*".to_string())
     }
 
     fn get_block(&self, call: usize, name: usize) -> &CodeBlock {
@@ -68,14 +82,16 @@ impl<'a> Reorder<'a> {
 
     fn add_nodes(&mut self, index: usize, oper: &Operation) {
         match &oper.value {
-            OperationValue::Constant(reg, _) => {
-                self.topo.node(ReorderNode::Tombstone(*reg));
+            OperationValue::Constant(reg,c) => {
                 self.topo.node(ReorderNode::Instruction(index));
                 self.reg_birth.insert(*reg,index);
+                self.constants.insert(*reg,c.clone());
             },
-            OperationValue::Code(call,name,rets, _) => {
+            OperationValue::Code(call,name,rets,args) => {
+                for reg in args {
+                    self.uses.entry(*reg).or_insert(vec![]).push(index);
+                }
                 for reg in rets {
-                    self.topo.node(ReorderNode::Tombstone(*reg));
                     self.reg_birth.insert(*reg,index);
                 }
                 self.topo.node(ReorderNode::Instruction(index));
@@ -87,7 +103,7 @@ impl<'a> Reorder<'a> {
         }
     }
 
-    fn add_world_arcs(&mut self) {
+    fn finish_arcs(&mut self) {
         self.worlds.reverse();
         if let Some(mut prev) = self.worlds.pop() {
             while let Some(next) = self.worlds.pop() {
@@ -110,11 +126,6 @@ impl<'a> Reorder<'a> {
                         &ReorderNode::Instruction(*self.reg_birth.get(arg).expect("use of unknown register")),
                         &ReorderNode::Instruction(index)
                     );
-                    /* tombstone edge */
-                    self.topo.arc(
-                        &ReorderNode::Instruction(index),
-                        &ReorderNode::Tombstone(*arg)
-                    );
                 }
             }
         }
@@ -123,19 +134,71 @@ impl<'a> Reorder<'a> {
     fn build(&mut self) {
         self.topo.sort();
     }
+
+    fn make_useful_arcs(&mut self, index: usize, oper: &Operation) -> Result<(),String> {
+        self.position = Some(oper.position.clone());
+        match &oper.value {
+            OperationValue::Constant(_, _) => {},
+            OperationValue::Code(call,name,rets,args) => {
+                let block = self.get_block(*call,*name);
+                let mut useful = vec![];
+                let inputs = args.iter().map(|a| self.constants.get(a).cloned()).collect::<Vec<_>>();
+                let imps = block.choose_imps(&inputs);
+                for imp in imps {
+                    for (ret_pos,arg_pos) in imp.reg_reuse()? {
+                        useful.push(args[arg_pos]);
+                    }
+                }
+                for reg in useful.drain(..) {
+                    self.topo.node(ReorderNode::Tombstone(reg,index));
+                    for other_use in self.uses.get(&reg).unwrap_or(&vec![]) {
+                        if *other_use != index {
+                            self.topo.arc(&ReorderNode::Instruction(*other_use),
+                                &ReorderNode::Tombstone(reg,index));
+                        }
+                    }
+                    self.useful_arcs.push((
+                        ReorderNode::Tombstone(reg,index),
+                        ReorderNode::Instruction(index)
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn add_useful_arcs(&mut self) {
+        let mut useful = mem::replace(&mut self.useful_arcs, vec![]);
+        useful.sort_by_key(|(a,b)| {
+            self.topo.distance(&a,&b)
+        });
+        for (src,dst) in useful.drain(..) {
+            self.topo.arc(&src,&dst);
+        }
+    }
 }
 
-pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation]) -> Vec<Operation> {
+pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation]) -> Result<Vec<Operation>,String> {
     /* populate and toposort initial graph */
     let mut reorder = Reorder::new(bt,block_index,10_000_000);
     for (i,oper) in opers.iter().enumerate() {
         reorder.add_nodes(i,oper);
     }
-    reorder.add_world_arcs();
+    reorder.finish_arcs();
     for (i,oper) in opers.iter().enumerate() {
         reorder.add_main_arcs(i,oper);
     }
     reorder.build();
     /* find instructions where we'd like to attempt a modifiable form */
-    opers.to_vec()
+    for (i,oper) in opers.iter().enumerate() {
+        reorder.make_useful_arcs(i,oper).map_err(|e| reorder.error_at(&e))?;
+    }
+    reorder.add_useful_arcs();
+    let order = reorder.topo.order().unwrap().iter().filter_map(|x| match x {
+        ReorderNode::Tombstone(_, _) => None,
+        ReorderNode::Instruction(i) => Some(*i),
+    }).collect::<Vec<_>>();
+    let opers = order.iter().map(|idx| opers[*idx].clone()).collect::<Vec<_>>();
+    eprintln!("redordered\n\n{}\n\n",sepfmt(&mut opers.iter(),"\n",""));
+    Ok(opers.to_vec())
 }

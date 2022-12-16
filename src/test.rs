@@ -101,3 +101,8 @@ fn test_const_fold() {
 fn test_libcore() {
     run_parse_tests(include_str!("testdata/libcore.etf"),true);
 }
+
+#[test]
+fn test_reorder() {
+    run_parse_tests(include_str!("testdata/reorder.etf"),true);
+}

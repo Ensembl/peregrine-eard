@@ -1,5 +1,68 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{CodeModifier, sepfmt, ImplBlock, CodeArgument}, middleend::broadtyping::BroadType};
+use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, CodeCommand}, middleend::broadtyping::BroadType};
+
+#[derive(Clone)]
+pub struct ImplBlock {
+    pub arguments: Vec<CodeImplArgument>,
+    pub results: Vec<CodeReturn>,
+    pub commands: Vec<CodeCommand>,
+}
+
+impl ImplBlock {
+    fn unifies(&self, args: &[Option<FullConstant>]) -> bool {
+        for (defn,value) in self.arguments.iter().zip(args.iter()) {
+            match (defn,value) {
+                (CodeImplArgument::Register(_),_) => {},
+                (CodeImplArgument::Constant(a), Some(FullConstant::Atomic(b))) => {
+                    if a != b { return false; }
+                },
+                _ => { return false; }
+
+            }
+        }
+        true
+    }
+
+    pub(crate) fn reg_reuse(&self) -> Result<Vec<(usize,usize)>,String> { // ret <- arg
+        let mut reg_names = HashMap::new();
+        for (i,arg) in self.arguments.iter().enumerate() {
+            match arg {
+                CodeImplArgument::Register(r) => {
+                    reg_names.insert(r.reg_id,i);
+                },
+                CodeImplArgument::Constant(_) => {},
+            }
+        }
+        let mut repeats = vec![];
+        for (i,ret) in self.results.iter().enumerate() {
+            match ret {
+                CodeReturn::Register(_) => {},
+                CodeReturn::Repeat(e) => {
+                    let pos = reg_names.get(e).ok_or_else(|| 
+                        "return repeat register not in argument list".to_string()
+                    )?;
+                    repeats.push((i,*pos));
+                }
+            }
+        }
+        Ok(repeats)
+    }
+}
+
+impl fmt::Debug for ImplBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f," impl ({})",
+            sepfmt(&mut self.arguments.iter(),", ","")
+        )?;
+        if self.results.len() > 0 {
+            write!(f," -> ({}) ",
+                sepfmt(&mut self.results.iter(),", ","")
+            )?;
+        }
+        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
+        Ok(())
+    }
+}
 
 #[derive(Clone)]
 pub struct CodeBlock {
@@ -31,6 +94,10 @@ impl CodeBlock {
             }).map_or_else(|x| x,|x| Ok(x))
         }).collect::<Result<Vec<_>,_>>()?;
         Ok(Some(typing))
+    }
+
+    pub(crate) fn choose_imps(&self, args: &[Option<FullConstant>]) -> Vec<&ImplBlock> {
+        self.impls.iter().filter(|imp| imp.unifies(args)).collect()
     }
 }
 

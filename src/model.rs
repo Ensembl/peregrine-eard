@@ -5,7 +5,7 @@ pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &st
 
 }
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq)]
 pub enum Constant {
     Number(f64),
     String(String),
@@ -425,28 +425,6 @@ impl fmt::Debug for CodeCommand {
             ),
             Self::Register(r) => write!(f,"register r{};",*r)
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct ImplBlock {
-    pub arguments: Vec<CodeImplArgument>,
-    pub results: Vec<CodeReturn>,
-    pub commands: Vec<CodeCommand>,
-}
-
-impl fmt::Debug for ImplBlock {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f," impl ({})",
-            sepfmt(&mut self.arguments.iter(),", ","")
-        )?;
-        if self.results.len() > 0 {
-            write!(f," -> ({}) ",
-                sepfmt(&mut self.results.iter(),", ","")
-            )?;
-        }
-        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
-        Ok(())
     }
 }
 

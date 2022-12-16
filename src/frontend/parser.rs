@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, ImplBlock, CodeImplVariable}, codeblocks::CodeBlock};
+use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable}, codeblocks::{CodeBlock, ImplBlock}};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
@@ -189,7 +189,7 @@ impl EarpParser {
     fn prefix(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
 
     fn register(input: Node) -> PestResult<usize> {
-        input.as_str()[1..].parse::<usize>().map_err(|e| input.error(e))
+        input.as_str()[1..].trim().parse::<usize>().map_err(|e| input.error(e))
     }
 
     fn arg_atomic_type(input: Node) -> PestResult<AtomicTypeSpec> {

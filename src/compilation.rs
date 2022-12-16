@@ -1,5 +1,5 @@
 use std::collections::{HashSet, HashMap};
-use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}, constfold::const_fold, culdesac::culdesac}};
+use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}, constfold::const_fold, culdesac::culdesac}, reorder::reorder};
 
 pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
@@ -63,6 +63,7 @@ impl<'a> EarpCompilation<'a> {
         let narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
         let opers = const_fold(&self,tree,&block_indexes,&linear);
         let opers = culdesac(tree,&block_indexes,&opers);
+        let opers = reorder(&tree,&block_indexes,&opers)?;
         Ok((opers,narrow))
     }
 

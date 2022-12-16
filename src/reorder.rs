@@ -47,11 +47,11 @@ struct Reorder<'a> {
     uses: HashMap<usize,Vec<usize>>,
     useful_arcs: Vec<(ReorderNode,ReorderNode)>, // src -> dst
     position: Option<(Arc<Vec<String>>,usize)>,
-    credit: u32
+    credit: u64
 }
 
 impl<'a> Reorder<'a> {
-    fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>, limit: u32) -> Reorder<'a> {
+    fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>, credit: u64) -> Reorder<'a> {
         Reorder {
             bt, block_index,
             topo: TopoSort::new(),
@@ -61,7 +61,7 @@ impl<'a> Reorder<'a> {
             constants: HashMap::new(),
             useful_arcs: vec![],
             position: None,
-            credit: limit
+            credit
         }
     }
 
@@ -83,7 +83,7 @@ impl<'a> Reorder<'a> {
     fn add_nodes(&mut self, index: usize, oper: &Operation) {
         match &oper.value {
             OperationValue::Constant(reg,c) => {
-                self.topo.node(ReorderNode::Instruction(index));
+                self.topo.node(ReorderNode::Instruction(index),None);
                 self.reg_birth.insert(*reg,index);
                 self.constants.insert(*reg,c.clone());
             },
@@ -94,7 +94,7 @@ impl<'a> Reorder<'a> {
                 for reg in rets {
                     self.reg_birth.insert(*reg,index);
                 }
-                self.topo.node(ReorderNode::Instruction(index));
+                self.topo.node(ReorderNode::Instruction(index),None);
                 let block = self.get_block(*call,*name);
                 if block.modifiers.contains(&CodeModifier::World) {
                     self.worlds.push(index);
@@ -139,18 +139,18 @@ impl<'a> Reorder<'a> {
         self.position = Some(oper.position.clone());
         match &oper.value {
             OperationValue::Constant(_, _) => {},
-            OperationValue::Code(call,name,rets,args) => {
+            OperationValue::Code(call,name,_,args) => {
                 let block = self.get_block(*call,*name);
                 let mut useful = vec![];
                 let inputs = args.iter().map(|a| self.constants.get(a).cloned()).collect::<Vec<_>>();
                 let imps = block.choose_imps(&inputs);
                 for imp in imps {
-                    for (ret_pos,arg_pos) in imp.reg_reuse()? {
+                    for (_,arg_pos) in imp.reg_reuse()? {
                         useful.push(args[arg_pos]);
                     }
                 }
                 for reg in useful.drain(..) {
-                    self.topo.node(ReorderNode::Tombstone(reg,index));
+                    self.topo.node(ReorderNode::Tombstone(reg,index),Some(&ReorderNode::Instruction(index)));
                     for other_use in self.uses.get(&reg).unwrap_or(&vec![]) {
                         if *other_use != index {
                             self.topo.arc(&ReorderNode::Instruction(*other_use),
@@ -173,6 +173,9 @@ impl<'a> Reorder<'a> {
             self.topo.distance(&a,&b)
         });
         for (src,dst) in useful.drain(..) {
+            let distance = self.topo.distance(&src,&dst).unwrap_or(0) as u64;
+            if distance > self.credit { return; }
+            self.credit -= distance;
             self.topo.arc(&src,&dst);
         }
     }

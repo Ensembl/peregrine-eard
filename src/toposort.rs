@@ -83,10 +83,10 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
         }
     }
 
-    pub(crate) fn node(&mut self, value: V) {
+    pub(crate) fn node(&mut self, value: V, after: Option<&V>) {
         if self.lookup.contains_key(&value) { return; }
-        let index = self.nodes.len();
-        self.lookup.insert(value.clone(),index);
+        let name = self.nodes.len();
+        self.lookup.insert(value.clone(),name);
         self.nodes.push(TopoNode {
             incoming: vec![],
             incoming_build: vec![],
@@ -96,8 +96,17 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
         });
         if self.next_flag > 1 {
             let (pos_to_name,name_to_pos) = self.sort.as_mut().map(|x| (&mut x.0,&mut x.1)).unwrap();
-            pos_to_name.push(index);
-            name_to_pos.push(index);
+            let mut at_pos = name;
+            if let Some(after) = after {
+                if let Some(after_name) = self.lookup.get(after) {
+                    at_pos = name_to_pos[*after_name]+1;
+                }
+            }
+            pos_to_name.insert(at_pos,name);
+            *name_to_pos = name_to_pos.iter().map(|pos| {
+                if *pos >= at_pos { pos+1 } else { *pos } 
+            }).collect();
+            name_to_pos.push(at_pos);
         }
     }
 
@@ -213,7 +222,7 @@ mod test {
 
         let mut topo = TopoSort::new();
         for node in nodes {
-            topo.node(*node);
+            topo.node(*node,None);
         }
         for (src,dst) in from.iter().zip(to.iter()) {
             assert!(topo.arc(src,dst));
@@ -236,13 +245,13 @@ mod test {
     fn topo_credit() {
         let mut topo = TopoSort::new();
         for i in 0..20 {
-            topo.node(i);
+            topo.node(i,None);
         }
         for i in 0..19 {
             topo.arc(&i,&(i+1));
         }
         topo.sort();
-        assert_eq!(2,topo.distance(&16,&18).unwrap());
-        assert_eq!(2,topo.distance(&2,&4).unwrap());
+        assert_eq!(0,topo.distance(&16,&18).unwrap());
+        assert_eq!(2,topo.distance(&4,&2).unwrap());
     }
 }

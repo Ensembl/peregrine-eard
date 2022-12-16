@@ -31,7 +31,7 @@
 use std::collections::HashMap;
 use crate::{toposort::TopoSort, model::{Operation, CodeModifier}, frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::CodeBlock};
 
-#[derive(PartialEq,Eq,Hash,Clone)]
+#[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
     Tombstone(usize),
     Instruction(usize)
@@ -49,7 +49,7 @@ impl<'a> Reorder<'a> {
     fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>, limit: u32) -> Reorder<'a> {
         Reorder {
             bt, block_index,
-            topo: TopoSort::new(Some(limit)),
+            topo: TopoSort::new(),
             reg_birth: HashMap::new(),
             worlds: vec![]
         }

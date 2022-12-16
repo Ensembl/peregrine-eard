@@ -31,6 +31,8 @@ pub mod compiler;
 pub mod compilation;
 mod equiv;
 mod model;
+pub(crate) mod toposort;
+mod reorder;
 
 #[cfg(test)]
 mod test;

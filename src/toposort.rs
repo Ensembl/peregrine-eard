@@ -29,7 +29,7 @@
  * all nodes to the right have been scanned, so we can just look at their flags.
  */
 
-use std::{collections::HashMap, hash::Hash, fmt};
+use std::{collections::{HashMap, VecDeque}, hash::Hash, fmt};
 
 struct TopoNode<V> {
     incoming: Vec<usize>,
@@ -168,20 +168,21 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
     pub(crate) fn sort(&mut self) -> bool {
         let our_flag = self.next_flag;
         self.next_flag += 1;
-        let mut ongoing = vec![];
+        let mut ongoing = VecDeque::new();
         let mut sorted = vec![];
+        let mut roots = vec![];
         let mut rev_sorted = vec![0;self.nodes.len()];
         for (i,node) in self.nodes.iter_mut().enumerate() {
             if node.incoming.len() == 0 {
-                rev_sorted[i] = sorted.len();
-                ongoing.push(i);
-                sorted.push(i);
-                node.flag = our_flag;
+                roots.push(i);
             }
             node.incoming_build = node.incoming.clone();
         }
+        roots.reverse();
         let mut target = vec![];
-        while let Some(src) = ongoing.pop() {
+        while let Some(src) = ongoing.pop_front().or_else(|| roots.pop()) {
+            rev_sorted[src] = sorted.len();
+            sorted.push(src);
             target.clear();
             for dst in &self.nodes[src].outgoing {
                 let src_idx = self.nodes[*dst].incoming_build.iter().position(|x| *x==src).unwrap();
@@ -193,9 +194,7 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
                     let incoming = &mut node.incoming_build;
                     incoming.swap_remove(link_idx);
                     if incoming.len() == 0 {
-                        rev_sorted[node_idx] = sorted.len();
-                        ongoing.push(node_idx);
-                        sorted.push(node_idx);
+                        ongoing.push_front(node_idx);
                         node.flag = our_flag;
                     }
                 }
@@ -228,9 +227,9 @@ mod test {
             assert!(topo.arc(src,dst));
         }
         topo.sort();
-        assert_eq!(Some(vec![3,5,7,11,2,8,10,9]),topo.order_clone());
+        assert_eq!(Some(vec![3,5,7,8,11,10,9,2]),topo.order_clone());
         assert!(topo.arc(&7,&3));
-        assert_eq!(Some(vec![7,3,5,11,2,8,10,9]),topo.order_clone());
+        assert_eq!(Some(vec![7,3,5,8,11,10,9,2]),topo.order_clone());
         assert!(topo.arc(&2,&3));
         assert_eq!(Some(vec![7,5,11,2,3,8,10,9]),topo.order_clone());
         assert!(!topo.arc(&8,&2));

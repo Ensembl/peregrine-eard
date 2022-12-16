@@ -1,7 +1,12 @@
 /*
- * We reorder to allow maximal use of modifying opcodes for our code blocks. THis is a toposort
- * problem. The dag has two node types: one for every instruction (instruction nodes) and one for
- * "after the last use of a register" (tombstone nodes).
+ * We reorder to allow maximal use of modifying opcodes for our code blocks. This is a toposort
+ * problem. The dag has two node types: one for every instruction (instruction nodes) and
+ * one which represents all uses of a register but for one having taken place (last chance node).
+ * For example, if register X is used in instructions A, B, C, there is a last chance node (X,A) 
+ * which is placed after B and C, a node (X,B) after A and C and a node (X,C) after A and B.
+ * 
+ * In reality, last chance nodes are created only when needed but for analysis can be treated as
+ * always present. There are the following edges.
  * 
  * 1. For each register a "register edge" is added from the instruction which generated the
  * register to each instruction which uses it.
@@ -9,21 +14,22 @@
  * 2. For the chain of world instructions, an edge is added in existing program order, a "world
  * edge".
  * 
- * 3. Every time a register is used as an argument, a "tombstone edge" is added from the
- * instruction node to the tombstone node.
+ * 3. Every time a register is used as an argument, a "last chance edge" is added to all relevant
+ * last chance nodes. (In reality, lazily on creation of the last chance node).
  * 
  * These edges all function identically, their name is just used to indicated their origin.
  * Together, this graph represents all acceptable orderings of instructions.
  * 
  * When an instruction exists in a modifying form, at least one pair of registers can be
  * identified, the "source" register which would be overritten and the "destination" register
- * which would take the new value. If we can add an edge from the tombstone node of the source
- * register to the instruction in which the destination register is created without adding cycles,
- * we can exploit the modfying form and reuse the register.
+ * which would take the new value. If we can add an edge from the last chance node of the source
+ * register for this instruction, to the instruction in which the destination register is created
+ * without adding cycles, we can exploit the modfying form and reuse the register as the last
+ * chance node guarantees this is the last use of the register.
  * 
  * We toposort the initial graph and then use an incremental algorithm to add a node A->B. We 
  * limit complexity by putting a limit on the number of nodes searched. World edges are linear
- * and tombstone edges convergent, so we would only expect branching from register edges. That is,
+ * and last chance edges convergent, so we would only expect branching from register edges. That is,
  * the complex searches would occur when a register is used in many places. Such registers may not
  * end up being optimised due to time constraints.
  */
@@ -33,7 +39,7 @@ use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue,
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
-    Tombstone(usize,usize), // all uses of reg .0 except instr .1
+    LastChance(usize,usize), // all uses of reg .0 except instr .1
     Instruction(usize)
 }
 
@@ -150,15 +156,15 @@ impl<'a> Reorder<'a> {
                     }
                 }
                 for reg in useful.drain(..) {
-                    self.topo.node(ReorderNode::Tombstone(reg,index),Some(&ReorderNode::Instruction(index)));
+                    self.topo.node(ReorderNode::LastChance(reg,index),Some(&ReorderNode::Instruction(index)));
                     for other_use in self.uses.get(&reg).unwrap_or(&vec![]) {
                         if *other_use != index {
                             self.topo.arc(&ReorderNode::Instruction(*other_use),
-                                &ReorderNode::Tombstone(reg,index));
+                                &ReorderNode::LastChance(reg,index));
                         }
                     }
                     self.useful_arcs.push((
-                        ReorderNode::Tombstone(reg,index),
+                        ReorderNode::LastChance(reg,index),
                         ReorderNode::Instruction(index)
                     ));
                 }
@@ -198,10 +204,9 @@ pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers:
     }
     reorder.add_useful_arcs();
     let order = reorder.topo.order().unwrap().iter().filter_map(|x| match x {
-        ReorderNode::Tombstone(_, _) => None,
+        ReorderNode::LastChance(_, _) => None,
         ReorderNode::Instruction(i) => Some(*i),
     }).collect::<Vec<_>>();
     let opers = order.iter().map(|idx| opers[*idx].clone()).collect::<Vec<_>>();
-    eprintln!("redordered\n\n{}\n\n",sepfmt(&mut opers.iter(),"\n",""));
     Ok(opers.to_vec())
 }

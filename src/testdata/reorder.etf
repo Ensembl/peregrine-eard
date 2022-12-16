@@ -49,20 +49,20 @@ libcore:50  (12#11) r94
 test:9 r1 <- 1
 test:9 r2 <- 1
 test:9 r3 <- 1
+test:7 r10 (14#1) r1 r2 r3
 test:10 r17 <- 3
 test:11 r22 <- 5
 test:11 r23 <- 0
+test:7 r30 (14#2) r10 r22 r23
+test:7 r66 (14#5) r17 r30 r10
+libcore:44 r71 (10#6) r66
 test:12 r37 <- 2
 test:12 r38 <- 0
 test:15 r82 <- 3
-test:7 r10 (14#1) r1 r2 r3
-test:7 r30 (14#2) r10 r22 r23
-test:7 r66 (14#5) r17 r30 r10
 test:7 r89 (14#8) r17 r30 r82
 test:7 r45 (14#3) r17 r37 r38
 libcore:44 r50 (10#4) r45
 libcore:50  (12#7) r50
-libcore:44 r94 (10#9) r89
-libcore:44 r71 (10#6) r66
 libcore:50  (12#10) r71
+libcore:44 r94 (10#9) r89
 libcore:50  (12#11) r94

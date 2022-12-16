@@ -345,7 +345,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
-            println!("{}",sepfmt(&mut opers.iter(),"\n",""));
+            println!("reordered:\n{}",sepfmt(&mut opers.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut opers.iter(),"\n",""),constfold_options),process_ws(constfold_correct,constfold_options));
         }
     }

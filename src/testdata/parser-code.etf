@@ -6,12 +6,10 @@ Code block smoke
 
 world code test(seq(?X) length(?X), boolean length(?X)) -> (seq(boolean) ref(?X), boolean) {
     impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r4: boolean) {
-      register r4;
       opcode 44, r1, r2, r3, r4, r5;
     }
 
     impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r4: boolean) {
-      register r4;
       opcode 44, r1, r2, r3, r4, r5;
     }
 }
@@ -23,11 +21,9 @@ world code test(seq(?X) length(?X), boolean length(?X)) -> (seq(boolean) ref(?X)
         value: Code(
             world code test( seq(?X) length(X), boolean length(X))->(seq(boolean) ref(X), boolean) {
                 impl (r1:seq(number), r2:boolean) -> (r3:seq(boolean), r4:boolean) {
-                    register r4;
                     opcode 44,r1,r2,r3,r4,r5;
                 }
                 impl (r1:seq(string), r2:boolean) -> (r3:seq(boolean), r4:boolean) {
-                    register r4;
                     opcode 44,r1,r2,r3,r4,r5;
                 }
             }

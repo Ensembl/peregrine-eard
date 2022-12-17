@@ -1,11 +1,11 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, CodeCommand}, middleend::broadtyping::BroadType};
+use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode}, middleend::broadtyping::BroadType};
 
 #[derive(Clone)]
 pub struct ImplBlock {
     pub arguments: Vec<CodeImplArgument>,
     pub results: Vec<CodeReturn>,
-    pub commands: Vec<CodeCommand>,
+    pub command: Option<Opcode>,
 }
 
 impl ImplBlock {
@@ -59,7 +59,7 @@ impl fmt::Debug for ImplBlock {
                 sepfmt(&mut self.results.iter(),", ","")
             )?;
         }
-        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.commands.iter(),"\n","  "))?;
+        write!(f," {{\n{}\n}}\n\n",sepfmt(&mut self.command.iter(),"\n","  "))?;
         Ok(())
     }
 }

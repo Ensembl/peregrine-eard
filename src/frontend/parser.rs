@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeCommand, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable}, codeblocks::{CodeBlock, ImplBlock}};
+use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
@@ -399,24 +399,11 @@ impl EarpParser {
         Ok(out)
     }
 
-    fn opcode_statement(input: Node) -> PestResult<CodeCommand> {
+    fn opcode_statement(input: Node) -> PestResult<Opcode> {
         Ok(match_nodes!(input.into_children();
             [opcode_opcode(code),opcode_args(args)] => {
-                CodeCommand::Opcode(code,args)
+                Opcode(code,args)
             }
-        ))
-    }
-
-    fn code_statement(input: Node) -> PestResult<CodeCommand> {
-        Ok(match_nodes!(input.into_children();
-            [opcode_statement(stmt)] => stmt,
-            [register_statement(reg)] => CodeCommand::Register(reg)
-        ))
-    }
-
-    fn register_statement(input: Node) -> PestResult<usize> {
-        Ok(match_nodes!(input.into_children();
-            [register(r)] => r
         ))
     }
 
@@ -525,7 +512,7 @@ impl EarpParser {
                 ImplBlock {
                     arguments: args, 
                     results: rets, 
-                    commands: vec![]
+                    command: None
                 }
             }
         ))
@@ -533,10 +520,13 @@ impl EarpParser {
 
     fn code_impl(input: Node) -> PestResult<ImplBlock> {
         Ok(match_nodes!(input.into_children();
-            [impl_header(mut block),code_statement(stmt)..] => {
-                block.commands = stmt.collect();
+            [impl_header(mut block),opcode_statement(stmt)] => {
+                block.command = Some(stmt);
                 block
-            }
+            },
+            [impl_header(block)] => {
+                block
+            },
         ))
     }
 

@@ -7,22 +7,18 @@ Code blocks
 world code test(seq(?X) length(?X), boolean length(?X...)) -> (seq(boolean) ref(?X), boolean) {
 
   impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r5: boolean) {
-    register r4;
     opcode 44, r1, r2, r3, r4, r5;
   }
 
   impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r5: boolean) {
-    register r4;
     opcode 44, r1, r2, r3, r4, r5;
   }
 
   impl (r1: seq(number), r2: boolean) -> (r3: seq(boolean), r1) {
-    register r4;
     opcode 45, r1, r2, r3, r4;
   }
 
   impl (r1: seq(string), r2: boolean) -> (r3: seq(boolean), r1) {
-    register r4;
     opcode 45, r1, r2, r3, r4;
   }
 }
@@ -33,22 +29,18 @@ world code test(seq(?X) length(?X), boolean length(?X...)) -> (seq(boolean) ref(
 world code test(seq(?X) length(X), boolean length(X...)) -> (seq(boolean) ref(X), boolean )  {
 
   impl (r1 : seq(number), r2 : boolean) -> (r3 : seq(boolean), r5 : boolean)  {
-     register r4;
      opcode 44, r1, r2, r3, r4, r5;
   }
 
   impl (r1 : seq(string), r2 : boolean) -> (r3 : seq(boolean), r5 : boolean)  {
-    register r4;
     opcode 44, r1, r2, r3, r4, r5;
   }
 
   impl (r1 : seq(number), r2 : boolean) -> (r3 : seq(boolean), r1)  {
-    register r4;
     opcode 45, r1, r2, r3, r4;
   }
 
   impl (r1 : seq(string), r2 : boolean) -> (r3 : seq(boolean), r1)  {
-    register r4;
     opcode 45, r1, r2, r3, r4;
   }
 

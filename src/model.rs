@@ -410,21 +410,15 @@ impl fmt::Debug for TypedArgument {
 }
 
 #[derive(Clone)]
-pub enum CodeCommand {
-    Opcode(usize,Vec<usize>),
-    Register(usize)
-}
+pub struct Opcode(pub usize,pub Vec<usize>);
 
-impl fmt::Debug for CodeCommand {
+impl fmt::Debug for Opcode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Opcode(opcode,args) => write!(f,"opcode {}{}{};",
-                *opcode,
-                if args.len() > 0 { ", " } else { "" },
-                sepfmt(&mut args.iter(),", ","r")
-            ),
-            Self::Register(r) => write!(f,"register r{};",*r)
-        }
+        write!(f,"opcode {}{}{};",
+                self.0,
+                if self.1.len() > 0 { ", " } else { "" },
+                sepfmt(&mut self.1.iter(),", ","r")
+        )
     }
 }
 

@@ -85,7 +85,7 @@ code_return_arguments = _{ code_arg ~ ("," ~ code_arg)* }
 code_arguments = { (code_arg ~ ("," ~ code_arg)*)? }
 code_arg = { arg_type ~ arg_check* }
 
-code_impl = { impl_header ~ "{" ~  code_statement* ~ "}" }
+code_impl = { impl_header ~ "{" ~  opcode_statement? ~ "}" }
 impl_header = { "impl" ~ "(" ~ impl_arguments ~ ")" ~ impl_return }
 
 impl_return =  { ("->" ~ (("(" ~ impl_return_arguments ~ ")")|impl_return_var))? }
@@ -106,12 +106,8 @@ code_modifiers = { code_modifier* }
 register = { "r" ~ ASCII_DIGIT+ }
 
 opcode_opcode = { ASCII_DIGIT+ }
-opcode_statement = { "opcode" ~ opcode_opcode ~ opcode_args }
+opcode_statement = { "opcode" ~ opcode_opcode ~ opcode_args ~ ";" }
 opcode_args = { ("," ~ register)* }
-
-register_statement = { "register" ~ register  }
-
-code_statement = { (opcode_statement|register_statement) ~ ";" }
 
 flag_statement = { "flag" ~ string ~ ";" }
 

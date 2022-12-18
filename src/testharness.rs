@@ -1,5 +1,7 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder};
+use ordered_float::OrderedFloat;
+
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -35,7 +37,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
             OrBundleRepeater::Normal(x) => x,
             _ => { return Err(format!("expceted expression")) }
         };
-        Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(Constant::Number(1.)))))
+        Ok(PTExpression::Infix(Box::new(value.clone()),"+".to_string(),Box::new(PTExpression::Constant(Constant::Number(OrderedFloat(1.))))))
     })?;
     compiler.add_block_macro("z", |_expr,pos,context| {
         Ok(vec![PTStatement {
@@ -49,7 +51,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
         args.iter().cloned().collect::<Option<Vec<FullConstant>>>().and_then(|v| {
             match (&v[0],&v[1]) {
                 (FullConstant::Atomic(Constant::Number(a)),FullConstant::Atomic(Constant::Number(b))) => {
-                    if *a+*b < 10. {
+                    if *a+*b < OrderedFloat(10.) {
                         Some(vec![FullConstant::Atomic(Constant::Number(*a+*b))])
                     } else {
                         None
@@ -336,6 +338,25 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             println!("{}",sepfmt(&mut opers.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut opers.iter(),"\n",""),constfold_options),process_ws(constfold_correct,constfold_options));
         }
+        if let Some((reuse_options,reuse_correct)) = sections.get("reuse") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear) = frontend(&mut compilation,&processed);
+            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
+            opers = culdesac(&tree,&block_indexes,&opers);
+            let (new_opers, knowns) = test_reuse(&tree,&block_indexes,&opers).expect("reuse failed");
+            println!("FROM:\n {}\n\n",sepfmt(&mut opers.iter(),"\n",""));
+            println!("TO:\n{}\n",sepfmt(&mut new_opers.iter(),"\n",""));
+            assert_eq!(process_ws(&sepfmt(&mut new_opers.iter(),"\n",""),reuse_options),process_ws(reuse_correct,reuse_options));
+            if let Some((knowns_options,knowns_correct)) = sections.get("reuse-known") {
+                let knowns = knowns.iter().collect::<BTreeMap<_,_>>();
+                let knowns = knowns.iter().map(|(k,v)| format!("{}: {:?}",k,v)).collect::<Vec<_>>();
+                println!("{}",knowns.join("\n"));
+                assert_eq!(process_ws(&knowns.join("\n"),knowns_options),process_ws(knowns_correct,knowns_options));
+            }
+        }
         if let Some((constfold_options,constfold_correct)) = sections.get("reordered") {
             let processed = processed.clone().expect("processing failed");
             let (tree,linear) = frontend(&mut compilation,&processed);
@@ -344,10 +365,10 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);
+            opers = reuse(&tree,&block_indexes,&opers).expect("reuse failed");
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
             println!("reordered:\n{}",sepfmt(&mut opers.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut opers.iter(),"\n",""),constfold_options),process_ws(constfold_correct,constfold_options));
         }
     }
 }
-

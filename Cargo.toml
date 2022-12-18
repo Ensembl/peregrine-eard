@@ -6,6 +6,7 @@ edition = "2018"
 
 
 [dependencies]
+ordered-float="*"
 pest="*"
 pest_consume="*"
 pest_derive="*"

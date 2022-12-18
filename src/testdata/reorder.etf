@@ -1,5 +1,154 @@
 >> test
 
+reust smoke test
+
+>> input
+
+code c(number, number, number) -> number {
+    impl (r1: number, r2: number, r3: number) -> r3: number {}
+}
+
+world code wc(?X) -> ?X {
+    impl (r1: ?X) -> r1 {}
+}
+
+function f(x,y,z) { let a = c(x,y,z); a }
+function wf(x) { let a = wc(x); a }
+
+let a = f(1,2,3);
+let b = f(1,2,3);
+let c = f(a,b,a);
+let d = f(a,b,a);
+let e = wf(c);
+let f = wf(d);
+print(format(c));
+print(format(d));
+print(format(e));
+print(format(f));
+
+>> constfold strip culdesac
+
+test:13 r1 <- 1
+test:13 r2 <- 2
+test:13 r3 <- 3
+test:10 r10 (14#1) r1 r2 r3
+test:14 r17 <- 1
+test:14 r18 <- 2
+test:14 r19 <- 3
+test:10 r26 (14#2) r17 r18 r19
+test:10 r41 (14#3) r10 r26 r10
+test:10 r56 (14#4) r10 r26 r10
+test:11 r65 (15#5) r41
+test:11 r75 (15#6) r56
+libcore:44 r84 (10#7) r41
+libcore:50  (12#8) r84
+libcore:44 r93 (10#9) r56
+libcore:50  (12#10) r93
+libcore:44 r101 (10#11) r65
+libcore:50  (12#12) r101
+libcore:44 r109 (10#13) r75
+libcore:50  (12#14) r109
+
+>> reuse strip
+
+test:13 r1 <- 1
+test:13 r2 <- 2
+test:13 r3 <- 3
+test:10 r10 (14#1) r1 r2 r3
+test:10 r41 (14#3) r10 r10 r10
+test:11 r65 (15#5) r41
+test:11 r75 (15#6) r41
+libcore:44 r84 (10#7) r41
+libcore:50  (12#8) r84
+libcore:50  (12#10) r84
+libcore:44 r101 (10#11) r65
+libcore:50  (12#12) r101
+libcore:44 r109 (10#13) r75
+libcore:50  (12#14) r109
+
+>> reuse-known strip
+
+1: 1
+2: 2
+3: 3
+10: 14/0(1, 2, 3)
+41: 14/0(14/0(1, 2, 3), 14/0(1, 2, 3), 14/0(1, 2, 3))
+84: 10/0(14/0(14/0(1, 2, 3), 14/0(1, 2, 3), 14/0(1, 2, 3)))
+
+>> test
+
+reust smoke test 2
+
+>> input
+
+code c(number, number, number) -> number {
+    impl (r1: number, r2: number, r3: number) -> r3: number {}
+}
+
+code pc(number, number) -> (number,number) {
+    impl (r1: number, r2: number) -> (r3: number, r4: number) {}
+}
+
+world code wc(?X) -> ?X {
+    impl (r1: ?X) -> r1 {}
+}
+
+procedure p(a,b) { let (a,b) = pc(a,b); (b,a) }
+function f(x,y,z) { let a = c(x,y,z); a }
+function wf(x) { let a = wc(x); a }
+
+let a = f(1,2,3);
+let b = f(1,2,3);
+let c = f(1,2,0);
+let (d,e) = p(a,b);
+let (f,g) = p(b,a);
+print(format(a));
+print(format(b));
+print(format(c));
+print(format(d));
+print(format(e));
+print(format(f));
+print(format(g));
+
+>> reuse strip
+
+test:18 r1 <- 1
+test:18 r2 <- 2
+test:18 r3 <- 3
+test:15 r10 (14#1) r1 r2 r3
+test:20 r34 <- 0
+test:15 r41 (14#3) r1 r2 r34
+test:14 r53 r54 (15#4) r10 r10
+libcore:44 r88 (10#6) r10
+libcore:50  (12#7) r88
+libcore:50  (12#9) r88
+libcore:44 r105 (10#10) r41
+libcore:50  (12#11) r105
+libcore:44 r113 (10#12) r54
+libcore:50  (12#13) r113
+libcore:44 r121 (10#14) r53
+libcore:50  (12#15) r121
+libcore:50  (12#17) r113
+libcore:50  (12#19) r121
+
+>> reuse-known strip
+
+
+1: 1
+2: 2
+3: 3
+10: 14/0(1, 2, 3)
+34: 0
+41: 14/0(1, 2, 0)
+53: 15/0(14/0(1, 2, 3), 14/0(1, 2, 3))
+54: 15/1(14/0(1, 2, 3), 14/0(1, 2, 3))
+88: 10/0(14/0(1, 2, 3))
+105: 10/0(14/0(1, 2, 0))
+113: 10/0(15/1(14/0(1, 2, 3), 14/0(1, 2, 3)))
+121: 10/0(15/0(14/0(1, 2, 3), 14/0(1, 2, 3)))
+
+>> test
+
 reorder smoke test
 
 >> input
@@ -47,22 +196,18 @@ libcore:50  (12#11) r94
 >> reordered strip
 
 test:9 r1 <- 1
-test:9 r2 <- 1
-test:9 r3 <- 1
-test:7 r10 (14#1) r1 r2 r3
+test:7 r10 (14#1) r1 r1 r1
 test:10 r17 <- 3
 test:11 r22 <- 5
 test:11 r23 <- 0
 test:7 r30 (14#2) r10 r22 r23
 test:7 r66 (14#5) r17 r30 r10
+test:7 r89 (14#8) r17 r30 r17
+libcore:44 r94 (10#9) r89
 libcore:44 r71 (10#6) r66
 test:12 r37 <- 2
-test:12 r38 <- 0
-test:15 r82 <- 3
-test:7 r89 (14#8) r17 r30 r82
-test:7 r45 (14#3) r17 r37 r38
+test:7 r45 (14#3) r17 r37 r23
 libcore:44 r50 (10#4) r45
 libcore:50  (12#7) r50
 libcore:50  (12#10) r71
-libcore:44 r94 (10#9) r89
 libcore:50  (12#11) r94

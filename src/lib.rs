@@ -31,6 +31,7 @@ pub mod compiler;
 pub mod compilation;
 mod equiv;
 mod model;
+mod reuse;
 pub(crate) mod toposort;
 mod reorder;
 

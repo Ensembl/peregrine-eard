@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, model::Constant};
 use crate::frontend::parsetree::{PTExpression};
 
@@ -43,7 +45,7 @@ fn test_macro_clash() {
     assert!(compiler.add_block_macro("y", |_,_,_| { Ok(vec![])}).is_ok());
     assert!(compiler.add_block_macro("x", |_,_,_| { Ok(vec![])}).is_err());
     assert!(compiler.add_expression_macro("x", |_,_| { Ok(
-        PTExpression::Constant(Constant::Number(0.))
+        PTExpression::Constant(Constant::Number(OrderedFloat(0.)))
     )}).is_err());
 }
 

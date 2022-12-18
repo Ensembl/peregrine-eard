@@ -1,4 +1,5 @@
 use std::sync::Arc;
+use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
 use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
@@ -176,7 +177,7 @@ impl EarpParser {
     fn constant(input: Node) -> PestResult<Constant> {
         Ok(match_nodes!(input.into_children();
           [string(s)] => Constant::String(s),
-          [number(n)] => Constant::Number(n),
+          [number(n)] => Constant::Number(OrderedFloat(n)),
           [boolean(b)] => Constant::Boolean(b)
         ))
     }

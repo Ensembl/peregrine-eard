@@ -1,13 +1,14 @@
 use std::{fmt::{self, Display}, sync::Arc, cmp::Ordering};
+use ordered_float::OrderedFloat;
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
 
 }
 
-#[derive(Clone,PartialEq)]
+#[derive(PartialEq,PartialOrd,Eq,Ord,Clone)]
 pub enum Constant {
-    Number(f64),
+    Number(OrderedFloat<f64>),
     String(String),
     Boolean(bool)
 }
@@ -34,7 +35,7 @@ impl fmt::Debug for Constant {
     }
 }
 
-#[derive(Clone)]
+#[derive(PartialEq,Eq,PartialOrd,Ord,Clone)]
 pub enum FullConstant {
     Atomic(Constant),
     Finite(Vec<Constant>),
@@ -81,6 +82,22 @@ impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let file = self.position.0.as_ref().last().map(|x| x.as_str()).unwrap_or("");
         write!(f,"{}:{} {:?}",file,self.position.1,self.value)
+    }
+}
+
+pub enum Step {
+    Constant(usize,FullConstant),
+    Opcode(usize,Vec<usize>)
+}
+
+impl fmt::Debug for Step {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Step::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
+            Step::Opcode(opcode,args) => {
+                write!(f,"opcode {}, {}",*opcode,sepfmt(&mut args.iter(),", ",""))
+            }
+        }
     }
 }
 

@@ -6,6 +6,7 @@ pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &st
 
 }
 
+#[derive(Clone)]
 pub(crate) struct FilePosition {
     filename: String,
     line_no: u32
@@ -14,6 +15,11 @@ pub(crate) struct FilePosition {
 impl FilePosition {
     pub(crate) fn anon() -> FilePosition {
         FilePosition { filename: "*anon*".to_string(), line_no: 0 }
+    }
+
+    pub(crate) fn xxx_new(filename: &Arc<Vec<String>>, line_no: usize) -> FilePosition {
+        let filename = filename.last().cloned().unwrap_or("*anon*".to_string());
+        FilePosition { filename: filename.to_string(), line_no: line_no as u32 }
     }
 }
 
@@ -24,35 +30,43 @@ impl fmt::Debug for FilePosition {
 }
 
 #[derive(Clone)]
-pub(crate) struct ParsePosition(Arc<Vec<FilePosition>>);
+struct PositionNode(Option<Arc<PositionNode>>,FilePosition);
+
+impl PositionNode {
+    fn to_str(&self, prefix: &str, suffix: &str) -> String {
+        let rest = self.0.as_ref().map(|parent| {
+            format!("{}",parent.to_str(prefix,suffix))
+        }).unwrap_or("".to_string());
+        format!("{}{:?}{}{}",prefix,self.1,suffix,rest)
+    }
+}
+
+#[derive(Clone)]
+pub struct ParsePosition(PositionNode,Arc<String>);
 
 impl ParsePosition {
-    pub(crate) fn xxx_new(position: (Arc<Vec<String>>,usize)) -> ParsePosition {
-        let stack = if position.0.len() > 0 {
-            position.0.iter().map(|filename| {
-                FilePosition { filename: filename.to_string(), line_no: position.1 as u32 }
-            }).collect()
-        } else {
-            vec![FilePosition::anon()]
-        };
-        ParsePosition(Arc::new(stack))
+    pub(crate) fn empty(variety: &str) -> ParsePosition {
+        ParsePosition(PositionNode(None,FilePosition::anon()),Arc::new(variety.to_string()))
     }
 
-    pub(crate) fn empty() -> ParsePosition {
-        ParsePosition(Arc::new(vec![FilePosition::anon()]))
+    pub(crate) fn update(&mut self, file: &FilePosition) {
+        let parent = (self.0).0.clone();
+        *self = ParsePosition(PositionNode(parent,file.clone()),self.1.clone());
     }
 
-    pub(crate) fn last(&self) -> &FilePosition { self.0.last().unwrap() }
+    pub(crate) fn push(&self, file: &FilePosition) -> ParsePosition {
+        ParsePosition(PositionNode(Some(Arc::new(self.0.clone())),file.clone()),self.1.clone())
+    }
+
+    pub(crate) fn last(&self) -> &FilePosition { &(self.0).1 }
 
     pub(crate) fn last_str(&self) -> String { format!("{:?}",self.last()) }
 
     pub(crate) fn full_str(&self) -> String {
-        let mut paths = self.0.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
-        let last = paths.pop().unwrap();
-        let mut paths = paths.iter().map(|x| format!("(included from {:?})",x)).collect::<Vec<_>>();
-        paths.push(last);
-        paths.reverse();
-        paths.join(" ")
+        let rest = (self.0).0.as_ref().map(|x|
+            x.to_str(&format!(" ({} from ",self.1),")")
+        ).unwrap_or("".to_string());
+        format!("{:?}{}",(self.0).1,rest)
     }
 
     pub(crate) fn message(&self, msg: &str) -> String {
@@ -524,13 +538,11 @@ impl fmt::Debug for LinearStatementValue {
 #[derive(Clone)]
 pub struct LinearStatement {
     pub value: LinearStatementValue,
-    pub file: Arc<Vec<String>>,
-    pub line_no: usize
+    pub position: ParsePosition
 }
 
 impl fmt::Debug for LinearStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let file = self.file.as_ref().last().map(|x| x.as_str()).unwrap_or("");
-        write!(f,"{}:{} {:?}",file,self.line_no,self.value)
+        write!(f,"{} {:?}",self.position.last_str(),self.value)
     }
 }

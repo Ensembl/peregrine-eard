@@ -10,11 +10,11 @@
  */
 
 use std::{sync::Arc, collections::{HashMap, HashSet}};
-use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}};
+use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType, ParsePosition}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}};
 
 pub(crate) struct Checking<'a> {
     bt: &'a BuildTree,
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     block_indexes: &'a HashMap<usize,usize>,
     equiv: HashMap<CheckType,EquivalenceClass<usize>>,
     group: HashMap<(CheckType,usize),HashSet<usize>>,
@@ -25,17 +25,11 @@ impl<'a> Checking<'a> {
     pub(crate) fn new(bt: &'a BuildTree, block_indexes: &'a HashMap<usize,usize>) -> Checking<'a> {
         Checking {
             bt, block_indexes,
-            position: None,
+            position: ParsePosition::empty("called"),
             equiv: HashMap::new(),
             group: HashMap::new(),
             forced: HashSet::new()
         }
-    }
-
-    fn error_at(&self, msg: &str) -> String {
-        self.position.as_ref().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
     }
 
     fn equiv(&mut self, ct: &CheckType) -> &mut EquivalenceClass<usize> {
@@ -67,7 +61,7 @@ impl<'a> Checking<'a> {
     }
 
     fn make_equivs(&mut self, stmt: &LinearStatement) -> Result<(),String> {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Copy(_, _) => { panic!("copy in checking: should have been run after reduce") }
             LinearStatementValue::Code(call,name,rets,args) => {
@@ -91,7 +85,7 @@ impl<'a> Checking<'a> {
     }
 
     fn groupify(&mut self, stmt: &LinearStatement) -> Result<(),String> {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Check(reg,ct,ci,force) => {
                 let reg_group = *self.equiv(ct).get(reg);
@@ -107,7 +101,7 @@ impl<'a> Checking<'a> {
 
     /* We iterate again so that we get the line number in the error message */
     fn check(&mut self, stmt: &LinearStatement) -> Result<(),String> {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Check(reg,ct,_,_) => {
                 let group = *self.equiv(ct).get(reg);
@@ -124,14 +118,14 @@ impl<'a> Checking<'a> {
 pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_indexes: &HashMap<usize,usize>) -> Result<(),String> {
     let mut typing = Checking::new(bt,block_indexes);
     for stmt in stmts {
-        typing.make_equivs(stmt).map_err(|e| typing.error_at(&e))?;
+        typing.make_equivs(stmt).map_err(|e| typing.position.message(&e))?;
     }
     typing.done_making_equivs();
     for stmt in stmts {
-        typing.groupify(stmt).map_err(|e| typing.error_at(&e))?;
+        typing.groupify(stmt).map_err(|e| typing.position.message(&e))?;
     }
     for stmt in stmts {
-        typing.check(stmt).map_err(|e| typing.error_at(&e))?;
+        typing.check(stmt).map_err(|e| typing.position.message(&e))?;
     }
     Ok(())
 }

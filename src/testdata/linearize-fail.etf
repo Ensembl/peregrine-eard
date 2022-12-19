@@ -10,7 +10,7 @@ p(0);
 
 >> linearize-fail trim
 
-unknown variable 'y' at test:2
+unknown variable 'y' at test:2 (called from test:4)
 
 >> test
 
@@ -50,7 +50,7 @@ p(0);
 
 >> linearize-fail trim
 
-empty bundle return 'y' at test:2
+empty bundle return 'y' at test:2 (called from test:4)
 
 >> test
 
@@ -136,7 +136,7 @@ p();
 
 >> linearize-fail trim
 
-definition at test:2 has 1 args; call passes 3 at test:3
+definition at test:2 has 1 args; call passes 3 at test:3 (called from test:5)
 
 >> test
 

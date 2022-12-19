@@ -15,7 +15,7 @@ impl<'a,'b> ConstFold<'a,'b> {
         ConstFold {
             comp: compilation, bt, block_indexes,
             values: HashMap::new(),
-            position: ParsePosition::empty(),
+            position: ParsePosition::empty("called"),
             out: vec![]
         }
     }
@@ -60,7 +60,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     }
 
     fn add(&mut self, stmt: &LinearStatement) {
-        self.position = ParsePosition::xxx_new((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Check(_, _, _, _) => {},
             LinearStatementValue::Constant(reg,c) => {

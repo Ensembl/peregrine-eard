@@ -66,7 +66,7 @@ impl<'a> Reorder<'a> {
             uses: HashMap::new(),
             constants: HashMap::new(),
             useful_arcs: vec![],
-            position: ParsePosition::empty(),
+            position: ParsePosition::empty("called"),
             credit
         }
     }

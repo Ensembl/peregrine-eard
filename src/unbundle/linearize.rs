@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec}};
+use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec, ParsePosition, FilePosition}};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -15,7 +15,7 @@ struct Linearize<'a> {
     tree: &'a BuildTree,
     bundles: &'a Transits,
     output: Vec<LinearStatement>,
-    positions: Vec<(Arc<Vec<String>>,usize)>,
+    positions: ParsePosition,
     next_register: usize,
     var_registers: VarRegisters,
     bt_registers: HashMap<(usize,Option<String>),usize>,
@@ -30,7 +30,7 @@ impl<'a> Linearize<'a> {
         Linearize {
             tree, bundles, 
             output: vec![], 
-            positions: vec![],
+            positions: ParsePosition::empty("called"),
             var_registers: VarRegisters::new(),
             bt_registers: HashMap::new(),
             next_register: 0,
@@ -55,18 +55,10 @@ impl<'a> Linearize<'a> {
     }
 
     fn add(&mut self, value: LinearStatementValue) {
-        let position = self.positions.last().cloned().unwrap_or_else(|| (Arc::new(vec!["*anon*".to_string()]),0));
         self.output.push(LinearStatement {
             value,
-            file: position.0,
-            line_no: position.1
+            position: self.positions.clone()
         })
-    }
-
-    fn error_at(&self, msg: &str) -> String {
-        self.positions.last().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
     }
 
     fn callee_args(&mut self, defn_args: &[OrBundle<TypedArgument>], arg_regs: &[usize]) -> Result<(),String> {
@@ -244,7 +236,8 @@ impl<'a> Linearize<'a> {
     fn callee(&mut self, index: usize, defn: &BTFuncProcDefinition, arg_regs: &[usize]) -> Result<Vec<usize>,String> {
         self.var_registers.push();
         self.checks.push();
-        self.positions.push(defn.position.clone());
+        let old_pos = self.positions.clone();
+        self.positions = self.positions.push(&FilePosition::xxx_new(&defn.position.0,defn.position.1));
         self.callee_args(&defn.args,arg_regs)?;
         self.callee_captures(index)?;
         for stmt in &defn.block {
@@ -252,7 +245,7 @@ impl<'a> Linearize<'a> {
         }
         let callee_rets = self.callee_rets(&defn)?;
         self.callee_matches(defn,&arg_regs,&callee_rets)?;
-        self.positions.pop();
+        self.positions = old_pos;
         self.checks.pop();
         self.var_registers.pop();
         Ok(callee_rets)
@@ -441,7 +434,7 @@ impl<'a> Linearize<'a> {
     }
 
     fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
-        self.positions.push((stmt.file.clone(),stmt.line_no));
+        self.positions.update(&FilePosition::xxx_new(&stmt.file,stmt.line_no));
         match &stmt.value {
             BTStatementValue::Define(index) => {
                 self.define(*index)?;
@@ -456,7 +449,6 @@ impl<'a> Linearize<'a> {
                 self.procedure(proc)?;
             },
         }
-        self.positions.pop();
         Ok(())
     }
 }
@@ -464,7 +456,7 @@ impl<'a> Linearize<'a> {
 pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,usize),String> {
     let mut linearize = Linearize::new(tree,bundles);
     for stmt in &tree.statements {
-        linearize.statement(stmt).map_err(|e| linearize.error_at(&e))?;
+        linearize.statement(stmt).map_err(|e| linearize.positions.message(&e))?;
     }
     Ok((linearize.output,linearize.next_register))
 }

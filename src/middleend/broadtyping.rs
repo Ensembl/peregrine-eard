@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc, fmt};
 
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, ParsePosition}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}};
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {
@@ -38,20 +38,14 @@ impl fmt::Debug for BroadType {
 
 pub(crate) struct BroadTyping<'a> {
     bt: &'a BuildTree,
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     types: HashMap<usize,BroadType>,
     blocks: HashMap<usize,usize>
 }
 
 impl<'a> BroadTyping<'a> {
     fn new(bt: &'a BuildTree) -> BroadTyping<'a> {
-        BroadTyping { bt, types: HashMap::new(), position: None, blocks: HashMap::new() }
-    }
-
-    fn error_at(&self, msg: &str) -> String {
-        self.position.as_ref().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
+        BroadTyping { bt, types: HashMap::new(), position: ParsePosition::empty("called"), blocks: HashMap::new() }
     }
 
     fn get(&self, reg: usize) -> BroadType {
@@ -59,7 +53,7 @@ impl<'a> BroadTyping<'a> {
     }
 
     fn add(&mut self, stmt: &LinearStatement) -> Result<(),String> {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Constant(reg,c) => {
                 self.types.insert(*reg,BroadType::Atomic(c.to_atomic_type()));
@@ -103,7 +97,7 @@ impl<'a> BroadTyping<'a> {
 pub(crate) fn broad_type(bt: &BuildTree, stmts: &[LinearStatement]) -> Result<(HashMap<usize,BroadType>,HashMap<usize,usize>),String> {
     let mut typing = BroadTyping::new(bt);
     for stmt in stmts {
-        typing.add(stmt).map_err(|e| typing.error_at(&e))?;
+        typing.add(stmt).map_err(|e| typing.position.message(&e))?;
     }
     Ok(typing.take())
 }

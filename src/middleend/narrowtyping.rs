@@ -6,7 +6,7 @@
  */
 
 use std::{collections::{HashMap, HashSet}, sync::Arc, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, ParsePosition }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
 
 use super::broadtyping::BroadType;
 
@@ -89,7 +89,7 @@ struct NarrowTyping<'a> {
     bt: &'a BuildTree,
     broad: &'a HashMap<usize,BroadType>,
     block_index: &'a HashMap<usize,usize>,
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     possible: EquivalenceMap<usize,Vec<AtomicTypeSpec>,String>
 }
 
@@ -97,7 +97,7 @@ impl<'a> NarrowTyping<'a> {
     fn new(bt: &'a BuildTree, broad: &'a HashMap<usize,BroadType>, block_index: &'a HashMap<usize,usize>) -> NarrowTyping<'a> {
         NarrowTyping {
             bt, broad, block_index,
-            position: None,
+            position: ParsePosition::empty("called"),
             possible: EquivalenceMap::new(|new: &mut Vec<AtomicTypeSpec>, old| {
                 let old_set = old.iter().collect::<HashSet<_>>();
                 *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
@@ -107,12 +107,6 @@ impl<'a> NarrowTyping<'a> {
                 Ok(())
             })
         }
-    }
-
-    fn error_at(&self, msg: &str) -> String {
-        self.position.as_ref().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
     }
 
     fn is_seq(&self, reg: usize) -> bool {
@@ -238,7 +232,7 @@ impl<'a> NarrowTyping<'a> {
     }
 
     fn add(&mut self, stmt: &LinearStatement) -> Result<(),String> {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Code(call,name,rets,args) => { 
                 self.code(*call,*name,rets,args)?;
@@ -258,7 +252,7 @@ impl<'a> NarrowTyping<'a> {
     }
 
     fn finalise(&mut self) -> Result<HashMap<usize,NarrowType>,String> {
-        self.position = None;
+        self.position = ParsePosition::empty("called");
         let mut seq_types = HashMap::new();
         for reg in self.possible.keys() {
             let mut types = self.possible.get(*reg).cloned().unwrap_or(vec![AtomicTypeSpec::Boolean]);
@@ -281,7 +275,7 @@ impl<'a> NarrowTyping<'a> {
 pub(crate) fn narrow_type(bt: &BuildTree, broad: &HashMap<usize,BroadType>, block_index: &HashMap<usize,usize>, stmts: &[LinearStatement]) -> Result<HashMap<usize,NarrowType>,String> {
     let mut typing = NarrowTyping::new(bt,broad,block_index);
     for stmt in stmts {
-        typing.add(stmt).map_err(|e| typing.error_at(&e))?;
+        typing.add(stmt).map_err(|e| typing.position.message(&e))?;
     }
     typing.finalise()
 }

@@ -80,7 +80,7 @@ impl<'a> Generate<'a> {
     fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>, narrow: &'a HashMap<usize,NarrowType>) -> Generate<'a> {
         Generate {
             bt, block_index, narrow,
-            position: ParsePosition::empty(),
+            position: ParsePosition::empty("called"),
             constants: HashMap::new(),
             unborn_constants: HashSet::new(),
             last_use: HashMap::new(),

@@ -3,15 +3,25 @@
  */
 
 fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) { 
-    impl (r1: ?X) -> r2: seq(?X) {}
+    impl (r1: ?X) -> r2: seq(?X) {
+        opcode 1, r2, r1;
+        }
 }
 
 fold(libcore__finseq) code __code_finseq() -> seq(?X) {
-    impl () -> r1: seq(?X) {}    
+    impl () -> r1: seq(?X) { 
+        opcode 2, r1;
+    }    
 }
 
 fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
-    impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}
+    impl (r1: seq(?X), r2: ?X) -> r1 {
+        opcode 4, r1, r2;
+    }
+
+    impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {
+        opcode 3, r3, r1, r2;
+    }
 }
 
 export function __operator_infseq(x) { let y = __code_infseq(x); y }

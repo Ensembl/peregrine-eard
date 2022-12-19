@@ -461,10 +461,10 @@ impl<'a> Linearize<'a> {
     }
 }
 
-pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<Vec<LinearStatement>,String> {
+pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,usize),String> {
     let mut linearize = Linearize::new(tree,bundles);
     for stmt in &tree.statements {
         linearize.statement(stmt).map_err(|e| linearize.error_at(&e))?;
     }
-    Ok(linearize.output)
+    Ok((linearize.output,linearize.next_register))
 }

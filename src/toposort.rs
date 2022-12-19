@@ -31,6 +31,7 @@
 
 use std::{collections::{HashMap, VecDeque}, hash::Hash, fmt};
 
+#[derive(Debug)]
 struct TopoNode<V> {
     incoming: Vec<usize>,
     incoming_build: Vec<usize>,
@@ -155,12 +156,13 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
 
     pub(crate) fn arc(&mut self, a: &V, b: &V) -> bool {
         if let (Some(a),Some(b)) = (self.lookup.get(a).cloned(),self.lookup.get(b).cloned()) {
+            if self.nodes[a].outgoing.contains(&b) { return true; }
             if a == b { return false; }
             if self.sort.is_some() {
                 if !self.reorder(a,b) { return false; }
             }
             self.nodes[a].outgoing.push(b);
-            self.nodes[b].incoming.push(a);
+            self.nodes[b].incoming.push(a);    
         }
         true
     }
@@ -185,7 +187,7 @@ impl<V: PartialEq+Eq+Hash+Clone+fmt::Debug> TopoSort<V> { // XXX Debug
             sorted.push(src);
             target.clear();
             for dst in &self.nodes[src].outgoing {
-                let src_idx = self.nodes[*dst].incoming_build.iter().position(|x| *x==src).unwrap();
+                let src_idx = self.nodes[*dst].incoming_build.iter().position(|x| *x==src).expect("toposort implementation error");
                 target.push((*dst,src_idx));
             }
             for (node_idx,link_idx) in target.drain(..) {

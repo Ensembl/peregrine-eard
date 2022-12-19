@@ -108,3 +108,8 @@ fn test_libcore() {
 fn test_reorder() {
     run_parse_tests(include_str!("testdata/reorder.etf"),true);
 }
+
+#[test]
+fn test_generate() {
+    run_parse_tests(include_str!("testdata/generate.etf"),true);
+}

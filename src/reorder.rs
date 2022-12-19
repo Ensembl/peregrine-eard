@@ -35,7 +35,7 @@
  */
 
 use std::{collections::HashMap, sync::Arc, mem};
-use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant, sepfmt}, frontend::{buildtree::{BTTopDefn, BuildTree}, parsetree::at}, codeblocks::CodeBlock};
+use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant}, frontend::{buildtree::{BTTopDefn, BuildTree}, parsetree::at}, codeblocks::CodeBlock};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
@@ -149,7 +149,7 @@ impl<'a> Reorder<'a> {
                 let block = self.get_block(*call,*name);
                 let mut useful = vec![];
                 let inputs = args.iter().map(|a| self.constants.get(a).cloned()).collect::<Vec<_>>();
-                let imps = block.choose_imps(&inputs);
+                let imps = block.choose_imps(&inputs,None,None);
                 for imp in imps {
                     for (_,arg_pos) in imp.reg_reuse()? {
                         useful.push(args[arg_pos]);

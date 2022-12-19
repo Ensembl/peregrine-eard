@@ -95,7 +95,7 @@ impl fmt::Debug for Step {
         match self {
             Step::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
             Step::Opcode(opcode,args) => {
-                write!(f,"opcode {}, {}",*opcode,sepfmt(&mut args.iter(),", ",""))
+                write!(f,"opcode {}, {}",*opcode,sepfmt(&mut args.iter(),", ","r"))
             }
         }
     }

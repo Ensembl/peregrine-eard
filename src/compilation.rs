@@ -1,5 +1,5 @@
 use std::collections::{HashSet, HashMap};
-use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse};
+use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill};
 
 pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
@@ -57,14 +57,16 @@ impl<'a> EarpCompilation<'a> {
 
     pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<Operation>,HashMap<usize,NarrowType>),String> {
         let bundles = build_unbundle(&tree)?;
-        let linear = reduce(&linearize(&tree,&bundles)?);
+        let (linear,next_register) = linearize(&tree,&bundles)?;
+        let linear = reduce(&linear);
         let (broad,block_indexes) = broad_type(&tree,&linear)?;
         run_checking(&tree,&linear,&block_indexes)?;
-        let narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
+        let mut narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
         let opers = const_fold(&self,tree,&block_indexes,&linear);
         let opers = culdesac(tree,&block_indexes,&opers);
         let opers = reuse(tree,&block_indexes,&opers)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
+        let opers = spill(next_register,&opers, &mut narrow);
         Ok((opers,narrow))
     }
 

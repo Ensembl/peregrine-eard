@@ -34,6 +34,9 @@ mod model;
 mod reuse;
 pub(crate) mod toposort;
 mod reorder;
+mod generate;
+mod spill;
+
 
 #[cfg(test)]
 mod test;

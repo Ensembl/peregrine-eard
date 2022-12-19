@@ -1,5 +1,5 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode}, middleend::broadtyping::BroadType};
+use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode, TypeSpec, AtomicTypeSpec}, middleend::{broadtyping::BroadType, narrowtyping::NarrowType}};
 
 #[derive(Clone)]
 pub struct ImplBlock {
@@ -9,7 +9,7 @@ pub struct ImplBlock {
 }
 
 impl ImplBlock {
-    fn unifies(&self, args: &[Option<FullConstant>]) -> bool {
+    fn unifies_constant(&self, args: &[Option<FullConstant>]) -> bool {
         for (defn,value) in self.arguments.iter().zip(args.iter()) {
             match (defn,value) {
                 (CodeImplArgument::Register(_),_) => {},
@@ -19,6 +19,98 @@ impl ImplBlock {
                 _ => { return false; }
 
             }
+        }
+        true
+    }
+
+    fn unifies_types(&self, narrow: &[NarrowType]) -> bool {
+        let mut wilds = HashMap::new();
+        for (defn,narrow) in self.arguments.iter().zip(narrow.iter()) {
+            let want_narrow = match defn {
+                CodeImplArgument::Register(r) => {
+                    r.arg_type.clone()
+                },
+                CodeImplArgument::Constant(c) => {
+                    TypeSpec::Atomic(c.to_atomic_type())
+                }
+            };
+            match &want_narrow {
+                TypeSpec::Atomic(a) => {
+                    let atomic = NarrowType::Atomic(a.clone());
+                    if &atomic != narrow { return false; }
+                },
+                TypeSpec::Sequence(s) => {
+                    let seq = NarrowType::Sequence(s.clone());
+                    if &seq != narrow { return false; }
+                },
+                TypeSpec::Wildcard(w) => {
+                    if let Some(value) = wilds.get(w) {
+                        if value != narrow { return false; }
+                    } else {
+                        wilds.insert(w.to_string(),narrow.clone());
+                    }
+                },
+                TypeSpec::SequenceWildcard(w) => {
+                    if let Some(value) = wilds.get(w) {
+                        let value = match value {
+                            NarrowType::Atomic(a) => NarrowType::Sequence(a.clone()),
+                            NarrowType::Sequence(_) => { return false; },
+                        };
+                        if &value != narrow { return false; }
+                    } else {
+                        match narrow {
+                            NarrowType::Atomic(_) => { return false; },
+                            NarrowType::Sequence(a) => {
+                                wilds.insert(w.to_string(),NarrowType::Atomic(a.clone()));
+                            },
+                        };
+                    }
+                },
+            }
+        }
+        true
+    }
+
+    fn unifies_modify(&self, modify: &[Option<usize>]) -> bool {
+        let mut reg_to_class = HashMap::new();
+        for (defn,value) in self.arguments.iter().zip(modify.iter()) {
+            match defn {
+                CodeImplArgument::Register(r) => {
+                    reg_to_class.insert(r.reg_id,value);
+                },
+                CodeImplArgument::Constant(_) => {}
+            }
+        }
+        let mut reg_classes = HashMap::new();
+        for ret in self.results.iter() {
+            match ret {
+                CodeReturn::Register(_) => {},
+                CodeReturn::Repeat(reg) => {
+                    let reg_class = *reg_to_class.get(reg).expect("missing register in opcode match");
+                    if let Some(reg_class) = reg_class {
+                        /* Must be in same reg class as other uses */
+                        if let Some(old_reg_class) = reg_classes.get(reg).cloned() {
+                            if old_reg_class != reg_class { return false; }
+                        } else {
+                            reg_classes.insert(*reg,reg_class);
+                        }
+                    } else {
+                        /* no register modify class so we can't accept a repeat here */
+                        return false;
+                    }
+                },
+            }
+        }
+        true
+    }
+
+    fn unifies(&self, args: &[Option<FullConstant>], narrow: Option<&[NarrowType]>, modify: Option<&Vec<Option<usize>>>) -> bool {
+        if !self.unifies_constant(args) { return false; }
+        if let Some(narrow) = narrow {
+            if !self.unifies_types(narrow) { return false; }
+        }
+        if let Some(regs) = modify {
+            if !self.unifies_modify(regs) { return false; }
         }
         true
     }
@@ -96,8 +188,8 @@ impl CodeBlock {
         Ok(Some(typing))
     }
 
-    pub(crate) fn choose_imps(&self, args: &[Option<FullConstant>]) -> Vec<&ImplBlock> {
-        self.impls.iter().filter(|imp| imp.unifies(args)).collect()
+    pub(crate) fn choose_imps(&self, args: &[Option<FullConstant>], narrow: Option<&[NarrowType]>, modify: Option<&Vec<Option<usize>>>) -> Vec<&ImplBlock> {
+        self.impls.iter().filter(|imp| imp.unifies(args,narrow,modify)).collect()
     }
 }
 

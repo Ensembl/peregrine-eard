@@ -59,7 +59,7 @@ impl<'a> KnownValues<'a> {
 
     fn add_oper(&mut self, oper: &Operation) {
         match &oper.value {
-            OperationValue::Constant(r,c) => {
+            OperationValue::Constant(_,_) => {
                 self.out.push(oper.clone());
             },
             OperationValue::Code(call,name,rets,args) => {

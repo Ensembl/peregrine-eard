@@ -7,11 +7,12 @@
 use std::{sync::Arc, collections::{HashMap, BTreeSet, BTreeMap, HashSet}};
 use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn, Opcode}, frontend::{parsetree::at, buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType};
 
+#[derive(Copy,Clone,PartialEq,Eq,PartialOrd,Ord,Hash)]
 struct NewRegister(usize);
 
 struct RegAllocate {
-    const_scrapheap: BTreeMap<FullConstant,usize>,
-    other_scrapheap: BTreeSet<usize>,
+    const_scrapheap: BTreeMap<FullConstant,NewRegister>,
+    other_scrapheap: BTreeSet<NewRegister>,
     next_reg: usize
 }
 
@@ -24,11 +25,11 @@ impl RegAllocate {
         }
     }
 
-    fn scavange(&mut self, value: &FullConstant) -> Option<usize> {
+    fn scavange(&mut self, value: &FullConstant) -> Option<NewRegister> {
         self.const_scrapheap.remove(value)
     }
 
-    fn allocate(&mut self) -> usize {
+    fn allocate(&mut self) -> NewRegister {
         if let Some(reg) = self.other_scrapheap.iter().next().cloned() {
             self.other_scrapheap.remove(&reg);
             return reg;
@@ -38,10 +39,11 @@ impl RegAllocate {
             return reg;
         }
         self.next_reg += 1;
-        self.next_reg
+        NewRegister(self.next_reg)
     }
 
-    fn free(&mut self, reg: usize, value: Option<FullConstant>) {
+    fn free(&mut self, reg: NewRegister, value: Option<FullConstant>) {
+        eprintln!("free R{} ({:?})",reg.0,value);
         if let Some(c) = value {
             self.const_scrapheap.insert(c,reg);
         } else {
@@ -50,43 +52,13 @@ impl RegAllocate {
     }
 }
 
-struct RegMap {
-    old_to_new: HashMap<usize,usize>,
-    const_to_new: BTreeMap<FullConstant,HashSet<usize>>,
-    new_to_const: HashMap<usize,FullConstant>
-}
-
-impl RegMap {
-    fn new() -> RegMap {
-        RegMap {
-            old_to_new: HashMap::new(),
-            const_to_new: BTreeMap::new(),
-            new_to_const: HashMap::new()
-        }
-    }
-
-    fn old_to_new(&self, reg: usize) -> Option<usize> {
-        self.old_to_new.get(&reg).cloned()
-    }
-
-    fn const_to_new(&mut self, c: &FullConstant) -> &mut HashSet<usize> {
-        self.const_to_new.entry(c.clone()).or_insert_with(|| HashSet::new())
-    }
-
-    fn new_with_const(&self, c: &FullConstant) -> Option<usize> {
-        self.const_to_new.get(c).and_then(|e| e.iter().next().cloned())
-    }
-
-    fn set(&mut self, old: usize, new: usize, c: Option<&FullConstant>) {
-        if let Some(old_value) = self.new_to_const.remove(&new) {
-            self.const_to_new(&old_value).remove(&new);
-        }
-        self.old_to_new.insert(old,new);
-        if let Some(c) = c {
-            self.const_to_new(c).insert(new);
-            self.new_to_const.insert(new,c.clone());
-        }
-    }
+struct CodeMapping<'a> {
+    def_to_reg: HashMap<usize,NewRegister>, // name in definition to new register name
+    reused_def: HashSet<usize>, // given name in definition is repeated in result
+    imp: &'a ImplBlock,
+    index: usize,
+    rets: &'a [usize],
+    args: &'a [usize]
 }
 
 struct Generate<'a> {
@@ -100,7 +72,7 @@ struct Generate<'a> {
     constants: HashMap<usize,FullConstant>, // from oldreg
     unborn_constants: HashSet<usize>,
     last_use: HashMap<usize,usize>,
-    regmap: RegMap,
+    regmap: HashMap<usize,NewRegister>,
     reg_alloc: RegAllocate
 }
 
@@ -112,7 +84,7 @@ impl<'a> Generate<'a> {
             constants: HashMap::new(),
             unborn_constants: HashSet::new(),
             last_use: HashMap::new(),
-            regmap: RegMap::new(),
+            regmap: HashMap::new(),
             reg_alloc: RegAllocate::new(),
             out: vec![]
         }
@@ -166,58 +138,55 @@ impl<'a> Generate<'a> {
 
     fn free_reg(&mut self, reg: usize) {
         let c = self.constants.get(&reg).cloned();
-        if let Some(new_reg) = self.regmap.old_to_new(reg) {
-            self.reg_alloc.free(new_reg,c);
+        if let Some(new_reg) = self.regmap.get(&reg) {
+            self.reg_alloc.free(*new_reg,c);
         }
     }
 
     fn make_opcode(&mut self, imp: &ImplBlock, index: usize, opcode: &Opcode, rets: &[usize], args: &[usize]) -> Result<Step,String> {
         let def_to_reg = self.map_regs(imp,index,rets,args)?;
         let opargs = opcode.1.iter().map(|d| 
-            *def_to_reg.get(d).expect("missing register")
+            def_to_reg.get(d).expect("missing register").0
         ).collect::<Vec<_>>();
         Ok(Step::Opcode(opcode.0,opargs))
     }
 
-    /* Map of name of argument in decl to new register name. Also tidies used regs */
-    fn map_regs(&mut self, imp: &ImplBlock, index: usize, rets: &[usize], args: &[usize]) -> Result<HashMap<usize,usize>,String> {
-        let mut def_to_reg = HashMap::new();
-        let mut reused_def = HashSet::new();
-        for (arg,reg) in imp.arguments.iter().zip(args.iter()) {
+    fn birth_and_map_args(&mut self, mapping: &mut CodeMapping) {
+        for (arg,reg) in mapping.imp.arguments.iter().zip(mapping.args.iter()) {
             match arg {
                 CodeImplArgument::Register(d) => {
-                    let existing_new = self.constants.get(reg)
-                        .and_then(|c| self.regmap.new_with_const(c));
-                    let new_reg = if let Some(r) = existing_new {
-                        r
-                    } else {
-                        self.birth_constants(*reg);                    
-                        self.regmap.old_to_new(*reg).unwrap()
-                    };
-                    def_to_reg.insert(d.reg_id,new_reg);
+                    self.birth_constants(*reg);                    
+                    let new_reg = self.regmap.get(reg).expect("missing constant");
+                    mapping.def_to_reg.insert(d.reg_id,*new_reg);
                 },
                 CodeImplArgument::Constant(_) => {}
             }
         }
-        for (ret,reg) in imp.results.iter().zip(rets.iter()) {
+    }
+
+    fn map_rets_and_detect_repeats(&mut self, mapping: &mut CodeMapping) {
+        for (ret,reg) in mapping.imp.results.iter().zip(mapping.rets.iter()) {
             match ret {
                 CodeReturn::Register(d) => {
                     let new_ret = self.reg_alloc.allocate();
-                    def_to_reg.insert(d.reg_id,new_ret);
-                    self.regmap.set(*reg,new_ret,None);
+                    mapping.def_to_reg.insert(d.reg_id,new_ret);
+                    self.regmap.insert(*reg,new_ret);
                 },
                 CodeReturn::Repeat(d) => {
-                    let new_reg = def_to_reg.get(d).expect("missing repetition register");
-                    self.regmap.set(*reg,*new_reg,None);
-                    reused_def.insert(*d);
+                    let new_reg = mapping.def_to_reg.get(d).expect("missing repetition register");
+                    self.regmap.insert(*reg,*new_reg);
+                    mapping.reused_def.insert(*d);
                 }
             }
         }
-        for (arg,reg) in imp.arguments.iter().zip(args.iter()) {
+    }
+
+    fn free_last_arg_use(&mut self, mapping: &mut CodeMapping) {
+        for (arg,reg) in mapping.imp.arguments.iter().zip(mapping.args.iter()) {
             match arg {
                 CodeImplArgument::Register(d) => {
                     if let Some(line) = self.last_use.get(reg) {
-                        if *line == index && !reused_def.contains(&d.reg_id) {
+                        if *line == mapping.index && !mapping.reused_def.contains(&d.reg_id) {
                             self.free_reg(*reg);
                         }
                     }
@@ -225,14 +194,30 @@ impl<'a> Generate<'a> {
                 CodeImplArgument::Constant(_) => {}
             }
         }
-        for reg in rets.iter() {
+    }
+
+    fn free_never_used_rets(&mut self, mapping: &mut CodeMapping) {
+        for reg in mapping.rets.iter() {
             if self.last_use.get(reg).is_none() {
                 if *reg > 0 {
                     self.free_reg(*reg);
                 }
             }
         }
-        Ok(def_to_reg)
+    }
+
+    /* Map of name of argument in decl to new register name. Also tidies used regs */
+    fn map_regs(&mut self, imp: &ImplBlock, index: usize, rets: &[usize], args: &[usize]) -> Result<HashMap<usize,NewRegister>,String> {
+        let mut mapping = CodeMapping {
+            imp, index, rets, args, 
+            def_to_reg: HashMap::new(),
+            reused_def: HashSet::new()
+        };
+        self.birth_and_map_args(&mut mapping);
+        self.map_rets_and_detect_repeats(&mut mapping);
+        self.free_last_arg_use(&mut mapping);
+        self.free_never_used_rets(&mut mapping);
+        Ok(mapping.def_to_reg)
     }
 
     fn code(&mut self, block: &CodeBlock, index: usize, rets: &[usize], args: &[usize]) -> Result<Option<Step>,String> {
@@ -240,7 +225,7 @@ impl<'a> Generate<'a> {
         let def_to_reg = self.map_regs(&imp,index,rets,args)?;
         Ok(imp.command.as_ref().map(|opcode| {
             let opargs = opcode.1.iter().map(|d| 
-                *def_to_reg.get(d).expect("missing register")
+                def_to_reg.get(d).expect("missing register").0
             ).collect::<Vec<_>>();
             Step::Opcode(opcode.0,opargs)
         }))
@@ -254,8 +239,8 @@ impl<'a> Generate<'a> {
             } else {
                 self.reg_alloc.allocate()
             };
-            self.regmap.set(reg,new_reg,Some(c));
-            self.out.push(Step::Constant(new_reg,c.clone()));
+            self.regmap.insert(reg,new_reg);
+            self.out.push(Step::Constant(new_reg.0,c.clone()));
         }
         reg
     }
@@ -264,8 +249,12 @@ impl<'a> Generate<'a> {
         self.position = Some(oper.position.clone());
         match &oper.value {
             OperationValue::Constant(reg, c) => {
+                if let Some(new_reg) = self.reg_alloc.scavange(c) {
+                    self.regmap.insert(*reg,new_reg);
+                } else {
+                    self.unborn_constants.insert(*reg);    
+                }
                 self.constants.insert(*reg,c.clone());
-                self.unborn_constants.insert(*reg);
             },
             OperationValue::Code(call,name,rets,args) =>  {
                 let block = self.get_block(*call,*name).clone();

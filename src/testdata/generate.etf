@@ -205,12 +205,3 @@ opcode 999, r1
 opcode 999, r1
 opcode 999, r1
 opcode 999, r1
-
->> test
-
-general generate smoke
-
->> input
-
-let a = 1;
-let b = 2;

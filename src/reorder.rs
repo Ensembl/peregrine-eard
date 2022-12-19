@@ -34,8 +34,8 @@
  * end up being optimised due to time constraints.
  */
 
-use std::{collections::HashMap, sync::Arc, mem};
-use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant}, frontend::{buildtree::{BTTopDefn, BuildTree}, parsetree::at}, codeblocks::CodeBlock};
+use std::{collections::HashMap, mem};
+use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant, ParsePosition}, frontend::{buildtree::{BTTopDefn, BuildTree}, parsetree::at}, codeblocks::CodeBlock};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
@@ -52,7 +52,7 @@ struct Reorder<'a> {
     constants: HashMap<usize,FullConstant>,
     uses: HashMap<usize,Vec<usize>>,
     useful_arcs: Vec<(ReorderNode,ReorderNode)>, // src -> dst
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     credit: u64
 }
 
@@ -66,15 +66,9 @@ impl<'a> Reorder<'a> {
             uses: HashMap::new(),
             constants: HashMap::new(),
             useful_arcs: vec![],
-            position: None,
+            position: ParsePosition::empty(),
             credit
         }
-    }
-
-    fn error_at(&self, msg: &str) -> String {
-        self.position.as_ref().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
     }
 
     fn get_block(&self, call: usize, name: usize) -> &CodeBlock {
@@ -142,7 +136,7 @@ impl<'a> Reorder<'a> {
     }
 
     fn make_useful_arcs(&mut self, index: usize, oper: &Operation) -> Result<(),String> {
-        self.position = Some(oper.position.clone());
+        self.position = oper.position.clone();
         match &oper.value {
             OperationValue::Constant(_, _) => {},
             OperationValue::Code(call,name,_,args) => {
@@ -200,7 +194,7 @@ pub(crate) fn reorder(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers:
     reorder.build();
     /* find instructions where we'd like to attempt a modifiable form */
     for (i,oper) in opers.iter().enumerate() {
-        reorder.make_useful_arcs(i,oper).map_err(|e| reorder.error_at(&e))?;
+        reorder.make_useful_arcs(i,oper).map_err(|e| reorder.position.message(&e))?;
     }
     reorder.add_useful_arcs();
     let order = reorder.topo.order().unwrap().iter().filter_map(|x| match x {

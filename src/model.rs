@@ -6,6 +6,60 @@ pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &st
 
 }
 
+pub(crate) struct FilePosition {
+    filename: String,
+    line_no: u32
+}
+
+impl FilePosition {
+    pub(crate) fn anon() -> FilePosition {
+        FilePosition { filename: "*anon*".to_string(), line_no: 0 }
+    }
+}
+
+impl fmt::Debug for FilePosition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{}:{}",self.filename,self.line_no)
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct ParsePosition(Arc<Vec<FilePosition>>);
+
+impl ParsePosition {
+    pub(crate) fn xxx_new(position: (Arc<Vec<String>>,usize)) -> ParsePosition {
+        let stack = if position.0.len() > 0 {
+            position.0.iter().map(|filename| {
+                FilePosition { filename: filename.to_string(), line_no: position.1 as u32 }
+            }).collect()
+        } else {
+            vec![FilePosition::anon()]
+        };
+        ParsePosition(Arc::new(stack))
+    }
+
+    pub(crate) fn empty() -> ParsePosition {
+        ParsePosition(Arc::new(vec![FilePosition::anon()]))
+    }
+
+    pub(crate) fn last(&self) -> &FilePosition { self.0.last().unwrap() }
+
+    pub(crate) fn last_str(&self) -> String { format!("{:?}",self.last()) }
+
+    pub(crate) fn full_str(&self) -> String {
+        let mut paths = self.0.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
+        let last = paths.pop().unwrap();
+        let mut paths = paths.iter().map(|x| format!("(included from {:?})",x)).collect::<Vec<_>>();
+        paths.push(last);
+        paths.reverse();
+        paths.join(" ")
+    }
+
+    pub(crate) fn message(&self, msg: &str) -> String {
+        format!("{} at {}",msg,self.full_str())
+    }
+}
+
 #[derive(PartialEq,PartialOrd,Eq,Ord,Clone)]
 pub enum Constant {
     Number(OrderedFloat<f64>),
@@ -74,14 +128,13 @@ impl fmt::Debug for OperationValue {
 
 #[derive(Clone)]
 pub struct Operation {
-    pub(crate) position: (Arc<Vec<String>>,usize),
+    pub(crate) position: ParsePosition,
     pub(crate) value: OperationValue
 }
 
 impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let file = self.position.0.as_ref().last().map(|x| x.as_str()).unwrap_or("");
-        write!(f,"{}:{} {:?}",file,self.position.1,self.value)
+        write!(f,"{} {:?}",self.position.last_str(),self.value)
     }
 }
 

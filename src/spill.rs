@@ -1,5 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
-use crate::{model::{FullConstant, Operation, OperationValue}, middleend::narrowtyping::NarrowType};
+use crate::{model::{FullConstant, Operation, OperationValue, ParsePosition}, middleend::narrowtyping::NarrowType};
 
 /* We have no main-store but can spill small constants as they can be regenerated. We force spills
  * after a certain non-reuse distance and allow patchup of non-spills during generation.
@@ -63,7 +63,7 @@ impl<'a> Spill<'a> {
         }
     }
 
-    fn vivify(&mut self, orig_reg: usize, position: &(Arc<Vec<String>>,usize)) -> usize {
+    fn vivify(&mut self, orig_reg: usize, position: &ParsePosition) -> usize {
         let reg = self.alias.get(&orig_reg).cloned().unwrap_or(orig_reg);
         if self.in_use.contains_key(&reg) {
             /* some version still alive */

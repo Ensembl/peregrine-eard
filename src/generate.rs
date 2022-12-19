@@ -4,8 +4,8 @@
  * First we record the last use of a register. 
  */
 
-use std::{sync::Arc, collections::{HashMap, BTreeSet, BTreeMap, HashSet}};
-use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn, Opcode}, frontend::{parsetree::at, buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType};
+use std::{collections::{HashMap, BTreeSet, BTreeMap, HashSet}};
+use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn, Opcode, ParsePosition}, frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType};
 
 #[derive(Copy,Clone,PartialEq,Eq,PartialOrd,Ord,Hash)]
 struct NewRegister(usize);
@@ -66,7 +66,7 @@ struct Generate<'a> {
     bt: &'a BuildTree,
     block_index: &'a HashMap<usize,usize>,
     narrow: &'a HashMap<usize,NarrowType>,
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     out: Vec<Step>,
     /**/
     constants: HashMap<usize,FullConstant>, // from oldreg
@@ -80,7 +80,7 @@ impl<'a> Generate<'a> {
     fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>, narrow: &'a HashMap<usize,NarrowType>) -> Generate<'a> {
         Generate {
             bt, block_index, narrow,
-            position: None,
+            position: ParsePosition::empty(),
             constants: HashMap::new(),
             unborn_constants: HashSet::new(),
             last_use: HashMap::new(),
@@ -90,14 +90,8 @@ impl<'a> Generate<'a> {
         }
     }
 
-    fn error_at(&self, msg: &str) -> String {
-        self.position.as_ref().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
-    }
-
     fn find_last(&mut self, index: usize, oper: &Operation) {
-        self.position = Some(oper.position.clone());
+        self.position = oper.position.clone();
         match &oper.value {
             OperationValue::Constant(_, _) => {},
             OperationValue::Code(_, _, _,args) => {
@@ -246,7 +240,7 @@ impl<'a> Generate<'a> {
     }
 
     fn add(&mut self, index: usize, oper: &Operation) -> Result<(),String> {
-        self.position = Some(oper.position.clone());
+        self.position = oper.position.clone();
         match &oper.value {
             OperationValue::Constant(reg, c) => {
                 if let Some(new_reg) = self.reg_alloc.scavange(c) {
@@ -275,7 +269,7 @@ pub(crate) fn generate(bt: &BuildTree, block_index: &HashMap<usize,usize>, narro
         generate.find_last(i,oper);
     }
     for (i,oper) in opers.iter().enumerate() {
-        generate.add(i,&oper).map_err(|e| generate.error_at(&e))?;
+        generate.add(i,&oper).map_err(|e| generate.position.message(&e))?;
     }
     Ok(generate.take())
 }

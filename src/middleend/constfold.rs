@@ -1,12 +1,12 @@
 use std::{sync::Arc, collections::{HashMap}};
-use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
+use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue, ParsePosition}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
 
 struct ConstFold<'a,'b> {
     comp: &'b EarpCompilation<'a>,
     bt: &'b BuildTree,
     block_indexes: &'b HashMap<usize,usize>,
     values: HashMap<usize,FullConstant>,
-    position: Option<(Arc<Vec<String>>,usize)>,
+    position: ParsePosition,
     out: Vec<Operation>
 }
 
@@ -15,7 +15,7 @@ impl<'a,'b> ConstFold<'a,'b> {
         ConstFold {
             comp: compilation, bt, block_indexes,
             values: HashMap::new(),
-            position: None,
+            position: ParsePosition::empty(),
             out: vec![]
         }
     }
@@ -30,12 +30,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     }
 
     fn out(&mut self, value: OperationValue) {
-        let position = if let Some(pos) = &self.position {
-            pos.clone()
-        } else {
-            (Arc::new(vec!["*anon*".to_string()]),0)
-        };
-        self.out.push(Operation { position, value });
+        self.out.push(Operation { position: self.position.clone(), value });
     }
 
     fn fold(&mut self, name: &str, rets: &[usize], args: &[usize]) -> bool {
@@ -65,7 +60,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     }
 
     fn add(&mut self, stmt: &LinearStatement) {
-        self.position = Some((stmt.file.clone(),stmt.line_no));
+        self.position = ParsePosition::xxx_new((stmt.file.clone(),stmt.line_no));
         match &stmt.value {
             LinearStatementValue::Check(_, _, _, _) => {},
             LinearStatementValue::Constant(reg,c) => {

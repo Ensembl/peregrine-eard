@@ -5,7 +5,7 @@
 fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) { 
     impl (r1: ?X) -> r2: seq(?X) {
         opcode 1, r2, r1;
-        }
+    }
 }
 
 fold(libcore__finseq) code __code_finseq() -> seq(?X) {

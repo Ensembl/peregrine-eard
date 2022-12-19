@@ -1,0 +1,5 @@
+  1 infseq
+  2 finseq
+  3 push (non-destructive)
+  4 push (destructive)
+  

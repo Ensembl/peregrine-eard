@@ -6,7 +6,7 @@
  */
 
 use std::{collections::{HashMap, HashSet}, sync::Arc, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction, ParsePosition }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock, source::ParsePosition};
 
 use super::broadtyping::BroadType;
 

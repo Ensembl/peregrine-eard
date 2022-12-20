@@ -10,7 +10,7 @@
  */
 
 use std::{sync::Arc, collections::{HashMap, HashSet}};
-use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType, ParsePosition}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}};
+use crate::{frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}, source::ParsePosition};
 
 pub(crate) struct Checking<'a> {
     bt: &'a BuildTree,

@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::{HashMap}};
-use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue, ParsePosition}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock};
+use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock, source::ParsePosition};
 
 struct ConstFold<'a,'b> {
     comp: &'b EarpCompilation<'a>,

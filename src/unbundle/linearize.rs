@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}, sync::Arc};
-use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec, ParsePosition, FilePosition}};
+use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec}, source::ParsePosition};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -237,7 +237,7 @@ impl<'a> Linearize<'a> {
         self.var_registers.push();
         self.checks.push();
         let old_pos = self.positions.clone();
-        self.positions = self.positions.push(defn.position.last());
+        self.positions = self.positions.add(defn.position.last());
         self.callee_args(&defn.args,arg_regs)?;
         self.callee_captures(index)?;
         for stmt in &defn.block {

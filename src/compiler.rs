@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant, ParsePosition}, libcore::libcore::libcore_add};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {

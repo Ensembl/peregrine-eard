@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{compiler::{EarpCompiler}, model::{OrBundleRepeater, ParsePosition, FilePosition}, compilation::EarpCompilation};
+use crate::{compiler::{EarpCompiler}, model::{OrBundleRepeater}, compilation::EarpCompilation, source::ParsePosition};
 use super::parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
@@ -61,7 +61,7 @@ struct RunIncludeOnce<'a,'b> {
 impl<'a,'b> PTTransformer for RunIncludeOnce<'a,'b> {
     fn include(&mut self, pos: &ParsePosition, path: &str) -> Result<Option<Vec<PTStatement>>,String> {
         self.any = true;
-        let new_pos = pos.push(&FilePosition::new(path));
+        let new_pos = pos.push(path);
         Ok(Some(self.compilation.parse_part(&new_pos).map_err(|e| {
             pos.message(&e)
         })?))

@@ -1,5 +1,5 @@
 use std::{collections::HashMap, sync::Arc};
-use crate::{model::{FullConstant, Operation, OperationValue, ParsePosition}, middleend::narrowtyping::NarrowType};
+use crate::{model::{FullConstant, Operation, OperationValue}, middleend::narrowtyping::NarrowType, source::ParsePosition};
 
 /* We have no main-store but can spill small constants as they can be regenerated. We force spills
  * after a certain non-reuse distance and allow patchup of non-spills during generation.

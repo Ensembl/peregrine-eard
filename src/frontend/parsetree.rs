@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater, ParsePosition}, codeblocks::CodeBlock};
+use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater}, codeblocks::CodeBlock, source::ParsePosition};
 use super::buildtree::{BuildTree};
 use super::buildtreebuilder::BuildContext;
 

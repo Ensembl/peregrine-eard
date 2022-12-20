@@ -1,101 +1,11 @@
-use std::{fmt::{self, Display}, sync::Arc, cmp::Ordering};
+use std::{fmt::{self, Display}, sync::{Arc, Mutex}, cmp::Ordering, collections::HashMap};
 use ordered_float::OrderedFloat;
+
+use crate::source::ParsePosition;
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
 
-}
-
-#[derive(Clone)]
-pub(crate) struct FilePosition {
-    pub filename: String,
-    pub line_no: u32
-}
-
-impl FilePosition {
-    pub(crate) fn anon() -> FilePosition {
-        FilePosition { filename: "*anon*".to_string(), line_no: 0 }
-    }
-
-    pub(crate) fn new(filename: &str) -> FilePosition {
-        FilePosition { filename: filename.to_string(), line_no: 0 }
-    }
-}
-
-impl fmt::Debug for FilePosition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"{}:{}",self.filename,self.line_no)
-    }
-}
-
-#[derive(Clone)]
-struct PositionNode(Option<Arc<PositionNode>>,FilePosition);
-
-impl PositionNode {
-    fn to_str(&self, prefix: &str, suffix: &str) -> String {
-        let rest = self.0.as_ref().map(|parent| {
-            format!("{}",parent.to_str(prefix,suffix))
-        }).unwrap_or("".to_string());
-        format!("{}{:?}{}{}",prefix,self.1,suffix,rest)
-    }
-
-    pub(crate) fn contains(&self, filename: &str) -> bool {
-        if filename == self.1.filename { return true; }
-        self.0.as_ref().map(|p| p.contains(filename)).unwrap_or(false)
-    }
-}
-
-#[derive(Clone)]
-pub struct ParsePosition(PositionNode,Arc<String>);
-
-impl ParsePosition {
-    pub(crate) fn new(filename: &str, variety: &str) -> ParsePosition {
-        ParsePosition(PositionNode(None,FilePosition::new(filename)),Arc::new(variety.to_string()))
-    }
-
-    pub(crate) fn contains(&self, filename: &str) -> bool {
-        self.0.contains(filename)
-    }
-
-    pub(crate) fn empty(variety: &str) -> ParsePosition {
-        ParsePosition(PositionNode(None,FilePosition::anon()),Arc::new(variety.to_string()))
-    }
-
-    pub(crate) fn at_line(&self, line_no: u32) -> ParsePosition {
-        let mut out = self.clone();
-        (out.0).1.line_no = line_no;
-        out
-    }
-
-    pub(crate) fn update(&mut self, file: &FilePosition) {
-        let parent = (self.0).0.clone();
-        *self = ParsePosition(PositionNode(parent,file.clone()),self.1.clone());
-    }
-
-    pub(crate) fn push(&self, file: &FilePosition) -> ParsePosition {
-        ParsePosition(PositionNode(Some(Arc::new(self.0.clone())),file.clone()),self.1.clone())
-    }
-
-    pub(crate) fn last(&self) -> &FilePosition { &(self.0).1 }
-
-    pub(crate) fn last_str(&self) -> String { format!("{:?}",self.last()) }
-
-    pub(crate) fn full_str(&self) -> String {
-        let rest = (self.0).0.as_ref().map(|x|
-            x.to_str(&format!(" ({} from ",self.1),")")
-        ).unwrap_or("".to_string());
-        format!("{:?}{}",(self.0).1,rest)
-    }
-
-    pub(crate) fn message(&self, msg: &str) -> String {
-        format!("{} at {}",msg,self.full_str())
-    }
-}
-
-impl fmt::Debug for ParsePosition {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f,"{}",self.full_str())
-    }
 }
 
 #[derive(PartialEq,PartialOrd,Eq,Ord,Clone)]

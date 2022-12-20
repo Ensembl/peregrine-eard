@@ -297,6 +297,14 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             println!("{}",report);
             assert_eq!(process_ws(&report,broad_options),process_ws(broad_correct,broad_options));
         }
+        if let Some((broad_options,broad_correct)) = sections.get("broad-fail") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear,_) = frontend(&mut compilation,&processed);
+            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
+            let got = broad_type(&tree,&linear).err().expect("typing failed");
+            println!("{}",got);
+            assert_eq!(process_ws(&got,broad_options),process_ws(broad_correct,broad_options));
+        }
         if let Some((_checking_options,_checking_correct)) = sections.get("checking") {
             let processed = processed.clone().expect("processing failed");
             let (tree,linear,_) = frontend(&mut compilation,&processed);

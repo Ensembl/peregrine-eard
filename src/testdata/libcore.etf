@@ -57,7 +57,7 @@ libcore:60  (12#3) r13
 
 >> test
 
-subtraction
+subtraction fold
 
 >> input
 
@@ -68,3 +68,15 @@ print(format(5-2));
 libcore:44 r7 <- 3
 libcore:54 r13 (10#2) r7
 libcore:60  (12#3) r13
+
+>> test
+
+sane error messages
+
+>> input
+
+print(format("hi"+3));
+
+>> broad-fail strip
+
+type check failed: expected number got string at libcore:43 (called from test:2)

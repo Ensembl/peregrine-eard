@@ -1,4 +1,3 @@
-use std::sync::Arc;
 use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater}, codeblocks::CodeBlock, source::ParsePosition};
 use super::buildtree::{BuildTree};
 use super::buildtreebuilder::BuildContext;
@@ -20,7 +19,7 @@ pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
 }
 
 pub trait PTTransformer {
-    fn include(&mut self, _pos: &ParsePosition, _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
+    fn include(&mut self, _pos: &ParsePosition, _fixed: bool, _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn remove_flags(&mut self, _flag: &str) -> Result<bool,String> { Ok(false) }
     fn bad_repeater(&mut self, _pos: (&[String],usize)) -> Result<(),String> { Ok(()) }
     fn call_to_expr(&mut self, _call: &PTCall, _context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
@@ -192,7 +191,7 @@ pub struct PTStatement {
 #[derive(Debug,Clone)]
 pub enum PTStatementValue {
     /* preprocessor */
-    Include(String),
+    Include(String,bool),
     Flag(String),
 
     /* definitions */
@@ -255,11 +254,11 @@ impl PTStatement {
         for block in this {
             let pos = block.position.clone();
             let mut more = match &block.value {
-                PTStatementValue::Include(path) => {
+                PTStatementValue::Include(path,fixed) => {
                     if pos.contains(path) {
                         return Err(pos.message(&format!("recursive include of {}",path)));
                     }
-                    if let Some(repl) = transformer.include(&pos,path)? {
+                    if let Some(repl) = transformer.include(&pos,*fixed,path)? {
                         repl
                     } else {
                         vec![block]

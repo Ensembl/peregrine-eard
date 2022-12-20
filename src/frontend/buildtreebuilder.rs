@@ -1,4 +1,4 @@
-use std::{sync::Arc, collections::BTreeMap};
+use std::{collections::BTreeMap};
 use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
 use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
 
@@ -442,7 +442,7 @@ impl BuildContext {
 
     pub(super) fn build_statement(&mut self, bt: &mut BuildTree, stmt: &PTStatement) -> Result<(),String> {
         match &stmt.value {
-            PTStatementValue::Include(_) |
+            PTStatementValue::Include(_,_) |
             PTStatementValue::Flag(_) => {
                 panic!("item should have been eliminated from build tree");
             },

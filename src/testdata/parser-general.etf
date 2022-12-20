@@ -72,7 +72,7 @@ include "abc";
 
 [
     PTStatement {
-        value: Include("abc"),
+        value: Include("abc",false),
         position: test:2,
         context: 1
     }

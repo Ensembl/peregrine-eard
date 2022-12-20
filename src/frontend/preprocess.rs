@@ -59,10 +59,9 @@ struct RunIncludeOnce<'a,'b> {
 }
 
 impl<'a,'b> PTTransformer for RunIncludeOnce<'a,'b> {
-    fn include(&mut self, pos: &ParsePosition, path: &str) -> Result<Option<Vec<PTStatement>>,String> {
+    fn include(&mut self, pos: &ParsePosition, fixed: bool, path: &str) -> Result<Option<Vec<PTStatement>>,String> {
         self.any = true;
-        let new_pos = pos.push(path);
-        Ok(Some(self.compilation.parse_part(&new_pos).map_err(|e| {
+        Ok(Some(self.compilation.parse_part(pos,path,fixed).map_err(|e| {
             pos.message(&e)
         })?))
     }

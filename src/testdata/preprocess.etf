@@ -46,7 +46,7 @@ include "missing";
 
 >> preproc-fail strip
 
-Error loading 'missing': Not found at test:2
+cannot find 'missing' at test:2
 
 >> test
 

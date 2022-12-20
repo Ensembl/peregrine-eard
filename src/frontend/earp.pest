@@ -15,6 +15,7 @@ identifier = @{ !reserved ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }
 macro_identifier = @{ !reserved ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* ~ "!" }
 
 string = ${ ("\"\"\"" ~ multi_string_inner ~ "\"\"\"")|("\"" ~ string_inner ~ "\"") }
+fixed_include_string = ${ "<" ~ string_inner ~ ">" }
 
 string_inner = @{ char* }
 char = {
@@ -46,6 +47,7 @@ number = @{
 }
 
 include = { "include" ~ string ~ ";" }
+fixed_include = { "include" ~ fixed_include ~ ";" }
 
 /* checks */
 maybe_force_check = { "!" | "" }
@@ -247,6 +249,7 @@ inner_block = {
 block = {
     code_block |
     include |
+    fixed_include |
     flag_statement |
     function |
     procedure |

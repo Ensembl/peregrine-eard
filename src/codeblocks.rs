@@ -1,5 +1,5 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode, TypeSpec, AtomicTypeSpec}, middleend::{broadtyping::BroadType, narrowtyping::NarrowType}};
+use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode, TypeSpec}, middleend::{broadtyping::BroadType, narrowtyping::NarrowType}};
 
 #[derive(Clone)]
 pub struct ImplBlock {

@@ -1,5 +1,5 @@
-use std::collections::{HashSet, HashMap};
-use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Operation}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::{narrow_type, NarrowType}, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::ParsePosition};
+use std::collections::{HashSet};
+use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, FileSourceSource, SourceSourceImpl}, generate::generate};
 
 pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
@@ -22,10 +22,10 @@ impl<'a> EarpCompilation<'a> {
         self.flags.insert(flag.to_string());
     }
 
-    pub(crate) fn parse_part(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {
+    pub(crate) fn parse_part(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
         self.context += 1;
         let context = self.context;
-        parse_earp(&self.compiler,position,context)
+        parse_earp(position,path,fixed,context)
     }
 
     fn parse_libcore(&mut self) -> Result<Vec<PTStatement>,String> {
@@ -35,9 +35,9 @@ impl<'a> EarpCompilation<'a> {
         parse_libcore(context)
     }
 
-    pub(crate) fn parse(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {
+    pub(crate) fn parse(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
         let mut out = self.parse_libcore()?;
-        out.append(&mut self.parse_part(position)?);
+        out.append(&mut self.parse_part(position,path,fixed)?);
         Ok(out)
     }
 
@@ -50,13 +50,14 @@ impl<'a> EarpCompilation<'a> {
     }
 
     pub(crate) fn frontend(&mut self, filename: &str) -> Result<BuildTree,String> {
-        let position = ParsePosition::new(filename,"included");
-        let stmts = self.parse(&position)?;
+        let soso = SourceSourceImpl::new(FileSourceSource::new()?);
+        let position = ParsePosition::root(soso,"included");
+        let stmts = self.parse(&position,filename,false)?;
         let stmts = self.preprocess(stmts)?;
         self.build(stmts)
     }
 
-    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<Operation>,HashMap<usize,NarrowType>),String> {
+    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<Vec<Step>,String> {
         let bundles = build_unbundle(&tree)?;
         let (linear,next_register) = linearize(&tree,&bundles)?;
         let linear = reduce(&linear);
@@ -68,12 +69,14 @@ impl<'a> EarpCompilation<'a> {
         let opers = reuse(tree,&block_indexes,&opers)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
         let opers = spill(next_register,&opers, &mut narrow);
-        Ok((opers,narrow))
+        let opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+        let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
+        Ok(steps)
     }
 
-    pub fn compile(&mut self, filename: &str) -> Result<(Vec<Operation>,HashMap<usize,NarrowType>),String> {
+    pub fn compile(&mut self, filename: &str) -> Result<Vec<Step>,String> {
         let tree = self.frontend(filename)?;
-        let (opers,typing) = self.middleend(&tree)?;
-        Ok((opers,typing))
+        let step = self.middleend(&tree)?;
+        Ok(step)
     }
 }

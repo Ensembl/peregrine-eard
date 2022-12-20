@@ -1,4 +1,4 @@
-use std::{fmt::{self, Display}, sync::{Arc, Mutex}, cmp::Ordering, collections::HashMap};
+use std::{fmt::{self, Display}, cmp::Ordering};
 use ordered_float::OrderedFloat;
 
 use crate::source::ParsePosition;

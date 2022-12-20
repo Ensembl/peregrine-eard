@@ -52,8 +52,8 @@
  *           recurse step 3 and recording bundle.names as used.
  */
 
-use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::{frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, parsetree::at}, source::ParsePosition};
+use std::{collections::{HashSet, HashMap}};
+use crate::{frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }}, source::ParsePosition};
 use crate::model::{OrBundleRepeater, Variable, OrBundle, TypedArgument};
 use super::{repeater::find_repeater_arguments, unbundleaux::{BundleNamespace, Transits, Position, TransitsBuilder}};
 

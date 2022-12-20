@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::HashMap};
 use crate::{model::{FullConstant, Operation, OperationValue}, middleend::narrowtyping::NarrowType, source::ParsePosition};
 
 /* We have no main-store but can spill small constants as they can be regenerated. We force spills

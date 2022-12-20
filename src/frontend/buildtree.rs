@@ -1,4 +1,4 @@
-use std::{sync::Arc, fmt};
+use std::fmt;
 use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
 
 #[derive(Debug,Clone)]

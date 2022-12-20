@@ -1,6 +1,6 @@
-use std::{collections::HashMap, sync::Arc, fmt};
+use std::{collections::HashMap, fmt};
 
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction}, frontend::{parsetree::at, buildtree::{BuildTree, BTTopDefn}}, source::ParsePosition};
+use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction}, frontend::{buildtree::{BuildTree, BTTopDefn}}, source::ParsePosition};
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {

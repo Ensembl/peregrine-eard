@@ -1,7 +1,6 @@
-use std::sync::Arc;
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::ParsePosition};
+use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition, SourceSourceImpl, FixedSourceSource}};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
@@ -159,6 +158,10 @@ impl EarpParser {
     }
 
     fn include(input: Node) -> PestResult<String> {
+        Ok(match_nodes!(input.into_children(); [string(s)] => s ))
+    }
+
+    fn fixed_include(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children(); [string(s)] => s ))
     }
 
@@ -559,7 +562,8 @@ impl EarpParser {
         let position = input.user_data().position.at_line(line_no as u32);
         let value = match_nodes!(input.into_children();
             [code_block(block)] => PTStatementValue::Code(block),
-            [include(s)] => PTStatementValue::Include(s),
+            [include(s)] => PTStatementValue::Include(s,false),
+            [fixed_include(s)] => PTStatementValue::Include(s,true),
             [flag_statement(s)] => PTStatementValue::Flag(s),
             [function(f)] => PTStatementValue::FuncDef(f),
             [procedure(p)] => PTStatementValue::ProcDef(p),
@@ -754,13 +758,15 @@ fn do_parse_earp(input: &str, position: &ParsePosition, context: usize) -> PestR
     EarpParser::file(input)
 }
 
-pub fn parse_earp(compiler: &EarpCompiler, position: &ParsePosition, context: usize) -> Result<Vec<PTStatement>,String> {
-    let input = compiler.load_source(&position.last().filename)?;
-    do_parse_earp(&input,position,context).map_err(|e| e.to_string())
+pub fn parse_earp(position: &ParsePosition, filename: &str, fixed: bool, context: usize) -> Result<Vec<PTStatement>,String> {
+    let (input,new_pos) = position.push(filename,fixed)?;
+    do_parse_earp(&input,&new_pos,context).map_err(|e| e.to_string())
 }
 
 pub(crate) fn parse_libcore(context: usize) -> Result<Vec<PTStatement>,String> {
-    let input = include_str!("../libcore/libcore.earp");
-    let position = ParsePosition::new("libcore","included");
-    do_parse_earp(&input,&position,context).map_err(|e| e.to_string())
+    let fixed = SourceSourceImpl::new(FixedSourceSource::new_vec(vec![
+        ("libcore",include_str!("../libcore/libcore.earp"))
+    ]));
+    let root = ParsePosition::root(fixed,"included");
+    parse_earp(&root,"libcore",true,context).map_err(|e| e.to_string())
 }

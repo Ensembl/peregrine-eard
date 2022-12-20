@@ -1,6 +1,6 @@
-use std::{collections::{HashMap}, sync::Arc};
+use std::{collections::{HashMap}};
 use crate::{model::{Variable, OrBundleRepeater, LinearStatement, LinearStatementValue, OrBundle, TypedArgument, TypeSpec}, source::ParsePosition};
-use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}, parsetree::at};
+use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
 /* NOTE! After linearizing we are not yet in signle-assignment form as multiple consecutive calls

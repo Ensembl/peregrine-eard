@@ -1,7 +1,7 @@
-use std::{sync::Arc, collections::HashMap, fmt};
+use std::{sync::Arc, collections::HashMap, fmt, path::PathBuf, env::current_dir, fs::read_to_string};
 
 pub(crate) trait SourceSource {
-    fn lookup(&self, pos: &ParsePosition, filename: &str) -> Result<(SourceSourceImpl,String),String>;
+    fn lookup(&self, filename: &str, fixed: bool) -> Result<(SourceSourceImpl,String),String>;
 }
 
 pub(crate) struct SourceSourceImpl(Box<dyn SourceSource>);
@@ -13,8 +13,17 @@ impl SourceSourceImpl {
 }
 
 impl SourceSource for SourceSourceImpl {
-    fn lookup(&self, pos: &ParsePosition, filename: &str) -> Result<(SourceSourceImpl,String),String> {
-        self.0.lookup(pos,filename)
+    fn lookup(&self,filename: &str, fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        self.0.lookup(filename,fixed)
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct NoneSourceSource;
+
+impl SourceSource for NoneSourceSource {
+    fn lookup(&self, filename: &str, _fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        return Err(format!("No loader for {}",filename))
     }
 }
 
@@ -27,28 +36,57 @@ impl FixedSourceSource {
     pub(crate) fn new(files: HashMap<String,String>) -> FixedSourceSource {
         FixedSourceSource { files: Arc::new(files) }
     }
+
+    pub(crate) fn new_vec(mut files: Vec<(&str,&str)>) -> FixedSourceSource {
+        let files = files.drain(..).map(|(k,v)| (k.to_string(),v.to_string())).collect::<HashMap<_,_>>();
+        Self::new(files)
+    }
 }
 
 impl SourceSource for FixedSourceSource {
-    fn lookup(&self, _pos: &ParsePosition, filename: &str) -> Result<(SourceSourceImpl,String),String> {
+    fn lookup(&self, filename: &str, _fixed: bool) -> Result<(SourceSourceImpl,String),String> {
         let src = self.files.get(filename).cloned().ok_or_else(|| format!("cannot find '{}'",filename))?;
         Ok((SourceSourceImpl::new(self.clone()),src.to_string()))
     }
 }
 
+pub(crate) struct FileSourceSource {
+    rel_path: PathBuf
+}
+
+impl FileSourceSource {
+    pub(crate) fn new() -> Result<FileSourceSource,String> {
+        let cwd = current_dir().map_err(|e| format!("couldn't get current directory: {}",e))?;
+        Ok(FileSourceSource { rel_path: cwd })
+    }
+}
+
+impl SourceSource for FileSourceSource {
+    fn lookup(&self, filename: &str, _fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        let mut new_path = self.rel_path.clone();
+        new_path.push(filename);
+        let rel_path = new_path.parent().ok_or_else(|| format!("Cannot find parent directory of {}",filename))?;
+        let new_source = FileSourceSource{ rel_path: rel_path.to_path_buf() };
+        let contents = read_to_string(new_path).map_err(|e| format!("cannot read {}: {}",filename,e))?;
+        Ok((SourceSourceImpl::new(new_source),contents))
+    }
+}
+
 #[derive(Clone)]
 pub(crate) struct FilePosition {
+    soso: Arc<SourceSourceImpl>,
     pub filename: String,
+    suppress: bool,
     line_no: u32
 }
 
 impl FilePosition {
-    fn anon() -> FilePosition {
-        FilePosition { filename: "*anon*".to_string(), line_no: 0 }
+    fn anon(soso: SourceSourceImpl) -> FilePosition {
+        FilePosition { soso: Arc::new(soso), filename: "*anon*".to_string(), line_no: 0, suppress: true }
     }
 
-    fn new(filename: &str) -> FilePosition {
-        FilePosition { filename: filename.to_string(), line_no: 0 }
+    fn new(soso: SourceSourceImpl, filename: &str) -> FilePosition {
+        FilePosition { soso: Arc::new(soso), filename: filename.to_string(), line_no: 0, suppress: false }
     }
 }
 
@@ -66,7 +104,11 @@ impl PositionNode {
         let rest = self.0.as_ref().map(|parent| {
             format!("{}",parent.to_str(prefix,suffix))
         }).unwrap_or("".to_string());
-        format!("{}{:?}{}{}",prefix,self.1,suffix,rest)
+        if self.1.suppress {
+            rest
+        } else {
+            format!("{}{:?}{}{}",prefix,self.1,suffix,rest)
+        }
     }
 
     pub(crate) fn contains(&self, filename: &str) -> bool {
@@ -79,16 +121,16 @@ impl PositionNode {
 pub struct ParsePosition(PositionNode,Arc<String>);
 
 impl ParsePosition {
-    pub(crate) fn new(filename: &str, variety: &str) -> ParsePosition {
-        ParsePosition(PositionNode(None,FilePosition::new(filename)),Arc::new(variety.to_string()))
-    }
-
     pub(crate) fn contains(&self, filename: &str) -> bool {
         self.0.contains(filename)
     }
 
+    pub(crate) fn root(soso: SourceSourceImpl,variety: &str) -> ParsePosition {
+        ParsePosition(PositionNode(None,FilePosition::anon(soso)),Arc::new(variety.to_string()))
+    }
+
     pub(crate) fn empty(variety: &str) -> ParsePosition {
-        ParsePosition(PositionNode(None,FilePosition::anon()),Arc::new(variety.to_string()))
+        Self::root(SourceSourceImpl::new(NoneSourceSource),variety)
     }
 
     pub(crate) fn at_line(&self, line_no: u32) -> ParsePosition {
@@ -106,8 +148,10 @@ impl ParsePosition {
         ParsePosition(PositionNode(Some(Arc::new(self.0.clone())),pos.clone()),self.1.clone())
     }
 
-    pub(crate) fn push(&self, filename: &str) -> ParsePosition {
-        self.add(&FilePosition::new(filename))
+    pub(crate) fn push(&self, filename: &str, fixed: bool) -> Result<(String,ParsePosition),String> {
+        let (soso,input) = self.last().soso.lookup(filename,fixed)?;
+        let new_pos = self.add(&FilePosition::new(soso,filename));
+        Ok((input,new_pos))
     }
 
     pub(crate) fn last(&self) -> &FilePosition { &(self.0).1 }

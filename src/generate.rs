@@ -5,7 +5,7 @@
  */
 
 use std::{collections::{HashMap, BTreeSet, BTreeMap, HashSet}};
-use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn, Opcode}, frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType, source::ParsePosition};
+use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn}, frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType, source::ParsePosition};
 
 #[derive(Copy,Clone,PartialEq,Eq,PartialOrd,Ord,Hash)]
 struct NewRegister(usize);
@@ -135,14 +135,6 @@ impl<'a> Generate<'a> {
         if let Some(new_reg) = self.regmap.get(&reg) {
             self.reg_alloc.free(*new_reg,c);
         }
-    }
-
-    fn make_opcode(&mut self, imp: &ImplBlock, index: usize, opcode: &Opcode, rets: &[usize], args: &[usize]) -> Result<Step,String> {
-        let def_to_reg = self.map_regs(imp,index,rets,args)?;
-        let opargs = opcode.1.iter().map(|d| 
-            def_to_reg.get(d).expect("missing register").0
-        ).collect::<Vec<_>>();
-        Ok(Step::Opcode(opcode.0,opargs))
     }
 
     fn birth_and_map_args(&mut self, mapping: &mut CodeMapping) {

@@ -1,5 +1,5 @@
 use std::{sync::Arc, fmt};
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater}, codeblocks::{CodeDefinition, CodeBlock}};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, ParsePosition}, codeblocks::{CodeDefinition, CodeBlock}};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {
@@ -116,31 +116,23 @@ impl fmt::Debug for BTStatementValue {
 #[derive(Clone)]
 pub struct BTStatement {
     pub value: BTStatementValue,
-    pub file: Arc<Vec<String>>,
-    pub line_no: usize
+    pub position: ParsePosition
 }
 
 impl fmt::Debug for BTStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let file = self.file.as_ref().last().map(|x| x.as_str()).unwrap_or("");
-        write!(f,"{}:{} {:?}",file,self.line_no,self.value)
+        write!(f,"{} {:?}",self.position.last_str(),self.value)
     }
 }
 
 #[derive(Clone)]
 pub struct BTFuncProcDefinition {
-    pub(crate) position: (Arc<Vec<String>>,usize),
+    pub(crate) position: ParsePosition,
     pub(crate) args: Vec<OrBundle<TypedArgument>>,
     pub(crate) captures: Vec<OrBundle<Variable>>,
     pub(crate) block: Vec<BTStatement>,
     pub(crate) ret: Vec<OrBundle<BTExpression>>,
     pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
-}
-
-impl BTFuncProcDefinition {
-    pub(crate) fn at(&self) -> String {
-        format!("{}:{}",self.position.0.last().map(|x| x.as_str()).unwrap_or("*anon*"),self.position.1)
-    }
 }
 
 impl fmt::Debug for BTFuncProcDefinition {

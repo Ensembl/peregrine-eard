@@ -765,7 +765,7 @@ fn do_parse_earp(input: &str, filename: &[String], context: usize) -> PestResult
 }
 
 pub fn parse_earp(compiler: &EarpCompiler, filename: &[String], context: usize) -> Result<Vec<PTStatement>,String> {
-    let input = compiler.load_source(filename.last().unwrap())?; // XXX
+    let input = compiler.load_source(filename.last().unwrap())?;
     do_parse_earp(&input,filename,context).map_err(|e| e.to_string())
 }
 

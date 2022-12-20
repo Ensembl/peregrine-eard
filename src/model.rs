@@ -45,6 +45,18 @@ impl PositionNode {
 pub struct ParsePosition(PositionNode,Arc<String>);
 
 impl ParsePosition {
+    pub(crate) fn xxx_new(file: &[String], line_no: usize, variety: &str) -> ParsePosition {
+        if file.len() == 1 {
+            ParsePosition(PositionNode(None,FilePosition { filename: file[0].to_string(), line_no: line_no as u32 }),Arc::new(variety.to_string()))
+        } else {
+            let parent = ParsePosition::xxx_new(&file[0..file.len()-1],line_no,variety);
+            ParsePosition(PositionNode(Some(Arc::new(parent.0)),FilePosition {
+                filename: file[file.len()-1].to_string(),
+                line_no: line_no as u32
+            }),Arc::new(variety.to_string()))
+        }
+    }
+
     pub(crate) fn empty(variety: &str) -> ParsePosition {
         ParsePosition(PositionNode(None,FilePosition::anon()),Arc::new(variety.to_string()))
     }

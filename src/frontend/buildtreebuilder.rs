@@ -1,5 +1,5 @@
 use std::{sync::Arc, collections::BTreeMap};
-use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}};
+use crate::{model::{OrBundle, TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, OrBundleRepeater, Check, TypeSpec, ParsePosition}, codeblocks::{CodeDefinition, CodeBlock}};
 use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}};
 
 #[derive(Debug,Clone)]
@@ -10,7 +10,7 @@ pub(super) enum DefName {
 }
 
 struct CurrentFuncProcDefinition {
-    position: (Arc<Vec<String>>,usize),
+    position: ParsePosition,
     block: Vec<BTStatement>,
     name: String,
     export: bool,
@@ -76,7 +76,7 @@ impl CurrentFuncProcDefinition {
 }
 
 pub struct BuildContext {
-    location: (Arc<Vec<String>>,usize),
+    location: ParsePosition,
     file_context: usize,
     defnames: BTreeMap<(Option<usize>,String),DefName>,
     next_register: usize,
@@ -87,7 +87,7 @@ pub struct BuildContext {
 impl BuildContext {
     pub fn new() -> BuildContext {
         BuildContext {
-            location: (Arc::new(vec!["*anon*".to_string()]),0),
+            location: ParsePosition::empty("included"),
             file_context: 0,
             defnames: BTreeMap::new(),
             next_register: 0,
@@ -132,12 +132,10 @@ impl BuildContext {
     }
 
     pub fn set_location(&mut self, file: &Arc<Vec<String>>, line_no: usize) {
-        self.location = (file.clone(),line_no);
+        self.location = ParsePosition::xxx_new(file,line_no,"included");
     }
 
-    pub fn location(&self) -> (&[String],usize) {
-        (self.location.0.as_ref(),self.location.1)
-    }
+    pub fn location(&self) -> &ParsePosition { &self.location }
 
     fn lookup(&self, name: &str) -> Result<DefName,String> {
         self.defnames
@@ -203,8 +201,7 @@ impl BuildContext {
     pub(crate) fn add_statement(&mut self, bt: &mut BuildTree, value: BTStatementValue) -> Result<(),String> {
         let stmt = BTStatement {
             value,
-            file: self.location.0.clone(),
-            line_no: self.location.1
+            position: self.location.clone()
         };
         if let Some(target) = self.funcproc_target.as_mut() {
             target.block.push(stmt);

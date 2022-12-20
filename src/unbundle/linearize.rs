@@ -95,7 +95,7 @@ impl<'a> Linearize<'a> {
 
     fn check_arg_match(&self, defn: &BTFuncProcDefinition, args: &[OrBundleRepeater<BTExpression>]) -> Result<(),String> {
         if defn.args.len() != args.len() {
-            return Err(format!("definition at {} has {} args; call passes {}",defn.at(),defn.args.len(),args.len()));
+            return Err(format!("definition at {} has {} args; call passes {}",defn.position.full_str(),defn.args.len(),args.len()));
         }
         Ok(())
     }
@@ -103,7 +103,7 @@ impl<'a> Linearize<'a> {
     fn check_ret_match(&self, defn: &BTFuncProcDefinition, rets: &Option<Vec<OrBundleRepeater<BTLValue>>>) -> Result<(),String> {
         if let Some(rets) = rets {
             if defn.ret.len() != rets.len() {
-                return Err(format!("definition at {} has {} return values; call expects {}",defn.at(),defn.ret.len(),rets.len()));
+                return Err(format!("definition at {} has {} return values; call expects {}",defn.position.full_str(),defn.ret.len(),rets.len()));
             }    
         }
         Ok(())
@@ -237,7 +237,7 @@ impl<'a> Linearize<'a> {
         self.var_registers.push();
         self.checks.push();
         let old_pos = self.positions.clone();
-        self.positions = self.positions.push(&FilePosition::xxx_new(&defn.position.0,defn.position.1));
+        self.positions = self.positions.push(defn.position.last());
         self.callee_args(&defn.args,arg_regs)?;
         self.callee_captures(index)?;
         for stmt in &defn.block {
@@ -434,7 +434,7 @@ impl<'a> Linearize<'a> {
     }
 
     fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
-        self.positions.update(&FilePosition::xxx_new(&stmt.file,stmt.line_no));
+        self.positions.update(stmt.position.last());
         match &stmt.value {
             BTStatementValue::Define(index) => {
                 self.define(*index)?;

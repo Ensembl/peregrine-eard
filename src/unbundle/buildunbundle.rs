@@ -53,7 +53,7 @@
  */
 
 use std::{sync::Arc, collections::{HashSet, HashMap}};
-use crate::frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, parsetree::at};
+use crate::{frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, parsetree::at}, model::ParsePosition};
 use crate::model::{OrBundleRepeater, Variable, OrBundle, TypedArgument};
 use super::{repeater::find_repeater_arguments, unbundleaux::{BundleNamespace, Transits, Position, TransitsBuilder}};
 
@@ -81,7 +81,7 @@ fn bundle(caller_expects: Option<&HashSet<String>>) -> Result<&HashSet<String>,S
 
 struct BuildUnbundle<'a> {
     tree: &'a BuildTree,
-    positions: Vec<(Arc<Vec<String>>,usize)>,
+    positions: ParsePosition,
     namespace: BundleNamespace,
     register_bundles: HashMap<usize,HashSet<String>>,
     transits: TransitsBuilder,
@@ -95,7 +95,7 @@ impl<'a> BuildUnbundle<'a> {
         BuildUnbundle {
             trace: vec![],
             tree,
-            positions: vec![],
+            positions: ParsePosition::empty("called"),
             namespace: BundleNamespace::new(),
             register_bundles: HashMap::new(),
             transits: TransitsBuilder::new()
@@ -110,12 +110,6 @@ impl<'a> BuildUnbundle<'a> {
     #[cfg(not(test))]
     fn trace(&mut self, _msg: &str) {}
     
-    fn error_at(&self, msg: &str) -> String {
-        self.positions.last().map(|(file,line)|
-            at(msg,Some((file.as_ref(),*line)))
-        ).unwrap_or("*anon*".to_string())
-    }
-
     fn check_for_repeater(&mut self, stmt: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         if let Some((left,right)) = find_repeater_arguments(stmt)? {
             self.transits.push(stmt.call_index);
@@ -371,13 +365,14 @@ impl<'a> BuildUnbundle<'a> {
 
     fn statement(&mut self, stmt: &BTStatement) -> Result<(),String> {
         self.trace(&format!("statement = {:?}",stmt));
-        self.positions.push((stmt.file.clone(),stmt.line_no));
+        let old_position = self.positions.clone();
+        self.positions.update(stmt.position.last());
         match &stmt.value {
             BTStatementValue::Declare(d) => self.declare(d)?,
             BTStatementValue::BundledStatement(s) => self.procedure(s)?,
             _ => {}
         }
-        self.positions.pop();
+        self.positions = old_position;
         Ok(())
     }
 }
@@ -385,7 +380,7 @@ impl<'a> BuildUnbundle<'a> {
 fn do_build_unbundle(tree: &BuildTree) -> Result<BuildUnbundle,String> {
     let mut unbundle = BuildUnbundle::new(tree);
     for stmt in tree.statements.iter().rev() {
-        unbundle.statement(stmt).map_err(|e| unbundle.error_at(&e))?;
+        unbundle.statement(stmt).map_err(|e| unbundle.positions.message(&e))?;
     }
     Ok(unbundle)
 }

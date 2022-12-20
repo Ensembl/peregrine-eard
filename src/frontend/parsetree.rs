@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater}, codeblocks::CodeBlock};
+use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater, ParsePosition}, codeblocks::CodeBlock};
 use super::buildtree::{BuildTree};
 use super::buildtreebuilder::BuildContext;
 
@@ -288,7 +288,7 @@ impl PTStatement {
             bc.set_location(&stmt.file,stmt.line_no);
             bc.set_file_context(stmt.context);
             bc.build_statement(&mut bt,&stmt).map_err(|e| {
-                at(&e,Some(bc.location()))
+                bc.location().message(&e)
             })?;
         }
         Ok(bt)

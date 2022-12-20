@@ -20,17 +20,17 @@ pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
 }
 
 pub trait PTTransformer {
-    fn include(&mut self, _pos: (&[String],usize), _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
+    fn include(&mut self, _pos: &ParsePosition, _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn remove_flags(&mut self, _flag: &str) -> Result<bool,String> { Ok(false) }
     fn bad_repeater(&mut self, _pos: (&[String],usize)) -> Result<(),String> { Ok(()) }
     fn call_to_expr(&mut self, _call: &PTCall, _context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
-    fn call_to_block(&mut self, _call: &PTCall, _pos: (&[String],usize), _context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
+    fn call_to_block(&mut self, _call: &PTCall, _pos: &ParsePosition, _context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
     fn replace_infix(&mut self, _a: &PTExpression, _f: &str, _b: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
     fn replace_prefix(&mut self, _f: &str, _a: &PTExpression) -> Result<Option<PTExpression>,String> { Ok(None) }
 }
 
 impl OrBundleRepeater<PTExpression> {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<OrBundleRepeater<PTExpression>,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<OrBundleRepeater<PTExpression>,String> {
         Ok(match self {
             OrBundleRepeater::Normal(x) => OrBundleRepeater::Normal(x.transform(transformer,pos,context)?),
             OrBundleRepeater::Bundle(s) => OrBundleRepeater::Bundle(s),
@@ -47,7 +47,7 @@ pub struct PTCall {
 }
 
 impl PTCall {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTCall,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<PTCall,String> {
         let mut args = vec![];
         for arg in self.args {
             args.push(arg.transform(transformer,pos,context)?);
@@ -59,7 +59,7 @@ impl PTCall {
         })
     }
 
-    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTExpression,String> {
+    fn transform_expression(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<PTExpression,String> {
         if let Some(repl) = transformer.call_to_expr(&self,context)? {
             Ok(repl)
         } else {
@@ -67,7 +67,7 @@ impl PTCall {
         }
     }
 
-    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> {
+    fn transform_block(&self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<Option<Vec<PTStatement>>,String> {
         if let Some(repl) = transformer.call_to_block(&self,pos,context)? {
             Ok(Some(repl))
         } else {
@@ -88,7 +88,7 @@ pub enum PTExpression {
 }
 
 impl PTExpression {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTExpression,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<PTExpression,String> {
         Ok(match self {
             PTExpression::FiniteSequence(mut exprs) => {
                 PTExpression::FiniteSequence(exprs.drain(..).map(|x| x.transform(transformer,pos,context)).collect::<Result<Vec<_>,_>>()?)
@@ -133,7 +133,7 @@ pub struct PTFuncDef {
 }
 
 impl PTFuncDef {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTFuncDef,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<PTFuncDef,String> {
         Ok(PTFuncDef {
             name: self.name,
             args: self.args,
@@ -147,7 +147,7 @@ impl PTFuncDef {
 }
 
 impl OrBundle<PTExpression> {
-    fn transform(self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<OrBundle<PTExpression>,String> {
+    fn transform(self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<OrBundle<PTExpression>,String> {
         Ok(match self {
             OrBundle::Normal(expr) => {
                 OrBundle::Normal(expr.transform(transformer,pos,context)?)
@@ -169,7 +169,7 @@ pub struct PTProcDef {
 }
 
 impl PTProcDef {
-    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: (&[String],usize), context: usize) -> Result<PTProcDef,String> {
+    fn transform(mut self, transformer: &mut dyn PTTransformer, pos: &ParsePosition, context: usize) -> Result<PTProcDef,String> {
         Ok(PTProcDef {
             name: self.name,
             args: self.args,
@@ -185,8 +185,7 @@ impl PTProcDef {
 #[derive(Debug,Clone)]
 pub struct PTStatement {
     pub value: PTStatementValue,
-    pub file: Arc<Vec<String>>,
-    pub line_no: usize,
+    pub position: ParsePosition,
     pub context: usize
 }
 
@@ -209,7 +208,7 @@ pub enum PTStatementValue {
 
 impl PTStatement {
     pub fn transform(self, transformer: &mut dyn PTTransformer) -> Result<Vec<PTStatement>,String> {
-        let pos = (self.file.as_ref().as_slice(),self.line_no);
+        let pos = self.position.clone();
         let value = match self.value {
             PTStatementValue::LetStatement(lvalues,rvalues) => {
                 let count_repeats = lvalues.iter().filter(|x| x.is_repeater()).count();
@@ -218,36 +217,35 @@ impl PTStatement {
                 }
                 let mut exprs = vec![];
                 for rvalue in rvalues {
-                    exprs.push(rvalue.transform(transformer,pos,self.context)?);
+                    exprs.push(rvalue.transform(transformer,&pos,self.context)?);
                 }
                 PTStatementValue::LetStatement(lvalues,exprs)
             },
             PTStatementValue::ModifyStatement(lvalues,mut rvalues) => {
                 let context = self.context.clone();
                 let rvalues = rvalues.drain(..).map(|x| 
-                    x.transform(transformer,pos,context)
+                    x.transform(transformer,&pos,context)
                 ).collect::<Result<_,_>>()?;
                 PTStatementValue::ModifyStatement(lvalues,rvalues)
             },
             PTStatementValue::BareCall(call) => {
-                if let Some(repl) = call.transform_block(transformer,pos,self.context)? {
+                if let Some(repl) = call.transform_block(transformer,&pos,self.context)? {
                     return Ok(repl);
                 } else {
-                    PTStatementValue::BareCall(call.transform(transformer,pos,self.context)?)
+                    PTStatementValue::BareCall(call.transform(transformer,&pos,self.context)?)
                 }
             },
             PTStatementValue::FuncDef(call) => {
-                PTStatementValue::FuncDef(call.transform(transformer,pos,self.context)?)
+                PTStatementValue::FuncDef(call.transform(transformer,&pos,self.context)?)
             },
             PTStatementValue::ProcDef(call) => {
-                PTStatementValue::ProcDef(call.transform(transformer,pos,self.context)?)
+                PTStatementValue::ProcDef(call.transform(transformer,&pos,self.context)?)
             },
             x => x
         };
         Ok(vec![PTStatement {
             value,
-            file: self.file,
-            line_no: self.line_no,
+            position: pos.clone(),
             context: self.context
         }])
     }
@@ -255,13 +253,13 @@ impl PTStatement {
     pub fn transform_list(this: Vec<Self>, transformer: &mut dyn PTTransformer) -> Result<Vec<PTStatement>,String> {
         let mut out = vec![];
         for block in this {
-            let pos = (block.file.as_ref().as_slice(),block.line_no);
+            let pos = block.position.clone();
             let mut more = match &block.value {
                 PTStatementValue::Include(path) => {
-                    if pos.0.contains(path) {
-                        return Err(at(&format!("recursive include of {}",path),Some(pos)))
+                    if pos.contains(path) {
+                        return Err(pos.message(&format!("recursive include of {}",path)));
                     }
-                    if let Some(repl) = transformer.include(pos,path)? {
+                    if let Some(repl) = transformer.include(&pos,path)? {
                         repl
                     } else {
                         vec![block]
@@ -285,7 +283,7 @@ impl PTStatement {
         let mut bt = BuildTree::new();
         let mut bc = BuildContext::new();
         for stmt in this.iter() {
-            bc.set_location(&stmt.file,stmt.line_no);
+            bc.set_location(&stmt.position);
             bc.set_file_context(stmt.context);
             bc.build_statement(&mut bt,&stmt).map_err(|e| {
                 bc.location().message(&e)

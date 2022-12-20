@@ -18,8 +18,7 @@ let x = 1 || 2 || 3;
                 Constant(3)
             )]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -92,8 +91,7 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
                 Constant(13)
             )]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -123,8 +121,7 @@ let y = (1+2)*3;
                 )
             )]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     },
     PTStatement {
@@ -140,8 +137,7 @@ let y = (1+2)*3;
                 Constant(3)
             )]
         ),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -163,8 +159,7 @@ let y = [1,...];
             [(x,[])],
             [FiniteSequence([Constant(1),Constant(2),Constant(3)])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     },
     PTStatement {
@@ -172,8 +167,7 @@ let y = [1,...];
             [(y,[])],
             [InfiniteSequence(Constant(1))]
         ),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -211,8 +205,7 @@ let x = -x - -y && !z;
                 )
             )]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -266,8 +259,7 @@ let **a = [1+y(**b)+3*z(zz()),x(2,c,*d)];
                 })
             ])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]

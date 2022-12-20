@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{compiler::{EarpCompiler}, model::OrBundleRepeater, compilation::EarpCompilation};
+use crate::{compiler::{EarpCompiler}, model::{OrBundleRepeater, ParsePosition, FilePosition}, compilation::EarpCompilation};
 use super::parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
@@ -37,7 +37,7 @@ impl<'a> PTTransformer for RunMacrosOnce<'a> {
         }
     }
 
-    fn call_to_block(&mut self, call: &PTCall, pos: (&[String],usize), context: usize) -> Result<Option<Vec<PTStatement>>,String> {
+    fn call_to_block(&mut self, call: &PTCall, pos: &ParsePosition, context: usize) -> Result<Option<Vec<PTStatement>>,String> {
         if call.is_macro {
             self.any = true;
             Ok(Some(self.compiler.apply_block_macro(&call.name,&call.args,pos,context)?))
@@ -59,12 +59,11 @@ struct RunIncludeOnce<'a,'b> {
 }
 
 impl<'a,'b> PTTransformer for RunIncludeOnce<'a,'b> {
-    fn include(&mut self, pos: (&[String],usize), path: &str) -> Result<Option<Vec<PTStatement>>,String> {
+    fn include(&mut self, pos: &ParsePosition, path: &str) -> Result<Option<Vec<PTStatement>>,String> {
         self.any = true;
-        let mut full_path = pos.0.to_vec();
-        full_path.push(path.to_string());
-        Ok(Some(self.compilation.parse_part(&full_path).map_err(|e| {
-            at(&e,Some(pos))
+        let new_pos = pos.push(&FilePosition::new(path));
+        Ok(Some(self.compilation.parse_part(&new_pos).map_err(|e| {
+            pos.message(&e)
         })?))
     }
 }

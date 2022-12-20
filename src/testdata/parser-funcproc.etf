@@ -29,8 +29,7 @@ export function first(a: seq(?X)) -> ?X {
                         ],
                         is_macro: false
                     }),
-                    file: ["test"],
-                    line_no: 3,
+                    position: test:3,
                     context: 1
                 }
             ],
@@ -44,8 +43,7 @@ export function first(a: seq(?X)) -> ?X {
             }),
             value_type: Some(?X)
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -76,8 +74,7 @@ function test(a: seq(number)|number|boolean length(?X) ref(?Y), b: seq(?Z)) -> s
             value: Constant(42),
             value_type: Some(seq(?Z) ref(X))
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -118,8 +115,7 @@ function inc(a) {
             value: Infix(Variable(a),"+",Constant(1)),
             value_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -149,8 +145,7 @@ function more(a: number length(?X)) {
             value: Constant(3),
             value_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -182,16 +177,14 @@ function func(*x) {
                         args: [Variable(x.a)],
                         is_macro:false
                     }),
-                    file: ["test"],
-                    line_no: 3,
+                    position: test:3,
                     context: 1
                 }
             ],
             value: *x,
             value_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -217,8 +210,7 @@ function x() { 42 }
             value: Constant(42),
             value_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -250,14 +242,12 @@ procedure x(a: number, b: number) -> (number,number) {
             block:[
                 PTStatement{
                     value:BareCall(PTCall{name:"print",args:[Variable(a)],is_macro:false}),
-                    file:["test"],
-                    line_no:3,
+                    position: test:3,
                     context:1
                 },
                 PTStatement{
                     value:BareCall(PTCall{name:"print",args:[Variable(b)],is_macro:false}),
-                    file:["test"],
-                    line_no:4,
+                    position: test:4,
                     context:1
                 }
             ],
@@ -267,8 +257,7 @@ procedure x(a: number, b: number) -> (number,number) {
                 number
             ])
         }),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     }
 ]
@@ -315,8 +304,7 @@ procedure x(a: number, b: number) -> (number) {
             ],
             ret_type: Some([number])
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -349,8 +337,7 @@ procedure x(a: number, b: number) -> number {
             ],
             ret_type: Some([number])
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -380,8 +367,7 @@ procedure x(a: number, b: number) {
             ret: [],
             ret_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -411,8 +397,7 @@ procedure x(a, b: length(?X...)) {
             ret: [],
             ret_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -461,16 +446,14 @@ procedure x(a, b: length(?X...), *c) {
                         [c.x],
                         [Constant(1)]
                     ),
-                    file:["test"],
-                    line_no:3,
+                    position: test:3,
                     context:1
                 }
             ],
             ret: [],
             ret_type:None
         }),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     }
 ]
@@ -498,8 +481,7 @@ procedure test(a) {
             [(x,[])],
             [Constant(2)]
         ),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     },
     PTStatement{
@@ -507,8 +489,7 @@ procedure test(a) {
             [(y,[])],
             [Constant(20)]
         ),
-        file:["test"],
-        line_no:3,
+        position: test:3,
         context:1
     },
     PTStatement{
@@ -531,8 +512,7 @@ procedure test(a) {
             ],
             ret_type:None
         }),
-        file:["test"],
-        line_no:5,
+        position: test:5,
         context:1
     }
 ]
@@ -567,16 +547,14 @@ procedure x(a, b: length(?X...), *c) {
                         [c.x],
                         [Constant(1)]
                     ),
-                    file: ["test"],
-                    line_no: 3,
+                    position: test:3,
                     context: 1
                 }
             ],
             ret: [*c],
             ret_type: None
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -610,8 +588,7 @@ let (x : length(w) total(ww),y,z) = c(a,b,c);
             })
         ]
     ),
-    file:["test"],
-    line_no:2,
+    position: test:2,
     context:1
     }
 ]
@@ -641,8 +618,7 @@ Procedure return (modify)
             })
         ]
     ),
-    file:["test"],
-    line_no:2,
+    position: test:2,
     context:1}
 ]
 

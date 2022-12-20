@@ -28,8 +28,7 @@ world code test(seq(?X) length(?X), boolean length(?X)) -> (seq(boolean) ref(?X)
                 }
             }
         ),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     }
 ]
@@ -57,8 +56,7 @@ code test(seq(?X)) -> (seq(?X)) {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -86,8 +84,7 @@ code test1( seq(?X) length(?Y) ) -> (seq(?X) length(?Y), seq(boolean) ref(?Y)) {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -115,8 +112,7 @@ code test(boolean) -> seq(boolean) {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -156,8 +152,7 @@ code test_string(boolean, string) {
                 }
             }
         ),
-        file: ["test"],
-        line_no:2,
+        position: test:2,
         context:1
     },
     PTStatement {
@@ -168,8 +163,7 @@ code test_string(boolean, string) {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 8,
+        position: test:8,
         context: 1
     },
     PTStatement{
@@ -180,8 +174,7 @@ code test_string(boolean, string) {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 14,
+        position: test:14,
         context: 1
     }
 ]
@@ -223,8 +216,7 @@ code test_string() {
                 }
             }
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]

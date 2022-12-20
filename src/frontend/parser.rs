@@ -1,7 +1,7 @@
 use std::sync::Arc;
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}};
+use crate::{compiler::EarpCompiler, model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode, ParsePosition}, codeblocks::{CodeBlock, ImplBlock}};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
@@ -10,7 +10,7 @@ struct EarpParser;
 
 #[derive(Clone)]
 struct ParseFixedState {
-    filename: Arc<Vec<String>>,
+    position: ParsePosition,
     context: usize
 }
 
@@ -541,8 +541,8 @@ impl EarpParser {
     }
 
     fn inner_block(input: Node) -> PestResult<PTStatement> {
-        let filename = input.user_data().filename.clone();
         let line_no = input.as_span().start_pos().line_col().0;
+        let position = input.user_data().position.at_line(line_no as u32);
         let context = input.user_data().context;
         let value = match_nodes!(input.into_children();
             [let_statement(s)] => s,
@@ -550,18 +550,13 @@ impl EarpParser {
             [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
             [macro_call(c)] => PTStatementValue::BareCall(c)
         );
-        Ok(PTStatement {
-            value,
-            file: filename,
-            line_no,
-            context
-        })
+        Ok(PTStatement { value, position, context })
     }
 
     fn block(input: Node) -> PestResult<PTStatement> {
-        let filename = input.user_data().filename.clone();
         let context = input.user_data().context;
         let line_no = input.as_span().start_pos().line_col().0;
+        let position = input.user_data().position.at_line(line_no as u32);
         let value = match_nodes!(input.into_children();
             [code_block(block)] => PTStatementValue::Code(block),
             [include(s)] => PTStatementValue::Include(s),
@@ -570,12 +565,7 @@ impl EarpParser {
             [procedure(p)] => PTStatementValue::ProcDef(p),
             [inner_block(b)] => { return Ok(b); },
         );
-        Ok(PTStatement {
-            value,
-            file: filename,
-            line_no,
-            context
-        })
+        Ok(PTStatement { value, position, context })
     }
 
     fn funcproc_arg_extras(input: Node) -> PestResult<ArgTypeSpec> {
@@ -755,21 +745,22 @@ impl EarpParser {
     }
 }
 
-fn do_parse_earp(input: &str, filename: &[String], context: usize) -> PestResult<Vec<PTStatement>> {
+fn do_parse_earp(input: &str, position: &ParsePosition, context: usize) -> PestResult<Vec<PTStatement>> {
     let state = ParseFixedState { 
-        filename: Arc::new(filename.to_vec()),
+        position: position.clone(),
         context
     };
     let input = EarpParser::parse_with_userdata(Rule::file,input,state)?.single()?;
     EarpParser::file(input)
 }
 
-pub fn parse_earp(compiler: &EarpCompiler, filename: &[String], context: usize) -> Result<Vec<PTStatement>,String> {
-    let input = compiler.load_source(filename.last().unwrap())?;
-    do_parse_earp(&input,filename,context).map_err(|e| e.to_string())
+pub fn parse_earp(compiler: &EarpCompiler, position: &ParsePosition, context: usize) -> Result<Vec<PTStatement>,String> {
+    let input = compiler.load_source(&position.last().filename)?;
+    do_parse_earp(&input,position,context).map_err(|e| e.to_string())
 }
 
 pub(crate) fn parse_libcore(context: usize) -> Result<Vec<PTStatement>,String> {
     let input = include_str!("../libcore/libcore.earp");
-    do_parse_earp(&input,&["libcore".to_string()],context).map_err(|e| e.to_string())
+    let position = ParsePosition::new("libcore","included");
+    do_parse_earp(&input,&position,context).map_err(|e| e.to_string())
 }

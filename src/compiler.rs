@@ -1,10 +1,10 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}, libcore::libcore::libcore_add};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant, ParsePosition}, libcore::libcore::libcore_add};
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
     source_loader: Box<dyn Fn(&str) -> Result<String,String>>,
-    block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],(&[String],usize),usize) -> Result<Vec<PTStatement>,String>>>,
+    block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
     constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>>>>
 }
@@ -39,7 +39,7 @@ impl EarpCompiler {
     }
 
     pub fn add_block_macro<F>(&mut self, name: &str, macro_cb: F) -> Result<(),String>
-            where F: Fn(&[OrBundleRepeater<PTExpression>],(&[String],usize),usize) -> Result<Vec<PTStatement>,String> + 'static {
+            where F: Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String> + 'static {
         self.check_macro_name_unused(name)?;
         self.block_macros.insert(name.to_string(),Box::new(macro_cb));
         Ok(())
@@ -67,7 +67,7 @@ impl EarpCompiler {
         })
     }
 
-    pub(crate) fn apply_block_macro(&self, name: &str, args: &[OrBundleRepeater<PTExpression>], pos: (&[String],usize), context: usize) -> Result<Vec<PTStatement>,String> {
+    pub(crate) fn apply_block_macro(&self, name: &str, args: &[OrBundleRepeater<PTExpression>], pos: &ParsePosition, context: usize) -> Result<Vec<PTStatement>,String> {
         let cb = self.block_macros.get(name).ok_or_else(|| format!("No such block macro \"{:?}\"",name))?;
         cb(args,pos,context)
     }

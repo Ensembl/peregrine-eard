@@ -17,8 +17,7 @@ let x = [true,false];
                 Constant(false)
             ])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -45,8 +44,7 @@ let x = [1, 2, -3, 4e1, 5.5e-1, -6.5e-2, 7e-3];
                 Constant(0.007)
             ])]
         ),
-        file: ["test"],
-        line_no: 1,
+        position: test:1,
         context: 1
     }
 ]
@@ -77,8 +75,7 @@ let x = ["hello","","\"","\\\"","\u002e","\u002F","\u20AC","\n\r\b\t\f","\u0030\
                 Constant("01")
             ])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -123,8 +120,7 @@ let x = [
                 Constant("h\"e\"l\"l\"o")
             ])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -150,8 +146,7 @@ let x = [true,false,frue,talse];
                 Variable(talse)
             ])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -173,32 +168,28 @@ let e = [0,x,y,z];
 [
     PTStatement {
         value: LetStatement([(a,[])],[FiniteSequence([])]),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     },
     PTStatement {
         value: LetStatement([(b,[])],[FiniteSequence([
                 Constant(1),Constant(2),Constant(3)
         ])]),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     },
     PTStatement {
         value: LetStatement([(c,[])],[FiniteSequence([
             Constant(false),Constant(false),Constant(true)
         ])]),
-        file: ["test"],
-        line_no: 4,
+        position: test:4,
         context: 1
     },
     PTStatement {
         value: LetStatement([(d,[])],[FiniteSequence([
             Constant("hello"),Constant("world")
         ])]),
-        file: ["test"],
-        line_no: 5,
+        position: test:5,
         context: 1
     },
     PTStatement {
@@ -208,8 +199,7 @@ let e = [0,x,y,z];
             Variable(y),
             Variable(z)
         ])]),
-        file: ["test"],
-        line_no: 6,
+        position: test:6,
         context: 1
     }
 ]

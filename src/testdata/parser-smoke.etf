@@ -29,8 +29,7 @@ world code print(r1: string|number) {
             ],
             modifiers: [World] 
         }),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -71,8 +70,7 @@ code add(r1: number, r2: number) -> (r3: number) {
             ], 
             modifiers: []
         }),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -116,8 +114,7 @@ code add(r1: number, r2: number) -> (r1: number) {
             ], 
             modifiers: []
         }),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -155,8 +152,7 @@ code add(r1: number, 1) -> (r1: number) {
             ], 
             modifiers: []
         }),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -198,8 +194,7 @@ code count_to_index(r1: seq(number) @?X #?Y) -> (r2: seq(number) #?X ^?Y) {
             ], 
             modifiers: []
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ] 
@@ -235,8 +230,7 @@ code len(r1: seq(?X)) -> (r2: number) {
             ],
             modifiers: []
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -252,14 +246,12 @@ flag "opt1";
 [
     PTStatement {
         value: Include("test1"), 
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     },
     PTStatement {
         value: Flag("opt1"),
-        file: ["test"],
-        line_no: 4,
+        position: test:4,
         context: 1
     }
 ]
@@ -291,8 +283,7 @@ let gn.tr_count #gn @tr = [1,2,4-1,x(1,3-1),y()];
                 Call(PTCall { name: "y", args: [], is_macro: false })
             ])
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -311,8 +302,7 @@ let colour = ["blue", ...];
                 InfiniteSequence(Constant("blue")
             )
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -339,8 +329,7 @@ gn.tr_count = check!(gn.tr_count + 1);
                 is_macro: true 
             })]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -361,8 +350,7 @@ let x = macro!();
                 is_macro: true 
             })
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -376,8 +364,7 @@ z1();
 [
     PTStatement {
         value: BareCall(PTCall { name: "z1", args: [], is_macro: false }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -395,8 +382,7 @@ z2(z3());
             args: [Call(PTCall { name: "z3", args: [], is_macro: false })],
             is_macro: false 
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]

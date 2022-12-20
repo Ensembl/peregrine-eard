@@ -131,8 +131,8 @@ impl BuildContext {
         self.file_context = context;
     }
 
-    pub fn set_location(&mut self, file: &Arc<Vec<String>>, line_no: usize) {
-        self.location = ParsePosition::xxx_new(file,line_no,"included");
+    pub fn set_location(&mut self, position: &ParsePosition) {
+        self.location = position.clone();
     }
 
     pub fn location(&self) -> &ParsePosition { &self.location }

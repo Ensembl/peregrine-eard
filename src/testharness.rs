@@ -1,7 +1,7 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, sync::Arc, hash::Hash};
 use ordered_float::OrderedFloat;
 
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, ParsePosition}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -27,8 +27,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
                 vec![OrBundleRepeater::Normal((Variable{ prefix: None, name: "x".to_string()},vec![]))],
                 vec![OrBundle::Normal(value.clone())]
             ),
-            file: Arc::new(pos.0.to_vec()),
-            line_no: pos.1,
+            position: pos.clone(),
             context
         }])
     })?;
@@ -42,8 +41,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     compiler.add_block_macro("z", |_expr,pos,context| {
         Ok(vec![PTStatement {
             value: PTStatementValue::Include("test2".to_string()),
-            file: Arc::new(pos.0.to_vec()),
-            line_no: pos.1,
+            position: pos.clone(),
             context
         }])
     })?;
@@ -143,7 +141,8 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         let mut compilation = make_compilation(&compiler,libcore);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
-        let parse_tree = compilation.parse(&Arc::new(vec!["test".to_string()]));
+        let position = ParsePosition::new("test","included");
+        let parse_tree = compilation.parse(&position);
         if let Some((parse_options,parse)) = sections.get("parse-fail") {
             match parse_tree {
                 Ok(result) => {

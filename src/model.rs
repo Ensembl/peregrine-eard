@@ -8,13 +8,17 @@ pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &st
 
 #[derive(Clone)]
 pub(crate) struct FilePosition {
-    filename: String,
-    line_no: u32
+    pub filename: String,
+    pub line_no: u32
 }
 
 impl FilePosition {
     pub(crate) fn anon() -> FilePosition {
         FilePosition { filename: "*anon*".to_string(), line_no: 0 }
+    }
+
+    pub(crate) fn new(filename: &str) -> FilePosition {
+        FilePosition { filename: filename.to_string(), line_no: 0 }
     }
 
     pub(crate) fn xxx_new(filename: &Arc<Vec<String>>, line_no: usize) -> FilePosition {
@@ -39,6 +43,11 @@ impl PositionNode {
         }).unwrap_or("".to_string());
         format!("{}{:?}{}{}",prefix,self.1,suffix,rest)
     }
+
+    pub(crate) fn contains(&self, filename: &str) -> bool {
+        if filename == self.1.filename { return true; }
+        self.0.as_ref().map(|p| p.contains(filename)).unwrap_or(false)
+    }
 }
 
 #[derive(Clone)]
@@ -57,8 +66,22 @@ impl ParsePosition {
         }
     }
 
+    pub(crate) fn new(filename: &str, variety: &str) -> ParsePosition {
+        ParsePosition(PositionNode(None,FilePosition::new(filename)),Arc::new(variety.to_string()))
+    }
+
+    pub(crate) fn contains(&self, filename: &str) -> bool {
+        self.0.contains(filename)
+    }
+
     pub(crate) fn empty(variety: &str) -> ParsePosition {
         ParsePosition(PositionNode(None,FilePosition::anon()),Arc::new(variety.to_string()))
+    }
+
+    pub(crate) fn at_line(&self, line_no: u32) -> ParsePosition {
+        let mut out = self.clone();
+        (out.0).1.line_no = line_no;
+        out
     }
 
     pub(crate) fn update(&mut self, file: &FilePosition) {
@@ -83,6 +106,12 @@ impl ParsePosition {
 
     pub(crate) fn message(&self, msg: &str) -> String {
         format!("{} at {}",msg,self.full_str())
+    }
+}
+
+impl fmt::Debug for ParsePosition {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{}",self.full_str())
     }
 }
 

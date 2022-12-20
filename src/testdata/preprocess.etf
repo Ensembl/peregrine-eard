@@ -21,21 +21,18 @@ let z = 3;
 [
     PTStatement{
         value: LetStatement([(x,[])],[Constant(1)]),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     },
     PTStatement{
         value: LetStatement([(y,[])],[Constant(2)]),
-        file: ["test","include-macro-smoke2.earp"],
-        line_no: 2,
-        context: 2
+        position: include-macro-smoke2.earp:2 (included from test:3),
+        context:2
     },
     PTStatement{
-        value: LetStatement([(z,[])],[Constant(3)]),
-        file: ["test","include-macro-smoke2.earp","include-macro-smoke3.earp"],
-        line_no: 2,
-        context: 3
+        value:LetStatement([(z,[])],[Constant(3)]),
+        position: include-macro-smoke3.earp:2 (included from include-macro-smoke2.earp:3) (included from test:3),
+        context:3
     }
 ]
 
@@ -93,14 +90,12 @@ let x = 1;
 [
     PTStatement {
         value: LetStatement([(x,[])],[Constant(1)]),
-        file: ["test","test1","test2"],
-        line_no: 2,
+        position: test2:2 (included from test1:2) (included from test:2),
         context: 3
     },
     PTStatement{
         value: LetStatement([(x,[])],[Constant(1)]),
-        file: ["test","test1","test2"],
-        line_no: 2,
+        position: test2:2 (included from test1:3) (included from test:2),
         context: 4
     }
 ]
@@ -134,8 +129,7 @@ x!(2);
 [
     PTStatement{
         value: LetStatement([(x,[])],[Constant(2)]),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -170,8 +164,7 @@ let x = 4 * y!(z);
                 is_macro: false
             })]
         ),
-        file: ["test"], 
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -201,8 +194,7 @@ let x = 1;
 [
     PTStatement{
         value: LetStatement([(x,[])],[Constant(1)]),
-        file: ["test","test1","test2","test3"],
-        line_no: 2,
+        position: test3:2 (included from test2:2) (included from test1:2) (included from test:2),
         context: 4
     }
 ]
@@ -250,8 +242,7 @@ let **tr_gn = lookup(**gn,tr.gn);
                 is_macro: false
             })]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -353,8 +344,7 @@ let x = 1 || 2 && 3 == 4 > 5 + 6 * 7 / 8 - 9 < 10 != 11 && 12 || 13;
                 is_macro:false
             })
         ]),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context: 1
     }
 ]

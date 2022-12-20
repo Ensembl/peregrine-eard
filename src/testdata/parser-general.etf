@@ -24,15 +24,13 @@ let x.y = false;
 [
     PTStatement {
         value: LetStatement([(x,[])],[Constant(true)]),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
 
     },
     PTStatement {
         value: LetStatement([(x.y,[])],[Constant(false)]),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -57,8 +55,7 @@ let x = test!("macro");
                 is_macro: true
             })]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -76,8 +73,7 @@ include "abc";
 [
     PTStatement {
         value: Include("abc"),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -102,8 +98,7 @@ let x : length(a) length(bb...) total(ccc) ref(dddd) = [1,2,3];
             ])],
             [FiniteSequence([Constant(1),Constant(2),Constant(3)])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -137,8 +132,7 @@ x = [4,5,6];
             [(x,[])],
             [FiniteSequence([Constant(1),Constant(2),Constant(3)])]
         ),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     },
     PTStatement {
@@ -146,8 +140,7 @@ x = [4,5,6];
             [x],
             [FiniteSequence([Constant(4),Constant(5),Constant(6)])]
         ),
-        file: ["test"],
-        line_no: 3,
+        position: test:3,
         context: 1
     }
 ]
@@ -173,8 +166,7 @@ c(1,2,3);
             ],
             is_macro: false
         }),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -192,8 +184,7 @@ test!("123");
 [
     PTStatement {
         value: BareCall(PTCall{name:"test",args:[Constant("123")],is_macro:true}),
-        file: ["test"],
-        line_no: 2,
+        position: test:2,
         context: 1
     }
 ]
@@ -219,8 +210,7 @@ let (a,b,c) = (x,y,z);
             Variable(y),
             Variable(z)
         ]),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     }
 ]
@@ -244,8 +234,7 @@ Multiple modify
             Variable(y),
             Variable(z)
         ]),
-        file:["test"],
-        line_no:2,
+        position: test:2,
         context:1
     }
 ]

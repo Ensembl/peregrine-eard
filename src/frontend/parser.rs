@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition, SourceSourceImpl, FixedSourceSource}};
+use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition }};
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
 
 #[derive(Parser)]
@@ -761,12 +761,4 @@ fn do_parse_earp(input: &str, position: &ParsePosition, context: usize) -> PestR
 pub fn parse_earp(position: &ParsePosition, filename: &str, fixed: bool, context: usize) -> Result<Vec<PTStatement>,String> {
     let (input,new_pos) = position.push(filename,fixed)?;
     do_parse_earp(&input,&new_pos,context).map_err(|e| e.to_string())
-}
-
-pub(crate) fn parse_libcore(context: usize) -> Result<Vec<PTStatement>,String> {
-    let fixed = SourceSourceImpl::new(FixedSourceSource::new_vec(vec![
-        ("libcore",include_str!("../libcore/libcore.earp"))
-    ]));
-    let root = ParsePosition::root(fixed,"included");
-    parse_earp(&root,"libcore",true,context).map_err(|e| e.to_string())
 }

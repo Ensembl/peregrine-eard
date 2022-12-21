@@ -1,5 +1,5 @@
 use std::collections::{HashSet};
-use crate::{compiler::EarpCompiler, frontend::{parsetree::PTStatement, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp, parse_libcore}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, FileSourceSource, SourceSourceImpl}, generate::generate};
+use crate::{compiler::EarpCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, generate::generate, libcore::libcore::libcore_sources};
 
 pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
@@ -28,15 +28,19 @@ impl<'a> EarpCompilation<'a> {
         parse_earp(position,path,fixed,context)
     }
 
-    fn parse_libcore(&mut self) -> Result<Vec<PTStatement>,String> {
+    fn parse_libcore(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {
         if self.flags.contains("no-libcore") { return Ok(vec![]); }
         self.context += 1;
         let context = self.context;
-        parse_libcore(context)
+        Ok(vec![PTStatement { 
+            value: PTStatementValue::Include("libcore".to_string(),true),
+            position: position.clone(),
+            context 
+        }])
     }
 
     pub(crate) fn parse(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
-        let mut out = self.parse_libcore()?;
+        let mut out = self.parse_libcore(position)?;
         out.append(&mut self.parse_part(position,path,fixed)?);
         Ok(out)
     }
@@ -50,8 +54,10 @@ impl<'a> EarpCompilation<'a> {
     }
 
     pub(crate) fn frontend(&mut self, filename: &str) -> Result<BuildTree,String> {
-        let soso = SourceSourceImpl::new(FileSourceSource::new()?);
-        let position = ParsePosition::root(soso,"included");
+        let mut soso_builder = CombinedSourceSourceBuilder::new()?;
+        soso_builder.add_fixed(libcore_sources());
+        let soso = CombinedSourceSource::new(soso_builder);
+        let position = ParsePosition::root(SourceSourceImpl::new(soso),"included");
         let stmts = self.parse(&position,filename,false)?;
         let stmts = self.preprocess(stmts)?;
         self.build(stmts)

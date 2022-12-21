@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl}};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
@@ -39,7 +39,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
     })?;
     compiler.add_block_macro("z", |_expr,pos,context| {
         Ok(vec![PTStatement {
-            value: PTStatementValue::Include("test2".to_string(),false),
+            value: PTStatementValue::Include("test2".to_string(),true),
             position: pos.clone(),
             context
         }])
@@ -136,13 +136,17 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
     }
     for (sections,inputs) in tests {
+        eprintln!("{:?}",inputs);
         let compiler = make_compiler(inputs.clone()).ok().unwrap();
         let mut compilation = make_compilation(&compiler,libcore);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
-        let soso = SourceSourceImpl::new(FixedSourceSource::new(inputs.clone()));
-        let position = ParsePosition::root(soso,"included");
-        let parse_tree = compilation.parse(&position,"test",false);
+        let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");
+        soso_builder.add_fixed(libcore_sources());
+        soso_builder.add_fixed(FixedSourceSource::new(inputs.clone()));
+        let soso = CombinedSourceSource::new(soso_builder);
+        let position = ParsePosition::root(SourceSourceImpl::new(soso),"included");
+        let parse_tree = compilation.parse(&position,"test",true);
         if let Some((parse_options,parse)) = sections.get("parse-fail") {
             match parse_tree {
                 Ok(result) => {

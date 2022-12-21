@@ -43,7 +43,6 @@ impl RegAllocate {
     }
 
     fn free(&mut self, reg: NewRegister, value: Option<FullConstant>) {
-        eprintln!("free R{} ({:?})",reg.0,value);
         if let Some(c) = value {
             self.const_scrapheap.insert(c,reg);
         } else {

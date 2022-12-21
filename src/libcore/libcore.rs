@@ -1,4 +1,4 @@
-use crate::{compiler::EarpCompiler, model::{FullConstant, Constant}};
+use crate::{compiler::EarpCompiler, model::{FullConstant, Constant}, source::FixedSourceSource};
 
 fn fold_infseq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let Some(Some(FullConstant::Atomic(x))) = inputs.get(0) {
@@ -51,4 +51,10 @@ pub(crate) fn libcore_add(compiler: &mut EarpCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__add",fold_add)?;
     compiler.add_constant_folder("libcore__sub",fold_sub)?;
     Ok(())
+}
+
+pub(crate) fn libcore_sources() -> FixedSourceSource {
+    FixedSourceSource::new_vec(vec![
+        ("libcore",include_str!("libcore.earp"))
+    ])
 }

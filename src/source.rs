@@ -44,7 +44,10 @@ impl FixedSourceSource {
 }
 
 impl SourceSource for FixedSourceSource {
-    fn lookup(&self, filename: &str, _fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+    fn lookup(&self, filename: &str, fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        if !fixed {
+            return Err("cannot find files from inside fixed source".to_string());
+        }
         let src = self.files.get(filename).cloned().ok_or_else(|| format!("cannot find '{}'",filename))?;
         Ok((SourceSourceImpl::new(self.clone()),src.to_string()))
     }
@@ -55,27 +58,80 @@ pub(crate) struct FileSourceSource {
 }
 
 impl FileSourceSource {
-    pub(crate) fn new() -> Result<FileSourceSource,String> {
+    fn new() -> Result<FileSourceSource,String> {
         let cwd = current_dir().map_err(|e| format!("couldn't get current directory: {}",e))?;
         Ok(FileSourceSource { rel_path: cwd })
     }
-}
 
-impl SourceSource for FileSourceSource {
-    fn lookup(&self, filename: &str, _fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+    fn lookup_file(&self, filename: &str, fixed: bool) -> Result<(FileSourceSource,String),String> {
+        if fixed {
+            return Err("cannot find fixed sources from inside file".to_string());
+        }
         let mut new_path = self.rel_path.clone();
         new_path.push(filename);
         let rel_path = new_path.parent().ok_or_else(|| format!("Cannot find parent directory of {}",filename))?;
         let new_source = FileSourceSource{ rel_path: rel_path.to_path_buf() };
         let contents = read_to_string(new_path).map_err(|e| format!("cannot read {}: {}",filename,e))?;
-        Ok((SourceSourceImpl::new(new_source),contents))
+        Ok((new_source,contents))
+    }
+}
+
+impl SourceSource for FileSourceSource {
+    fn lookup(&self, filename: &str, fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        let (source,input) = self.lookup_file(filename,fixed)?;
+        Ok((SourceSourceImpl::new(source),input))
+    }
+}
+
+pub(crate) struct CombinedSourceSourceBuilder {
+    file: FileSourceSource,
+    fixed: Vec<FixedSourceSource>
+}
+
+impl CombinedSourceSourceBuilder {
+    pub(crate) fn new() -> Result<CombinedSourceSourceBuilder,String> {
+        Ok(CombinedSourceSourceBuilder { file: FileSourceSource::new()?, fixed: vec![] })
+    }
+
+    pub(crate) fn add_fixed(&mut self, source: FixedSourceSource) {
+        self.fixed.push(source);
+    }
+}
+
+pub(crate) struct CombinedSourceSource {
+    file: FileSourceSource,
+    fixed: Arc<Vec<FixedSourceSource>>
+}
+
+impl CombinedSourceSource {
+    pub(crate) fn new(builder: CombinedSourceSourceBuilder) -> CombinedSourceSource {
+        CombinedSourceSource { file: builder.file, fixed: Arc::new(builder.fixed) }
+    }
+}
+
+impl SourceSource for CombinedSourceSource {
+    fn lookup(&self, filename: &str, fixed: bool) -> Result<(SourceSourceImpl,String),String> {
+        if fixed {
+            for src in self.fixed.as_ref() {
+                if let Some(out) = src.lookup(filename,true).ok() {
+                    return Ok(out);
+                }
+            }
+            return Err(format!("missing builtin file {}",filename));
+        } else {
+            let (file,input) = self.file.lookup_file(filename,false)?;
+            let soso = CombinedSourceSource {
+                file, fixed: self.fixed.clone()
+            };
+            Ok((SourceSourceImpl::new(soso),input))
+        }
     }
 }
 
 #[derive(Clone)]
 pub(crate) struct FilePosition {
     soso: Arc<SourceSourceImpl>,
-    pub filename: String,
+    filename: String,
     suppress: bool,
     line_no: u32
 }

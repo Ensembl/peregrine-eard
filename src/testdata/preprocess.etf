@@ -5,12 +5,12 @@ Basic include/macro smoke test
 >> input
 
 let x = 1;
-include "include-macro-smoke2.earp";
+refer "include-macro-smoke2.earp";
 
 >> input include-macro-smoke2.earp
 
 let y = 2;
-include "include-macro-smoke3.earp";
+refer "include-macro-smoke3.earp";
 
 >> input include-macro-smoke3.earp
 
@@ -42,7 +42,7 @@ Missing include
 
 >> input
 
-include "missing";
+refer "missing";
 
 >> preproc-fail strip
 
@@ -54,15 +54,15 @@ Recursive include
 
 >> input
 
-include "test1";
+refer "test1";
 
 >> input test1
 
-include "test2";
+refer "test2";
 
 >> input test2
 
-include "test1";
+refer "test1";
 
 >> preproc-fail strip
 
@@ -74,12 +74,12 @@ Non-recursive include
 
 >> input
 
-include "test1";
+refer "test1";
 
 >> input test1
 
-include "test2";
-include "test2";
+refer "test2";
+refer "test2";
 
 >> input test2
 
@@ -106,11 +106,11 @@ Self-recursive include
 
 >> input
 
-include "test1";
+refer "test1";
 
 >> input test1
 
-include "test1";
+refer "test1";
 
 >> preproc-fail strip
 
@@ -175,7 +175,7 @@ multi loop
 
 >> input
 
-include "test1";
+refer "test1";
 
 >> input test1
 
@@ -183,7 +183,7 @@ z!();
 
 >> input test2
 
-include "test3";
+refer "test3";
 
 >> input test3
 
@@ -207,7 +207,7 @@ flags
 
 flag "abc";
 flag "def";
-include "test2";
+refer "test2";
 
 >> input test2
 

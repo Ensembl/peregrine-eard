@@ -40,14 +40,14 @@ test:10 r41 (14#3) r10 r26 r10
 test:10 r56 (14#4) r10 r26 r10
 test:11 r65 (15#5) r41
 test:11 r75 (15#6) r56
-libcore:54 r84 (10#7) r41
-libcore:60  (12#8) r84
-libcore:54 r93 (10#9) r56
-libcore:60  (12#10) r93
-libcore:54 r101 (10#11) r65
-libcore:60  (12#12) r101
-libcore:54 r109 (10#13) r75
-libcore:60  (12#14) r109
+print:5 r84 (10#7) r41
+print:11  (12#8) r84
+print:5 r93 (10#9) r56
+print:11  (12#10) r93
+print:5 r101 (10#11) r65
+print:11  (12#12) r101
+print:5 r109 (10#13) r75
+print:11  (12#14) r109
 
 >> reuse strip
 
@@ -58,13 +58,13 @@ test:10 r10 (14#1) r1 r2 r3
 test:10 r41 (14#3) r10 r10 r10
 test:11 r65 (15#5) r41
 test:11 r75 (15#6) r41
-libcore:54 r84 (10#7) r41
-libcore:60  (12#8) r84
-libcore:60  (12#10) r84
-libcore:54 r101 (10#11) r65
-libcore:60  (12#12) r101
-libcore:54 r109 (10#13) r75
-libcore:60  (12#14) r109
+print:5 r84 (10#7) r41
+print:11  (12#8) r84
+print:11  (12#10) r84
+print:5 r101 (10#11) r65
+print:11  (12#12) r101
+print:5 r109 (10#13) r75
+print:11  (12#14) r109
 
 >> reuse-known strip
 
@@ -119,17 +119,17 @@ test:15 r10 (14#1) r1 r2 r3
 test:20 r34 <- 0
 test:15 r41 (14#3) r1 r2 r34
 test:14 r53 r54 (15#4) r10 r10
-libcore:54 r88 (10#6) r10
-libcore:60  (12#7) r88
-libcore:60  (12#9) r88
-libcore:54 r105 (10#10) r41
-libcore:60  (12#11) r105
-libcore:54 r113 (10#12) r54
-libcore:60  (12#13) r113
-libcore:54 r121 (10#14) r53
-libcore:60  (12#15) r121
-libcore:60  (12#17) r113
-libcore:60  (12#19) r121
+print:5 r88 (10#6) r10
+print:11  (12#7) r88
+print:11  (12#9) r88
+print:5 r105 (10#10) r41
+print:11  (12#11) r105
+print:5 r113 (10#12) r54
+print:11  (12#13) r113
+print:5 r121 (10#14) r53
+print:11  (12#15) r121
+print:11  (12#17) r113
+print:11  (12#19) r121
 
 >> reuse-known strip
 
@@ -183,15 +183,15 @@ test:7 r30 (14#2) r10 r22 r23
 test:12 r37 <- 2
 test:12 r38 <- 0
 test:7 r45 (14#3) r17 r37 r38
-libcore:54 r50 (10#4) r45
+print:5 r50 (10#4) r45
 test:7 r66 (14#5) r17 r30 r10
-libcore:54 r71 (10#6) r66
-libcore:60  (12#7) r50
+print:5 r71 (10#6) r66
+print:11  (12#7) r50
 test:15 r82 <- 3
 test:7 r89 (14#8) r17 r30 r82
-libcore:54 r94 (10#9) r89
-libcore:60  (12#10) r71
-libcore:60  (12#11) r94
+print:5 r94 (10#9) r89
+print:11  (12#10) r71
+print:11  (12#11) r94
 
 >> reordered strip
 
@@ -203,14 +203,14 @@ test:11 r23 <- 0
 test:7 r30 (14#2) r10 r22 r23
 test:7 r66 (14#5) r17 r30 r10
 test:7 r89 (14#8) r17 r30 r17
-libcore:54 r94 (10#9) r89
-libcore:54 r71 (10#6) r66
+print:5 r94 (10#9) r89
+print:5 r71 (10#6) r66
 test:12 r37 <- 2
 test:7 r45 (14#3) r17 r37 r23
-libcore:54 r50 (10#4) r45
-libcore:60  (12#7) r50
-libcore:60  (12#10) r71
-libcore:60  (12#11) r94
+print:5 r50 (10#4) r45
+print:11  (12#7) r50
+print:11  (12#10) r71
+print:11  (12#11) r94
 
 >> test
 

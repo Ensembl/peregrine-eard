@@ -1,0 +1,10 @@
+fold(libcore__add) code __code_add(number,number) -> number {
+    impl (r1: number, r2: number) -> r3: number {}
+}
+
+fold(libcore__sub) code __code_sub(number,number) -> number {
+    impl (r1: number, r2: number) -> r3: number {}
+}
+
+export function __operator_add(a: number, b: number) -> number { let y = __code_add(a,b); y }
+export function __operator_sub(a: number, b: number) -> number { let y = __code_sub(a,b); y }

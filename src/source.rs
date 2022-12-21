@@ -28,16 +28,16 @@ impl SourceSource for NoneSourceSource {
 }
 
 #[derive(Clone)]
-pub(crate) struct FixedSourceSource {
+pub struct FixedSourceSource {
     files: Arc<HashMap<String,String>>
 }
 
 impl FixedSourceSource {
-    pub(crate) fn new(files: HashMap<String,String>) -> FixedSourceSource {
+    pub fn new(files: HashMap<String,String>) -> FixedSourceSource {
         FixedSourceSource { files: Arc::new(files) }
     }
 
-    pub(crate) fn new_vec(mut files: Vec<(&str,&str)>) -> FixedSourceSource {
+    pub fn new_vec(mut files: Vec<(&str,&str)>) -> FixedSourceSource {
         let files = files.drain(..).map(|(k,v)| (k.to_string(),v.to_string())).collect::<HashMap<_,_>>();
         Self::new(files)
     }
@@ -53,6 +53,7 @@ impl SourceSource for FixedSourceSource {
     }
 }
 
+#[derive(Clone)]
 pub(crate) struct FileSourceSource {
     rel_path: PathBuf
 }
@@ -104,8 +105,8 @@ pub(crate) struct CombinedSourceSource {
 }
 
 impl CombinedSourceSource {
-    pub(crate) fn new(builder: CombinedSourceSourceBuilder) -> CombinedSourceSource {
-        CombinedSourceSource { file: builder.file, fixed: Arc::new(builder.fixed) }
+    pub(crate) fn new(builder: &CombinedSourceSourceBuilder) -> CombinedSourceSource {
+        CombinedSourceSource { file: builder.file.clone(), fixed: Arc::new(builder.fixed.clone()) }
     }
 }
 

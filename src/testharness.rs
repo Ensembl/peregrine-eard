@@ -3,19 +3,14 @@ use ordered_float::OrderedFloat;
 use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
-fn source_loader(sources: HashMap<String,String>) -> impl Fn(&str) -> Result<String,String> {
-    move |key| sources.get(key).cloned().ok_or_else(|| "Not found".to_string())
-}
-
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
     let mut keys = h.keys().collect::<Vec<_>>();
     keys.sort();
     keys.iter().map(|k| (*k,h.get(k).unwrap())).collect()
 }
 
-pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompiler,String> {
+pub(crate) fn make_compiler() -> Result<EarpCompiler,String> {
     let mut compiler = EarpCompiler::new()?;
-    compiler.set_source_loader(source_loader(sources));
     compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
             OrBundleRepeater::Normal(x) => x,
@@ -62,7 +57,7 @@ pub(crate) fn make_compiler(sources: HashMap<String,String>) -> Result<EarpCompi
 }
 
 pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler, libcore: bool) -> EarpCompilation<'a> {
-    let mut comp = EarpCompilation::new(compiler);
+    let mut comp = EarpCompilation::new(compiler).expect("cannot build compilation");
     if !libcore {
         comp.set_flag("no-libcore");
     }
@@ -137,14 +132,14 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
     }
     for (sections,inputs) in tests {
         eprintln!("{:?}",inputs);
-        let compiler = make_compiler(inputs.clone()).ok().unwrap();
+        let compiler = make_compiler().ok().unwrap();
         let mut compilation = make_compilation(&compiler,libcore);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
         let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");
         soso_builder.add_fixed(libcore_sources());
         soso_builder.add_fixed(FixedSourceSource::new(inputs.clone()));
-        let soso = CombinedSourceSource::new(soso_builder);
+        let soso = CombinedSourceSource::new(&soso_builder);
         let position = ParsePosition::root(SourceSourceImpl::new(soso),"included");
         let parse_tree = compilation.parse(&position,"test",true);
         if let Some((parse_options,parse)) = sections.get("parse-fail") {

@@ -55,6 +55,9 @@ pub(crate) fn libcore_add(compiler: &mut EarpCompiler) -> Result<(),String> {
 
 pub(crate) fn libcore_sources() -> FixedSourceSource {
     FixedSourceSource::new_vec(vec![
-        ("libcore",include_str!("libcore.earp"))
+        ("libcore",include_str!("earp/libcore.earp")),
+        ("sequences",include_str!("earp/sequences.earp")),
+        ("maths",include_str!("earp/maths.earp")),
+        ("print",include_str!("earp/print.earp"))
     ])
 }

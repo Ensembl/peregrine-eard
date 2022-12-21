@@ -3,7 +3,6 @@ use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullCons
 use crate::model::{OrBundleRepeater};
 
 pub struct EarpCompiler {
-    source_loader: Box<dyn Fn(&str) -> Result<String,String>>,
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
     constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>>>>
@@ -12,22 +11,12 @@ pub struct EarpCompiler {
 impl EarpCompiler {
     pub fn new() -> Result<EarpCompiler,String> {
         let mut out = EarpCompiler {
-            source_loader: Box::new(|_| { Err("No source loader set".to_string()) }),
             block_macros: HashMap::new(),
             expression_macros: HashMap::new(),
             constant_folder: HashMap::new()
         };
         libcore_add(&mut out)?;
         Ok(out)
-    }
-
-    pub fn set_source_loader<F>(&mut self, cb: F)
-            where F: Fn(&str) -> Result<String,String> + 'static {
-        self.source_loader = Box::new(cb);
-    }
-
-    pub fn load_source(&self, path: &str) -> Result<String,String> {
-        (self.source_loader)(path).map_err(|e| format!("Error loading '{}': {}",path,e))
     }
 
     fn check_macro_name_unused(&self, name: &str) -> Result<(),String> {

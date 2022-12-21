@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, dump_opers}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
@@ -286,9 +286,8 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             if linearized_options.contains("reduce") {
                 linear = reduce(&linear);
             }
-            let linear = linear.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>();
-            println!("{}",linear.join("\n"));
-            assert_eq!(process_ws(&linear.join("\n"),linearized_options),process_ws(linearized_correct,linearized_options));
+            println!("{}",dump_linear(&linear));
+            assert_eq!(process_ws(&dump_linear(&linear),linearized_options),process_ws(linearized_correct,linearized_options));
         }
         if let Some((linearized_options,linearized_correct)) = sections.get("linearize-fail") {
             let tree = compilation.build(processed.expect("processing failed")).expect("build failed");
@@ -301,7 +300,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         if let Some((broad_options,broad_correct)) = sections.get("broad") {
             let processed = processed.clone().expect("processing failed");
             let (tree,linear,_) = frontend(&mut compilation,&processed);
-            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
+            println!("{}",dump_linear(&linear));
             let (typing,_) = broad_type(&tree,&linear).expect("typing failed");
             let mut report = BTreeMap::new();
             for (reg,broad) in sort_map(&typing) {
@@ -314,7 +313,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         if let Some((broad_options,broad_correct)) = sections.get("broad-fail") {
             let processed = processed.clone().expect("processing failed");
             let (tree,linear,_) = frontend(&mut compilation,&processed);
-            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
+            println!("{}",dump_linear(&linear));
             let got = broad_type(&tree,&linear).err().expect("typing failed");
             println!("{}",got);
             assert_eq!(process_ws(&got,broad_options),process_ws(broad_correct,broad_options));
@@ -324,8 +323,8 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
-            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
-            assert_eq!(process_ws(&sepfmt(&mut linear.iter(),"\n",""),checking_options),process_ws(checking_correct,checking_options));
+            println!("{}",dump_linear(&linear));
+            assert_eq!(process_ws(&dump_linear(&linear),checking_options),process_ws(checking_correct,checking_options));
         }
         if let Some((checking_options,checking_expected)) = sections.get("checking-fail") {
             let processed = processed.clone().expect("processing failed");

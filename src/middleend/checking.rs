@@ -93,6 +93,21 @@ impl<'a> Checking<'a> {
         }
     }
 
+    fn add_check_code(&mut self, check_name: &str, check_fn: &str, a_reg: usize, b_reg: usize) {
+        let checkname_reg = self.allocator.next_register();
+        self.broad.insert(checkname_reg,BroadType::Atomic(AtomicTypeSpec::String));
+        self.out.push(LinearStatement { 
+            value: LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())),
+            position: self.position.clone()
+        });
+        let name = self.bt.get_special(&check_fn);
+        let call = self.allocator.next_call();
+        self.out.push(LinearStatement {
+            value: LinearStatementValue::Code(call,name,vec![],vec![checkname_reg,a_reg,b_reg]),
+            position: self.position.clone(),
+        });
+    }
+
     fn add_runtime_check(&mut self, reg: usize, check_name: &str, ct: &CheckType, ci: usize) {
         let value_reg = self.allocator.next_register();
         self.broad.insert(value_reg,BroadType::Atomic(AtomicTypeSpec::Number));
@@ -108,22 +123,41 @@ impl<'a> Checking<'a> {
             value: LinearStatementValue::Code(call,name,vec![value_reg],vec![reg]),
             position: self.position.clone(),
         });
-        if let Some(existing) = self.check_register.get(&(ct.clone(),ci)) {
-            let checkname_reg = self.allocator.next_register();
-            self.broad.insert(checkname_reg,BroadType::Atomic(AtomicTypeSpec::String));
-            self.out.push(LinearStatement { 
-                value: LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())),
-                position: self.position.clone()
-            });
-            let check_fn = format!("check_{}",value_fn);
-            let name = self.bt.get_special(&check_fn);
-            let call = self.allocator.next_call();
-            self.out.push(LinearStatement {
-                value: LinearStatementValue::Code(call,name,vec![],vec![checkname_reg,value_reg,*existing]),
-                position: self.position.clone(),
-            });
-        } else {
-            self.check_register.insert((ct.clone(),ci),value_reg);
+        match ct {
+            CheckType::Length => {
+                if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
+                    self.add_check_code(check_name,"check_length",value_reg,*existing);
+                } else {
+                    if let Some(existing) = self.check_register.get(&(CheckType::Sum,ci)) {
+                        self.add_check_code(check_name,"check_length_total",value_reg,*existing);
+                    }
+                    if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)) {
+                        self.add_check_code(check_name,"check_length_bound",value_reg,*existing);
+                    }
+                    self.check_register.insert((ct.clone(),ci),value_reg);
+                }
+            },
+            CheckType::Reference => {
+                if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)) {
+                    self.add_check_code(check_name,"check_bound",value_reg,*existing);
+                } else {
+                    if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
+                        self.add_check_code(check_name,"check_length_bound",*existing,value_reg);
+                    }
+                    self.check_register.insert((ct.clone(),ci),value_reg);
+                }
+            },
+            CheckType::Sum => {
+                if let Some(existing) = self.check_register.get(&(CheckType::Sum,ci)) {
+                    self.add_check_code(check_name,"check_total",value_reg,*existing);
+                } else {
+                    if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
+                        self.add_check_code(check_name,"check_length_total",*existing,value_reg);
+                    }
+                    self.check_register.insert((ct.clone(),ci),value_reg);
+                }
+            },
+            CheckType::LengthOrInfinite => {}
         }
     }
 

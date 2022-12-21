@@ -1,7 +1,9 @@
-use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap};
+use std::{fmt::{self, Display}, cmp::Ordering};
 use ordered_float::OrderedFloat;
-
 use crate::source::ParsePosition;
+
+#[cfg(test)]
+use std::collections::HashMap;
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
@@ -74,11 +76,13 @@ impl fmt::Debug for OperationValue {
     }
 }
 
+#[cfg(test)]
 struct AllocDumper {
     next_call: usize,
     seen: HashMap<usize,usize>
 }
 
+#[cfg(test)]
 impl AllocDumper {
     fn new() -> AllocDumper {
         AllocDumper { next_call: 0, seen: HashMap::new() }
@@ -100,6 +104,7 @@ pub struct Operation {
 }
 
 impl OperationValue {
+    #[cfg(test)]
     fn dump(&self, ad: &mut AllocDumper) -> String {
         match self {
             OperationValue::Constant(r,c) => format!("r{} <- {:?}",r,c),
@@ -114,11 +119,13 @@ impl OperationValue {
 }
 
 impl Operation {
+    #[cfg(test)]
     fn dump(&self, ad: &mut AllocDumper) -> String {
         format!("{} {}",self.position.last_str(),self.value.dump(ad))
     }
 }
 
+#[cfg(test)]
 pub(crate) fn dump_opers(opers: &[Operation]) -> String {
     let mut ad = AllocDumper::new();
     let mut out = String::new();
@@ -501,6 +508,26 @@ pub enum LinearStatementValue {
     WildEquiv(Vec<usize>)
 }
 
+impl LinearStatementValue {
+    #[cfg(test)]
+    fn dump(&self, ad: &mut AllocDumper) -> String {
+        match self {
+            Self::Check(name,v, ct, c,force) => {
+                let force = if *force { "f" } else { "" };
+                format!("r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
+            },
+            Self::Type(v, c) => format!("r{:?} <type> {:?}",v,c),
+            Self::WildEquiv(r) => format!("<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
+            Self::Constant(v,c) => format!("r{:?} <constant> {:?}",v,c),
+            Self::Copy(to,from) => format!("r{:?} <copy-from> r{:?}",*to,*from),
+            Self::Code(call,name,rets,args) => {
+                format!("{} ({}#{}) {}",
+                    sepfmt(&mut rets.iter()," ","r"),ad.get(*name),call,sepfmt(&mut args.iter()," ","r"))
+            }
+        }
+    }
+}
+
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -526,8 +553,26 @@ pub struct LinearStatement {
     pub position: ParsePosition
 }
 
+impl LinearStatement {
+    #[cfg(test)]
+    fn dump(&self, ad: &mut AllocDumper) -> String {
+        format!("{} {}",self.position.last_str(),self.value.dump(ad))
+    }
+}
+
 impl fmt::Debug for LinearStatement {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,"{} {:?}",self.position.last_str(),self.value)
     }
+}
+
+#[cfg(test)]
+pub(crate) fn dump_linear(linear: &[LinearStatement]) -> String {
+    let mut ad = AllocDumper::new();
+    let mut out = String::new();
+    for stmt in linear {
+        out.push_str(&stmt.dump(&mut ad));
+        out.push('\n');
+    }
+    out
 }

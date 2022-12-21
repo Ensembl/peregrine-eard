@@ -160,7 +160,7 @@ test:38 r36 <copy-from> r35
 test:38 r37 <copy-from> r36
 test:39 r38 <copy-from> r37
 test:39 r39 <constant> true
-test:39 r40 r41 (6#5) r38 r39
+test:39 r40 r41 (3#5) r38 r39
 test:39 r42 <copy-from> r40
 test:39 r43 <copy-from> r42
 test:39 r44 <copy-from> r43

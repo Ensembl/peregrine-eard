@@ -112,22 +112,7 @@ opcode 8, r2
 
 >> test
 
-length check
-
->> input
-
-__test_check_length("a",1,-1);
-
->> generate strip
-
-r1 <- "a"
-r2 <- 1
-r3 <- -1
-opcode 10, r1, r2, r3
-
->> test
-
-checking smoke
+checking length smoke
 
 >> input
 
@@ -145,6 +130,56 @@ r1 <- [3,4]
 opcode 5, r3, r1
 r1 <- "a"
 opcode 10, r1, r3, r2
+
+>> test
+
+checking total smoke
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
+function c(x) { let y = wc(x); y }
+
+let a : total(!a) = c([7,3]);
+let b : total(!a) = c([9,1]);
+let x : length(!a) = c([0,1,2,3,4,5,6,7,8,9]);
+
+>> generate strip
+
+r1 <- [7,3]
+opcode 6, r2, r1
+r1 <- [9,1]
+opcode 6, r3, r1
+r1 <- "a"
+opcode 11, r1, r3, r2
+r3 <- [0,1,2,3,4,5,6,7,8,9]
+opcode 5, r4, r3
+opcode 13, r1, r4, r2
+
+>> test
+
+checking length then total/bound
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
+function c(x) { let y = wc(x); y }
+
+let x : length(!a) = c([0,1,2,3,4,5,6,7,8,9]);
+let a : total(!a) = c([7,3]);
+let b : ref(!a) = c([9,1]);
+
+>> generate strip
+
+r1 <- [0,1,2,3,4,5,6,7,8,9]
+opcode 5, r2, r1
+r1 <- [7,3]
+opcode 6, r3, r1
+r1 <- "a"
+opcode 13, r1, r2, r3
+r3 <- [9,1]
+opcode 7, r4, r3
+opcode 14, r1, r2, r4
 
 >> test
 

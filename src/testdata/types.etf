@@ -18,20 +18,20 @@ procedure p(x: number, y: seq(boolean) length(?X)) -> (number, seq(boolean) leng
 let w : length(!w) = [true,false];
 let (z1,z2 : length(w)) = p(1,w);
 
->> linearize strip reduce
+>> linearize strip reduce nolines
 
-sequences:63 r1 (5#1) 
+sequences:75 r1 (1#1) 
 test:13 r7 <constant> true
-sequences:64 r12 (6#2) r1 r7
+sequences:76 r12 (2#2) r1 r7
 test:13 r17 <constant> false
-sequences:64 r22 (6#3) r12 r17
+sequences:76 r22 (2#3) r12 r17
 test:13 r22 <check:w>f Length 1
 test:14 r29 <constant> 1
 test:9 r29 <type> [number]
 test:9 r22 <type> [seq(boolean)]
 test:9 r22 <check:X> Length 1
 test:9 r29 <type> [number]
-test:8 r36 (28#4) r22
+test:8 r36 (3#4) r22
 test:8 <wild-equiv> r22, r36
 test:9 r36 <type> [seq(boolean)]
 test:9 r36 <check:X> Length 1
@@ -45,17 +45,17 @@ seq: 1, 12, 22, 36
 
 >> checking strip nolines
 
-sequences:63 r1 (5#1) 
+sequences:75 r1 (1#1) 
 test:13 r7 <constant> true
-sequences:64 r12 (6#2) r1 r7
+sequences:76 r12 (2#2) r1 r7
 test:13 r17 <constant> false
-sequences:64 r22 (6#3) r12 r17
-test:13 r46 (7#5) r22
+sequences:76 r22 (2#3) r12 r17
+test:13 r46 (3#5) r22
 test:14 r29 <constant> 1
 test:9 r29 <type> [number]
 test:9 r22 <type> [seq(boolean)]
 test:9 r29 <type> [number]
-test:8 r36 (28#4) r22
+test:8 r36 (4#4) r22
 test:8 <wild-equiv> r22, r36
 test:9 r36 <type> [seq(boolean)]
 
@@ -141,18 +141,18 @@ let b : length(!b) = [3,4];
 
 >> checking strip nolines
 
-test:6 r1 (29#1) 
+test:6 r1 (1#1) 
 test:15 r7 <constant> 1
-test:7 r12 (30#2) r1 r7
+test:7 r12 (2#2) r1 r7
 test:15 r17 <constant> 2
-test:7 r22 (30#3) r12 r17
-test:15 r55 (7#7) r22
-test:6 r29 (29#4) 
+test:7 r22 (2#3) r12 r17
+test:15 r55 (3#7) r22
+test:6 r29 (1#4) 
 test:16 r34 <constant> 3
-test:7 r39 (30#5) r29 r34
+test:7 r39 (2#5) r29 r34
 test:16 r43 <constant> 4
-test:7 r48 (30#6) r39 r43
-test:16 r56 (7#8) r48
+test:7 r48 (2#6) r39 r43
+test:16 r56 (3#8) r48
 
 >> narrow strip
 
@@ -183,13 +183,13 @@ let b : length(a) = c(a);
 
 >> checking strip nolines
 
-test:6 r1 (29#1) 
+test:6 r1 (1#1) 
 test:15 r7 <constant> 1
-test:7 r12 (30#2) r1 r7
+test:7 r12 (2#2) r1 r7
 test:15 r17 <constant> 2
-test:7 r22 (30#3) r12 r17
-test:15 r34 (7#5) r22
-test:16 r30 (34#4) r22
+test:7 r22 (2#3) r12 r17
+test:15 r34 (3#5) r22
+test:16 r30 (4#4) r22
 
 >> narrow strip
 
@@ -212,7 +212,7 @@ let (c,d,f) = p(1,"hi");
 
 test:6 r1 <constant> 1
 test:6 r2 <constant> "hi"
-sequences:63 r5 (5#1) 
+sequences:75 r5 (1#1) 
 test:2 r10 <constant> ""
 test:2 r5 <type> [seq]
 
@@ -251,27 +251,27 @@ print(f);
 
 test:12 r1 <constant> 1
 test:12 r2 <constant> "hi"
-sequences:63 r5 (5#1) 
-sequences:64 r16 (6#2) r5 r1
-sequences:63 r20 (5#3) 
-sequences:63 r24 (5#4) 
+sequences:75 r5 (1#1) 
+sequences:76 r16 (2#2) r5 r1
+sequences:75 r20 (1#3) 
+sequences:75 r24 (1#4) 
 test:5 r16 <type> [seq]
 test:5 r28 <constant> ""
 test:5 r20 <type> [seq]
 test:5 r24 <type> [seq]
 test:5 <wild-equiv> r20, r24
-sequences:63 r47 (5#5) 
+sequences:75 r47 (1#5) 
 test:9 r20 <type> [seq(string)]
 test:9 r47 <type> [seq]
 test:9 r47 <type> [seq]
 test:10 r47 <type> [seq(number)]
 test:10 r56 <constant> 0
-test:3  (28#6) r16
-test:3  (28#7) r1
-test:3  (28#8) r28
-test:3  (28#9) r20
-test:3  (28#10) r24
-test:3  (28#11) r2
+test:3  (3#6) r16
+test:3  (3#7) r1
+test:3  (3#8) r28
+test:3  (3#9) r20
+test:3  (3#10) r24
+test:3  (3#11) r2
 
 >> narrow strip
 

@@ -59,6 +59,18 @@ world special(check_bound) code __code_check_bound(string,number,number) {
     }
 }
 
+world special(check_length_total) code __code_check_length_total(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 13, r1, r2, r3;
+    }
+}
+
+world special(check_length_bound) code __code_check_length_bound(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 14, r1, r2, r3;
+    }
+}
+
 export function __operator_infseq(x) { let y = __code_infseq(x); y }
 export function __operator_finseq() { let y = __code_finseq(); y }
 export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
@@ -67,8 +79,5 @@ export function __operator_length(x) { let y = __code_length(x); y }
 export function __test_length(x) { let y = __code_length(x); y }
 export function __test_total(x) { let y = __code_total(x); y }
 export function __test_bound(x) { let y = __code_bound(x); y }
-export procedure __test_check_length(a,b,c) { __code_check_length(a,b,c); }
-export procedure __test_check_total(a,b,c) { __code_check_total(a,b,c); }
-export procedure __test_check_bound(a,b,c) { __code_check_bound(a,b,c); }
 
 export function len(x) { let y = __code_length(x); y }

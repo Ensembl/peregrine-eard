@@ -73,28 +73,21 @@ fn run_include_once<'a,'b>(compilation: &'b mut EarpCompilation<'a>, block: Vec<
     Ok((out,once.any))
 }
 
-struct Phase2Misc<'a,'b> {
-    compilation: &'b mut EarpCompilation<'a>,
+struct Phase2Misc {
     prefix: HashMap<String,String>,
     infix: HashMap<String,String>
 }
 
-impl<'a,'b> Phase2Misc<'a,'b> {
-    fn new(compilation: &'b mut EarpCompilation<'a>) -> Phase2Misc<'a,'b> {
+impl Phase2Misc {
+    fn new() -> Phase2Misc {
         Phase2Misc { 
-            compilation,
             prefix: PREFIX_OPERATORS.iter().map(|(k,v)| (k.to_string(),v.to_string())).collect(),
             infix: INFIX_OPERATORS.iter().map(|(k,v)| (k.to_string(),v.to_string())).collect()
         }
     }
 }
 
-impl<'a,'b> PTTransformer for Phase2Misc<'a,'b> {
-    fn remove_flags(&mut self, flag: &str) -> Result<bool,String> {
-        self.compilation.set_flag(flag);
-        Ok(true)
-    }
-
+impl PTTransformer for Phase2Misc {
     fn bad_repeater(&mut self, pos: (&[String],usize)) -> Result<(),String> {
         return Err(at("invalid use of repeater (**)",Some(pos)))
     }
@@ -129,8 +122,8 @@ impl<'a,'b> PTTransformer for Phase2Misc<'a,'b> {
     }
 }
 
-fn phase2_misc(compilation: &mut EarpCompilation, block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
-    let mut flags = Phase2Misc::new(compilation);
+fn phase2_misc(block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
+    let mut flags = Phase2Misc::new();
     PTStatement::transform_list(block,&mut flags)
 }
 
@@ -142,5 +135,5 @@ pub fn preprocess(compilation: &mut EarpCompilation, mut block: Vec<PTStatement>
         (block,any1) = run_macros_once(&compilation.compiler,block)?;
         (block,any2) = run_include_once(compilation,block)?;
     }
-    phase2_misc(compilation,block)
+    phase2_misc(block)
 }

@@ -211,10 +211,6 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             }
         };
         let processed = compilation.preprocess(parse_tree);
-        if let Some((_,flags)) = sections.get("flags") {
-            let want_flags = split_on_space(flags).drain(..).collect();
-            assert_eq!(&compilation.flags,&want_flags);
-        }
         if let Some((parse_options,parse)) = sections.get("preproc") {
             match &processed {
                 Ok(result) => {

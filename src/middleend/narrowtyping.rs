@@ -5,7 +5,7 @@
  * fully determine the type of their results.
  */
 
-use std::{collections::{HashMap, HashSet, BTreeSet}, fmt};
+use std::{collections::{HashMap, HashSet}, fmt};
 use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock, source::ParsePosition};
 use super::broadtyping::BroadType;
 

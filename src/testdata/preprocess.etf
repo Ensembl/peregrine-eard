@@ -201,26 +201,6 @@ let x = 1;
 
 >> test
 
-flags
-
->> input
-
-flag "abc";
-flag "def";
-refer "test2";
-
->> input test2
-
-flag "ghi";
-
->> flag
-
-abc
-def
-ghi
-
->> test
-
 good repeater
 
 >> input

@@ -113,8 +113,6 @@ opcode_opcode = { ASCII_DIGIT+ }
 opcode_statement = { "opcode" ~ opcode_opcode ~ opcode_args ~ ";" }
 opcode_args = { ("," ~ register)* }
 
-flag_statement = { "flag" ~ string ~ ";" }
-
 /* operators */
 
 infix1 = { "*"|"/" }
@@ -252,7 +250,6 @@ block = {
     code_block |
     include |
     fixed_include |
-    flag_statement |
     function |
     procedure |
     inner_block

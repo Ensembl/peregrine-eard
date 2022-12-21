@@ -20,7 +20,6 @@ pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
 
 pub trait PTTransformer {
     fn include(&mut self, _pos: &ParsePosition, _fixed: bool, _path: &str) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
-    fn remove_flags(&mut self, _flag: &str) -> Result<bool,String> { Ok(false) }
     fn bad_repeater(&mut self, _pos: (&[String],usize)) -> Result<(),String> { Ok(()) }
     fn call_to_expr(&mut self, _call: &PTCall, _context: usize) -> Result<Option<PTExpression>,String> { Ok(None) }
     fn call_to_block(&mut self, _call: &PTCall, _pos: &ParsePosition, _context: usize) -> Result<Option<Vec<PTStatement>>,String> { Ok(None) }
@@ -192,7 +191,6 @@ pub struct PTStatement {
 pub enum PTStatementValue {
     /* preprocessor */
     Include(String,bool),
-    Flag(String),
 
     /* definitions */
     Code(CodeBlock),
@@ -264,13 +262,6 @@ impl PTStatement {
                         vec![block]
                     }
                 },
-                PTStatementValue::Flag(flag) => {
-                    if transformer.remove_flags(&flag)? {
-                        vec![]
-                    } else {
-                        vec![block]
-                    }
-                },    
                 _ => block.transform(transformer)?
             };
             out.append(&mut more);

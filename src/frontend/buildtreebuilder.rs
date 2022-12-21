@@ -442,8 +442,7 @@ impl BuildContext {
 
     pub(super) fn build_statement(&mut self, bt: &mut BuildTree, stmt: &PTStatement) -> Result<(),String> {
         match &stmt.value {
-            PTStatementValue::Include(_,_) |
-            PTStatementValue::Flag(_) => {
+            PTStatementValue::Include(_,_) => {
                 panic!("item should have been eliminated from build tree");
             },
 

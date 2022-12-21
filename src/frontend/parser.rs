@@ -174,10 +174,6 @@ impl EarpParser {
         Ok(match_nodes!(input.into_children(); [string(s)] => s ))
     }
 
-    fn flag_statement(input: Node) -> PestResult<String> {
-        Ok(match_nodes!(input.into_children(); [string(s)] => s ))
-    }
-
     fn bundle(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children(); [prefix(s)] => s ))
     }
@@ -576,7 +572,6 @@ impl EarpParser {
             [code_block(block)] => PTStatementValue::Code(block),
             [include(s)] => PTStatementValue::Include(s,false),
             [fixed_include(s)] => PTStatementValue::Include(s,true),
-            [flag_statement(s)] => PTStatementValue::Flag(s),
             [function(f)] => PTStatementValue::FuncDef(f),
             [procedure(p)] => PTStatementValue::ProcDef(p),
             [inner_block(b)] => { return Ok(b); },

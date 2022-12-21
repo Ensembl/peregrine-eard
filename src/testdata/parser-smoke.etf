@@ -165,7 +165,6 @@ code len(seq(?X)) -> (number) {
 >> input
 
 include "test1";
-flag "opt1";
 
 >> parse strip
 
@@ -173,11 +172,6 @@ flag "opt1";
     PTStatement {
         value: Include("test1",false), 
         position: test:2,
-        context: 1
-    },
-    PTStatement {
-        value: Flag("opt1"),
-        position: test:3,
         context: 1
     }
 ]

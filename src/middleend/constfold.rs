@@ -62,7 +62,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     fn add(&mut self, stmt: &LinearStatement) {
         self.position = stmt.position.clone();
         match &stmt.value {
-            LinearStatementValue::Check(_, _, _, _) => {},
+            LinearStatementValue::Check(_,_,_,_,_) => {},
             LinearStatementValue::Constant(reg,c) => {
                 self.out(OperationValue::Constant(*reg,FullConstant::Atomic(c.clone())));
                 self.values.insert(*reg,FullConstant::Atomic(c.clone()));

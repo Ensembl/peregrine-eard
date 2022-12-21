@@ -93,7 +93,7 @@ impl<'a> Checking<'a> {
         }
     }
 
-    fn add_runtime_check(&mut self, reg: usize, ct: &CheckType, ci: usize) {
+    fn add_runtime_check(&mut self, reg: usize, check_name: &str, ct: &CheckType, ci: usize) {
         let value_reg = self.allocator.next_register();
         self.broad.insert(value_reg,BroadType::Atomic(AtomicTypeSpec::Number));
         let value_fn = match ct {
@@ -112,7 +112,7 @@ impl<'a> Checking<'a> {
             let checkname_reg = self.allocator.next_register();
             self.broad.insert(checkname_reg,BroadType::Atomic(AtomicTypeSpec::String));
             self.out.push(LinearStatement { 
-                value: LinearStatementValue::Constant(checkname_reg,Constant::String("TODO".to_string())),
+                value: LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())),
                 position: self.position.clone()
             });
             let check_fn = format!("check_{}",value_fn);
@@ -130,12 +130,12 @@ impl<'a> Checking<'a> {
     fn groupify(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = stmt.position.clone();
         match &stmt.value {
-            LinearStatementValue::Check(reg,ct,ci,force) => {
+            LinearStatementValue::Check(name,reg,ct,ci,force) => {
                 let reg_group = *self.equiv(ct).get(reg);
                 self.group.entry((ct.clone(),*ci)).or_insert_with(|| HashSet::new()).insert(reg_group);
                 if *force {
                     self.forced.insert(reg_group);
-                    self.add_runtime_check(*reg,ct,*ci);
+                    self.add_runtime_check(*reg,name,ct,*ci);
                 }
             },
             _ => {
@@ -149,7 +149,7 @@ impl<'a> Checking<'a> {
     fn check(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = stmt.position.clone();
         match &stmt.value {
-            LinearStatementValue::Check(reg,ct,_,_) => {
+            LinearStatementValue::Check(_,reg,ct,_,_) => {
                 let group = *self.equiv(ct).get(reg);
                 if !self.forced.contains(&group) {
                     return Err(format!("checking error: cannot guarantee {:?}",ct));

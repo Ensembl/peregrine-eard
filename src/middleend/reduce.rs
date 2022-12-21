@@ -26,8 +26,8 @@ impl Reduce {
 
     fn reduce(&mut self, stmt: &LinearStatement) -> Option<LinearStatement> {
         let value = match &stmt.value {
-            LinearStatementValue::Check(reg,ct,ci,f) => {
-                Some(LinearStatementValue::Check(self.canon(*reg),ct.clone(),*ci,*f))
+            LinearStatementValue::Check(name,reg,ct,ci,f) => {
+                Some(LinearStatementValue::Check(name.clone(),self.canon(*reg),ct.clone(),*ci,*f))
             },
             LinearStatementValue::WildEquiv(regs) => {
                 let mut regs = regs.iter().map(|r| self.canon(*r)).collect::<Vec<_>>();

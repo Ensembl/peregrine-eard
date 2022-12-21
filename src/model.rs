@@ -493,7 +493,7 @@ impl fmt::Debug for Opcode {
 
 #[derive(Clone)]
 pub enum LinearStatementValue {
-    Check(usize,CheckType,usize, bool), // reg, type, index, force
+    Check(String,usize,CheckType,usize, bool), // source-name, reg, type, index, force
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
@@ -504,9 +504,9 @@ pub enum LinearStatementValue {
 impl fmt::Debug for LinearStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Check(v, ct, c,force) => {
+            Self::Check(name,v, ct, c,force) => {
                 let force = if *force { "f" } else { "" };
-                write!(f,"r{:?} <check>{} {:?} {:?}",v,force,ct,c)
+                write!(f,"r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
             },
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
             Self::WildEquiv(r) => write!(f,"<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),

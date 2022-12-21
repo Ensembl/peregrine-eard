@@ -36,7 +36,7 @@ let a = test(5,5);
 
 test:8 r1 <- 5
 test:8 r2 <- 5
-test:8 r3 (14#1) r1 r2
+test:8 r3 (1#1) r1 r2
 
 >> test
 
@@ -48,13 +48,13 @@ let a = [1,2,3];
 
 >> constfold strip
 
-sequences:28 r1 <- []
+sequences:46 r1 <- []
 test:2 r7 <- 1
-sequences:29 r12 <- [1]
+sequences:47 r12 <- [1]
 test:2 r17 <- 2
-sequences:29 r22 <- [1,2]
+sequences:47 r22 <- [1,2]
 test:2 r26 <- 3
-sequences:29 r31 <- [1,2,3]
+sequences:47 r31 <- [1,2,3]
 
 >> test
 
@@ -68,11 +68,11 @@ let a = [x-1,x,x+1];
 >> constfold strip
 
 test:2 r1 <- 1
-sequences:28 r5 <- []
+sequences:46 r5 <- []
 test:3 r12 <- 1
 maths:10 r17 <- 0
-sequences:29 r25 <- [0]
-sequences:29 r35 <- [0,1]
+sequences:47 r25 <- [0]
+sequences:47 r35 <- [0,1]
 test:3 r40 <- 1
 maths:9 r45 <- 2
-sequences:29 r53 <- [0,1,2]
+sequences:47 r53 <- [0,1,2]

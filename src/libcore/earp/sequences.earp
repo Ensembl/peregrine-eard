@@ -24,6 +24,29 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
     }
 }
 
+fold(libcore__length) code __code_length(seq(?X)) -> number {
+    impl (r1: seq(?X)) -> r2 {
+        opcode 5, r2, r1;
+    }
+}
+
+fold(libcore__total) code __code_total(seq(?X)) -> number {
+    impl (r1: seq(?X)) -> r2 {
+        opcode 6, r2, r1;
+    }
+}
+
+fold(libcore__bound) code __code_bound(seq(?X)) -> number {
+    impl (r1: seq(?X)) -> r2 {
+        opcode 7, r2, r1;
+    }
+}
+
 export function __operator_infseq(x) { let y = __code_infseq(x); y }
 export function __operator_finseq() { let y = __code_finseq(); y }
 export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
+export function __operator_length(x) { let y = __code_length(x); y }
+export function __operator_total(x) { let y = __code_total(x); y }
+export function __operator_bound(x) { let y = __code_bound(x); y }
+
+export function len(x) { let y = __code_length(x); y }

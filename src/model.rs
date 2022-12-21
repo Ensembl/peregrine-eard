@@ -1,4 +1,4 @@
-use std::{fmt::{self, Display}, cmp::Ordering};
+use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap};
 use ordered_float::OrderedFloat;
 
 use crate::source::ParsePosition;
@@ -74,10 +74,59 @@ impl fmt::Debug for OperationValue {
     }
 }
 
+struct AllocDumper {
+    next_call: usize,
+    seen: HashMap<usize,usize>
+}
+
+impl AllocDumper {
+    fn new() -> AllocDumper {
+        AllocDumper { next_call: 0, seen: HashMap::new() }
+    }
+
+    fn get(&mut self, input: usize) -> usize {
+        let (seen,next_call) = (&mut self.seen,&mut self.next_call);
+        *seen.entry(input).or_insert_with(|| {
+            *next_call +=1;
+            *next_call
+        })
+    }
+}
+
 #[derive(Clone)]
 pub struct Operation {
     pub(crate) position: ParsePosition,
     pub(crate) value: OperationValue
+}
+
+impl OperationValue {
+    fn dump(&self, ad: &mut AllocDumper) -> String {
+        match self {
+            OperationValue::Constant(r,c) => format!("r{} <- {:?}",r,c),
+            OperationValue::Code(call,name,rets,args) => 
+                format!("{} ({}#{}) {}",
+                    sepfmt(&mut rets.iter()," ","r"),
+                    ad.get(*name),*call,
+                    sepfmt(&mut args.iter()," ","r")
+                )
+        }
+    }
+}
+
+impl Operation {
+    fn dump(&self, ad: &mut AllocDumper) -> String {
+        format!("{} {}",self.position.last_str(),self.value.dump(ad))
+    }
+}
+
+pub(crate) fn dump_opers(opers: &[Operation]) -> String {
+    let mut ad = AllocDumper::new();
+    let mut out = String::new();
+    for oper in opers {
+        out.push_str(&oper.dump(&mut ad));
+        out.push('\n');
+    }
+    out
 }
 
 impl fmt::Debug for Operation {

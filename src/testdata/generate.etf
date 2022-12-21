@@ -20,11 +20,11 @@ wf(4,5,6);
 test:10 r1 <- 1
 test:10 r2 <- 2
 test:10 r3 <- 3
-test:8 r0 r0 (14#1) r1 r2 r3
+test:8 r0 r0 (1#1) r1 r2 r3
 test:11 r18 <- 4
 test:11 r19 <- 5
 test:11 r20 <- 6
-test:8 r0 r0 (14#2) r18 r19 r20
+test:8 r0 r0 (1#2) r18 r19 r20
 
 >> generate strip
 
@@ -106,21 +106,21 @@ x(f(2,1));
 >> reuse strip
 
 test:29 r1 <- 2
-test:26 r7 (14#1) r1 r1
-test:27  (15#2) r7
+test:26 r7 (1#1) r1 r1
+test:27  (2#2) r7
 test:30 r13 <- 3
-test:26 r19 (14#3) r13 r1
-test:27  (15#4) r19
+test:26 r19 (1#3) r13 r1
+test:27  (2#4) r19
 test:31 r25 <- 1
-test:26 r30 (14#5) r1 r25
-test:27  (15#6) r30
-test:26 r41 (14#7) r1 r25
-test:27  (15#8) r41
+test:26 r30 (1#5) r1 r25
+test:27  (2#6) r30
+test:26 r41 (1#7) r1 r25
+test:27  (2#8) r41
 test:33 r47 <- 0
-test:26 r52 (14#9) r1 r47
-test:27  (15#10) r52
-test:26 r63 (14#11) r1 r25
-test:27  (15#12) r63
+test:26 r52 (1#9) r1 r47
+test:27  (2#10) r52
+test:26 r63 (1#11) r1 r25
+test:27  (2#12) r63
 
 >> generate strip
 
@@ -169,32 +169,32 @@ use(a);
 >> spill strip
 
 test:12 r1 <- 1
-test:13  (15#1) r1
-test:14  (15#2) r1
-test:10  (14#3) 
-test:10  (14#4) 
-test:10  (14#5) 
-test:10  (14#6) 
-test:10  (14#7) 
-test:10  (14#8) 
-test:10  (14#9) 
-test:10  (14#10) 
-test:10  (14#11) 
+test:13  (1#1) r1
+test:14  (1#2) r1
+test:10  (2#3) 
+test:10  (2#4) 
+test:10  (2#5) 
+test:10  (2#6) 
+test:10  (2#7) 
+test:10  (2#8) 
+test:10  (2#9) 
+test:10  (2#10) 
+test:10  (2#11) 
 test:16 r11 <- 1
-test:16  (15#12) r11
-test:17  (15#13) r11
-test:10  (14#14) 
-test:10  (14#15) 
-test:10  (14#16) 
-test:10  (14#17) 
-test:10  (14#18) 
-test:10  (14#19) 
-test:10  (14#20) 
-test:10  (14#21) 
-test:10  (14#22) 
+test:16  (1#12) r11
+test:17  (1#13) r11
+test:10  (2#14) 
+test:10  (2#15) 
+test:10  (2#16) 
+test:10  (2#17) 
+test:10  (2#18) 
+test:10  (2#19) 
+test:10  (2#20) 
+test:10  (2#21) 
+test:10  (2#22) 
 test:19 r12 <- 1
-test:19  (15#23) r12
-test:20  (15#24) r12
+test:19  (1#23) r12
+test:20  (1#24) r12
 
 >> generate strip
 

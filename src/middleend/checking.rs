@@ -134,6 +134,9 @@ impl<'a> Checking<'a> {
                     if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)) {
                         self.add_check_code(check_name,"check_length_bound",value_reg,*existing);
                     }
+                    if let Some(existing) = self.check_register.get(&(CheckType::LengthOrInfinite,ci)) {
+                        self.add_check_code(check_name,"check_length_inf",value_reg,*existing);
+                    }
                     self.check_register.insert((ct.clone(),ci),value_reg);
                 }
             },
@@ -157,7 +160,16 @@ impl<'a> Checking<'a> {
                     self.check_register.insert((ct.clone(),ci),value_reg);
                 }
             },
-            CheckType::LengthOrInfinite => {}
+            CheckType::LengthOrInfinite => {
+                if let Some(existing) = self.check_register.get(&(CheckType::LengthOrInfinite,ci)) {
+                    self.add_check_code(check_name,"check_inf",*existing,value_reg);
+                } else {
+                    if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
+                        self.add_check_code(check_name,"check_length_inf",*existing,value_reg);
+                    }
+                    self.check_register.insert((ct.clone(),ci),value_reg);
+                }
+            }
         }
     }
 

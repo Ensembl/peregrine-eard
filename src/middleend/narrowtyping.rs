@@ -128,8 +128,8 @@ impl<'a> NarrowTyping<'a> {
                 (TypeSpec::SequenceWildcard(w), BroadType::Sequence) => {
                     wilds.entry(w.to_string()).or_insert(WildcardType::Any).atomic()?;
                 },
-                _ => {
-                    return Err("type mismatch/E".to_string());
+                (a,b) => {
+                    return Err(format!("type mismatch/E r{} {:?} {:?}: {:?}",reg,a,b,block));
                 }
             }
         }

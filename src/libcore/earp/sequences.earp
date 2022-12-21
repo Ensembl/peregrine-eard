@@ -24,6 +24,10 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
     }
 }
 
+/*
+ * Checking
+ */
+
 fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
     impl (r1: seq(?X)) -> r2 : number {
         opcode 5, r2, r1;
@@ -68,6 +72,18 @@ world special(check_length_total) code __code_check_length_total(string,number,n
 world special(check_length_bound) code __code_check_length_bound(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 14, r1, r2, r3;
+    }
+}
+
+world special(check_inf) code __code_check_inf(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 15, r1, r2, r3;
+    }
+}
+
+world special(check_length_inf) code __code_check_length_inf(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 16, r1, r2, r3;
     }
 }
 

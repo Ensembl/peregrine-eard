@@ -183,6 +183,31 @@ opcode 14, r1, r2, r4
 
 >> test
 
+checking or-inf
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
+function c(x) { let y = wc(x); y }
+
+let a : length(!a...) = c([1,2,3]);
+let b : length(!a...) = c([4,...]);
+let c : length(!a) = c([5,6,7]);
+
+>> generate strip
+
+r1 <- [1,2,3]
+opcode 5, r2, r1
+r1 <- [4,...]
+opcode 5, r3, r1
+r1 <- "a"
+opcode 15, r1, r2, r3
+r3 <- [5,6,7]
+opcode 5, r4, r3
+opcode 16, r1, r4, r2
+
+>> test
+
 checking collapse only one
 
 >> input
@@ -197,4 +222,3 @@ let b : length(!b) = c([3,4]);
 
 r1 <- [1,2]
 r2 <- [3,4]
-

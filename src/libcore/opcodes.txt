@@ -12,4 +12,6 @@
  12 runtime bound/bound check
  13 runtime length/total check
  14 runtime length/bound check
-  
+ 15 runtime inf/inf check
+ 16 runtime length/inf check
+ 

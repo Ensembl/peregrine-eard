@@ -5,4 +5,5 @@
   5 length seq -> number
   6 total seq -> number (sum and positive int check)
   7 bound seq -> number (max and positive int check)
-  
+  8 print string
+  9 format arbitrary as string

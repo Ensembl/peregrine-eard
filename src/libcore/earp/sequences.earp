@@ -25,19 +25,19 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
 }
 
 fold(libcore__length) code __code_length(seq(?X)) -> number {
-    impl (r1: seq(?X)) -> r2 {
+    impl (r1: seq(?X)) -> r2 : number {
         opcode 5, r2, r1;
     }
 }
 
 fold(libcore__total) code __code_total(seq(?X)) -> number {
-    impl (r1: seq(?X)) -> r2 {
+    impl (r1: seq(?X)) -> r2 : number {
         opcode 6, r2, r1;
     }
 }
 
 fold(libcore__bound) code __code_bound(seq(?X)) -> number {
-    impl (r1: seq(?X)) -> r2 {
+    impl (r1: seq(?X)) -> r2 : number {
         opcode 7, r2, r1;
     }
 }

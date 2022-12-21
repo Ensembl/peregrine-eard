@@ -7,7 +7,7 @@ finite sequences
 let a = [1,2,3];
 print(format(a));
 
->> constfold strip culdesac
+>> constfold strip culdesac nolines
 
 sequences:47 r31 <- [1,2,3]
 print:5 r41 (1#5) r31
@@ -21,7 +21,7 @@ empty sequence
 
 print(format([]));
 
->> constfold strip culdesac
+>> constfold strip culdesac nolines
 
 sequences:46 r1 <- []
 print:5 r9 (1#2) r1
@@ -35,7 +35,7 @@ infinite sequence
 
 print(format([true,...]));
 
->> constfold strip culdesac
+>> constfold strip culdesac nolines
 
 sequences:45 r4 <- [true,...]
 print:5 r10 (1#2) r4
@@ -49,7 +49,7 @@ addition
 
 print(format(2+2));
 
->> constfold strip culdesac
+>> constfold strip culdesac nolines
 
 maths:9 r7 <- 4
 print:5 r13 (1#2) r7
@@ -63,7 +63,7 @@ subtraction fold
 
 print(format(5-2));
 
->> constfold strip culdesac
+>> constfold strip culdesac nolines
 
 maths:10 r7 <- 3
 print:5 r13 (1#2) r7

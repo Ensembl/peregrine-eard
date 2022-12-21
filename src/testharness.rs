@@ -76,6 +76,21 @@ fn split_on_space(input: &str) -> Vec<String> {
 }
 
 fn process_ws(input: &str, options: &HashSet<String>) -> String {
+    let mut no_lines = String::new();
+    let input = if options.contains("nolines") {
+        for line in input.split("\n") {
+            if let Some(split) = line.find(" ") {
+                let (_,main) = line.split_at(split);
+                no_lines.push_str(main);
+            } else {
+                no_lines.push_str(line);
+            }
+            no_lines.push('\n');
+        }
+        no_lines
+    } else {
+        input.to_string()
+    };
     if options.contains("strip") {
         let mut out = String::new();
         for c in input.chars() {

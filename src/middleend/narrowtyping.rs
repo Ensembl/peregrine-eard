@@ -5,7 +5,7 @@
  * fully determine the type of their results.
  */
 
-use std::{collections::{HashMap, HashSet}, fmt};
+use std::{collections::{HashMap, HashSet, BTreeSet}, fmt};
 use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock, source::ParsePosition};
 use super::broadtyping::BroadType;
 
@@ -69,7 +69,7 @@ impl WildcardType {
     }
 }
 
-#[derive(PartialEq,Eq,Clone)]
+#[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
 pub enum NarrowType {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
@@ -101,7 +101,7 @@ impl<'a> NarrowTyping<'a> {
                 let old_set = old.iter().collect::<HashSet<_>>();
                 *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
                 if new.len() == 0 {
-                    return Err("type mismatch/D".to_string());
+                    return Err("type mismatch".to_string());
                 }
                 Ok(())
             })

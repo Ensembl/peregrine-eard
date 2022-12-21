@@ -6,9 +6,10 @@ COMMENT = _{ ("//" ~ (!"\n" ~ ANY)* ~ "\n") | ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
 
 /* general */
 
-reserved = {
-    "false" | "true" | "include" | "number" | "string" | "boolean" | "handle" | "seq" | "code" |
-    "world" | "opcode" | "register" | "flag" | "function" | "procedure" | "let"
+reserved = @{
+    ("false" | "true" | "include" | "number" | "string" | "boolean" | "handle" | "seq" | "code" |
+    "world" | "opcode" | "register" | "flag" | "function" | "procedure" | "let") ~ 
+    (WHITESPACE|(!"_" ~ PUNCTUATION))
 }
 
 identifier = @{ !reserved ~ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_")* }

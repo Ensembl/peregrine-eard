@@ -123,3 +123,8 @@ fn test_checking() {
 fn test_checking_opt() {
     run_parse_tests(include_str!("testdata/checking-opt.etf"),true,true);
 }
+
+#[test]
+fn test_handle() {
+    run_parse_tests(include_str!("testdata/handle.etf"),true,false);
+}

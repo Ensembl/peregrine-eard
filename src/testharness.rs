@@ -92,6 +92,23 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     } else {
         input.to_string()
     };
+    let input = if options.contains("main") {
+        let mut alpha = String::new();
+        for line in input.split("\n") {
+            if let Some(first) = line.chars().next() {
+                if first.is_alphabetic() && !line.contains("define") {
+                    alpha.push_str(line);
+                    alpha.push('\n');
+                }
+            } else {
+                alpha.push_str(line);
+                alpha.push('\n');
+            }
+        }
+        alpha
+    } else {
+        input.to_string()
+    };
     if options.contains("strip") {
         let mut out = String::new();
         for c in input.chars() {
@@ -347,6 +364,15 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let report = report.iter().map(|(k,v)| format!("{}: {}",k,v.join(", "))).collect::<Vec<_>>().join("\n");
             println!("{}",report);
             assert_eq!(process_ws(&report,narrow_options),process_ws(narrow_correct,narrow_options));
+        }
+        if let Some((narrow_options,narrow_correct)) = sections.get("narrow-fail") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
+            let error = narrow_type(&tree,&broad,&block_indexes, &linear).err().expect("narrow unespectedly succeeded");
+            println!("{}",error);
+            assert_eq!(process_ws(&error,narrow_options),process_ws(narrow_correct,narrow_options));
         }
         if let Some((constfold_options,constfold_correct)) = sections.get("constfold") {
             let processed = processed.clone().expect("processing failed");

@@ -5,7 +5,8 @@ pub struct EarpCompilation<'a> {
     pub(crate) compiler: &'a EarpCompiler,
     pub(crate) flags: HashSet<String>,
     soso_builder: CombinedSourceSourceBuilder,
-    context: usize
+    context: usize,
+    optimise: bool
 }
 
 impl<'a> EarpCompilation<'a> {
@@ -16,7 +17,8 @@ impl<'a> EarpCompilation<'a> {
             compiler,
             flags: HashSet::new(),
             soso_builder,
-            context: 0
+            context: 0,
+            optimise: false
         })
     }
 
@@ -26,6 +28,10 @@ impl<'a> EarpCompilation<'a> {
         self.soso_builder.add_fixed(source);
     }
 
+    pub fn set_optimise(&mut self, yn: bool) {
+        self.optimise = yn;
+    }
+
     pub fn set_flag(&mut self, flag: &str) {
         self.flags.insert(flag.to_string());
     }
@@ -33,7 +39,7 @@ impl<'a> EarpCompilation<'a> {
     pub(crate) fn parse_part(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
         self.context += 1;
         let context = self.context;
-        parse_earp(position,path,fixed,context)
+        parse_earp(position,path,fixed,self.optimise,context)
     }
 
     fn add_libcore(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {

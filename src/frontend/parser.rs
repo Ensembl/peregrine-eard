@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, OrBundle, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, OrBundleRepeater, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition }};
-use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }};
+use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition }};
+use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, femodel::{OrBundle, OrBundleRepeater}};
 
 #[derive(Parser)]
 #[grammar = "frontend/earp.pest"]
@@ -10,7 +10,8 @@ struct EarpParser;
 #[derive(Clone)]
 struct ParseFixedState {
     position: ParsePosition,
-    context: usize
+    context: usize,
+    optimise: bool
 }
 
 #[allow(unused)]
@@ -108,6 +109,7 @@ impl EarpParser {
     }
 
     fn world(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+    fn debug(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
 
     fn fold(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children(); [identifier(s)] => s ))
@@ -117,11 +119,13 @@ impl EarpParser {
         Ok(match_nodes!(input.into_children(); [identifier(s)] => s ))
     }
 
-    fn code_modifier(input: Node) -> PestResult<CodeModifier> {
+    fn code_modifier(input: Node) -> PestResult<Option<CodeModifier>> {
+        let optimise = input.user_data().optimise;
         Ok(match_nodes!(input.into_children();
-          [world(_)] => CodeModifier::World,
-          [fold(f)] => CodeModifier::Fold(f.to_string()),
-          [special(f)] => CodeModifier::Special(f.to_string())
+          [world(_)] => Some(CodeModifier::World),
+          [debug(_)] => if optimise { None } else  { Some(CodeModifier::World) },
+          [fold(f)] => Some(CodeModifier::Fold(f.to_string())),
+          [special(f)] => Some(CodeModifier::Special(f.to_string()))
         ))
     }
 
@@ -387,7 +391,9 @@ impl EarpParser {
     fn code_modifiers(input: Node) -> PestResult<Vec<CodeModifier>> {
         let mut out = vec![];
         for child in input.into_children() {
-            out.push(Self::code_modifier(child)?);
+            if let Some(child) = Self::code_modifier(child)? {
+                out.push(child);
+            }
         }
         Ok(out)
     }
@@ -754,16 +760,17 @@ impl EarpParser {
     }
 }
 
-fn do_parse_earp(input: &str, position: &ParsePosition, context: usize) -> PestResult<Vec<PTStatement>> {
+fn do_parse_earp(input: &str, position: &ParsePosition, optimise: bool, context: usize) -> PestResult<Vec<PTStatement>> {
     let state = ParseFixedState { 
         position: position.clone(),
+        optimise,
         context
     };
     let input = EarpParser::parse_with_userdata(Rule::file,input,state)?.single()?;
     EarpParser::file(input)
 }
 
-pub fn parse_earp(position: &ParsePosition, filename: &str, fixed: bool, context: usize) -> Result<Vec<PTStatement>,String> {
+pub fn parse_earp(position: &ParsePosition, filename: &str, fixed: bool, optimise: bool, context: usize) -> Result<Vec<PTStatement>,String> {
     let (input,new_pos) = position.push(filename,fixed)?;
-    do_parse_earp(&input,&new_pos,context).map_err(|e| e.to_string())
+    do_parse_earp(&input,&new_pos,optimise,context).map_err(|e| e.to_string())
 }

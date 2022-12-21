@@ -46,42 +46,43 @@ fold(libcore__bound) special(bound) code __code_bound(seq(?X)) -> number {
     }
 }
 
-world special(check_length) code __code_check_length(string,number,number) {
+debug special(check_length) code __code_check_length(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 10, r1, r2, r3;
     }
 }
 
-world special(check_total) code __code_check_total(string,number,number) {
+debug special(check_total) code __code_check_total(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 11, r1, r2, r3;
     }
 }
-world special(check_bound) code __code_check_bound(string,number,number) {
+
+debug special(check_bound) code __code_check_bound(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 12, r1, r2, r3;
     }
 }
 
-world special(check_length_total) code __code_check_length_total(string,number,number) {
+debug special(check_length_total) code __code_check_length_total(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 13, r1, r2, r3;
     }
 }
 
-world special(check_length_bound) code __code_check_length_bound(string,number,number) {
+debug special(check_length_bound) code __code_check_length_bound(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 14, r1, r2, r3;
     }
 }
 
-world special(check_inf) code __code_check_inf(string,number,number) {
+debug special(check_inf) code __code_check_inf(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 15, r1, r2, r3;
     }
 }
 
-world special(check_length_inf) code __code_check_length_inf(string,number,number) {
+debug special(check_length_inf) code __code_check_length_inf(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 16, r1, r2, r3;
     }

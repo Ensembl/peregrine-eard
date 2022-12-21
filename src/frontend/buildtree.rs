@@ -1,5 +1,7 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, CodeModifier}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, TypedArgument, CodeModifier}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
+
+use super::femodel::{OrBundleRepeater, OrBundle};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {

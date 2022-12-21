@@ -3,7 +3,8 @@ mod frontend {
     mod buildtreebuilder;    
     pub(crate) mod preprocess;
     pub(crate) mod parser;
-    pub(crate) mod parsetree;    
+    pub(crate) mod parsetree;   
+    pub(crate) mod femodel; 
 }
 
 mod libcore {

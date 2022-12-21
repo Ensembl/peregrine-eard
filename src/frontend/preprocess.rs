@@ -1,6 +1,6 @@
 use std::{collections::HashMap};
-use crate::{compiler::{EarpCompiler}, model::{OrBundleRepeater}, compilation::EarpCompilation, source::ParsePosition};
-use super::parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at};
+use crate::{compiler::{EarpCompiler}, compilation::EarpCompilation, source::ParsePosition};
+use super::{parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at}, femodel::OrBundleRepeater};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
     ("*", "__operator_mul"),

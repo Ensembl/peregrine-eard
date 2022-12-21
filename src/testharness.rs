@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::BuildTree, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
@@ -56,8 +56,9 @@ pub(crate) fn make_compiler() -> Result<EarpCompiler,String> {
     Ok(compiler)
 }
 
-pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler, libcore: bool) -> EarpCompilation<'a> {
+pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler, libcore: bool, optimise: bool) -> EarpCompilation<'a> {
     let mut comp = EarpCompilation::new(compiler).expect("cannot build compilation");
+    comp.set_optimise(optimise);
     if !libcore {
         comp.set_flag("no-libcore");
     }
@@ -114,7 +115,7 @@ fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (Bu
     (tree,reduce(&linear),next_register)
 }
 
-pub(super) fn run_parse_tests(data: &str, libcore: bool) {
+pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
     let mut tests = vec![];
     let mut cur_section = "".to_string();
     let mut cur_name = String::new();
@@ -148,7 +149,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
     for (sections,inputs) in tests {
         eprintln!("{:?}",inputs);
         let compiler = make_compiler().ok().unwrap();
-        let mut compilation = make_compilation(&compiler,libcore);
+        let mut compilation = make_compilation(&compiler,libcore,optimise);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
         let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");

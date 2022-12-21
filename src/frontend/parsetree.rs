@@ -1,5 +1,5 @@
-use crate::{model::{Variable, Check, FuncProcModifier, Constant, OrBundle, ArgTypeSpec, TypedArgument, OrBundleRepeater}, codeblocks::CodeBlock, source::ParsePosition};
-use super::buildtree::{BuildTree};
+use crate::{model::{Variable, Check, FuncProcModifier, Constant, ArgTypeSpec, TypedArgument}, codeblocks::CodeBlock, source::ParsePosition};
+use super::{buildtree::{BuildTree}, femodel::{OrBundle, OrBundleRepeater}};
 use super::buildtreebuilder::BuildContext;
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {

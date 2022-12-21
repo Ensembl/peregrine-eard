@@ -1,6 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
-use crate::model::{OrBundleRepeater};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundleRepeater}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
 
 pub struct EarpCompiler {
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,

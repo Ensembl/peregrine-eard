@@ -1,5 +1,6 @@
 use crate::frontend::buildtree::{BTProcCall, BTLValue, BTExpression};
-use crate::model::{OrBundleRepeater, Variable};
+use crate::frontend::femodel::OrBundleRepeater;
+use crate::model::{Variable};
 
 fn list_lhs_repeaters(rets: &[OrBundleRepeater<BTLValue>]) -> Vec<String> {
     rets.iter().filter_map(|ret| {

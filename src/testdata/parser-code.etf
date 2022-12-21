@@ -220,3 +220,31 @@ code test_string() {
         context: 1
     }
 ]
+
+>> test
+
+code & impl args differ 1
+
+>> input
+
+code test(number,number) -> boolean {
+    impl (r1: number) -> r2: number {}
+}
+
+>> parse-fail strip
+
+mismatch in arg list between code block and impl
+
+>> test
+
+code & impl args differ 2
+
+>> input
+
+code test(number,number) -> boolean {
+    impl (r1: number, r2: number) {}
+}
+
+>> parse-fail strip
+
+mismatch in return list between code block and impl

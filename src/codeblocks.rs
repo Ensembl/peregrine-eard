@@ -188,6 +188,19 @@ impl CodeBlock {
         Ok(Some(typing))
     }
 
+    pub(crate) fn add_impls(&mut self, impls: Vec<ImplBlock>) -> Result<(),String> {
+        for imp in &impls {
+            if imp.arguments.len() != self.arguments.len() {
+                return Err(format!("mismatch in arg list between code block and impl"));
+            }
+            if imp.results.len() != self.results.len() {
+                return Err(format!("mismatch in return list between code block and impl"));
+            }
+        }
+        self.impls = impls;
+        Ok(())
+    }
+
     pub(crate) fn choose_imps(&self, args: &[Option<FullConstant>], narrow: Option<&[NarrowType]>, modify: Option<&Vec<Option<usize>>>) -> Vec<&ImplBlock> {
         self.impls.iter().filter(|imp| imp.unifies(args,narrow,modify)).collect()
     }

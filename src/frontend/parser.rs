@@ -546,9 +546,10 @@ impl EarpParser {
     }
 
     fn code_block(input: Node) -> PestResult<CodeBlock> {
+        let input2 = input.clone();
         Ok(match_nodes!(input.into_children();
             [code_header(mut block),code_impl(stmt)..] => {
-                block.impls = stmt.collect();
+                block.add_impls(stmt.collect()).map_err(|e| input2.error(e))?;
                 block
             }
         ))

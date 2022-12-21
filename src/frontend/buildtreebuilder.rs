@@ -167,8 +167,8 @@ impl BuildContext {
         self.next_register
     }
 
-    pub(super) fn define_funcproc(&mut self, name: &str, definition: BTFuncProcDefinition, is_proc: bool, bt: &mut BuildTree, export: bool) -> Result<BTStatementValue,String> {
-        let definition = if is_proc { BTDefinition::Proc(definition) } else { BTDefinition::Func(definition) };
+    pub(super) fn define_funcproc(&mut self, name: &str, fpdefn: BTFuncProcDefinition, is_proc: bool, bt: &mut BuildTree, export: bool) -> Result<BTStatementValue,String> {
+        let definition = if is_proc { BTDefinition::Proc(fpdefn) } else { BTDefinition::Func(fpdefn) };
         let id = bt.add_definition(definition);
         let name_id = if is_proc { DefName::Proc(id) } else { DefName::Func(id) };
         let context = if export { None } else { Some(self.file_context) };

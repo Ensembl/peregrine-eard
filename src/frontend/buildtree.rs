@@ -1,5 +1,5 @@
-use std::fmt;
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
+use std::{fmt, collections::HashMap};
+use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, OrBundle, TypedArgument, OrBundleRepeater, CodeModifier}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {
@@ -192,12 +192,17 @@ pub enum BTTopDefn<'a> {
 #[derive(Clone)]
 pub struct BuildTree {
     pub(crate) statements: Vec<BTStatement>,
-    pub(crate) definitions: Vec<BTDefinition>
+    pub(crate) definitions: Vec<BTDefinition>,
+    pub(crate) specials: HashMap<String,usize>
 }
 
 impl BuildTree {
     pub(crate) fn new() -> BuildTree {
-        BuildTree { statements: vec![], definitions: vec![] }
+        BuildTree { statements: vec![], definitions: vec![], specials: HashMap::new() }
+    }
+
+    pub(crate) fn get_special(&self, name: &str) -> usize {
+        *self.specials.get(name).expect(&format!("missing special '{}'",name))
     }
 
     pub(super) fn add_definition(&mut self, defn: BTDefinition) -> usize {
@@ -206,9 +211,22 @@ impl BuildTree {
         id
     }
 
+    fn extract_special(&self, mods: &[CodeModifier]) -> Option<String> {
+        mods.iter().filter_map(|m| {
+            match m {
+                CodeModifier::Special(s) => Some(s.to_string()),
+                _ => None
+            }
+        }).next()
+    }
+
     pub(crate) fn add_code(&mut self, id: usize, block: &CodeBlock) -> Result<(),String> {
+        let special = self.extract_special(&block.modifiers);
         match &mut self.definitions[id] {
             BTDefinition::Code(c) => {
+                if let Some(special) = special {
+                    self.specials.insert(special,id);
+                }
                 c.add(block.clone())?;
             },
             _ => {

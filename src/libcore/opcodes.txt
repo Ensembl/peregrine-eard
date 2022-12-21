@@ -7,3 +7,7 @@
   7 bound seq -> number (max and positive int check)
   8 print string
   9 format arbitrary as string
+ 10 runtime length check
+ 11 runtime total check
+ 12 runtime bound check
+ 

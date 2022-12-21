@@ -11,18 +11,34 @@ use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{
  * necessary that we are not in SAF anyway).
  */
 
+pub(crate) struct Allocator {
+    next_register: usize,
+    next_call_index: usize
+}
+
+impl Allocator {
+    pub(crate) fn next_register(&mut self) -> usize {
+        self.next_register += 1;
+        self.next_register
+    }
+
+    pub(crate) fn next_call(&mut self) -> usize {
+        self.next_call_index += 1;
+        self.next_call_index
+    }
+}
+
 struct Linearize<'a> {
     tree: &'a BuildTree,
     bundles: &'a Transits,
     output: Vec<LinearStatement>,
     positions: ParsePosition,
-    next_register: usize,
     var_registers: VarRegisters,
     bt_registers: HashMap<(usize,Option<String>),usize>,
     call_stack: Vec<usize>,
     captures: HashMap<usize,Vec<(Variable,usize)>>,
     checks: Checks,
-    next_call_index: usize
+    allocator: Allocator
 }
 
 impl<'a> Linearize<'a> {
@@ -33,24 +49,20 @@ impl<'a> Linearize<'a> {
             positions: ParsePosition::empty("called"),
             var_registers: VarRegisters::new(),
             bt_registers: HashMap::new(),
-            next_register: 0,
+            allocator: Allocator {
+                next_register: 0,
+                next_call_index: 0
+            },
             call_stack: vec![],
             captures: HashMap::new(),
-            checks: Checks::new(),
-            next_call_index: 0
+            checks: Checks::new()
         }
     }
 
-    fn anon_register(&mut self) -> usize {
-        self.next_register += 1;
-        self.next_register
-    }
-
     fn bt_register(&mut self, reg: usize, name: Option<&String>) -> usize {
-        let (registers,next_register) = (&mut self.bt_registers,&mut self.next_register);
+        let (registers,allocator) = (&mut self.bt_registers,&mut self.allocator);
         *registers.entry((reg,name.cloned())).or_insert_with(|| {
-            *next_register += 1;
-            *next_register
+            allocator.next_register()
         })
     }
 
@@ -66,7 +78,7 @@ impl<'a> Linearize<'a> {
         for (i,arg) in defn_args.iter().enumerate() {
             match arg {
                 OrBundle::Normal(arg) => {
-                    let var_reg = self.anon_register();
+                    let var_reg = self.allocator.next_register();
                     self.var_registers.add(&Variable { name: arg.id.clone(), prefix: None },var_reg);
                     self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
                     let types = arg.typespec.arg_types.iter().filter_map(|t| {
@@ -83,7 +95,7 @@ impl<'a> Linearize<'a> {
                 OrBundle::Bundle(bundle_name) => {
                     let bundle = self.bundles.get(&self.call_stack,&Position::Arg(i))?;
                     for name in bundle {
-                        let var_reg = self.anon_register();
+                        let var_reg = self.allocator.next_register();
                         self.var_registers.add(&Variable { name: name.clone(), prefix: Some(bundle_name.clone()) },var_reg);
                         self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
                     }
@@ -132,7 +144,7 @@ impl<'a> Linearize<'a> {
                 OrBundle::Normal(expr) => {
                     match expr {
                         BTExpression::Constant(c) => {
-                            let reg = self.anon_register();
+                            let reg = self.allocator.next_register();
                             regs.push(reg);
                             self.add(LinearStatementValue::Constant(reg,c.clone()));
                             self.ret_checks(i,reg,defn)?;
@@ -186,7 +198,7 @@ impl<'a> Linearize<'a> {
     fn callee_captures(&mut self, index: usize) -> Result<(),String> {
         if let Some(captures) = self.captures.get(&index).cloned() {
             for (variable, reg) in captures {
-                let arg = self.anon_register();
+                let arg = self.allocator.next_register();
                 self.add(LinearStatementValue::Copy(arg,reg));
                 self.var_registers.add(&variable,arg);
             }
@@ -258,18 +270,18 @@ impl<'a> Linearize<'a> {
                 OrBundleRepeater::Normal(expr) => {
                     match expr {
                         BTExpression::Constant(c) => { 
-                            let arg_reg = self.anon_register();
+                            let arg_reg = self.allocator.next_register();
                             self.add(LinearStatementValue::Constant(arg_reg,c.clone()));
                             arg_regs.push(arg_reg);
                         },
                         BTExpression::Variable(variable) => {
-                            let arg_reg = self.anon_register();
+                            let arg_reg = self.allocator.next_register();
                             let src_reg = self.var_registers.get(variable)?;
                             self.add(LinearStatementValue::Copy(arg_reg,src_reg));
                             arg_regs.push(arg_reg);
                         },
                         BTExpression::RegisterValue(bt_reg,BTRegisterType::Normal) => { 
-                            let arg_reg = self.anon_register();
+                            let arg_reg = self.allocator.next_register();
                             let src_reg = self.bt_register(*bt_reg,None);
                             self.add(LinearStatementValue::Copy(arg_reg,src_reg));
                             arg_regs.push(arg_reg);
@@ -277,7 +289,7 @@ impl<'a> Linearize<'a> {
                         BTExpression::RegisterValue(bt_register,BTRegisterType::Bundle) => {
                             let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;
                             for bundle_arg in bundle {
-                                let arg_reg = self.anon_register();
+                                let arg_reg = self.allocator.next_register();
                                 let reg = self.bt_register(*bt_register,Some(bundle_arg));
                                 self.add(LinearStatementValue::Copy(arg_reg,reg));
                                 arg_regs.push(arg_reg);
@@ -300,7 +312,7 @@ impl<'a> Linearize<'a> {
                     }
                     let bundle = self.bundles.get(&self.call_stack,&Position::Arg(i))?;
                     for bundle_arg in bundle {
-                        let arg_reg = self.anon_register();
+                        let arg_reg = self.allocator.next_register();
                         let variable = self.var_registers.get(&Variable {
                             prefix: Some(bundle_name.to_string()),
                             name: bundle_arg.to_string()
@@ -320,7 +332,7 @@ impl<'a> Linearize<'a> {
         for (i,ret) in rets.iter().enumerate() {
             match ret {
                 OrBundleRepeater::Normal(BTLValue::Variable(variable)) => {
-                    let dst = self.anon_register();
+                    let dst = self.allocator.next_register();
                     self.var_registers.add(&variable,dst);
                     self.add(LinearStatementValue::Copy(dst,*src.next().unwrap()));
                 },
@@ -338,7 +350,7 @@ impl<'a> Linearize<'a> {
                 OrBundleRepeater::Bundle(bundle_name) => {
                     let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;
                     for bundle_arg in bundle {
-                        let dst = self.anon_register();
+                        let dst = self.allocator.next_register();
                         self.var_registers.add(&Variable {
                             prefix: Some(bundle_name.to_string()),
                             name: bundle_arg.to_string()
@@ -364,10 +376,10 @@ impl<'a> Linearize<'a> {
             },
             Some(BTTopDefn::Code(defn)) => {
                 /* code */
-                let callee_rets = (0..defn.ret_count()).map(|_| self.anon_register()).collect::<Vec<_>>();
-                self.next_call_index += 1;
+                let callee_rets = (0..defn.ret_count()).map(|_| self.allocator.next_register()).collect::<Vec<_>>();
+                let call_index = self.allocator.next_call();
                 self.add(LinearStatementValue::Code(
-                    self.next_call_index,
+                    call_index,
                     proc.proc_index.expect("assignment/non-assignment"),
                     callee_rets.clone(),arg_regs
                 ));
@@ -407,14 +419,14 @@ impl<'a> Linearize<'a> {
                 for capture in defn.captures.iter() {
                     match capture {
                         OrBundle::Normal(variable) => {
-                            let dst = self.anon_register();
+                            let dst = self.allocator.next_register();
                             captures.push((variable.clone(),dst));
                             let src = self.var_registers.get(variable)?;
                             self.add(LinearStatementValue::Copy(dst,src));
                         },
                         OrBundle::Bundle(prefix) => {
                             for name in self.var_registers.outer_all_prefix(prefix) {
-                                let dst = self.anon_register();
+                                let dst = self.allocator.next_register();
                                 let variable = Variable {
                                     prefix: Some(prefix.to_string()),
                                     name: name.clone()
@@ -453,10 +465,10 @@ impl<'a> Linearize<'a> {
     }
 }
 
-pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,usize),String> {
+pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,Allocator),String> {
     let mut linearize = Linearize::new(tree,bundles);
     for stmt in &tree.statements {
         linearize.statement(stmt).map_err(|e| linearize.positions.message(&e))?;
     }
-    Ok((linearize.output,linearize.next_register))
+    Ok((linearize.output,linearize.allocator))
 }

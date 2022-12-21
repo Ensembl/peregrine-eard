@@ -24,21 +24,38 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
     }
 }
 
-fold(libcore__length) code __code_length(seq(?X)) -> number {
+fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
     impl (r1: seq(?X)) -> r2 : number {
         opcode 5, r2, r1;
     }
 }
 
-fold(libcore__total) code __code_total(seq(?X)) -> number {
+fold(libcore__total) special(total) code __code_total(seq(?X)) -> number {
     impl (r1: seq(?X)) -> r2 : number {
         opcode 6, r2, r1;
     }
 }
 
-fold(libcore__bound) code __code_bound(seq(?X)) -> number {
+fold(libcore__bound) special(bound) code __code_bound(seq(?X)) -> number {
     impl (r1: seq(?X)) -> r2 : number {
         opcode 7, r2, r1;
+    }
+}
+
+world special(check_length) code __code_check_length(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 10, r1, r2, r3;
+    }
+}
+
+world special(check_total) code __code_check_total(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 11, r1, r2, r3;
+    }
+}
+world special(check_bound) code __code_check_bound(string,number,number) {
+    impl (r1: string, r2: number, r3: number) {
+        opcode 12, r1, r2, r3;
     }
 }
 
@@ -46,7 +63,12 @@ export function __operator_infseq(x) { let y = __code_infseq(x); y }
 export function __operator_finseq() { let y = __code_finseq(); y }
 export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
 export function __operator_length(x) { let y = __code_length(x); y }
-export function __operator_total(x) { let y = __code_total(x); y }
-export function __operator_bound(x) { let y = __code_bound(x); y }
+
+export function __test_length(x) { let y = __code_length(x); y }
+export function __test_total(x) { let y = __code_total(x); y }
+export function __test_bound(x) { let y = __code_bound(x); y }
+export procedure __test_check_length(a,b,c) { __code_check_length(a,b,c); }
+export procedure __test_check_total(a,b,c) { __code_check_total(a,b,c); }
+export procedure __test_check_bound(a,b,c) { __code_check_bound(a,b,c); }
 
 export function len(x) { let y = __code_length(x); y }

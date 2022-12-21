@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{model::{FullConstant, Operation, OperationValue}, middleend::narrowtyping::NarrowType, source::ParsePosition};
+use crate::{model::{FullConstant, Operation, OperationValue}, middleend::narrowtyping::NarrowType, source::ParsePosition, unbundle::linearize::Allocator};
 
 /* We have no main-store but can spill small constants as they can be regenerated. We force spills
  * after a certain non-reuse distance and allow patchup of non-spills during generation.
@@ -25,18 +25,18 @@ struct Spill<'a> {
     in_use: HashMap<usize,Option<usize>>, // reg -> instr number for const regs still alive
     constants: HashMap<usize,FullConstant>, // reg -> value
     alias: HashMap<usize,usize>, // reg input -> reg output
-    next_register: usize,
+    allocator: Allocator,
     narrow: &'a mut HashMap<usize,NarrowType>,
     out: Vec<Operation>
 }
 
 impl<'a> Spill<'a> {
-    fn new(next_register: usize, narrow: &'a mut HashMap<usize,NarrowType>) -> Spill<'a> {
+    fn new(allocator: Allocator, narrow: &'a mut HashMap<usize,NarrowType>) -> Spill<'a> {
         Spill {
             in_use: HashMap::new(),
             constants: HashMap::new(),
             alias: HashMap::new(),
-            next_register, narrow,
+            allocator, narrow,
             out: vec![]
         }
     }
@@ -70,8 +70,7 @@ impl<'a> Spill<'a> {
             reg
         } else if let Some(value) = self.constants.get(&orig_reg) {
             /* vivify */
-            self.next_register += 1;
-            let alias_reg = self.next_register;
+            let alias_reg = self.allocator.next_register();
             self.alias.insert(orig_reg,alias_reg);
             self.narrow.insert(alias_reg,self.narrow.get(&orig_reg).expect("missing type").clone());
             self.in_use.insert(alias_reg,None);
@@ -79,7 +78,7 @@ impl<'a> Spill<'a> {
                 position: position.clone(),
                 value: OperationValue::Constant(alias_reg,value.clone())
             });
-            self.next_register
+            alias_reg
         } else {
             /* not a constant */
             reg
@@ -110,8 +109,8 @@ impl<'a> Spill<'a> {
     fn take(self) -> Vec<Operation> { self.out }
 }
 
-pub(crate) fn spill(next_register: usize, opers: &[Operation], narrow: &mut HashMap<usize,NarrowType>) -> Vec<Operation> {
-    let mut spill = Spill::new(next_register,narrow);
+pub(crate) fn spill(allocator: Allocator, opers: &[Operation], narrow: &mut HashMap<usize,NarrowType>) -> Vec<Operation> {
+    let mut spill = Spill::new(allocator,narrow);
     for (i,oper) in opers.iter().enumerate() {
         spill.add(i,oper);
     }

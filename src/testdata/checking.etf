@@ -7,11 +7,11 @@ length works
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
-print(format(__operator_length([])));
-print(format(__operator_length([1])));
-print(format(__operator_length([1,2])));
-print(format(__operator_length([1,...])));
-print(format(__operator_length(c([]))));
+print(format(__test_length([])));
+print(format(__test_length([1])));
+print(format(__test_length([1,2])));
+print(format(__test_length([1,...])));
+print(format(__test_length(c([]))));
 
 >> generate strip
 
@@ -41,12 +41,12 @@ total works
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
-print(format(__operator_total([])));
-print(format(__operator_total([1])));
-print(format(__operator_total([1,2])));
-print(format(__operator_total(c([1,2]))));
-print(format(__operator_total([1,...])));
-print(format(__operator_total([1.3,2])));
+print(format(__test_total([])));
+print(format(__test_total([1])));
+print(format(__test_total([1,2])));
+print(format(__test_total(c([1,2]))));
+print(format(__test_total([1,...])));
+print(format(__test_total([1.3,2])));
 
 >> generate strip
 
@@ -80,12 +80,12 @@ bound works
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
-print(format(__operator_bound([])));
-print(format(__operator_bound([1])));
-print(format(__operator_bound([1,7,3])));
-print(format(__operator_bound(c([1,2]))));
-print(format(__operator_bound([1,...])));
-print(format(__operator_bound([1.3,2])));
+print(format(__test_bound([])));
+print(format(__test_bound([1])));
+print(format(__test_bound([1,7,3])));
+print(format(__test_bound(c([1,2]))));
+print(format(__test_bound([1,...])));
+print(format(__test_bound([1.3,2])));
 
 >> generate strip
 
@@ -109,3 +109,57 @@ opcode 8, r1
 r1 <- -1
 opcode 9, r2, r1
 opcode 8, r2
+
+>> test
+
+length check
+
+>> input
+
+__test_check_length("a",1,-1);
+
+>> generate strip
+
+r1 <- "a"
+r2 <- 1
+r3 <- -1
+opcode 10, r1, r2, r3
+
+>> test
+
+checking smoke
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
+function c(x) { let y = wc(x); y }
+
+let a : length(!a) = c([1,2]);
+let b : length(!a) = c([3,4]);
+
+>> generate strip
+
+r1 <- [1,2]
+opcode 5, r2, r1
+r1 <- [3,4]
+opcode 5, r3, r1
+r1 <- "TODO"
+opcode 10, r1, r3, r2
+
+>> test
+
+checking collapse only one
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
+function c(x) { let y = wc(x); y }
+
+let a : length(!a) = c([1,2]);
+let b : length(!b) = c([3,4]);
+
+>> generate strip
+
+r1 <- [1,2]
+r2 <- [3,4]
+

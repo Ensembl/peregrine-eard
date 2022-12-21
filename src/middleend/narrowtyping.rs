@@ -158,9 +158,8 @@ impl<'a> NarrowTyping<'a> {
         })
     }
 
-    // XXX rets both wildcarded same but unrestricted
     fn code(&mut self, call: usize, name: usize, rets: &[usize], args: &[usize]) -> Result<(),String> {
-        let block_index = *self.block_index.get(&call).expect("missing call block");
+        let block_index = *self.block_index.get(&call).unwrap_or(&0);
         let block = match self.bt.get_by_index(name)? {
             BTTopDefn::Code(c) => c.get_block(block_index),
             _ => { panic!("didn't get code with code index"); }

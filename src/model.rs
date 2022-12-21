@@ -154,14 +154,16 @@ impl fmt::Debug for Step {
 #[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
     World,
-    Fold(String)
+    Fold(String),
+    Special(String)
 }
 
 impl fmt::Debug for CodeModifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CodeModifier::World => write!(f,"world")?,
-            CodeModifier::Fold(s) => write!(f,"fold({})",s)?
+            CodeModifier::Fold(s) => write!(f,"fold({})",s)?,
+            CodeModifier::Special(s) => write!(f,"special({})",s)?
         }
         Ok(())
     }
@@ -494,7 +496,7 @@ pub enum LinearStatementValue {
     Check(usize,CheckType,usize, bool), // reg, type, index, force
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
-    Code(usize,usize,Vec<usize>,Vec<usize>), // name,call,index,rets,args
+    Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
     Type(usize,Vec<TypeRestriction>),
     WildEquiv(Vec<usize>)
 }

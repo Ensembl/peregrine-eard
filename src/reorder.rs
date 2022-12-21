@@ -72,7 +72,7 @@ impl<'a> Reorder<'a> {
     }
 
     fn get_block(&self, call: usize, name: usize) -> &CodeBlock {
-        let block_index = *self.block_index.get(&call).expect("missing block index");
+        let block_index = *self.block_index.get(&call).unwrap_or(&0);
         let code_block = match self.bt.get_by_index(name).expect("missing code block") {
             BTTopDefn::FuncProc(_) => { panic!("code index to non-code"); },
             BTTopDefn::Code(c) => c

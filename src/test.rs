@@ -91,7 +91,7 @@ fn test_capture_smoke() {
 
 #[test]
 fn test_types() {
-    run_parse_tests(include_str!("testdata/types.etf"),false);
+    run_parse_tests(include_str!("testdata/types.etf"),true);
 }
 
 #[test]

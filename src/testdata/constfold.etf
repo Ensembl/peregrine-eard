@@ -46,7 +46,7 @@ constfold smoke 3
 
 let a = [1,2,3];
 
->> constfold strip
+>> constfold strip nolines
 
 sequences:46 r1 <- []
 test:2 r7 <- 1
@@ -65,7 +65,7 @@ constfold smoke 4
 let x = 1;
 let a = [x-1,x,x+1];
 
->> constfold strip
+>> constfold strip nolines
 
 test:2 r1 <- 1
 sequences:46 r5 <- []

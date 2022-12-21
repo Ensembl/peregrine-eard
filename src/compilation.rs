@@ -71,16 +71,16 @@ impl<'a> EarpCompilation<'a> {
 
     pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<Vec<Step>,String> {
         let bundles = build_unbundle(&tree)?;
-        let (linear,next_register) = linearize(&tree,&bundles)?;
+        let (linear,mut allocator) = linearize(&tree,&bundles)?;
         let linear = reduce(&linear);
-        let (broad,block_indexes) = broad_type(&tree,&linear)?;
-        run_checking(&tree,&linear,&block_indexes)?;
+        let (mut broad,block_indexes) = broad_type(&tree,&linear)?;
+        let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad)?;
         let mut narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
         let opers = const_fold(&self,tree,&block_indexes,&linear);
         let opers = culdesac(tree,&block_indexes,&opers);
         let opers = reuse(tree,&block_indexes,&opers)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
-        let opers = spill(next_register,&opers, &mut narrow);
+        let opers = spill(allocator,&opers, &mut narrow);
         let opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
         let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
         Ok(steps)

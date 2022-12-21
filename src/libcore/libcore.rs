@@ -1,7 +1,5 @@
-use ordered_float::OrderedFloat;
 use crate::{compiler::EarpCompiler, model::{FullConstant, Constant}, source::FixedSourceSource};
-
-use super::foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq};
+use super::foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq };
 
 fn fold_add(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(FullConstant::Atomic(Constant::Number(a)))),

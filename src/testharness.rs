@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, dump_opers}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::linearize}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
+use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, OrBundle, OrBundleRepeater, sepfmt, LinearStatement, FullConstant, dump_opers}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::buildtree::BuildTree, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
@@ -107,7 +107,7 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     }
 }
 
-fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>,usize) {
+fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>,Allocator) {
     let tree = compilation.build(processed.to_vec()).expect("build failed");
     let bundles = build_unbundle(&tree).expect("unbundle failed");
     let (linear,next_register) = linearize(&tree,&bundles).expect("linearize failed");
@@ -319,24 +319,26 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
             println!("{}",got);
             assert_eq!(process_ws(&got,broad_options),process_ws(broad_correct,broad_options));
         }
-        if let Some((_checking_options,_checking_correct)) = sections.get("checking") {
+        if let Some((checking_options,checking_correct)) = sections.get("checking") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,_) = frontend(&mut compilation,&processed);
-            let (_typing,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
+            println!("{}",sepfmt(&mut linear.iter(),"\n",""));
+            assert_eq!(process_ws(&sepfmt(&mut linear.iter(),"\n",""),checking_options),process_ws(checking_correct,checking_options));
         }
         if let Some((checking_options,checking_expected)) = sections.get("checking-fail") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,_) = frontend(&mut compilation,&processed);
-            let (_typing,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
-            let error = run_checking(&tree,&linear,&block_indexes).err().expect("checking unexpectedly succeeded");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("typing failed");
+            let error = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).err().expect("checking unexpectedly succeeded");
             assert_eq!(process_ws(&error,checking_options),process_ws(checking_expected,checking_options));
         }
         if let Some((narrow_options,narrow_correct)) = sections.get("narrow") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,_) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
             let narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut report = BTreeMap::new();
             for (reg,narrow) in sort_map(&narrow) {
@@ -348,9 +350,9 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
         if let Some((constfold_options,constfold_correct)) = sections.get("constfold") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,_) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
             let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             if constfold_options.contains("culdesac") {
@@ -361,9 +363,9 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
         if let Some((reuse_options,reuse_correct)) = sections.get("reuse") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,_) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
             let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);
@@ -380,9 +382,9 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
         if let Some((spill_options,spill_correct)) = sections.get("spill") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,next_register) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register, &mut broad).expect("checking unexpectedly failed");
             let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);
@@ -393,9 +395,9 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
         if let Some((reorder_options,reorder_correct)) = sections.get("reordered") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,next_register) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
             let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);
@@ -407,9 +409,9 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool) {
         }
         if let Some((generate_options,generate_correct)) = sections.get("generate") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,next_register) = frontend(&mut compilation,&processed);
-            let (broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            run_checking(&tree,&linear,&block_indexes).expect("checking unexpectedly failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
             let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
             opers = culdesac(&tree,&block_indexes,&opers);

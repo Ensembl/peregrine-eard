@@ -21,7 +21,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     }
 
     fn get_block(&mut self, call: usize, name: usize) -> &CodeBlock {
-        let block_index = *self.block_indexes.get(&call).expect("missing block index");
+        let block_index = *self.block_indexes.get(&call).unwrap_or(&0);
         let code_block = match self.bt.get_by_index(name).expect("missing code block") {
             BTTopDefn::FuncProc(_) => { panic!("code index to non-code"); },
             BTTopDefn::Code(c) => c

@@ -113,10 +113,15 @@ impl EarpParser {
         Ok(match_nodes!(input.into_children(); [identifier(s)] => s ))
     }
 
+    fn special(input: Node) -> PestResult<String> {
+        Ok(match_nodes!(input.into_children(); [identifier(s)] => s ))
+    }
+
     fn code_modifier(input: Node) -> PestResult<CodeModifier> {
         Ok(match_nodes!(input.into_children();
           [world(_)] => CodeModifier::World,
-          [fold(f)] => CodeModifier::Fold(f.to_string())
+          [fold(f)] => CodeModifier::Fold(f.to_string()),
+          [special(f)] => CodeModifier::Special(f.to_string())
         ))
     }
 

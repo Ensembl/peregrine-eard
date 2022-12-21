@@ -4,13 +4,6 @@ type smoke 1
 
 >> input
 
-code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
-code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
-code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
-function __operator_infseq(x) { let y = __code_infseq(x); y }
-function __operator_finseq() { let y = __code_finseq(); y }
-procedure __operator_push(x,y) { let y = __code_push(x,y); y }
-
 world code c (seq(?X) length(?Y)) -> (seq(?X) length(?Y)) {
     impl (r1: seq(boolean)) -> (r1) {
         opcode 14, r1;
@@ -27,22 +20,22 @@ let (z1,z2 : length(w)) = p(1,w);
 
 >> linearize strip reduce
 
-test:6 r1 (1#1) 
-test:20 r7 <constant> true
-test:7 r12 (2#2) r1 r7
-test:20 r17 <constant> false
-test:7 r22 (2#3) r12 r17
-test:20 r22 <check>f Length 1
-test:21 r29 <constant> 1
-test:16 r29 <type> [number]
-test:16 r22 <type> [seq(boolean)]
-test:16 r22 <check> Length 1
-test:16 r29 <type> [number]
-test:15 r36 (6#4) r22
-test:15 <wild-equiv> r22, r36
-test:16 r36 <type> [seq(boolean)]
-test:16 r36 <check> Length 1
-test:21 r36 <check> Length 1
+sequences:52 r1 (5#1) 
+test:13 r7 <constant> true
+sequences:53 r12 (6#2) r1 r7
+test:13 r17 <constant> false
+sequences:53 r22 (6#3) r12 r17
+test:13 r22 <check>f Length 1
+test:14 r29 <constant> 1
+test:9 r29 <type> [number]
+test:9 r22 <type> [seq(boolean)]
+test:9 r22 <check> Length 1
+test:9 r29 <type> [number]
+test:8 r36 (23#4) r22
+test:8 <wild-equiv> r22, r36
+test:9 r36 <type> [seq(boolean)]
+test:9 r36 <check> Length 1
+test:14 r36 <check> Length 1
 
 >> broad strip
 
@@ -174,78 +167,19 @@ type bug
 
 >> input
 
-code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
-code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
-code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
-function __operator_infseq(x) { let y = __code_infseq(x); y }
-function __operator_finseq() { let y = __code_finseq(); y }
-procedure __operator_push(x,y) { let y = __code_push(x,y); y }
-
 procedure p(x : ?X, z : ?Z) -> (?Y,seq(?Y),?Z) {
     ("",[],z)
 }
 
 let (c,d,f) = p(1,"hi");
 
->> built strip
-
-0: code __code_infseq(?X ) -> (seq(?X) )  {
-   impl (r1 : ?X) -> (r2 : seq(?X))  {}
-}
-
-1: code __code_finseq() -> (seq(?X) )  {
-   impl () -> (r1 : seq(?X))  {}
-}
-
-2: code __code_push(seq(?X) , ?X ) -> (seq(?X) )  {
-   impl (r1 : seq(?X), r2 : ?X) -> (r3 : seq(?X))  {}
-}
-
-3:func (x) {
-  test:5 (r1) <- (0#1 x)
-  test:5 let y
-  test:5 (y) <- #2 r1
-  (y)
-}
-
-4:func () {
-  test:6 (r2) <- (1#3)
-  test:6 let y
-  test:6 (y) <- #4 r2
-  (y)
-}
-
-5:proc (x,y) {
-  test:7 (r3) <- (2#5 x y)
-  test:7 let y
-  test:7 (y) <- #6 r3
-  (y)
-}
-
-6:proc (x: ?X,z: ?Z) -> (?Y,seq(?Y),?Z) {
-  test:9 (r4) <- (4#7)
-  ("",r4,z)
-}
-
-test:5 define 3
-test:6 define 4
-test:7 define 5
-test:9 define 6
-test:13 (r5 r6 r7) <- (6#8 1 "hi")
-test:13 let c
-test:13 let d
-test:13 let f
-test:13 (c) <- #9 r5
-test:13 (d) <- #10 r6
-test:13 (f) <- #11 r7
-
 >> linearize strip reduce
 
-test:13 r1 <constant> 1
-test:13 r2 <constant> "hi"
-test:6 r5 (1#1) 
-test:9 r10 <constant> ""
-test:9 r5 <type> [seq]
+test:6 r1 <constant> 1
+test:6 r2 <constant> "hi"
+sequences:52 r5 (5#1) 
+test:2 r10 <constant> ""
+test:2 r5 <type> [seq]
 
 >> narrow strip
 
@@ -258,13 +192,6 @@ string: 2, 10
 type challenge
 
 >> input
-
-code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
-code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
-code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
-function __operator_infseq(x) { let y = __code_infseq(x); y }
-function __operator_finseq() { let y = __code_finseq(); y }
-procedure __operator_push(x,y) { let y = __code_push(x,y); y }
 
 world code __code_print(?X) { impl (r1: ?X) {} }
 procedure print(x: ?X) { __code_print(x); }
@@ -287,29 +214,29 @@ print(f);
 
 >> linearize strip reduce
 
-test:19 r1 <constant> 1
-test:19 r2 <constant> "hi"
-test:6 r5 (1#1) 
-test:7 r16 (2#2) r5 r1
-test:6 r20 (1#3) 
-test:6 r24 (1#4) 
-test:12 r16 <type> [seq]
-test:12 r28 <constant> ""
-test:12 r20 <type> [seq]
-test:12 r24 <type> [seq]
-test:12 <wild-equiv> r20, r24
-test:6 r47 (1#5) 
-test:16 r20 <type> [seq(string)]
-test:16 r47 <type> [seq]
-test:16 r47 <type> [seq]
-test:17 r47 <type> [seq(number)]
-test:17 r56 <constant> 0
-test:10  (6#6) r16
-test:10  (6#7) r1
-test:10  (6#8) r28
-test:10  (6#9) r20
-test:10  (6#10) r24
-test:10  (6#11) r2
+test:12 r1 <constant> 1
+test:12 r2 <constant> "hi"
+sequences:52 r5 (5#1) 
+sequences:53 r16 (6#2) r5 r1
+sequences:52 r20 (5#3) 
+sequences:52 r24 (5#4) 
+test:5 r16 <type> [seq]
+test:5 r28 <constant> ""
+test:5 r20 <type> [seq]
+test:5 r24 <type> [seq]
+test:5 <wild-equiv> r20, r24
+sequences:52 r47 (5#5) 
+test:9 r20 <type> [seq(string)]
+test:9 r47 <type> [seq]
+test:9 r47 <type> [seq]
+test:10 r47 <type> [seq(number)]
+test:10 r56 <constant> 0
+test:3  (23#6) r16
+test:3  (23#7) r1
+test:3  (23#8) r28
+test:3  (23#9) r20
+test:3  (23#10) r24
+test:3  (23#11) r2
 
 >> narrow strip
 

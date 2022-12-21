@@ -10,7 +10,9 @@
  */
 
 use std::{collections::{HashMap, HashSet}};
-use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}, source::ParsePosition};
+use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType, Constant, AtomicTypeSpec}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}, source::ParsePosition, unbundle::linearize::Allocator};
+
+use super::broadtyping::BroadType;
 
 pub(crate) struct Checking<'a> {
     bt: &'a BuildTree,
@@ -18,17 +20,24 @@ pub(crate) struct Checking<'a> {
     block_indexes: &'a HashMap<usize,usize>,
     equiv: HashMap<CheckType,EquivalenceClass<usize>>,
     group: HashMap<(CheckType,usize),HashSet<usize>>,
-    forced: HashSet<usize>
+    forced: HashSet<usize>,
+    check_register: HashMap<(CheckType,usize),usize>,
+    allocator: &'a mut Allocator,
+    broad: &'a mut HashMap<usize,BroadType>,
+    out: Vec<LinearStatement>
 }
 
 impl<'a> Checking<'a> {
-    pub(crate) fn new(bt: &'a BuildTree, block_indexes: &'a HashMap<usize,usize>) -> Checking<'a> {
+    pub(crate) fn new(bt: &'a BuildTree, block_indexes: &'a HashMap<usize,usize>, allocator: &'a mut Allocator, broad: &'a mut HashMap<usize,BroadType>) -> Checking<'a> {
         Checking {
             bt, block_indexes,
             position: ParsePosition::empty("called"),
+            check_register: HashMap::new(),
             equiv: HashMap::new(),
             group: HashMap::new(),
-            forced: HashSet::new()
+            forced: HashSet::new(),
+            allocator, broad,
+            out: vec![]
         }
     }
 
@@ -84,6 +93,40 @@ impl<'a> Checking<'a> {
         }
     }
 
+    fn add_runtime_check(&mut self, reg: usize, ct: &CheckType, ci: usize) {
+        let value_reg = self.allocator.next_register();
+        self.broad.insert(value_reg,BroadType::Atomic(AtomicTypeSpec::Number));
+        let value_fn = match ct {
+            CheckType::Length => "length",
+            CheckType::LengthOrInfinite => "length",
+            CheckType::Reference => "bound",
+            CheckType::Sum => "total",
+        };
+        let name = self.bt.get_special(value_fn);
+        let call = self.allocator.next_call();
+        self.out.push(LinearStatement {
+            value: LinearStatementValue::Code(call,name,vec![value_reg],vec![reg]),
+            position: self.position.clone(),
+        });
+        if let Some(existing) = self.check_register.get(&(ct.clone(),ci)) {
+            let checkname_reg = self.allocator.next_register();
+            self.broad.insert(checkname_reg,BroadType::Atomic(AtomicTypeSpec::String));
+            self.out.push(LinearStatement { 
+                value: LinearStatementValue::Constant(checkname_reg,Constant::String("TODO".to_string())),
+                position: self.position.clone()
+            });
+            let check_fn = format!("check_{}",value_fn);
+            let name = self.bt.get_special(&check_fn);
+            let call = self.allocator.next_call();
+            self.out.push(LinearStatement {
+                value: LinearStatementValue::Code(call,name,vec![],vec![checkname_reg,value_reg,*existing]),
+                position: self.position.clone(),
+            });
+        } else {
+            self.check_register.insert((ct.clone(),ci),value_reg);
+        }
+    }
+
     fn groupify(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = stmt.position.clone();
         match &stmt.value {
@@ -92,9 +135,12 @@ impl<'a> Checking<'a> {
                 self.group.entry((ct.clone(),*ci)).or_insert_with(|| HashSet::new()).insert(reg_group);
                 if *force {
                     self.forced.insert(reg_group);
+                    self.add_runtime_check(*reg,ct,*ci);
                 }
             },
-            _ => {}
+            _ => {
+                self.out.push(stmt.clone());
+            }
         }
         Ok(())
     }
@@ -115,8 +161,8 @@ impl<'a> Checking<'a> {
     }
 }
 
-pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_indexes: &HashMap<usize,usize>) -> Result<(),String> {
-    let mut typing = Checking::new(bt,block_indexes);
+pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_indexes: &HashMap<usize,usize>, allocator: &mut Allocator,  broad: &mut HashMap<usize,BroadType>) -> Result<Vec<LinearStatement>,String> {
+    let mut typing = Checking::new(bt,block_indexes,allocator,broad);
     for stmt in stmts {
         typing.make_equivs(stmt).map_err(|e| typing.position.message(&e))?;
     }
@@ -127,5 +173,5 @@ pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_inde
     for stmt in stmts {
         typing.check(stmt).map_err(|e| typing.position.message(&e))?;
     }
-    Ok(())
+    Ok(typing.out.to_vec())
 }

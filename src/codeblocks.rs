@@ -116,7 +116,6 @@ impl ImplBlock {
     }
 
     pub(crate) fn reg_reuse(&self) -> Result<Vec<(usize,usize)>,String> { // ret <- arg
-        eprintln!("{:?}",self);
         let mut reg_names = HashMap::new();
         for (i,arg) in self.arguments.iter().enumerate() {
             match arg {

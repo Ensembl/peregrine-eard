@@ -101,7 +101,8 @@ impl_real_arg = { register ~ ":" ~ arg_type }
 /* code blocks */
 world = { "world" }
 fold = { "fold(" ~ identifier ~ ")" }
-code_modifier = { world | fold }
+special = { "special(" ~ identifier ~ ")" }
+code_modifier = { world | fold | special }
 code_modifiers = { code_modifier* }
 
 register = { "r" ~ ASCII_DIGIT+ }

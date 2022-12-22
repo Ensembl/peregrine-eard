@@ -1,0 +1,12 @@
+[package]
+name = "eard-compiler"
+version = "0.0.0"
+authors = ["ensembl-webteam@ebi.ac.uk"]
+edition = "2018"
+
+[dependencies]
+anyhow="*"
+clap = { version = "4", features = ["derive"] }
+
+[dependencies.eard-compiler-lib]
+path = "../eard-compiler-lib"

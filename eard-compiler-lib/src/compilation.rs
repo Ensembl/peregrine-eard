@@ -1,14 +1,9 @@
-use std::collections::{HashSet};
-use crate::{compiler::EardCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources};
+use crate::{compiler::EardCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, model::{Step, CompiledCode}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources, compiled::make_program};
 
 pub struct EardCompilation<'a> {
     pub(crate) compiler: &'a EardCompiler,
-    pub(crate) flags: HashSet<String>,
     soso_builder: CombinedSourceSourceBuilder,
-    context: usize,
-    optimise: bool,
-    target_version: Option<u32>
-}
+    context: usize}
 
 impl<'a> EardCompilation<'a> {
     pub fn new(compiler: &'a EardCompiler) -> Result<EardCompilation,String> {
@@ -16,40 +11,25 @@ impl<'a> EardCompilation<'a> {
         soso_builder.add_fixed(libcore_sources());
         Ok(EardCompilation {
             compiler,
-            flags: HashSet::new(),
             soso_builder,
             context: 0,
-            optimise: false,
-            target_version: None
         })
     }
 
     pub(crate) fn compiler(&self) -> &EardCompiler { &self.compiler }
 
-    pub fn set_target_version(&mut self, version: u32) {
-        self.target_version = Some(version);
-    }
-
     pub fn add_sources(&mut self, source: FixedSourceSource) {
         self.soso_builder.add_fixed(source);
-    }
-
-    pub fn set_optimise(&mut self, yn: bool) {
-        self.optimise = yn;
-    }
-
-    pub fn set_flag(&mut self, flag: &str) {
-        self.flags.insert(flag.to_string());
     }
 
     pub(crate) fn parse_part(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
         self.context += 1;
         let context = self.context;
-        parse_eard(position,path,fixed,self.optimise,context)
+        parse_eard(position,path,fixed,self.compiler().optimise(),context)
     }
 
     fn add_libcore(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {
-        if self.flags.contains("no-libcore") { return Ok(vec![]); }
+        if self.compiler().has_flag("no-libcore") { return Ok(vec![]); }
         self.context += 1;
         let context = self.context;
         Ok(vec![PTStatement { 
@@ -70,7 +50,7 @@ impl<'a> EardCompilation<'a> {
     }
 
     pub(crate) fn build(&mut self, input: Vec<PTStatement>) -> Result<BuildTree,String> {
-        PTStatement::to_build_tree(input,self.target_version)
+        PTStatement::to_build_tree(input,self.compiler().target_version())
     }
 
     pub(crate) fn frontend(&mut self, filename: &str) -> Result<BuildTree,String> {

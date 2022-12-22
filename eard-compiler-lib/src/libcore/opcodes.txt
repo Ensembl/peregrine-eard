@@ -1,3 +1,4 @@
+  0 load constant
   1 infseq
   2 finseq
   3 push (non-destructive)

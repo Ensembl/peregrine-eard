@@ -1,7 +1,10 @@
-use std::{collections::{HashMap}};
+use std::{collections::{HashMap, HashSet}};
 use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundleRepeater}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
 
 pub struct EardCompiler {
+    flags: HashSet<String>,
+    optimise: bool,
+    target_version: Option<u32>,
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
     constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>>>>
@@ -10,6 +13,9 @@ pub struct EardCompiler {
 impl EardCompiler {
     pub fn new() -> Result<EardCompiler,String> {
         let mut out = EardCompiler {
+            flags: HashSet::new(),
+            optimise: false,
+            target_version: None,
             block_macros: HashMap::new(),
             expression_macros: HashMap::new(),
             constant_folder: HashMap::new()
@@ -17,6 +23,20 @@ impl EardCompiler {
         libcore_add(&mut out)?;
         Ok(out)
     }
+
+    pub fn set_flag(&mut self, flag: &str) {
+        self.flags.insert(flag.to_string());
+    }
+
+    pub fn has_flag(&self, flag: &str) -> bool {
+        self.flags.contains(flag)
+    }
+
+    pub fn set_target_version(&mut self, version: u32) { self.target_version = Some(version); }
+    pub fn target_version(&self) -> Option<u32> { self.target_version }
+
+    pub fn set_optimise(&mut self, yn: bool) { self.optimise = yn; }
+    pub fn optimise(&self) -> bool { self.optimise }
 
     fn check_macro_name_unused(&self, name: &str) -> Result<(),String> {
         if self.block_macros.contains_key(name) || self.expression_macros.contains_key(name) {

@@ -56,13 +56,8 @@ pub(crate) fn make_compiler() -> Result<EardCompiler,String> {
     Ok(compiler)
 }
 
-pub(crate) fn make_compilation<'a>(compiler: &'a EardCompiler, libcore: bool, optimise: bool) -> EardCompilation<'a> {
-    let mut comp = EardCompilation::new(compiler).expect("cannot build compilation");
-    comp.set_optimise(optimise);
-    if !libcore {
-        comp.set_flag("no-libcore");
-    }
-    comp
+pub(crate) fn make_compilation<'a>(compiler: &'a EardCompiler) -> EardCompilation<'a> {
+    EardCompilation::new(compiler).expect("cannot build compilation")
 }
 
 fn split_on_space(input: &str) -> Vec<String> {
@@ -165,8 +160,12 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
     }
     for (sections,inputs) in tests {
         eprintln!("{:?}",inputs);
-        let compiler = make_compiler().ok().unwrap();
-        let mut compilation = make_compilation(&compiler,libcore,optimise);
+        let mut compiler = make_compiler().ok().unwrap();
+        if !libcore {
+            compiler.set_flag("no-libcore");
+        }
+        compiler.set_optimise(optimise);
+        let mut compilation = make_compilation(&compiler);
         let input = if let Some(x) = inputs.get("test") { x.clone() } else { continue; };
         println!("\n\n\n{}\n",input);
         let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");

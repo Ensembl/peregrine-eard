@@ -145,11 +145,11 @@ fn test_multi_generate() {
         
         c(3);
     ";
-    let compiler = EardCompiler::new().expect("bad compiler");
     let mut chosen = vec![];
     for v in 0..12 {
+        let mut compiler = EardCompiler::new().expect("bad compiler");
+        compiler.set_target_version(v);
         let mut compilation = EardCompilation::new(&compiler).expect("bad compilation");
-        compilation.set_target_version(v);
         let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");
         soso_builder.add_fixed(libcore_sources());
         soso_builder.add_fixed(FixedSourceSource::new_vec(vec![("test",source)]));

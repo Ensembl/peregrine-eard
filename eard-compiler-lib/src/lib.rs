@@ -39,7 +39,7 @@ pub(crate) mod toposort;
 mod reorder;
 mod generate;
 mod spill;
-
+mod compiled;
 
 #[cfg(test)]
 mod test;

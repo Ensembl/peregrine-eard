@@ -7,7 +7,6 @@ use std::collections::HashMap;
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
-
 }
 
 #[derive(PartialEq,PartialOrd,Eq,Ord,Clone)]
@@ -156,6 +155,11 @@ impl fmt::Debug for Step {
             }
         }
     }
+}
+
+pub struct CompiledCode {
+    pub constants: Vec<FullConstant>,
+    pub program: Vec<(usize,Vec<usize>)>
 }
 
 #[derive(Clone,PartialEq,Eq)]

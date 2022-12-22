@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{compiler::{EarpCompiler}, compilation::EarpCompilation, source::ParsePosition};
+use crate::{compiler::{EardCompiler}, compilation::EardCompilation, source::ParsePosition};
 use super::{parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at}, femodel::OrBundleRepeater};
 
 const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
@@ -23,7 +23,7 @@ const PREFIX_OPERATORS : [(&'static str,&'static str);2] = [
 ];
 
 struct RunMacrosOnce<'a> {
-    compiler: &'a EarpCompiler,
+    compiler: &'a EardCompiler,
     any: bool
 }
 
@@ -47,14 +47,14 @@ impl<'a> PTTransformer for RunMacrosOnce<'a> {
     }
 }
 
-fn run_macros_once(compiler: &EarpCompiler, block: Vec<PTStatement>) -> Result<(Vec<PTStatement>,bool),String> {
+fn run_macros_once(compiler: &EardCompiler, block: Vec<PTStatement>) -> Result<(Vec<PTStatement>,bool),String> {
     let mut once = RunMacrosOnce { compiler, any: false };
     let out = PTStatement::transform_list(block,&mut once)?;
     Ok((out,once.any))
 }
 
 struct RunIncludeOnce<'a,'b> {
-    compilation: &'b mut EarpCompilation<'a>,
+    compilation: &'b mut EardCompilation<'a>,
     any: bool
 }
 
@@ -67,7 +67,7 @@ impl<'a,'b> PTTransformer for RunIncludeOnce<'a,'b> {
     }
 }
 
-fn run_include_once<'a,'b>(compilation: &'b mut EarpCompilation<'a>, block: Vec<PTStatement>) -> Result<(Vec<PTStatement>,bool),String> {
+fn run_include_once<'a,'b>(compilation: &'b mut EardCompilation<'a>, block: Vec<PTStatement>) -> Result<(Vec<PTStatement>,bool),String> {
     let mut once = RunIncludeOnce { compilation, any: false };
     let out = PTStatement::transform_list(block,&mut once)?;
     Ok((out,once.any))
@@ -127,7 +127,7 @@ fn phase2_misc(block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
     PTStatement::transform_list(block,&mut flags)
 }
 
-pub fn preprocess(compilation: &mut EarpCompilation, mut block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
+pub fn preprocess(compilation: &mut EardCompilation, mut block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
     let mut any1 = true;
     let mut any2 = true;
     while any1 || any2 {

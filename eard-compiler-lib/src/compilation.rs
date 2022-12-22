@@ -1,8 +1,8 @@
 use std::collections::{HashSet};
-use crate::{compiler::EarpCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_earp}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources};
+use crate::{compiler::EardCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, model::{Step}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources};
 
-pub struct EarpCompilation<'a> {
-    pub(crate) compiler: &'a EarpCompiler,
+pub struct EardCompilation<'a> {
+    pub(crate) compiler: &'a EardCompiler,
     pub(crate) flags: HashSet<String>,
     soso_builder: CombinedSourceSourceBuilder,
     context: usize,
@@ -10,11 +10,11 @@ pub struct EarpCompilation<'a> {
     target_version: Option<u32>
 }
 
-impl<'a> EarpCompilation<'a> {
-    pub fn new(compiler: &'a EarpCompiler) -> Result<EarpCompilation,String> {
+impl<'a> EardCompilation<'a> {
+    pub fn new(compiler: &'a EardCompiler) -> Result<EardCompilation,String> {
         let mut soso_builder = CombinedSourceSourceBuilder::new()?;
         soso_builder.add_fixed(libcore_sources());
-        Ok(EarpCompilation {
+        Ok(EardCompilation {
             compiler,
             flags: HashSet::new(),
             soso_builder,
@@ -24,7 +24,7 @@ impl<'a> EarpCompilation<'a> {
         })
     }
 
-    pub(crate) fn compiler(&self) -> &EarpCompiler { &self.compiler }
+    pub(crate) fn compiler(&self) -> &EardCompiler { &self.compiler }
 
     pub fn set_target_version(&mut self, version: u32) {
         self.target_version = Some(version);
@@ -45,7 +45,7 @@ impl<'a> EarpCompilation<'a> {
     pub(crate) fn parse_part(&mut self, position: &ParsePosition, path: &str, fixed: bool) -> Result<Vec<PTStatement>,String> {
         self.context += 1;
         let context = self.context;
-        parse_earp(position,path,fixed,self.optimise,context)
+        parse_eard(position,path,fixed,self.optimise,context)
     }
 
     fn add_libcore(&mut self, position: &ParsePosition) -> Result<Vec<PTStatement>,String> {

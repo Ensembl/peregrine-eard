@@ -1,8 +1,8 @@
 use std::{collections::{HashMap}};
-use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EarpCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock, source::ParsePosition};
+use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EardCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock, source::ParsePosition};
 
 struct ConstFold<'a,'b> {
-    comp: &'b EarpCompilation<'a>,
+    comp: &'b EardCompilation<'a>,
     bt: &'b BuildTree,
     block_indexes: &'b HashMap<usize,usize>,
     values: HashMap<usize,FullConstant>,
@@ -11,7 +11,7 @@ struct ConstFold<'a,'b> {
 }
 
 impl<'a,'b> ConstFold<'a,'b> {
-    fn new(compilation: &'b EarpCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>) -> ConstFold<'a,'b> {
+    fn new(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>) -> ConstFold<'a,'b> {
         ConstFold {
             comp: compilation, bt, block_indexes,
             values: HashMap::new(),
@@ -80,7 +80,7 @@ impl<'a,'b> ConstFold<'a,'b> {
     fn take(self) -> Vec<Operation> { self.out }
 }
 
-pub(crate) fn const_fold<'a,'b>(compilation: &'b EarpCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, stmts: &[LinearStatement]) -> Vec<Operation> {
+pub(crate) fn const_fold<'a,'b>(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, stmts: &[LinearStatement]) -> Vec<Operation> {
     let mut fold = ConstFold::new(compilation,bt,block_indexes);
     for stmt in stmts {
         fold.add(stmt);

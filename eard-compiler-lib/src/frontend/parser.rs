@@ -4,8 +4,8 @@ use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, 
 use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, femodel::{OrBundle, OrBundleRepeater}};
 
 #[derive(Parser)]
-#[grammar = "frontend/earp.pest"]
-struct EarpParser;
+#[grammar = "frontend/eard.pest"]
+struct EardParser;
 
 #[derive(Clone)]
 struct ParseFixedState {
@@ -92,7 +92,7 @@ fn decl_check(input: Node, check_type: CheckType) -> PestResult<Check> {
 }
 
 #[pest_consume::parser]
-impl EarpParser {
+impl EardParser {
     fn string_inner(input: Node) -> PestResult<String> {
         parse_string(input)
     }
@@ -771,17 +771,17 @@ impl EarpParser {
     }
 }
 
-fn do_parse_earp(input: &str, position: &ParsePosition, optimise: bool, context: usize) -> PestResult<Vec<PTStatement>> {
+fn do_parse_eard(input: &str, position: &ParsePosition, optimise: bool, context: usize) -> PestResult<Vec<PTStatement>> {
     let state = ParseFixedState { 
         position: position.clone(),
         optimise,
         context
     };
-    let input = EarpParser::parse_with_userdata(Rule::file,input,state)?.single()?;
-    EarpParser::file(input)
+    let input = EardParser::parse_with_userdata(Rule::file,input,state)?.single()?;
+    EardParser::file(input)
 }
 
-pub fn parse_earp(position: &ParsePosition, filename: &str, fixed: bool, optimise: bool, context: usize) -> Result<Vec<PTStatement>,String> {
+pub fn parse_eard(position: &ParsePosition, filename: &str, fixed: bool, optimise: bool, context: usize) -> Result<Vec<PTStatement>,String> {
     let (input,new_pos) = position.push(filename,fixed)?;
-    do_parse_earp(&input,&new_pos,optimise,context).map_err(|e| e.to_string())
+    do_parse_eard(&input,&new_pos,optimise,context).map_err(|e| e.to_string())
 }

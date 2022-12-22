@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 
-use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, model::{Constant, sepfmt}, compilation::EarpCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources};
+use crate::{testharness::{run_parse_tests}, compiler::EardCompiler, model::{Constant, sepfmt}, compilation::EardCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression};
 
 #[test]
@@ -40,7 +40,7 @@ fn test_preprocess() {
 
 #[test]
 fn test_macro_clash() {
-    let mut compiler = EarpCompiler::new().expect("couldn't build compiler");
+    let mut compiler = EardCompiler::new().expect("couldn't build compiler");
     assert!(compiler.add_block_macro("x", |_,_,_| { Ok(vec![])}).is_ok());
     assert!(compiler.add_block_macro("y", |_,_,_| { Ok(vec![])}).is_ok());
     assert!(compiler.add_block_macro("x", |_,_,_| { Ok(vec![])}).is_err());
@@ -145,10 +145,10 @@ fn test_multi_generate() {
         
         c(3);
     ";
-    let compiler = EarpCompiler::new().expect("bad compiler");
+    let compiler = EardCompiler::new().expect("bad compiler");
     let mut chosen = vec![];
     for v in 0..12 {
-        let mut compilation = EarpCompilation::new(&compiler).expect("bad compilation");
+        let mut compilation = EardCompilation::new(&compiler).expect("bad compilation");
         compilation.set_target_version(v);
         let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");
         soso_builder.add_fixed(libcore_sources());

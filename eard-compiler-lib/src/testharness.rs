@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EarpCompiler}, model::{Variable, Constant, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::BuildTree, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EarpCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
+use crate::{compiler::{EardCompiler}, model::{Variable, Constant, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::BuildTree, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EardCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
@@ -9,8 +9,8 @@ fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'
     keys.iter().map(|k| (*k,h.get(k).unwrap())).collect()
 }
 
-pub(crate) fn make_compiler() -> Result<EarpCompiler,String> {
-    let mut compiler = EarpCompiler::new()?;
+pub(crate) fn make_compiler() -> Result<EardCompiler,String> {
+    let mut compiler = EardCompiler::new()?;
     compiler.add_block_macro("x", |expr,pos,context| {
         let value = match &expr[0] {
             OrBundleRepeater::Normal(x) => x,
@@ -56,8 +56,8 @@ pub(crate) fn make_compiler() -> Result<EarpCompiler,String> {
     Ok(compiler)
 }
 
-pub(crate) fn make_compilation<'a>(compiler: &'a EarpCompiler, libcore: bool, optimise: bool) -> EarpCompilation<'a> {
-    let mut comp = EarpCompilation::new(compiler).expect("cannot build compilation");
+pub(crate) fn make_compilation<'a>(compiler: &'a EardCompiler, libcore: bool, optimise: bool) -> EardCompilation<'a> {
+    let mut comp = EardCompilation::new(compiler).expect("cannot build compilation");
     comp.set_optimise(optimise);
     if !libcore {
         comp.set_flag("no-libcore");
@@ -125,7 +125,7 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     }
 }
 
-fn frontend(compilation: &mut EarpCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>,Allocator) {
+fn frontend(compilation: &mut EardCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>,Allocator) {
     let tree = compilation.build(processed.to_vec()).expect("build failed");
     let bundles = build_unbundle(&tree).expect("unbundle failed");
     let (linear,next_register) = linearize(&tree,&bundles).expect("linearize failed");

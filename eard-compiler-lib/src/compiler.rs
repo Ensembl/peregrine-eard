@@ -1,15 +1,15 @@
 use std::{collections::{HashMap}};
 use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundleRepeater}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
 
-pub struct EarpCompiler {
+pub struct EardCompiler {
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
     constant_folder: HashMap<String,Box<dyn Fn(&[Option<FullConstant>]) -> Option<Vec<FullConstant>>>>
 }
 
-impl EarpCompiler {
-    pub fn new() -> Result<EarpCompiler,String> {
-        let mut out = EarpCompiler {
+impl EardCompiler {
+    pub fn new() -> Result<EardCompiler,String> {
+        let mut out = EardCompiler {
             block_macros: HashMap::new(),
             expression_macros: HashMap::new(),
             constant_folder: HashMap::new()

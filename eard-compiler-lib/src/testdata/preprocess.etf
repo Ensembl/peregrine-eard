@@ -5,14 +5,14 @@ Basic include/macro smoke test
 >> input
 
 let x = 1;
-refer "include-macro-smoke2.earp";
+refer "include-macro-smoke2.eard";
 
->> input include-macro-smoke2.earp
+>> input include-macro-smoke2.eard
 
 let y = 2;
-refer "include-macro-smoke3.earp";
+refer "include-macro-smoke3.eard";
 
->> input include-macro-smoke3.earp
+>> input include-macro-smoke3.eard
 
 let z = 3;
 
@@ -26,12 +26,12 @@ let z = 3;
     },
     PTStatement{
         value: LetStatement([(y,[])],[Constant(2)]),
-        position: include-macro-smoke2.earp:2 (included from test:3),
+        position: include-macro-smoke2.eard:2 (included from test:3),
         context:2
     },
     PTStatement{
         value:LetStatement([(z,[])],[Constant(3)]),
-        position: include-macro-smoke3.earp:2 (included from include-macro-smoke2.earp:3) (included from test:3),
+        position: include-macro-smoke3.eard:2 (included from include-macro-smoke2.eard:3) (included from test:3),
         context:3
     }
 ]

@@ -1,0 +1,25 @@
+{
+    "name": "eard-file-extension",
+    "displayName": "eard file extension",
+    "description": "Syntax highlighting etc for .eard files",
+    "version": "0.0.2",
+    "engines": {
+        "vscode": "^1.48.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "eard",
+            "aliases": ["eard", "eard"],
+            "extensions": [".dp",".eard"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "eard",
+            "scopeName": "source.eard",
+            "path": "./syntaxes/eard.tmLanguage.json"
+        }]
+    }
+}

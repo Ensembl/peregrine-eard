@@ -1,0 +1,78 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "egs",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#types"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#numeric"
+		},
+		{
+			"include": "#comments"
+		}
+
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.eard",
+				"match": "\\b(include|code|world|opcode|register|function|procedure|let|refer|impl|debug|export|fold)\\b"
+			}]
+		},
+		"types": {
+			"patterns": [{
+				"name": "support.type.eard",
+				"match": "\\b(boolean|number|string|bytes|seq)\\b"
+			}]
+		},
+		"functions": {
+			"patterns": [{
+				"name": "entity.name.function.eard",
+				"match": "\\b([A-Za-z_][A-Za-z0-9_]+)(?=\\()"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double.eard",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.eard",
+					"match": "\\\\."
+				}
+			]
+		},
+		"numeric": {
+			"patterns": [{
+				"name": "constant.numeric.float.eard",
+				"match": "-?([0-9]+)(\\.[0-9]+)?"
+			}]
+		},
+		"comments": {
+			"patterns": [
+				{
+				"name": "comment.line.eard",
+				"begin": "//",
+				"end": "\n"
+
+				},
+				{
+				"name":"comment.block.eard",
+				"begin": "\/[*]",
+				"end": "[*](\/)"
+				}
+			]
+		}
+	},
+	"scopeName": "source.eard"
+}

@@ -51,7 +51,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "earp-compiler-lib"
+name = "eard-compiler-lib"
 version = "0.0.0"
 dependencies = [
  "minicbor",

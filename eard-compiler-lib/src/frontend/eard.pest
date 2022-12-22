@@ -8,7 +8,7 @@ COMMENT = _{ ("//" ~ (!"\n" ~ ANY)* ~ "\n") | ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
 
 reserved = @{
     ("false" | "true" | "include" | "number" | "string" | "boolean" | "handle" | "seq" | "code" |
-    "world" | "opcode" | "register" | "flag" | "function" | "procedure" | "let") ~ 
+    "world" | "opcode" | "register" | "flag" | "function" | "procedure" | "let" | "refer" | "impl") ~ 
     (WHITESPACE|(!"_" ~ PUNCTUATION))
 }
 

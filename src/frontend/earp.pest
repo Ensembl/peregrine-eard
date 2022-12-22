@@ -88,6 +88,11 @@ code_arguments = { (code_arg ~ ("," ~ code_arg)*)? }
 code_arg = { arg_type ~ arg_check* }
 
 code_impl = { impl_header ~ "{" ~  opcode_statement? ~ "}" }
+
+version_spec_part = @{ ("<="|">="|"<"|">"|"=") ~ ASCII_DIGIT+ }
+version_spec = { version_spec_part* }
+version = { "version(" ~ version_spec ~ ")" }
+
 impl_header = { "impl" ~ "(" ~ impl_arguments ~ ")" ~ impl_return }
 
 impl_return =  { ("->" ~ (("(" ~ impl_return_arguments ~ ")")|impl_return_var))? }
@@ -168,7 +173,8 @@ function_return = { ("->" ~ funcproc_return_type)? }
 
 function_value = { expression|bundle }
 
-funcproc_modifier = { "export" }
+export = { "export" }
+funcproc_modifier = { export | version }
 funcproc_modifiers = { funcproc_modifier* }
 
 // XXX let bundle call

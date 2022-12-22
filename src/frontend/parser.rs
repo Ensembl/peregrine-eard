@@ -129,11 +129,26 @@ impl EarpParser {
         ))
     }
 
+    fn export(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+    fn version_spec_part(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+
+    fn version_spec(input: Node) -> PestResult<Vec<String>> {
+        Ok(match_nodes!(input.into_children();
+          [version_spec_part(p)..] => p.collect()
+        ))
+    }
+
+    fn version(input: Node) -> PestResult<Vec<String>> {
+        Ok(match_nodes!(input.into_children();
+          [version_spec(p)] => p
+        ))
+    }
+
     fn funcproc_modifier(input: Node) -> PestResult<FuncProcModifier> {
-        Ok(match input.as_str() {
-            "export" => FuncProcModifier::Export,
-            _ => unreachable!()
-        })
+        Ok(match_nodes!(input.into_children();
+          [export(_)] => FuncProcModifier::Export,
+          [version(v)] => FuncProcModifier::Version(v),
+        ))
     }
 
     fn boolean(input: Node) -> PestResult<bool> {

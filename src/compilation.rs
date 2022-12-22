@@ -6,7 +6,8 @@ pub struct EarpCompilation<'a> {
     pub(crate) flags: HashSet<String>,
     soso_builder: CombinedSourceSourceBuilder,
     context: usize,
-    optimise: bool
+    optimise: bool,
+    target_version: Option<u32>
 }
 
 impl<'a> EarpCompilation<'a> {
@@ -18,11 +19,16 @@ impl<'a> EarpCompilation<'a> {
             flags: HashSet::new(),
             soso_builder,
             context: 0,
-            optimise: false
+            optimise: false,
+            target_version: None
         })
     }
 
     pub(crate) fn compiler(&self) -> &EarpCompiler { &self.compiler }
+
+    pub fn set_target_version(&mut self, version: u32) {
+        self.target_version = Some(version);
+    }
 
     pub fn add_sources(&mut self, source: FixedSourceSource) {
         self.soso_builder.add_fixed(source);
@@ -64,7 +70,7 @@ impl<'a> EarpCompilation<'a> {
     }
 
     pub(crate) fn build(&mut self, input: Vec<PTStatement>) -> Result<BuildTree,String> {
-        PTStatement::to_build_tree(input)    
+        PTStatement::to_build_tree(input,self.target_version)
     }
 
     pub(crate) fn frontend(&mut self, filename: &str) -> Result<BuildTree,String> {

@@ -1,6 +1,6 @@
 use ordered_float::OrderedFloat;
 
-use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, model::Constant};
+use crate::{testharness::{run_parse_tests}, compiler::EarpCompiler, model::{Constant, sepfmt}, compilation::EarpCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources};
 use crate::frontend::parsetree::{PTExpression};
 
 #[test]
@@ -127,4 +127,48 @@ fn test_checking_opt() {
 #[test]
 fn test_handle() {
     run_parse_tests(include_str!("testdata/handle.etf"),true,false);
+}
+
+#[test]
+fn test_multi_generate() {
+    let source = "        
+        world code wc1(number) -> number { impl(r1: number) -> r2: number { opcode 901, r2, r1; } }
+        world code wc2(number) -> number { impl(r1: number) -> r2: number { opcode 902, r2, r1; } }
+        world code wc3(number) -> number { impl(r1: number) -> r2: number { opcode 903, r2, r1; } }
+        world code wc4(number) -> number { impl(r1: number) -> r2: number { opcode 904, r2, r1; } }
+
+
+        version(<=3)    function c(x) { let y = wc1(x); y }
+        version(>3 <=8) function c(x) { let y = wc2(x); y }
+        version(=9)     function c(x) { let y = wc3(x); y }
+        version(>9)     function c(x) { let y = wc4(x); y }
+        
+        c(3);
+    ";
+    let compiler = EarpCompiler::new().expect("bad compiler");
+    let mut chosen = vec![];
+    for v in 0..12 {
+        let mut compilation = EarpCompilation::new(&compiler).expect("bad compilation");
+        compilation.set_target_version(v);
+        let mut soso_builder = CombinedSourceSourceBuilder::new().expect("cannot create soso");
+        soso_builder.add_fixed(libcore_sources());
+        soso_builder.add_fixed(FixedSourceSource::new_vec(vec![("test",source)]));
+        let soso = CombinedSourceSource::new(&soso_builder);
+        let position = ParsePosition::root(SourceSourceImpl::new(soso),"included");
+        let stmts = compilation.parse(&position,"test",true).expect("cannot parse");
+        let stmts = compilation.preprocess(stmts).expect("preprocess");
+        let tree = compilation.build(stmts).expect("building");
+        let step = compilation.middleend(&tree).expect("middleend");
+        let text = sepfmt(&mut step.iter(),"\n","");
+        for line in text.split("\n") {
+            if line.contains("opcode") {
+                let digits = line.chars().filter(|x| x.is_digit(10) || *x == ',').collect::<String>();
+                if let Some(comma) = digits.find(",") {
+                    let (opcode,_) = digits.split_at(comma);
+                    chosen.push(opcode.parse::<u32>().expect("bad digit parse"));
+                }
+            }
+        }
+    }
+    assert_eq!(vec![901, 901, 901, 901, 902, 902, 902, 902, 902, 903, 904, 904],chosen);
 }

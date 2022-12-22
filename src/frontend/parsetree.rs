@@ -142,6 +142,15 @@ impl PTFuncDef {
             value_type: self.value_type
         })
     }
+
+    pub(crate) fn versions(&self) -> Vec<Vec<String>> {
+        self.modifiers.iter().filter_map(|m| {
+            match m {
+                FuncProcModifier::Export => None,
+                FuncProcModifier::Version(v) => Some(v.to_vec())
+            }
+        }).collect()
+    }
 }
 
 impl OrBundle<PTExpression> {
@@ -177,6 +186,15 @@ impl PTProcDef {
             ret: self.ret.drain(..).map(|x| x.transform(transformer,pos,context)).collect::<Result<_,_>>()?,
             ret_type: self.ret_type
         })
+    }
+
+    pub(crate) fn versions(&self) -> Vec<Vec<String>> {
+        self.modifiers.iter().filter_map(|m| {
+            match m {
+                FuncProcModifier::Export => None,
+                FuncProcModifier::Version(v) => Some(v.to_vec())
+            }
+        }).collect()
     }
 }
 
@@ -269,9 +287,9 @@ impl PTStatement {
         Ok(out)    
     }
 
-    pub(crate) fn to_build_tree(this: Vec<Self>) -> Result<BuildTree,String> {
+    pub(crate) fn to_build_tree(this: Vec<Self>, target_version: Option<u32>) -> Result<BuildTree,String> {
         let mut bt = BuildTree::new();
-        let mut bc = BuildContext::new();
+        let mut bc = BuildContext::new(target_version);
         for stmt in this.iter() {
             bc.set_location(&stmt.position);
             bc.set_file_context(stmt.context);

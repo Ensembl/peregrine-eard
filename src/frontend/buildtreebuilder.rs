@@ -14,6 +14,7 @@ struct CurrentFuncProcDefinition {
     block: Vec<BTStatement>,
     name: String,
     export: bool,
+    versions: Vec<Vec<String>>,
     args: Vec<OrBundle<TypedArgument>>,
     captures: Vec<OrBundle<Variable>>,
     variety: BTDefinitionVariety,
@@ -76,6 +77,7 @@ impl CurrentFuncProcDefinition {
 }
 
 pub struct BuildContext {
+    target_version: Option<u32>,
     location: ParsePosition,
     file_context: usize,
     defnames: BTreeMap<(Option<usize>,String),DefName>,
@@ -85,8 +87,9 @@ pub struct BuildContext {
 }
 
 impl BuildContext {
-    pub fn new() -> BuildContext {
+    pub fn new(target_version: Option<u32>) -> BuildContext {
         BuildContext {
+            target_version,
             location: ParsePosition::empty("included"),
             file_context: 0,
             defnames: BTreeMap::new(),
@@ -100,7 +103,7 @@ impl BuildContext {
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
             captures: &[OrBundle<Variable>],
-            export: bool) {
+            export: bool, versions: Vec<Vec<String>>) {
         let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
         self.funcproc_target = Some(CurrentFuncProcDefinition {
             position: self.location.clone(),
@@ -109,12 +112,34 @@ impl BuildContext {
             captures: captures.to_vec(),
             export, variety,
             block: vec![],
-            ret_type
+            ret_type, versions
         });
+    }
+
+    fn version_part_ok(&self, defn_ver: &str) -> bool {
+        let lt = defn_ver.contains("<");
+        let gt = defn_ver.contains(">");
+        let eq = defn_ver.contains("=");
+        let digits = defn_ver.chars().filter(|x| x.is_digit(10)).collect::<String>();
+        digits.parse::<u32>().map(|v| {
+            if let Some(want_ver) = self.target_version {
+                ( gt && want_ver > v ) || ( eq && want_ver == v ) || ( lt && want_ver < v )
+            } else { gt }
+        }).unwrap_or(false)
+    }
+
+    fn version_ok(&self, defn_ver: &Vec<String>) -> bool {
+        defn_ver.iter().all(|spec| self.version_part_ok(spec))
+    }
+
+    fn versions_ok(&self, defn_vers: &Vec<Vec<String>>) -> bool {
+        if defn_vers.len() == 0 { return true; }
+        defn_vers.iter().any(|spec| self.version_ok(spec))
     }
 
     pub fn pop_funcproc_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
         let ctx = self.funcproc_target.take().expect("pop without push");
+        if !self.versions_ok(&ctx.versions) { return Ok(()); }
         let defn = match &ctx.variety {
             BTDefinitionVariety::Func => {                
                 self.define_funcproc(&ctx.name,ctx.to_funcproc(ret)?,false,bt,ctx.export)?
@@ -420,7 +445,8 @@ impl BuildContext {
     fn build_funcdef(&mut self, bt: &mut BuildTree, def: &PTFuncDef) -> Result<(),String> {
         let ret_type = def.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export);
+        let versions = def.versions();
+        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export,versions);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }
@@ -430,8 +456,9 @@ impl BuildContext {
     }
 
     fn build_procdef(&mut self, bt: &mut BuildTree, def: &PTProcDef) -> Result<(),String> {
+        let versions = def.versions();
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export);
+        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export,versions);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }

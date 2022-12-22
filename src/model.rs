@@ -240,7 +240,8 @@ impl fmt::Debug for CodeReturn {
 
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub enum FuncProcModifier {
-    Export
+    Export,
+    Version(Vec<String>)
 }
 
 #[derive(Clone,PartialEq,Eq,Hash)]

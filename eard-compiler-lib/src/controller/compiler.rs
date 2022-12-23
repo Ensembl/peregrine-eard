@@ -33,7 +33,7 @@ impl EardCompiler {
     }
 
     pub fn set_verbose(&mut self, yn: bool) { self.verbose = yn; }
-    pub(crate) fn verbose(&self) -> bool { self.verbose }
+    pub fn verbose(&self) -> bool { self.verbose }
 
     pub fn has_flag(&self, flag: &str) -> bool {
         self.flags.contains(flag)

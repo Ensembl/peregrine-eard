@@ -3,7 +3,7 @@ use crate::{test::testutil::sepfmt, controller::source::ParsePosition};
 use super::constants::FullConstant;
 
 #[derive(Clone)]
-pub enum OperationValue {
+pub(crate) enum OperationValue {
     Constant(usize,FullConstant),
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args,
     Entry(String)
@@ -27,7 +27,7 @@ impl fmt::Debug for OperationValue {
 }
 
 #[derive(Clone)]
-pub struct Operation {
+pub(crate) struct Operation {
     pub(crate) position: ParsePosition,
     pub(crate) value: OperationValue
 }

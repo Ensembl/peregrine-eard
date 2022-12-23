@@ -128,7 +128,7 @@ fn phase2_misc(block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
     PTStatement::transform_list(block,&mut flags)
 }
 
-pub fn preprocess(compilation: &mut EardCompilation, mut block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
+pub(crate) fn preprocess(compilation: &mut EardCompilation, mut block: Vec<PTStatement>) -> Result<Vec<PTStatement>,String> {
     let mut any1 = true;
     let mut any2 = true;
     while any1 || any2 {

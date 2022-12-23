@@ -70,7 +70,7 @@ impl WildcardType {
 }
 
 #[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
-pub enum NarrowType {
+pub(crate) enum NarrowType {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
 }

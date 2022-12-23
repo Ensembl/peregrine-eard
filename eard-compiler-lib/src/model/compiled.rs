@@ -1,14 +1,11 @@
 use std::{convert::Infallible, fmt, collections::HashMap};
-
 use json::{JsonValue, object::Object};
 use minicbor::{Encoder, encode::Error};
-
 use crate::test::testutil::sepfmt;
-
 use super::constants::FullConstant;
 
 #[derive(Clone)]
-pub struct Metadata {
+pub(crate) struct Metadata {
     pub(crate) group: String,
     pub(crate) name: String,
     pub(crate) version: u32
@@ -29,9 +26,9 @@ impl Metadata {
     }
 }
 
-pub struct CompiledBlock {
-    pub constants: Vec<FullConstant>,
-    pub program: Vec<(usize,Vec<usize>)>
+pub(crate) struct CompiledBlock {
+    pub(crate) constants: Vec<FullConstant>,
+    pub(crate) program: Vec<(usize,Vec<usize>)>
 }
 
 impl CompiledBlock {
@@ -77,8 +74,8 @@ impl fmt::Debug for CompiledBlock {
 }
 
 pub struct CompiledCode {
-    pub metadata: Metadata,
-    pub code: HashMap<String,CompiledBlock>
+    pub(crate) metadata: Metadata,
+    pub(crate) code: HashMap<String,CompiledBlock>
 }
 
 impl CompiledCode {

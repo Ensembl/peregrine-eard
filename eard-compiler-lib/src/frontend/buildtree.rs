@@ -26,13 +26,13 @@ impl Display for Variable {
 }
 
 #[derive(Debug,Clone)]
-pub enum BTRegisterType {
+pub(crate) enum BTRegisterType {
     Normal,
     Bundle
 }
 
 #[derive(Clone)]
-pub enum BTExpression {
+pub(crate) enum BTExpression {
     Constant(Constant),
     Variable(Variable),
     RegisterValue(usize,BTRegisterType),
@@ -53,7 +53,7 @@ impl fmt::Debug for BTExpression {
 
 // XXX block macros
 #[derive(Clone)]
-pub enum BTLValue {
+pub(crate) enum BTLValue {
     Variable(Variable),
     Register(usize,BTRegisterType)
 }
@@ -70,7 +70,7 @@ impl fmt::Debug for BTLValue {
 
 
 #[derive(Clone)]
-pub struct BTProcCall<R> {
+pub(crate) struct BTProcCall<R> {
     pub(crate) proc_index: Option<usize>,
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
     pub(crate) rets: Option<Vec<R>>,
@@ -102,7 +102,7 @@ impl<R: fmt::Debug> fmt::Debug for BTProcCall<R> {
 }
 
 #[derive(Clone)]
-pub struct BTFuncCall {
+pub(crate) struct BTFuncCall {
     pub(crate) func_index: usize,
     pub(crate) args: Vec<OrBundleRepeater<BTExpression>>,
     pub(crate) call_index: usize
@@ -119,7 +119,7 @@ impl fmt::Debug for BTFuncCall {
 }
 
 #[derive(Clone)]
-pub enum BTStatementValue {
+pub(crate) enum BTStatementValue {
     Header(String,String,u32),
     Define(usize),
     Declare(OrBundleRepeater<Variable>),
@@ -142,9 +142,9 @@ impl fmt::Debug for BTStatementValue {
 }
 
 #[derive(Clone)]
-pub struct BTStatement {
-    pub value: BTStatementValue,
-    pub position: ParsePosition
+pub(crate) struct BTStatement {
+    pub(crate) value: BTStatementValue,
+    pub(crate) position: ParsePosition
 }
 
 impl fmt::Debug for BTStatement {
@@ -154,7 +154,7 @@ impl fmt::Debug for BTStatement {
 }
 
 #[derive(Clone)]
-pub struct BTFuncProcDefinition {
+pub(crate) struct BTFuncProcDefinition {
     pub(crate) position: ParsePosition,
     pub(crate) args: Vec<OrBundle<TypedArgument>>,
     pub(crate) captures: Vec<OrBundle<Variable>>,
@@ -194,10 +194,10 @@ impl fmt::Debug for BTFuncProcDefinition {
     }
 }
 
-pub enum BTDefinitionVariety { Func, Proc }
+pub(crate) enum BTDefinitionVariety { Func, Proc }
 
 #[derive(Clone)]
-pub enum BTDefinition {
+pub(crate) enum BTDefinition {
     Func(BTFuncProcDefinition),
     Proc(BTFuncProcDefinition),
     Code(CodeDefinition)
@@ -213,13 +213,13 @@ impl fmt::Debug for BTDefinition {
     }
 }
 
-pub enum BTTopDefn<'a> {
+pub(crate) enum BTTopDefn<'a> {
     FuncProc(&'a BTFuncProcDefinition),
     Code(&'a CodeDefinition)
 }
 
 #[derive(Clone)]
-pub struct BuildTree {
+pub(crate) struct BuildTree {
     pub(crate) statements: Vec<BTStatement>,
     definitions: Vec<BTDefinition>,
     specials: HashMap<String,usize>,

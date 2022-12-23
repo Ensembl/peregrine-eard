@@ -78,7 +78,7 @@ impl CurrentFuncProcDefinition {
     }
 }
 
-pub struct BuildContext {
+pub(crate) struct BuildContext {
     target_version: Option<u32>,
     location: ParsePosition,
     file_context: usize,
@@ -89,7 +89,7 @@ pub struct BuildContext {
 }
 
 impl BuildContext {
-    pub fn new(target_version: Option<u32>) -> BuildContext {
+    pub(crate) fn new(target_version: Option<u32>) -> BuildContext {
         BuildContext {
             target_version,
             location: ParsePosition::empty("included"),
@@ -101,7 +101,7 @@ impl BuildContext {
         }
     }
 
-    pub fn push_funcproc_target(&mut self, is_proc: bool, name: &str,
+    pub(crate) fn push_funcproc_target(&mut self, is_proc: bool, name: &str,
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
             captures: &[OrBundle<Variable>],
@@ -139,7 +139,7 @@ impl BuildContext {
         defn_vers.iter().any(|spec| self.version_ok(spec))
     }
 
-    pub fn pop_funcproc_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
+    pub(crate) fn pop_funcproc_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
         let ctx = self.funcproc_target.take().expect("pop without push");
         if !self.versions_ok(&ctx.versions) { return Ok(()); }
         let defn_id = match &ctx.variety {
@@ -166,15 +166,15 @@ impl BuildContext {
         Ok(())
     }
 
-    pub fn set_file_context(&mut self, context: usize) {
+    pub(crate) fn set_file_context(&mut self, context: usize) {
         self.file_context = context;
     }
 
-    pub fn set_location(&mut self, position: &ParsePosition) {
+    pub(crate) fn set_location(&mut self, position: &ParsePosition) {
         self.location = position.clone();
     }
 
-    pub fn location(&self) -> &ParsePosition { &self.location }
+    pub(crate) fn location(&self) -> &ParsePosition { &self.location }
 
     fn lookup(&self, name: &str) -> Result<DefName,String> {
         self.defnames

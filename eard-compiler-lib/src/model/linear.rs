@@ -3,7 +3,7 @@ use std::fmt;
 use super::{checkstypes::{CheckType, TypeRestriction}, constants::Constant};
 
 #[derive(Clone)]
-pub enum LinearStatementValue {
+pub(crate) enum LinearStatementValue {
     Check(String,usize,CheckType,usize, bool), // source-name, reg, type, index, force
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
@@ -59,9 +59,9 @@ impl fmt::Debug for LinearStatementValue {
 }
 
 #[derive(Clone)]
-pub struct LinearStatement {
-    pub value: LinearStatementValue,
-    pub position: ParsePosition
+pub(crate) struct LinearStatement {
+    pub(crate) value: LinearStatementValue,
+    pub(crate) position: ParsePosition
 }
 
 impl LinearStatement {

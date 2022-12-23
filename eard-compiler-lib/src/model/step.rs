@@ -3,7 +3,7 @@ use crate::test::testutil::sepfmt;
 
 use super::constants::FullConstant;
 
-pub enum Step {
+pub(crate) enum Step {
     Constant(usize,FullConstant),
     Opcode(usize,Vec<usize>),
     Entry(String)

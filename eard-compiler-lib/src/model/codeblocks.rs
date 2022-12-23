@@ -304,7 +304,7 @@ impl fmt::Debug for CodeBlock {
 }
 
 #[derive(Clone)]
-pub struct CodeDefinition {
+pub(crate) struct CodeDefinition {
     ret_count: Option<usize>,
     blocks: Vec<CodeBlock>
 }

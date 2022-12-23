@@ -811,7 +811,7 @@ fn do_parse_eard(input: &str, position: &ParsePosition, optimise: bool, context:
     EardParser::file(input)
 }
 
-pub fn parse_eard(position: &ParsePosition, filename: &str, fixed: bool, optimise: bool, context: usize) -> Result<Vec<PTStatement>,String> {
+pub(crate) fn parse_eard(position: &ParsePosition, filename: &str, fixed: bool, optimise: bool, context: usize) -> Result<Vec<PTStatement>,String> {
     let (input,new_pos) = position.push(filename,fixed)?;
     do_parse_eard(&input,&new_pos,optimise,context).map_err(|e| e.to_string())
 }

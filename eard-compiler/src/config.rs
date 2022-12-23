@@ -17,11 +17,11 @@ pub(crate) enum Format {
 #[command(about = "Compiles eard source into eard binaries", long_about = None)]
 pub(crate) struct Config {
    /// Source files to compile
-   #[arg(short, long)]
+   #[arg(short = 'c', long)]
    pub(crate) source: Vec<String>,
 
    /// Output filename
-   #[arg(short, long, default_value = "out.eard")]
+   #[arg(short, long, default_value = "out.eardo")]
    pub(crate) outfile: String,
 
    /// Target bytecode version

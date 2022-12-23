@@ -165,7 +165,7 @@ fn test_multi_generate() {
         let stmts = compilation.parse(&position,"test",true).expect("cannot parse");
         let stmts = compilation.preprocess(stmts).expect("preprocess");
         let tree = compilation.build(stmts).expect("building");
-        let step = compilation.middleend(&tree).expect("middleend");
+        let (step,_) = compilation.middleend(&tree).expect("middleend");
         let text = sepfmt(&mut step.iter(),"\n","");
         for line in text.split("\n") {
             if line.contains("opcode") {

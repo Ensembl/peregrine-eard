@@ -40,6 +40,7 @@ mod reorder;
 mod generate;
 mod spill;
 mod compiled;
+pub mod serialise;
 
 #[cfg(test)]
 mod test;

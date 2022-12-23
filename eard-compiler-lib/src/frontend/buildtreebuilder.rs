@@ -488,7 +488,7 @@ impl BuildContext {
                 panic!("item should have been eliminated from build tree");
             },
             PTStatementValue::Header(group,name,version) => {
-                self.add_statement(bt,BTStatementValue::Header(group.to_string(),name.to_string(),*version));
+                self.add_statement(bt,BTStatementValue::Header(group.to_string(),name.to_string(),*version))?;
             },
             PTStatementValue::FuncDef(f) => { self.build_funcdef(bt,f)?; },
             PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; },

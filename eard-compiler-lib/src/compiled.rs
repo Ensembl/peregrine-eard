@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use crate::model::{CompiledCode, Step, CompiledBlock};
+use crate::model::{CompiledCode, Step, CompiledBlock, Metadata};
 
 fn find_entries(steps: &[Step]) -> Vec<String> {
     let out = steps.iter().filter_map(|step| {
@@ -36,8 +36,8 @@ fn make_block(steps: &[Step], entry: &str) -> CompiledBlock {
     CompiledBlock { constants, program }
 }
 
-pub(crate) fn make_program(steps: &[Step]) -> CompiledCode {
+pub(crate) fn make_program(steps: &[Step], metadata: &Metadata) -> CompiledCode {
     let entries = find_entries(steps);
     let code = entries.iter().map(|entry| (entry.to_string(),make_block(steps,entry))).collect::<HashMap<_,_>>();
-    CompiledCode { code }
+    CompiledCode { code, metadata: metadata.clone() }
 }

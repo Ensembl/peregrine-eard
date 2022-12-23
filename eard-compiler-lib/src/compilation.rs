@@ -1,4 +1,4 @@
-use crate::{compiler::EardCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, model::{Step, CompiledCode}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources, compiled::make_program};
+use crate::{compiler::EardCompiler, frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, model::{CompiledCode, Step, Metadata}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac}, reorder::reorder, reuse::reuse, spill::spill, source::{ParsePosition, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder, FixedSourceSource}, generate::generate, libcore::libcore::libcore_sources, compiled::make_program};
 
 pub struct EardCompilation<'a> {
     pub(crate) compiler: &'a EardCompiler,
@@ -61,7 +61,7 @@ impl<'a> EardCompilation<'a> {
         self.build(stmts)
     }
 
-    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<Vec<Step>,String> {
+    pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<Step>,Metadata),String> {
         let bundles = build_unbundle(&tree)?;
         let (linear,mut allocator,metadata) = linearize(&tree,&bundles)?;
         let linear = reduce(&linear);
@@ -75,12 +75,13 @@ impl<'a> EardCompilation<'a> {
         let opers = spill(allocator,&opers, &mut narrow);
         let opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
         let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
-        Ok(steps)
+        Ok((steps,metadata))
     }
 
-    pub fn compile(&mut self, filename: &str) -> Result<Vec<Step>,String> {
+    pub fn compile(&mut self, filename: &str) -> Result<CompiledCode,String> {
         let tree = self.frontend(filename)?;
-        let step = self.middleend(&tree)?;
-        Ok(step)
+        let (steps,metadata) = self.middleend(&tree)?;
+        let program = make_program(&steps,&metadata);
+        Ok(program)
     }
 }

@@ -1,4 +1,5 @@
-use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap};
+use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap, convert::Infallible};
+use minicbor::{encode::{Error}, Encoder};
 use ordered_float::OrderedFloat;
 use crate::source::ParsePosition;
 
@@ -23,6 +24,17 @@ impl Constant {
     }
 }
 
+impl Constant {
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        match self {
+            Constant::Number(n) => { encoder.f64(n.0)?; },
+            Constant::String(s) => { encoder.str(s)?; },
+            Constant::Boolean(b) => { encoder.bool(*b)?; }
+        }
+        Ok(())
+    }
+}
+
 impl fmt::Debug for Constant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f,"{}",match self {
@@ -40,6 +52,28 @@ pub enum FullConstant {
     Atomic(Constant),
     Finite(Vec<Constant>),
     Infinite(Constant)
+}
+
+impl FullConstant {
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        match self {
+            FullConstant::Atomic(c) => {
+                c.encode(encoder)?;
+            },
+            FullConstant::Finite(seq) => {
+                encoder.array(seq.len() as u64)?;
+                for c in seq {
+                    c.encode(encoder)?;
+                }
+            },
+            FullConstant::Infinite(c) => {
+                encoder.begin_map()?.str("")?;
+                c.encode(encoder)?;
+                encoder.end()?;
+            }
+        }
+        Ok(())
+    }
 }
 
 impl fmt::Debug for FullConstant {
@@ -165,15 +199,41 @@ impl fmt::Debug for Step {
     }
 }
 
+#[derive(Clone)]
 pub struct Metadata {
     pub(crate) group: String,
     pub(crate) name: String,
     pub(crate) version: u32
 }
 
+impl Metadata {
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        encoder.begin_array()?.str(&self.group)?.str(&self.name)?.u32(self.version)?.end()?;
+        Ok(())
+    }
+}
+
 pub struct CompiledBlock {
     pub constants: Vec<FullConstant>,
     pub program: Vec<(usize,Vec<usize>)>
+}
+
+impl CompiledBlock {
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        encoder.begin_map()?.str("constants")?.begin_array()?;
+        for c in &self.constants {
+            c.encode(encoder)?;
+        }
+        encoder.end()?.str("program")?.begin_array()?;
+        for (opcode,opargs) in &self.program {
+            encoder.array((opargs.len()+1) as u64)?.u32(*opcode as u32)?;
+            for oparg in opargs {
+                encoder.u32(*oparg as u32)?;
+            }
+        }
+        encoder.end()?.end()?; /* program entry; main map */
+        Ok(())
+    }
 }
 
 impl fmt::Debug for CompiledBlock {
@@ -186,7 +246,22 @@ impl fmt::Debug for CompiledBlock {
 }
 
 pub struct CompiledCode {
+    pub metadata: Metadata,
     pub code: HashMap<String,CompiledBlock>
+}
+
+impl CompiledCode {
+    pub(crate) fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        encoder.begin_map()?.str("metadata")?;
+        self.metadata.encode(encoder)?;
+        encoder.str("blocks")?.begin_map()?;
+        for (name,block) in self.code.iter() {
+            encoder.str(name)?;
+            block.encode(encoder)?;
+        }
+        encoder.end()?.end()?;
+        Ok(())
+    }
 }
 
 impl fmt::Debug for CompiledCode {

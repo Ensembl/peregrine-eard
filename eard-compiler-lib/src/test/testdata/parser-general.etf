@@ -157,7 +157,7 @@ c(1,2,3);
 
 [
     PTStatement {
-        value: BareCall(PTCall{
+        value: Expression(Call(PTCall{
             name: "c",
             args: [
                 Constant(1),
@@ -165,7 +165,7 @@ c(1,2,3);
                 Constant(3)
             ],
             is_macro: false
-        }),
+        })),
         position: test:2,
         context: 1
     }
@@ -183,7 +183,7 @@ test!("123");
 
 [
     PTStatement {
-        value: BareCall(PTCall{name:"test",args:[Constant("123")],is_macro:true}),
+        value: MacroCall(PTCall{name:"test",args:[Constant("123")],is_macro:true}),
         position: test:2,
         context: 1
     }

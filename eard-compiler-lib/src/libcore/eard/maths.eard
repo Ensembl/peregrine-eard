@@ -1,10 +1,80 @@
 fold(libcore__add) code __code_add(number,number) -> number {
-    impl (r1: number, r2: number) -> r3: number {}
+    impl (r1: number, 0) -> r1 {}
+
+    impl (r1: number, 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 18, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 17, r3, r1, r2;
+    }
 }
 
 fold(libcore__sub) code __code_sub(number,number) -> number {
-    impl (r1: number, r2: number) -> r3: number {}
+    impl (r1: number, 0) -> r1 {}
+
+    impl (r1: number, 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 20, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 19, r3, r1, r2;
+    }
+}
+
+fold(libcore__mul) code __code_mul(number,number) -> number {
+    impl (r1: number, 1) -> r1 {}
+
+    impl (r1: number, 1) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 23, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 22, r3, r1, r2;
+    }
+}
+
+fold(libcore__div) code __code_div(number,number) -> number {
+    impl (r1: number, 1) -> r1 {}
+
+    impl (r1: number, 1) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 25, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 24, r3, r1, r2;
+    }
 }
 
 export function __operator_add(a: number, b: number) -> number { let y = __code_add(a,b); y }
 export function __operator_sub(a: number, b: number) -> number { let y = __code_sub(a,b); y }
+export function __operator_mul(a: number, b: number) -> number { let y = __code_mul(a,b); y }
+export function __operator_div(a: number, b: number) -> number { let y = __code_div(a,b); y }
+/*
+export function __operator_gt(a: number, b: number) -> boolean { let y = __code_gt(a,b); y }
+export function __operator_lt(a: number, b: number) -> boolean { let y = __code_lt(a,b); y }
+export function __operator_ge(a: number, b: number) -> boolean { let y = __code_ge(a,b); y }
+export function __operator_le(a: number, b: number) -> boolean { let y = __code_le(a,b); y }
+export function __operator_eq(a: number, b: number) -> boolean { let y = __code_eq(a,b); y }
+export function __operator_ne(a: number, b: number) -> boolean { let y = __code_ne(a,b); y }
+export function __operator_and(a: boolean, b: boolean) -> boolean { let y = __code_and(a,b); y }
+export function __operator_or(a: boolean, b: boolean) -> boolean { let y = __code_or(a,b); y }
+export function __operator_minus(a: number) -> number { let y = __code_minus(a); y }
+export function __operator_not(a: boolean) -> boolean { let y = __code_not(a); y }
+*/

@@ -15,4 +15,28 @@
  14 runtime length/bound check
  15 runtime inf/inf check
  16 runtime length/inf check
- 
+ 17 add number/number
+ 18 add number/number modify
+ 19 sub number/number
+ 20 sub number/number modify
+ 21 copy
+ 22 mul number/number
+ 23 mul number/number modify
+ 24 div number/number
+ 25 div number/number modify
+
+
+export function __operator_add(a: number, b: number) -> number { let y = __code_add(a,b); y }
+export function __operator_sub(a: number, b: number) -> number { let y = __code_sub(a,b); y }
+export function __operator_mul(a: number, b: number) -> number { let y = __code_mul(a,b); y }
+export function __operator_div(a: number, b: number) -> number { let y = __code_div(a,b); y }
+export function __operator_gt(a: number, b: number) -> boolean { let y = __code_gt(a,b); y }
+export function __operator_lt(a: number, b: number) -> boolean { let y = __code_lt(a,b); y }
+export function __operator_ge(a: number, b: number) -> boolean { let y = __code_ge(a,b); y }
+export function __operator_le(a: number, b: number) -> boolean { let y = __code_le(a,b); y }
+export function __operator_eq(a: number, b: number) -> boolean { let y = __code_eq(a,b); y }
+export function __operator_ne(a: number, b: number) -> boolean { let y = __code_ne(a,b); y }
+export function __operator_and(a: boolean, b: boolean) -> boolean { let y = __code_and(a,b); y }
+export function __operator_or(a: boolean, b: boolean) -> boolean { let y = __code_or(a,b); y }
+export function __operator_minus(a: number) -> number { let y = __code_minus(a); y }
+export function __operator_not(a: boolean) -> boolean { let y = __code_not(a); y }

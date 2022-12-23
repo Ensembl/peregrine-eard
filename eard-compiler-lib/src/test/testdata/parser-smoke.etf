@@ -288,7 +288,7 @@ z1();
 
 [
     PTStatement {
-        value: BareCall(PTCall { name: "z1", args: [], is_macro: false }),
+        value: Expression(Call(PTCall { name: "z1", args: [], is_macro: false })),
         position: test:2,
         context: 1
     }
@@ -304,12 +304,24 @@ z2(z3());
 
 [
     PTStatement {
-        value: BareCall(PTCall {
+        value: Expression(Call(PTCall {
             name: "z2",
             args: [Call(PTCall { name: "z3", args: [], is_macro: false })],
             is_macro: false 
-        }),
+        })),
         position: test:2,
         context: 1
     }
 ]
+
+>> test
+
+parse regression
+
+>> input
+
+program "test" "test" 1;
+
+>> built strip nolines
+
+test:2 program "test" "test" 1

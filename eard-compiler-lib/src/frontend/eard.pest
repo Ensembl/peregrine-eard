@@ -246,13 +246,13 @@ modify_lvalue = _{
 
 modify_statement = { modify_lvalue ~ "=" ~ rhs_tuple }
 
-bare_statement = _{ func_or_proc_call ~ ";" }
+bare_statement = _{ expression ~ ";" }
 
 inner_block = {
     let_statement |
     modify_statement |
-    bare_statement |
-    (macro_call ~ ";")
+    (macro_call ~ ";") |
+    bare_statement
 }
 
 prog_version = { ASCII_DIGIT+ }

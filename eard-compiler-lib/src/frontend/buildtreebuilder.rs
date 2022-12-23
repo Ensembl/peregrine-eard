@@ -484,7 +484,7 @@ impl BuildContext {
 
     pub(super) fn build_statement(&mut self, bt: &mut BuildTree, stmt: &PTStatement) -> Result<(),String> {
         match &stmt.value {
-            PTStatementValue::Include(_,_) => {
+            PTStatementValue::Include(_,_) | PTStatementValue::MacroCall(_) => {
                 panic!("item should have been eliminated from build tree");
             },
             PTStatementValue::Header(group,name,version) => {
@@ -503,18 +503,19 @@ impl BuildContext {
                 let xx = xx.iter().map(|x| OrBundle::Normal(x.clone())).collect::<Vec<_>>();
                 self.make_statement(&vv,&xx,false,bt)?;
             },
-            PTStatementValue::BareCall(c) => {
-                match self.lookup(&c.name)? {
-                    DefName::Func(_) => {
-                        /* top level is function call with discarded result, add assign proc */
-                        let expr = PTExpression::Call(c.clone());
-                        let ret = OrBundleRepeater::Normal(self.build_expression(bt,&expr)?);
-                        let stmt = self.make_statement_value(None,vec![ret],None);
-                        self.add_statement(bt,stmt)?;
-                    },
-                    DefName::Proc(_) => { self.build_top(None,bt,c)? },
-                    DefName::Code(_) => { self.build_top(None,bt,c)? },
+            PTStatementValue::Expression(expr) => {
+                if let PTExpression::Call(c) = expr {
+                    match self.lookup(&c.name)? {
+                        DefName::Func(_) => {},
+                        DefName::Proc(_) => { return self.build_top(None,bt,c); },
+                        DefName::Code(_) => { return self.build_top(None,bt,c); },
+                    }
+    
                 }
+                /* top level is function call with discarded result, add assign proc */
+                let ret = OrBundleRepeater::Normal(self.build_expression(bt,&expr)?);
+                let stmt = self.make_statement_value(None,vec![ret],None);
+                self.add_statement(bt,stmt)?;
             },
         }
         Ok(())

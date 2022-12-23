@@ -226,7 +226,8 @@ pub enum PTStatementValue {
     /* instructions */
     LetStatement(Vec<OrBundleRepeater<(Variable,Vec<Check>)>>,Vec<OrBundle<PTExpression>>),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
-    BareCall(PTCall),
+    Expression(PTExpression),
+    MacroCall(PTCall),
 }
 
 impl PTStatement {
@@ -251,12 +252,16 @@ impl PTStatement {
                 ).collect::<Result<_,_>>()?;
                 PTStatementValue::ModifyStatement(lvalues,rvalues)
             },
-            PTStatementValue::BareCall(call) => {
+            PTStatementValue::MacroCall(call) => {
                 if let Some(repl) = call.transform_block(transformer,&pos,self.context)? {
                     return Ok(repl);
                 } else {
-                    PTStatementValue::BareCall(call.transform(transformer,&pos,self.context)?)
+                    return Err(format!("no such macro"));
                 }
+            },
+            PTStatementValue::Expression(x) => {
+                let context = self.context.clone();
+                PTStatementValue::Expression(x.transform(transformer,&pos,context)?)
             },
             PTStatementValue::FuncDef(call) => {
                 PTStatementValue::FuncDef(call.transform(transformer,&pos,self.context)?)

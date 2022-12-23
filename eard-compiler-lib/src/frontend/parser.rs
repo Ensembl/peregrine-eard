@@ -602,8 +602,8 @@ impl EardParser {
         let value = match_nodes!(input.into_children();
             [let_statement(s)] => s,
             [modify_statement(s)] => s,
-            [func_or_proc_call(c)] => PTStatementValue::BareCall(c),
-            [macro_call(c)] => PTStatementValue::BareCall(c)
+            [expression(c)] => PTStatementValue::Expression(c),
+            [macro_call(c)] => PTStatementValue::MacroCall(c)
         );
         Ok(PTStatement { value, position, context })
     }

@@ -1,25 +1,5 @@
-use crate::{ model::constants::{FullConstant, Constant}, controller::{compiler::EardCompiler, source::FixedSourceSource}};
-use super::foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq };
-
-fn fold_add(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
-    if let (Some(Some(FullConstant::Atomic(Constant::Number(a)))),
-            Some(Some(FullConstant::Atomic(Constant::Number(b))))) = 
-                (inputs.get(0),inputs.get(1)) {
-        Some(vec![FullConstant::Atomic(Constant::Number(*a+*b))])
-    } else {
-        None
-    }
-}
-
-fn fold_sub(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
-    if let (Some(Some(FullConstant::Atomic(Constant::Number(a)))),
-            Some(Some(FullConstant::Atomic(Constant::Number(b))))) = 
-                (inputs.get(0),inputs.get(1)) {
-        Some(vec![FullConstant::Atomic(Constant::Number(*a-*b))])
-    } else {
-        None
-    }
-}
+use crate::{controller::{compiler::EardCompiler, source::FixedSourceSource}};
+use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div}};
 
 pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__infseq",fold_infseq)?;
@@ -30,6 +10,8 @@ pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__bound",fold_bound)?;
     compiler.add_constant_folder("libcore__add",fold_add)?;
     compiler.add_constant_folder("libcore__sub",fold_sub)?;
+    compiler.add_constant_folder("libcore__mul",fold_mul)?;
+    compiler.add_constant_folder("libcore__div",fold_div)?;
     Ok(())
 }
 

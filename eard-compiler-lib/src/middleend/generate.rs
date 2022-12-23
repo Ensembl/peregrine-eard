@@ -125,7 +125,7 @@ impl<'a> Generate<'a> {
         ).collect::<Vec<_>>();
         let imps = block.choose_imps(&constants,Some(&narrow),Some(&modify_pattern));
         if imps.len() == 0 {
-            return Err("no opcode implementation matching type".to_string());
+            return Err(format!("no opcode implementation matching type {:?}",narrow));
         }
         Ok(imps[0].clone())
     }

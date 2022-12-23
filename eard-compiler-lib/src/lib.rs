@@ -18,6 +18,7 @@ mod frontend {
 mod libcore {
     pub(crate) mod libcore;
     mod foldseq;
+    mod foldmaths;
 }
 
 mod middleend {

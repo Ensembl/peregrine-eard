@@ -229,6 +229,29 @@ opcode 999, r0, r2
 
 >> test
 
+multiplication by zero
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x*0);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+r1 <- 0
+opcode 999, r0, r1
+opcode 999, r0, r2
+
+>> test
+
 division fold
 
 >> input
@@ -331,4 +354,4 @@ print(format("hi"+3));
 
 >> broad-fail strip
 
-type check failed: expected number got string at maths:65 (called from test:4)
+type check failed: expected number got string at maths:67 (called from test:4)

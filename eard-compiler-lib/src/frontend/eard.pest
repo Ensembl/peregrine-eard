@@ -99,7 +99,7 @@ impl_return =  { ("->" ~ (("(" ~ impl_return_arguments ~ ")")|impl_return_var))?
 impl_return_arguments = _{ impl_return_var ~ ("," ~ impl_return_var)* }
 impl_arguments = { (impl_arg_var ~ ("," ~ impl_arg_var)*)? }
 
-impl_return_var = { (impl_real_arg|register) }
+impl_return_var = { (impl_real_arg|register|constant) }
 impl_arg_var = { (impl_real_arg|constant) }
 
 impl_real_arg = { register ~ ":" ~ arg_type }

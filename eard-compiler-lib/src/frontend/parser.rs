@@ -549,7 +549,8 @@ impl EardParser {
     fn impl_return_var(input: Node) -> PestResult<CodeReturn> {
         Ok(match_nodes!(input.into_children();
             [impl_real_arg(v)] => CodeReturn::Register(v),
-            [register(c)] => CodeReturn::Repeat(c)
+            [register(c)] => CodeReturn::Repeat(c),
+            [constant(c)] => CodeReturn::Constant(c)
         ))
     }
 

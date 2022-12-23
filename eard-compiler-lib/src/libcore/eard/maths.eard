@@ -31,6 +31,8 @@ fold(libcore__sub) code __code_sub(number,number) -> number {
 }
 
 fold(libcore__mul) code __code_mul(number,number) -> number {
+    impl (r1: number, 0) -> 0 {}
+
     impl (r1: number, 1) -> r1 {}
 
     impl (r1: number, 1) -> r2: number {

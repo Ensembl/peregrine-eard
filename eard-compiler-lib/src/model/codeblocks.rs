@@ -69,7 +69,8 @@ impl fmt::Debug for CodeImplArgument {
 #[derive(Clone)]
 pub enum CodeReturn {
     Register(CodeImplVariable),
-    Repeat(usize)
+    Repeat(usize),
+    Constant(Constant)
 }
 
 impl fmt::Debug for CodeReturn {
@@ -77,6 +78,7 @@ impl fmt::Debug for CodeReturn {
         match self {
             Self::Register(r) => write!(f,"{:?}",r),
             Self::Repeat(r) => write!(f,"r{}",*r),
+            Self::Constant(c) => write!(f,"{:?}",c)
         }
     }
 }
@@ -164,7 +166,7 @@ impl ImplBlock {
         let mut reg_classes = HashMap::new();
         for ret in self.results.iter() {
             match ret {
-                CodeReturn::Register(_) => {},
+                CodeReturn::Register(_) | CodeReturn::Constant(_) => {},
                 CodeReturn::Repeat(reg) => {
                     let reg_class = *reg_to_class.get(reg).expect("missing register in opcode match");
                     if let Some(reg_class) = reg_class {
@@ -208,7 +210,7 @@ impl ImplBlock {
         let mut repeats = vec![];
         for (i,ret) in self.results.iter().enumerate() {
             match ret {
-                CodeReturn::Register(_) => {},
+                CodeReturn::Register(_) | CodeReturn::Constant(_) => {},
                 CodeReturn::Repeat(e) => {
                     let pos = reg_names.get(e).ok_or_else(|| 
                         "return repeat register not in argument list".to_string()

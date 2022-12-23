@@ -141,8 +141,8 @@ impl<'a> Generate<'a> {
         for (arg,reg) in mapping.imp.arguments.iter().zip(mapping.args.iter()) {
             match arg {
                 CodeImplArgument::Register(d) => {
-                    self.birth_constants(*reg);                    
-                    let new_reg = self.regmap.get(reg).expect("missing constant");
+                    self.birth_constants(*reg);
+                    let new_reg = self.regmap.get(reg).expect("missing constant/A");
                     mapping.def_to_reg.insert(d.reg_id,*new_reg);
                 },
                 CodeImplArgument::Constant(_) => {}
@@ -164,6 +164,11 @@ impl<'a> Generate<'a> {
                     if mapping.rets[i] != 0 {
                         mapping.reused_def.insert(*d);
                     }
+                },
+                CodeReturn::Constant(c) => {
+                    let new_ret = if mapping.rets[i] == 0 { NewRegister(0) } else { self.reg_alloc.allocate() };
+                    self.out.push(Step::Constant(new_ret.0,FullConstant::Atomic(c.clone())));
+                    self.regmap.insert(*reg,new_ret);
                 }
             }
         }
@@ -222,7 +227,7 @@ impl<'a> Generate<'a> {
 
     fn birth_constants(&mut self, reg: usize) -> usize {
         if self.unborn_constants.remove(&reg) {
-            let c = self.constants.get(&reg).expect("missing constant");
+            let c = self.constants.get(&reg).expect("missing constant/B");
             let new_reg = if let Some(r) = self.reg_alloc.scavange(c) {
                 r
             } else {

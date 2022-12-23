@@ -136,7 +136,8 @@ pub struct BTFuncProcDefinition {
     pub(crate) captures: Vec<OrBundle<Variable>>,
     pub(crate) block: Vec<BTStatement>,
     pub(crate) ret: Vec<OrBundle<BTExpression>>,
-    pub(crate) ret_type: Option<Vec<ArgTypeSpec>>
+    pub(crate) ret_type: Option<Vec<ArgTypeSpec>>,
+    pub(crate) entry: bool
 }
 
 impl fmt::Debug for BTFuncProcDefinition {

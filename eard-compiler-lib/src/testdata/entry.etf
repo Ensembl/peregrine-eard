@@ -13,9 +13,6 @@ entry procedure other() {
     c("other");
 }
 
-//main();
-//other();
-
 >> built strip
 
 0:world code wc(?X ) -> (?X ) { impl (r1 : ?X) -> (r1)  { opcode 999, r1; } }
@@ -104,3 +101,72 @@ block: other
   program:
     (0, [1, 0])
     (999, [1])
+
+>> test
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
+function c(x) { let y = wc(x); y }
+
+entry procedure main(x) {
+    c("main");
+}
+
+>> built-fail strip
+
+entry procedure main can take no arguments at test:5
+
+>> test
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
+function c(x) { let y = wc(x); y }
+
+entry procedure main() {
+    c("main");
+    (1)
+}
+
+>> built-fail strip
+
+entry procedure main can return no values at test:5
+
+>> test
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = 1;
+
+entry procedure main() {
+    capture a;
+
+    c("main");
+}
+
+>> built-fail strip
+
+entry procedure main cannot capture values at test:7
+
+>> test
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = 1;
+
+entry procedure main() {
+    c("main");
+}
+
+main();
+
+>> linearize-fail strip
+
+entry procedures cannot be explicitly called at test:11

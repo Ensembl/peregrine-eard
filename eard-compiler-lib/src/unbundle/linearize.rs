@@ -369,6 +369,9 @@ impl<'a> Linearize<'a> {
         match self.tree.get_any(proc)? {
             Some(BTTopDefn::FuncProc(defn)) => {
                 /* normal procedure */
+                if defn.entry {
+                    return Err("entry procedures cannot be explicitly called".to_string());
+                }
                 self.check_arg_match(defn,&proc.args)?;
                 self.check_ret_match(defn,&proc.rets)?;
                 let callee_rets = self.callee(proc.proc_index.unwrap(),defn,&arg_regs)?;

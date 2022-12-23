@@ -72,7 +72,8 @@ impl CurrentFuncProcDefinition {
             captures: self.captures.clone(),
             ret_type: self.ret_type.clone(),
             ret: ret.to_vec(),
-            block: self.block.clone()
+            block: self.block.clone(),
+            entry: self.entry
         })
     }
 }
@@ -152,6 +153,15 @@ impl BuildContext {
         self.add_statement(bt,BTStatementValue::Define(defn_id))?;
         if ctx.entry {
             bt.set_entry(defn_id,&ctx.name);
+            if ctx.args.len() > 0 {
+                return Err(format!("entry procedure {} can take no arguments",ctx.name));
+            }
+            if ret.len() > 0 {
+                return Err(format!("entry procedure {} can return no values",ctx.name));
+            }
+            if ctx.captures.len() > 0 {
+                return Err(format!("entry procedure {} cannot capture values",ctx.name));
+            }
         }
         Ok(())
     }

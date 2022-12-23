@@ -185,7 +185,10 @@ pub struct CompiledCode {
 
 impl fmt::Debug for CompiledCode {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for (block,code) in &self.code {
+        let mut keys = self.code.keys().collect::<Vec<_>>();
+        keys.sort();
+        for block in keys.iter() {
+            let code = self.code.get(*block).unwrap();
             write!(f,"block: {}\n{:?}\n",block,code)?;
         }
         Ok(())

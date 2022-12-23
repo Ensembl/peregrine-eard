@@ -1,6 +1,6 @@
 mod config;
 
-use std::{process::exit, fs::File, io::Write};
+use std::{process::exit, fs::File, io::{Write, self}};
 
 use eard_compiler_lib::{compiler::EardCompiler, compilation::EardCompilation, serialise::EardSerializeCode };
 use config::Config;
@@ -31,8 +31,13 @@ fn do_it(config: &Config) -> Result<(),String> {
             output.serialize_json().as_bytes().to_vec()
         }
     };
-    let mut output = File::create(&config.outfile).map_err(|e| format!("cannot write file: {}",e))?;
-    output.write_all(&binary).map_err(|e| format!("cannot write file: {}",e))?;        
+    if config.outfile == "-" {
+        let mut f = io::stdout().lock();
+        f.write_all(&binary).map_err(|e| format!("cannot write file: {}",e))?;
+    } else {
+        let mut f = File::create(&config.outfile).map_err(|e| format!("cannot write file: {}",e))?;
+        f.write_all(&binary).map_err(|e| format!("cannot write file: {}",e))?;
+    }
     Ok(())
 }
 

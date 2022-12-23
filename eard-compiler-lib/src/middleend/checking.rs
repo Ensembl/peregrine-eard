@@ -207,7 +207,7 @@ impl<'a> Checking<'a> {
     }
 }
 
-pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_indexes: &HashMap<usize,usize>, allocator: &mut Allocator,  broad: &mut HashMap<usize,BroadType>) -> Result<Vec<LinearStatement>,String> {
+pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_indexes: &HashMap<usize,usize>, allocator: &mut Allocator,  broad: &mut HashMap<usize,BroadType>, verbose: bool) -> Result<Vec<LinearStatement>,String> {
     let mut typing = Checking::new(bt,block_indexes,allocator,broad);
     for stmt in stmts {
         typing.make_equivs(stmt).map_err(|e| typing.position.message(&e))?;
@@ -218,6 +218,10 @@ pub(crate) fn run_checking(bt: &BuildTree, stmts: &[LinearStatement], block_inde
     }
     for stmt in stmts {
         typing.check(stmt).map_err(|e| typing.position.message(&e))?;
+    }
+    if verbose {
+        eprintln!("adding checks left {} statements",typing.out.len());
+        typing.allocator.verbose();
     }
     Ok(typing.out.to_vec())
 }

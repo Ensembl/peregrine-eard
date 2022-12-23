@@ -144,10 +144,13 @@ pub(crate) fn test_reuse(bt: &BuildTree, block_indexes: &HashMap<usize,usize>, o
     Ok(known.test_take())
 }
 
-pub(crate) fn reuse(bt: &BuildTree, block_indexes: &HashMap<usize,usize>, opers: &[Operation]) -> Result<Vec<Operation>,String> {
+pub(crate) fn reuse(bt: &BuildTree, block_indexes: &HashMap<usize,usize>, opers: &[Operation], verbose: bool) -> Result<Vec<Operation>,String> {
     let mut known = KnownValues::new(bt,block_indexes);
     for oper in opers {
         known.add(oper)?;
+    }
+    if verbose {
+        eprintln!("memoizing side-effect free expressions left {} statements",known.out.len());
     }
     Ok(known.take())
 }

@@ -11,15 +11,28 @@ fn do_it(config: &Config) -> Result<(),String> {
     if config.optimise {
         compiler.set_optimise(true);
     }
+    if let Some(v) = config.bytecode {
+        compiler.set_target_version(v);
+    }
+    if config.verbose {
+        compiler.set_verbose(true);
+    }
     let mut output = EardSerializeCode::new();
     for src in &config.source {
         let mut compilation = EardCompilation::new(&compiler)?;
         let code = compilation.compile(src)?;
         output.add(code);
     }
-    let binary = output.serialize()?;
+    let binary = match &config.format {
+        config::Format::Standard => {
+            output.serialize()?
+        },
+        config::Format::Expanded => {
+            output.serialize_json().as_bytes().to_vec()
+        }
+    };
     let mut output = File::create(&config.outfile).map_err(|e| format!("cannot write file: {}",e))?;
-    output.write_all(&binary).map_err(|e| format!("cannot write file: {}",e))?;
+    output.write_all(&binary).map_err(|e| format!("cannot write file: {}",e))?;        
     Ok(())
 }
 

@@ -67,7 +67,11 @@ impl Reduce {
     }
 }
 
-pub(crate) fn reduce(stmts: &[LinearStatement]) -> Vec<LinearStatement> {
+pub(crate) fn reduce(stmts: &[LinearStatement], verbose: bool) -> Vec<LinearStatement> {
     let mut reduce = Reduce::new();
-    stmts.iter().filter_map(|f| reduce.reduce(f)).collect()
+    let out = stmts.iter().filter_map(|f| reduce.reduce(f)).collect::<Vec<_>>();
+    if verbose {
+        eprintln!("reduced to {} statements by removing copies",out.len());
+    }
+    out
 }

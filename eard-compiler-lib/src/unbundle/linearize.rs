@@ -26,6 +26,10 @@ impl Allocator {
         self.next_call_index += 1;
         self.next_call_index
     }
+
+    pub(crate) fn verbose(&self) {
+        eprintln!("used {} registers; made {} calls",self.next_register,self.next_call_index);
+    }
 }
 
 struct Linearize<'a> {
@@ -487,13 +491,17 @@ impl<'a> Linearize<'a> {
     }
 }
 
-pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,Allocator,Metadata),String> {
+pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits,verbose: bool) -> Result<(Vec<LinearStatement>,Allocator,Metadata),String> {
     let mut linearize = Linearize::new(tree,bundles);
     for stmt in &tree.statements {
         linearize.statement(stmt).map_err(|e| linearize.positions.message(&e))?;
     }
     if linearize.metadata.is_none() {
         return Err("missing program header".to_string());
+    }
+    if verbose {
+        eprintln!("linearised to {} statements",linearize.output.len());
+        linearize.allocator.verbose();
     }
     Ok((linearize.output,linearize.allocator,linearize.metadata.unwrap()))
 }

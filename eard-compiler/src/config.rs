@@ -3,8 +3,10 @@ use clap::{Parser, ValueEnum};
 #[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord,ValueEnum)]
 pub(crate) enum Format {
     /// Standard format (binary)
+    #[value(alias("s"))]
     Standard,
     /// Expanded (for debugging)
+    #[value(alias("x"))]
     Expanded
 }
 
@@ -34,5 +36,9 @@ pub(crate) struct Config {
 
    /// Format
    #[arg(short, long, value_enum, default_value_t = Format::Standard)]
-   pub(crate) format: Format
+   pub(crate) format: Format,
+
+   /// Verbose
+   #[arg(short = 'v', long, default_value_t = false)]
+   pub(crate) verbose: bool,
 }

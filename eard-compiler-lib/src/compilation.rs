@@ -62,19 +62,20 @@ impl<'a> EardCompilation<'a> {
     }
 
     pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<(Vec<Step>,Metadata),String> {
+        let verbose = self.compiler.verbose();
         let bundles = build_unbundle(&tree)?;
-        let (linear,mut allocator,metadata) = linearize(&tree,&bundles)?;
-        let linear = reduce(&linear);
+        let (linear,mut allocator,metadata) = linearize(&tree,&bundles,verbose)?;
+        let linear = reduce(&linear,verbose);
         let (mut broad,block_indexes) = broad_type(&tree,&linear)?;
-        let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad)?;
+        let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad,verbose)?;
         let mut narrow = narrow_type(&tree,&broad,&block_indexes,&linear)?;
-        let opers = const_fold(&self,tree,&block_indexes,&linear);
-        let opers = culdesac(tree,&block_indexes,&opers);
-        let opers = reuse(tree,&block_indexes,&opers)?;
+        let opers = const_fold(&self,tree,&block_indexes,&linear,verbose);
+        let opers = culdesac(tree,&block_indexes,&opers,verbose);
+        let opers = reuse(tree,&block_indexes,&opers,verbose)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
         let opers = spill(allocator,&opers, &mut narrow);
         let opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
-        let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
+        let steps = generate(&tree,&block_indexes,&narrow,&opers,verbose).expect("generate failed");
         Ok((steps,metadata))
     }
 

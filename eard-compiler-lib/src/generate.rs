@@ -261,13 +261,16 @@ impl<'a> Generate<'a> {
     fn take(self) -> Vec<Step> { self.out }
 }
 
-pub(crate) fn generate(bt: &BuildTree, block_index: &HashMap<usize,usize>, narrow: &HashMap<usize,NarrowType>, opers: &[Operation]) -> Result<Vec<Step>,String> {
+pub(crate) fn generate(bt: &BuildTree, block_index: &HashMap<usize,usize>, narrow: &HashMap<usize,NarrowType>, opers: &[Operation], verbose: bool) -> Result<Vec<Step>,String> {
     let mut generate = Generate::new(bt,block_index,narrow);
     for (i,oper) in opers.iter().enumerate() {
         generate.find_last(i,oper);
     }
     for (i,oper) in opers.iter().enumerate() {
         generate.add(i,&oper).map_err(|e| generate.position.message(&e))?;
+    }
+    if verbose {
+        eprintln!("generated {} opcodes, using {} registers",generate.out.len(),generate.reg_alloc.next_reg);
     }
     Ok(generate.take())
 }

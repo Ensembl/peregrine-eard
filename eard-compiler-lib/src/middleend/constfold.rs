@@ -83,10 +83,13 @@ impl<'a,'b> ConstFold<'a,'b> {
     fn take(self) -> Vec<Operation> { self.out }
 }
 
-pub(crate) fn const_fold<'a,'b>(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, stmts: &[LinearStatement]) -> Vec<Operation> {
+pub(crate) fn const_fold<'a,'b>(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, stmts: &[LinearStatement], verbose: bool) -> Vec<Operation> {
     let mut fold = ConstFold::new(compilation,bt,block_indexes);
     for stmt in stmts {
         fold.add(stmt);
+    }
+    if verbose {
+        eprintln!("folding constants left {} statements",fold.out.len());
     }
     fold.take()
 }

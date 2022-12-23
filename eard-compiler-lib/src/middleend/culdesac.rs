@@ -94,11 +94,15 @@ impl<'a> CulDeSac<'a> {
     }
 }
 
-pub(crate) fn culdesac(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation]) -> Vec<Operation> {
+pub(crate) fn culdesac(bt: &BuildTree, block_index: &HashMap<usize,usize>, opers: &[Operation], verbose: bool) -> Vec<Operation> {
     let mut culdesac = CulDeSac::new(bt,block_index);
     for oper in opers {
         culdesac.add_oper(oper);
     }
     culdesac.iterate_roots();
-    opers.iter().filter_map(|op| culdesac.include(op)).collect()
+    let out = opers.iter().filter_map(|op| culdesac.include(op)).collect::<Vec<_>>();
+    if verbose {
+        eprintln!("removing data-flow dead-ends left {} statements",out.len());
+    }
+    out
 }

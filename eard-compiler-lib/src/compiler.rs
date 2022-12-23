@@ -4,6 +4,7 @@ use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundle
 pub struct EardCompiler {
     flags: HashSet<String>,
     optimise: bool,
+    verbose: bool,
     target_version: Option<u32>,
     block_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],&ParsePosition,usize) -> Result<Vec<PTStatement>,String>>>,
     expression_macros: HashMap<String,Box<dyn Fn(&[OrBundleRepeater<PTExpression>],usize) -> Result<PTExpression,String>>>,
@@ -15,6 +16,7 @@ impl EardCompiler {
         let mut out = EardCompiler {
             flags: HashSet::new(),
             optimise: false,
+            verbose: false,
             target_version: None,
             block_macros: HashMap::new(),
             expression_macros: HashMap::new(),
@@ -27,6 +29,9 @@ impl EardCompiler {
     pub fn set_flag(&mut self, flag: &str) {
         self.flags.insert(flag.to_string());
     }
+
+    pub fn set_verbose(&mut self, yn: bool) { self.verbose = yn; }
+    pub(crate) fn verbose(&self) -> bool { self.verbose }
 
     pub fn has_flag(&self, flag: &str) -> bool {
         self.flags.contains(flag)

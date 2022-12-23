@@ -11,3 +11,5 @@ pest="*"
 pest_consume="*"
 pest_derive="*"
 minicbor={ version="*", features=["std"] }
+json="*"
+regex="1"

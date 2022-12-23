@@ -1,4 +1,5 @@
 use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap, convert::Infallible};
+use json::{JsonValue, object::Object};
 use minicbor::{encode::{Error}, Encoder};
 use ordered_float::OrderedFloat;
 use crate::source::ParsePosition;
@@ -27,11 +28,25 @@ impl Constant {
 impl Constant {
     fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         match self {
-            Constant::Number(n) => { encoder.f64(n.0)?; },
+            Constant::Number(n) => { 
+                if n.0.fract() == 0. {
+                    encoder.i64(n.0 as i64)?;
+                } else {
+                    encoder.f64(n.0)?; 
+                }
+            },
             Constant::String(s) => { encoder.str(s)?; },
             Constant::Boolean(b) => { encoder.bool(*b)?; }
         }
         Ok(())
+    }
+
+    fn encode_json(&self) -> JsonValue {
+        match self {
+            Constant::Number(n) => JsonValue::Number(n.0.into()),
+            Constant::String(s) => JsonValue::String(s.into()),
+            Constant::Boolean(b) => JsonValue::Boolean(*b)
+        }
     }
 }
 
@@ -73,6 +88,20 @@ impl FullConstant {
             }
         }
         Ok(())
+    }
+
+    fn encode_json(&self) -> JsonValue {
+        match self {
+            FullConstant::Atomic(c) => c.encode_json(),
+            FullConstant::Finite(s) => {
+                JsonValue::Array(s.iter().map(|c| c.encode_json()).collect())
+            },
+            FullConstant::Infinite(c) => {
+                let mut obj = Object::new();
+                obj.insert("",c.encode_json());
+                JsonValue::Object(obj)
+            },
+        }
     }
 }
 
@@ -211,6 +240,14 @@ impl Metadata {
         encoder.begin_array()?.str(&self.group)?.str(&self.name)?.u32(self.version)?.end()?;
         Ok(())
     }
+
+    fn encode_json(&self) -> JsonValue {
+        JsonValue::Array(vec![
+            JsonValue::String(self.group.to_string()),
+            JsonValue::String(self.name.to_string()),
+            JsonValue::Number(self.version.into())
+        ])
+    }
 }
 
 pub struct CompiledBlock {
@@ -233,6 +270,21 @@ impl CompiledBlock {
         }
         encoder.end()?.end()?; /* program entry; main map */
         Ok(())
+    }
+
+    fn encode_json(&self) -> JsonValue {
+        let mut out = Object::new();
+        let constants = JsonValue::Array(self.constants.iter().map(|c| c.encode_json()).collect());
+        out.insert("constants",constants);
+        let mut program = vec![];
+        for (opcode,opargs) in &self.program {
+            let mut value = vec![*opcode];
+            value.extend(opargs.iter());
+            let value = value.drain(..).map(|v| JsonValue::Number(v.into())).collect();
+            program.push(JsonValue::Array(value));
+        }
+        out.insert("program",JsonValue::Array(program));
+        JsonValue::Object(out)
     }
 }
 
@@ -261,6 +313,17 @@ impl CompiledCode {
         }
         encoder.end()?.end()?;
         Ok(())
+    }
+
+    pub(crate) fn encode_json(&self) -> JsonValue {
+        let mut out = Object::new();
+        out.insert("metadata",self.metadata.encode_json());
+        let mut blocks = Object::new();
+        for (name,block) in self.code.iter() {
+            blocks.insert(&name,block.encode_json());
+        }
+        out.insert("blocks",JsonValue::Object(blocks));
+        JsonValue::Object(out)
     }
 }
 

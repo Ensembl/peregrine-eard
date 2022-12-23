@@ -1,8 +1,9 @@
 use std::convert::Infallible;
 use json::JsonValue;
 use minicbor::{Encoder, encode::{Error}};
-use crate::model::{CompiledCode};
 use regex::Regex;
+
+use crate::model::compiled::CompiledCode;
 
 fn compactify(s: &str) -> String {
     let re1 = Regex::new(r"\n {12,}").unwrap();

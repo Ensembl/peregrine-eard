@@ -10,8 +10,7 @@
  */
 
 use std::{collections::{HashMap, HashSet}};
-use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, model::{LinearStatement, LinearStatementValue, CheckType, Constant, AtomicTypeSpec}, codeblocks::{CodeBlock}, equiv::{EquivalenceClass}, source::ParsePosition, unbundle::linearize::Allocator};
-
+use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, codeblocks::{CodeBlock}, source::ParsePosition, unbundle::linearize::Allocator, util::equiv::EquivalenceClass, model::{checkstypes::{CheckType, AtomicTypeSpec}, linear::{LinearStatement, LinearStatementValue}, constants::Constant}};
 use super::broadtyping::BroadType;
 
 pub(crate) struct Checking<'a> {

@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
-use crate::{model::{CodeModifier, Variable, Check, CheckType, FuncProcModifier, Constant, AtomicTypeSpec, TypeSpec, ArgTypeSpec, TypedArgument, CodeImplArgument, CodeReturn, CodeArgument, CodeImplVariable, Opcode}, codeblocks::{CodeBlock, ImplBlock}, source::{ParsePosition }};
-use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue }, femodel::{OrBundle, OrBundleRepeater}};
+use crate::{codeblocks::{CodeBlock, ImplBlock, CodeModifier, CodeArgument, CodeImplArgument, CodeImplVariable, CodeReturn}, source::{ParsePosition }, model::{checkstypes::{CheckType, Check, AtomicTypeSpec, TypeSpec, TypedArgument, ArgTypeSpec}, constants::Constant, compiled::Opcode}};
+use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, FuncProcModifier }, femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable};
 
 #[derive(Parser)]
 #[grammar = "frontend/eard.pest"]

@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, BTreeMap}, fmt};
-use crate::{model::{FullConstant, Operation, OperationValue, CodeModifier, sepfmt}, frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::CodeBlock};
+use crate::{frontend::buildtree::{BTTopDefn, BuildTree}, codeblocks::{CodeBlock, CodeModifier}, model::{constants::FullConstant, operation::{OperationValue, Operation}}, test::testutil::sepfmt};
 
 #[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
 pub(crate) enum KnownValue {

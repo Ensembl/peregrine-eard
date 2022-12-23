@@ -53,8 +53,7 @@
  */
 
 use std::{collections::{HashSet, HashMap}};
-use crate::{frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn }, femodel::{OrBundle, OrBundleRepeater}}, source::ParsePosition};
-use crate::model::{Variable, TypedArgument};
+use crate::{frontend::{buildtree::{BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BuildTree, BTFuncCall, BTTopDefn, Variable }, femodel::{OrBundle, OrBundleRepeater}}, source::ParsePosition, model::checkstypes::TypedArgument};
 use super::{repeater::find_repeater_arguments, unbundleaux::{BundleNamespace, Transits, Position, TransitsBuilder}};
 
 fn sorted<T: Clone+Ord>(set: Option<&HashSet<T>>) -> Option<Vec<T>> {

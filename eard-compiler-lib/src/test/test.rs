@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
-
-use crate::{testharness::{run_parse_tests}, compiler::EardCompiler, model::{Constant, sepfmt}, compilation::EardCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources};
+use crate::{ compiler::EardCompiler, compilation::EardCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources, model::constants::Constant, test::testutil::sepfmt};
 use crate::frontend::parsetree::{PTExpression};
+use super::testharness::run_parse_tests;
 
 #[test]
 fn test_parse_smoke() {

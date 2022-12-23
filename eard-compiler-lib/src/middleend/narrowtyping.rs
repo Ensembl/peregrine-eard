@@ -6,7 +6,7 @@
  */
 
 use std::{collections::{HashMap, HashSet}, fmt};
-use crate::{model::{AtomicTypeSpec, LinearStatement, LinearStatementValue, TypeSpec, TypeRestriction }, frontend::{buildtree::{BuildTree, BTTopDefn}}, equiv::{EquivalenceMap}, codeblocks::CodeBlock, source::ParsePosition};
+use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, codeblocks::CodeBlock, source::ParsePosition, util::equiv::EquivalenceMap, model::{checkstypes::{AtomicTypeSpec, TypeSpec, TypeRestriction}, linear::{LinearStatement, LinearStatementValue}}};
 use super::broadtyping::BroadType;
 
 /* Wildcards can never be constrained to be a non-wild seq(X) in a declaration, oddly,

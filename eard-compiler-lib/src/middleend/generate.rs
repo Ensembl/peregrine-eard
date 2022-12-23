@@ -5,7 +5,7 @@
  */
 
 use std::{collections::{HashMap, BTreeSet, BTreeMap, HashSet}};
-use crate::{model::{Step, Operation, OperationValue, FullConstant, CodeImplArgument, CodeReturn}, frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock}, middleend::narrowtyping::NarrowType, source::ParsePosition};
+use crate::{frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, ImplBlock, CodeImplArgument, CodeReturn}, middleend::narrowtyping::NarrowType, source::ParsePosition, model::{constants::FullConstant, step::Step, operation::{OperationValue, Operation}}};
 
 #[derive(Copy,Clone,PartialEq,Eq,PartialOrd,Ord,Hash)]
 struct NewRegister(usize);

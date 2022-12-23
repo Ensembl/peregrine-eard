@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use crate::model::{CompiledCode, Step, CompiledBlock, Metadata};
+
+use crate::model::{compiled::{CompiledBlock, Metadata, CompiledCode}, step::Step};
 
 fn find_entries(steps: &[Step]) -> Vec<String> {
     let out = steps.iter().filter_map(|step| {

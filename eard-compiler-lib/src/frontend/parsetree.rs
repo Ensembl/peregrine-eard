@@ -1,5 +1,5 @@
-use crate::{model::{Variable, Check, FuncProcModifier, Constant, ArgTypeSpec, TypedArgument}, codeblocks::CodeBlock, source::ParsePosition};
-use super::{buildtree::{BuildTree}, femodel::{OrBundle, OrBundleRepeater}};
+use crate::{codeblocks::CodeBlock, source::ParsePosition, model::{constants::Constant, checkstypes::{TypedArgument, ArgTypeSpec, Check}}};
+use super::{buildtree::{BuildTree, Variable}, femodel::{OrBundle, OrBundleRepeater}};
 use super::buildtreebuilder::BuildContext;
 
 pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
@@ -16,6 +16,13 @@ pub(crate) fn at(msg: &str, pos: Option<(&[String],usize)>) -> String {
     } else {
         msg.to_string()
     }
+}
+
+#[derive(Debug,Clone,PartialEq,Eq)]
+pub enum FuncProcModifier {
+    Export,
+    Entry,
+    Version(Vec<String>)
 }
 
 pub trait PTTransformer {

@@ -1,7 +1,29 @@
-use std::{fmt, collections::HashMap};
-use crate::{model::{ Variable, Check, Constant, ArgTypeSpec, TypedArgument, CodeModifier}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
+use std::{fmt::{self, Display}, collections::HashMap};
+use crate::{codeblocks::{CodeDefinition, CodeBlock, CodeModifier}, source::ParsePosition, model::{constants::Constant, checkstypes::{Check, ArgTypeSpec, TypedArgument}}};
 
 use super::femodel::{OrBundleRepeater, OrBundle};
+
+#[derive(Clone,PartialEq,Eq,Hash)]
+pub struct Variable {
+    pub prefix: Option<String>,
+    pub name: String
+}
+
+impl fmt::Debug for Variable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(prefix) = &self.prefix {
+            write!(f,"{}.{}",prefix,self.name)
+        } else {
+            write!(f,"{}",self.name)
+        }
+    }
+}
+
+impl Display for Variable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{:?}",self)
+    }
+}
 
 #[derive(Debug,Clone)]
 pub enum BTRegisterType {

@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet}};
-use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundleRepeater}, model::{FullConstant}, libcore::libcore::libcore_add, source::ParsePosition};
+use crate::{frontend::{parsetree::{PTStatement, PTExpression}, femodel::OrBundleRepeater}, libcore::libcore::libcore_add, source::ParsePosition, model::constants::FullConstant};
 
 pub struct EardCompiler {
     flags: HashSet<String>,

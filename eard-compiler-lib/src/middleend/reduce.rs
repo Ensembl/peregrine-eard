@@ -1,5 +1,6 @@
 use std::collections::HashMap;
-use crate::model::{LinearStatement, LinearStatementValue};
+
+use crate::model::linear::{LinearStatementValue, LinearStatement};
 
 /* NOTE! After linearizing we are not yet in signle-assignment form as multiple consecutive calls
  * to a function/procedure reuse registers (we can get away without rewriting or a stack because)

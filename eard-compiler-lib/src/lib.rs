@@ -19,6 +19,27 @@ mod middleend {
     pub(crate) mod checking;  
     pub(crate) mod culdesac;
     pub(crate) mod constfold;
+    pub(crate) mod reuse;
+    pub(crate) mod reorder;
+    pub(crate) mod generate;
+    pub(crate) mod spill;
+}
+
+mod model {
+    pub(crate) mod checkstypes;
+    pub(crate) mod compiled;
+    pub(crate) mod constants;
+    pub(crate) mod linear;
+    pub(crate) mod operation;
+    pub(crate) mod step;
+}
+
+mod test {
+    #[cfg(test)]
+    mod test;
+    pub(crate) mod testutil;    
+    #[cfg(test)]
+    mod testharness;
 }
 
 mod unbundle {
@@ -28,22 +49,15 @@ mod unbundle {
     pub(crate) mod linearize;
 }
 
+mod util {
+    pub(crate) mod toposort;
+    pub(crate) mod equiv;
+}
+
 mod codeblocks;
 pub mod compiler;
 pub mod compilation;
-mod equiv;
-mod model;
 mod source;
-mod reuse;
-pub(crate) mod toposort;
-mod reorder;
-mod generate;
-mod spill;
 mod compiled;
 pub mod serialise;
 
-#[cfg(test)]
-mod test;
-
-#[cfg(test)]
-mod testharness;

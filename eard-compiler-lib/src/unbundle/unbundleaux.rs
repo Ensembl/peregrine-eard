@@ -1,5 +1,6 @@
 use std::collections::{HashSet, HashMap, BTreeMap};
-use crate::model::{Variable, CheckType};
+
+use crate::{frontend::buildtree::Variable, model::checkstypes::CheckType};
 
 #[derive(Clone)]
 pub(super) struct Bundle {

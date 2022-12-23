@@ -1,5 +1,6 @@
 use ordered_float::OrderedFloat;
-use crate::model::{FullConstant, Constant};
+
+use crate::model::constants::{FullConstant, Constant};
 
 pub(super) fn fold_infseq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let Some(Some(FullConstant::Atomic(x))) = inputs.get(0) {

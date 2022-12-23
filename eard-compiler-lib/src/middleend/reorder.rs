@@ -35,7 +35,7 @@
  */
 
 use std::{collections::HashMap, mem};
-use crate::{toposort::TopoSort, model::{Operation, CodeModifier, OperationValue, FullConstant}, frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::CodeBlock, source::ParsePosition};
+use crate::{frontend::{buildtree::{BTTopDefn, BuildTree}}, codeblocks::{CodeBlock, CodeModifier}, source::ParsePosition, util::toposort::TopoSort, model::{operation::{Operation, OperationValue}, constants::FullConstant}};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {

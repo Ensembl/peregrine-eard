@@ -1,4 +1,4 @@
-use crate::{compiler::EardCompiler, model::{FullConstant, Constant}, source::FixedSourceSource};
+use crate::{compiler::EardCompiler, source::FixedSourceSource, model::constants::{FullConstant, Constant}};
 use super::foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq };
 
 fn fold_add(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {

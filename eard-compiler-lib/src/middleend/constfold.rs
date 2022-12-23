@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{model::{LinearStatement, Operation, LinearStatementValue, FullConstant, CodeModifier, OperationValue}, compilation::EardCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::CodeBlock, source::ParsePosition};
+use crate::{compilation::EardCompilation, frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::{CodeBlock, CodeModifier}, source::ParsePosition, model::{constants::FullConstant, operation::{Operation, OperationValue}, linear::{LinearStatementValue, LinearStatement}}};
 
 struct ConstFold<'a,'b> {
     comp: &'b EardCompilation<'a>,

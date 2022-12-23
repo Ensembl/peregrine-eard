@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap};
-use crate::{model::{TypedArgument, ArgTypeSpec, FuncProcModifier, Variable, Check, TypeSpec}, codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition};
-use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef}, femodel::{OrBundle, OrBundleRepeater}};
+use crate::{codeblocks::{CodeDefinition, CodeBlock}, source::ParsePosition, model::checkstypes::{TypedArgument, ArgTypeSpec, TypeSpec, Check}};
+use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType, Variable}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef, FuncProcModifier}, femodel::{OrBundle, OrBundleRepeater}};
 
 #[derive(Debug,Clone)]
 pub(super) enum DefName {

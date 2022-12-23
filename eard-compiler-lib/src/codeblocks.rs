@@ -1,5 +1,85 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{CodeModifier, sepfmt, CodeArgument, FullConstant, CodeImplArgument, CodeReturn, Opcode, TypeSpec}, middleend::{broadtyping::BroadType, narrowtyping::NarrowType}};
+use crate::{model::{checkstypes::{Check, TypeSpec}, constants::{FullConstant, Constant}, compiled::Opcode}, middleend::{narrowtyping::NarrowType, broadtyping::BroadType}, test::testutil::sepfmt};
+
+#[derive(Clone,PartialEq,Eq)]
+pub enum CodeModifier {
+    World,
+    Fold(String),
+    Special(String)
+}
+
+impl fmt::Debug for CodeModifier {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CodeModifier::World => write!(f,"world")?,
+            CodeModifier::Fold(s) => write!(f,"fold({})",s)?,
+            CodeModifier::Special(s) => write!(f,"special({})",s)?
+        }
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct CodeArgument {
+    pub arg_type: TypeSpec,
+    pub checks: Vec<Check>
+}
+
+impl fmt::Debug for CodeArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{:?} {}",
+            self.arg_type,
+            sepfmt(&mut self.checks.iter()," ","")
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub struct CodeImplVariable {
+    pub reg_id: usize,
+    pub arg_type: TypeSpec
+}
+
+impl fmt::Debug for CodeImplVariable {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"r{} : {:?}",
+            self.reg_id,
+            self.arg_type
+        )?;
+        Ok(())
+    }
+}
+
+#[derive(Clone)]
+pub enum CodeImplArgument {
+    Register(CodeImplVariable),
+    Constant(Constant)
+}
+
+impl fmt::Debug for CodeImplArgument {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Register(r) => write!(f,"{:?}",r),
+            Self::Constant(c) => write!(f,"{:?}",c),
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum CodeReturn {
+    Register(CodeImplVariable),
+    Repeat(usize)
+}
+
+impl fmt::Debug for CodeReturn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Register(r) => write!(f,"{:?}",r),
+            Self::Repeat(r) => write!(f,"r{}",*r),
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct ImplBlock {

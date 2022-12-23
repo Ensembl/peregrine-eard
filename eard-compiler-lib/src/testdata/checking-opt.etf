@@ -4,6 +4,8 @@ checking length smoke
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -20,6 +22,8 @@ r1 <- [3,4]
 checking total smoke
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
@@ -40,6 +44,8 @@ checking length then total/bound
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -59,6 +65,8 @@ checking or-inf
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -77,6 +85,8 @@ r1 <- [5,6,7]
 checking collapse only one
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }

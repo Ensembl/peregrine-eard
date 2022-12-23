@@ -4,6 +4,8 @@ finite sequences
 
 >> input
 
+program "test" "test" 1;
+
 let a = [1,2,3];
 print(format(a));
 
@@ -19,6 +21,8 @@ empty sequence
 
 >> input
 
+program "test" "test" 1;
+
 print(format([]));
 
 >> constfold strip culdesac nolines
@@ -32,6 +36,8 @@ print:11  (2#3) r9
 infinite sequence
 
 >> input
+
+program "test" "test" 1;
 
 print(format([true,...]));
 
@@ -47,6 +53,8 @@ addition
 
 >> input
 
+program "test" "test" 1;
+
 print(format(2+2));
 
 >> constfold strip culdesac nolines
@@ -60,6 +68,8 @@ print:11  (2#3) r13
 subtraction fold
 
 >> input
+
+program "test" "test" 1;
 
 print(format(5-2));
 
@@ -75,8 +85,10 @@ sane error messages
 
 >> input
 
+program "test" "test" 1;
+
 print(format("hi"+3));
 
 >> broad-fail strip
 
-type check failed: expected number got string at maths:9 (called from test:2)
+type check failed: expected number got string at maths:9 (called from test:4)

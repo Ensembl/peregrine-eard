@@ -63,7 +63,7 @@ impl<'a> EardCompilation<'a> {
 
     pub(crate) fn middleend(&mut self, tree: &BuildTree) -> Result<Vec<Step>,String> {
         let bundles = build_unbundle(&tree)?;
-        let (linear,mut allocator) = linearize(&tree,&bundles)?;
+        let (linear,mut allocator,metadata) = linearize(&tree,&bundles)?;
         let linear = reduce(&linear);
         let (mut broad,block_indexes) = broad_type(&tree,&linear)?;
         let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad)?;

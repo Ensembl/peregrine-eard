@@ -4,13 +4,15 @@ bad variable 1
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x) { (y) }
 
 p(0);
 
 >> linearize-fail trim
 
-unknown variable 'y' at test:2 (called from test:4)
+unknown variable 'y' at test:4 (called from test:6)
 
 >> test
 
@@ -18,13 +20,15 @@ bad variable 2
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x) { (y) }
 
 p(x);
 
 >> linearize-fail trim
 
-unknown variable 'x' at test:4
+unknown variable 'x' at test:6
 
 >> test
 
@@ -32,11 +36,13 @@ bad variable 3
 
 >> input
 
+program "test" "test" 1;
+
 let y = x;
 
 >> linearize-fail trim
 
-unknown variable 'x' at test:2
+unknown variable 'x' at test:4
 
 >> test
 
@@ -44,13 +50,15 @@ bad variable 4
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x) { (*y) }
 
 p(0);
 
 >> linearize-fail trim
 
-empty bundle return 'y' at test:2 (called from test:4)
+empty bundle return 'y' at test:4 (called from test:6)
 
 >> test
 
@@ -58,13 +66,15 @@ bad variable 5
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(*x) { (*x) }
 
 p(*a);
 
 >> linearize-fail trim
 
-empty bundle argument 'a' at test:4
+empty bundle argument 'a' at test:6
 
 >> test
 
@@ -72,13 +82,15 @@ bad variable 6
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x) { (x) }
 
 let **a = p(**b);
 
 >> linearize-fail trim
 
-empty bundle used in repeater 'b' at test:4
+empty bundle used in repeater 'b' at test:6
 
 >> test
 
@@ -86,13 +98,15 @@ bad args 1
 
 >> input
 
+program "test" "test" 1;
+
 procedure p() { 0 }
 
 p(0);
 
 >> linearize-fail trim
 
-definition at test:2 has 0 args; call passes 1 at test:4
+definition at test:4 has 0 args; call passes 1 at test:6
 
 >> test
 
@@ -100,19 +114,23 @@ bad args 2
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x) { 0 }
 
 p();
 
 >> linearize-fail trim
 
-definition at test:2 has 1 args; call passes 0 at test:4
+definition at test:4 has 1 args; call passes 0 at test:6
 
 >> test
 
 bad args 3
 
 >> input
+
+program "test" "test" 1;
 
 function f(s) { 0 }
 procedure p() { 0 }
@@ -121,13 +139,15 @@ p(f(0,1));
 
 >> linearize-fail trim
 
-definition at test:2 has 1 args; call passes 2 at test:5
+definition at test:4 has 1 args; call passes 2 at test:7
 
 >> test
 
 bad args 4
 
 >> input
+
+program "test" "test" 1;
 
 function f(s) { 0 }
 procedure p() { f(0,1,2) }
@@ -136,7 +156,7 @@ p();
 
 >> linearize-fail trim
 
-definition at test:2 has 1 args; call passes 3 at test:3 (called from test:5)
+definition at test:4 has 1 args; call passes 3 at test:5 (called from test:7)
 
 >> test
 
@@ -144,13 +164,15 @@ bad ret 1
 
 >> input
 
+program "test" "test" 1;
+
 procedure p() { (1,2) }
 
 let x = p();
 
 >> linearize-fail trim
 
-definition at test:2 has 2 return values; call expects 1 at test:4
+definition at test:4 has 2 return values; call expects 1 at test:6
 
 >> test
 
@@ -158,13 +180,15 @@ bad ret 2
 
 >> input
 
+program "test" "test" 1;
+
 procedure p() { (1,2) }
 
 let (x,y,z) = p();
 
 >> linearize-fail trim
 
-definition at test:2 has 2 return values; call expects 3 at test:4
+definition at test:4 has 2 return values; call expects 3 at test:6
 
 >> test
 
@@ -172,14 +196,16 @@ bad ret counter 1
 
 >> input
 
+program "test" "test" 1;
+
 procedure p() { (1,2) }
 
 p();
 
 >> linearize trim
 
-test:2 r1 <constant> 1
-test:2 r2 <constant> 2
+test:4 r1 <constant> 1
+test:4 r2 <constant> 2
 
 >> test
 
@@ -187,11 +213,13 @@ bad ret assign 1
 
 >> input
 
+program "test" "test" 1;
+
 let (a,b) = (1,2,3);
 
 >> built-fail trim
 
-let tuples differ in length: 2 lvalues but 3 rvalues at test:2
+let tuples differ in length: 2 lvalues but 3 rvalues at test:4
 
 >> test
 
@@ -199,12 +227,14 @@ bad ret assign 2
 
 >> input
 
+program "test" "test" 1;
+
 let (a,b) = (1,1);
 (a,b) = (1,2,3);
 
 >> built-fail trim
 
-let tuples differ in length: 2 lvalues but 3 rvalues at test:3
+let tuples differ in length: 2 lvalues but 3 rvalues at test:5
 
 >> test
 
@@ -212,19 +242,23 @@ bundle arg match 1
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(*p) { p.a }
 
 p(2);
 
 >> unbundle-fail trim
 
-unexpected bundle at test:4
+unexpected bundle at test:6
 
 >> test
 
 bundle arg match 2
 
 >> input
+
+program "test" "test" 1;
 
 procedure p(p) { p }
 
@@ -233,13 +267,15 @@ p(*a);
 
 >> unbundle-fail trim
 
-unexpected bundle at test:5
+unexpected bundle at test:7
 
 >> test
 
 bundle arg match 3
 
 >> input
+
+program "test" "test" 1;
 
 function f(x) { x }
 procedure p(*x) { f(*x) }
@@ -249,13 +285,15 @@ p(*a);
 
 >> unbundle-fail trim
 
-unexpected bundle at test:6
+unexpected bundle at test:8
 
 >> test
 
 bundle arg match 3
 
 >> input
+
+program "test" "test" 1;
 
 function f(*x) { *x }
 procedure p(x) { x }
@@ -265,4 +303,4 @@ p(f(*a));
 
 >> unbundle-fail trim
 
-expected bundle at test:6
+expected bundle at test:8

@@ -123,7 +123,7 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
 fn frontend(compilation: &mut EardCompilation, processed: &[PTStatement]) -> (BuildTree,Vec<LinearStatement>,Allocator) {
     let tree = compilation.build(processed.to_vec()).expect("build failed");
     let bundles = build_unbundle(&tree).expect("unbundle failed");
-    let (linear,next_register) = linearize(&tree,&bundles).expect("linearize failed");
+    let (linear,next_register,metadata) = linearize(&tree,&bundles).expect("linearize failed");
     (tree,reduce(&linear),next_register)
 }
 
@@ -295,7 +295,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
         if let Some((linearized_options,linearized_correct)) = sections.get("linearize") {
             let tree = compilation.build(processed.clone().expect("processing failed")).expect("build failed");
             let bundles = build_unbundle(&tree).expect("unbundle failed");
-            let (mut linear,_) = linearize(&tree,&bundles).expect("linearize failed");
+            let (mut linear,_,_) = linearize(&tree,&bundles).expect("linearize failed");
             if linearized_options.contains("reduce") {
                 linear = reduce(&linear);
             }

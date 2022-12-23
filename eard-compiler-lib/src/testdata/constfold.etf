@@ -4,6 +4,8 @@ constfold smoke 1
 
 >> input
 
+program "test" "test" 1;
+
 world fold(test) code test(number,number) -> number {
     impl (r1: number, r2: number) -> (r3: number) {
         opcode 14, r1;
@@ -14,15 +16,17 @@ let a = test(5,4);
 
 >> constfold strip
 
-test:8 r1 <- 5
-test:8 r2 <- 4
-test:8 r3 <- 9
+test:10 r1 <- 5
+test:10 r2 <- 4
+test:10 r3 <- 9
 
 >> test
 
 constfold smoke 2
 
 >> input
+
+program "test" "test" 1;
 
 world fold(test) code test(number,number) -> number {
     impl (r1: number, r2: number) -> (r3: number) {
@@ -34,15 +38,17 @@ let a = test(5,5);
 
 >> constfold strip
 
-test:8 r1 <- 5
-test:8 r2 <- 5
-test:8 r3 (1#1) r1 r2
+test:10 r1 <- 5
+test:10 r2 <- 5
+test:10 r3 (1#1) r1 r2
 
 >> test
 
 constfold smoke 3
 
 >> input
+
+program "test" "test" 1;
 
 let a = [1,2,3];
 
@@ -61,6 +67,8 @@ sequences:47 r31 <- [1,2,3]
 constfold smoke 4
 
 >> input
+
+program "test" "test" 1;
 
 let x = 1;
 let a = [x-1,x,x+1];

@@ -4,6 +4,8 @@ capture 1
 
 >> input
 
+program "test" "test" 1;
+
 let a = 1;
 let b = 2;
 
@@ -23,20 +25,21 @@ let (x,y) = p();
   (a,b)
 }
 
-test:2 (r1) <- #1 1
-test:2 let a
-test:2 (a) <- #2 r1
-test:3 (r2) <- #3 2
-test:3 let b
-test:3 (b) <- #4 r2
-test:5 define 0
-test:11 (r3 r4) <- (0#5)
-test:11 let x
-test:11 let y
-test:11 (x) <- #6 r3
-test:11 (y) <- #7 r4
+test:2 program "test" "test" 1
+test:4 (r1) <- #1 1
+test:4 let a
+test:4 (a) <- #2 r1
+test:5 (r2) <- #3 2
+test:5 let b
+test:5 (b) <- #4 r2
+test:7 define 0
+test:13 (r3 r4) <- (0#5)
+test:13 let x
+test:13 let y
+test:13 (x) <- #6 r3
+test:13 (y) <- #7 r4
 
->> linearize strip
+>> linearize strip nolines
 
 test:2 r1 <constant> 1
 test:2 r2 <copy-from> r1
@@ -66,6 +69,8 @@ capture 2
 
 >> input
 
+program "test" "test" 1;
+
 let x.a = 1;
 let x.b = 2;
 let x.c = 3;
@@ -85,23 +90,24 @@ let (x,y) = p();
   (x.a,x.b)
 }
 
-test:2 (r1) <- #1 1
-test:2 let x.a
-test:2 (x.a) <- #2 r1
-test:3 (r2) <- #3 2
-test:3 let x.b
-test:3 (x.b) <- #4 r2
-test:4 (r3) <- #5 3
-test:4 let x.c
-test:4 (x.c) <- #6 r3
-test:6 define 0
-test:12 (r4 r5) <- (0#7)
-test:12 let x
-test:12 let y
-test:12 (x) <- #8 r4
-test:12 (y) <- #9 r5
+test:2 program "test" "test" 1
+test:4 (r1) <- #1 1
+test:4 let x.a
+test:4 (x.a) <- #2 r1
+test:5 (r2) <- #3 2
+test:5 let x.b
+test:5 (x.b) <- #4 r2
+test:6 (r3) <- #5 3
+test:6 let x.c
+test:6 (x.c) <- #6 r3
+test:8 define 0
+test:14 (r4 r5) <- (0#7)
+test:14 let x
+test:14 let y
+test:14 (x) <- #8 r4
+test:14 (y) <- #9 r5
 
->> linearize strip
+>> linearize strip nolines
 
 test:2 r1 <constant> 1
 test:2 r2 <copy-from> r1

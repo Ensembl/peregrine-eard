@@ -2,6 +2,8 @@
 
 >> input
 
+program "test" "test" 1;
+
 world code code_gen() -> handle(h) { impl() -> r1: handle(h) { opcode 999, r1; } }
 function gen() { let y = code_gen(); y }
 
@@ -41,6 +43,8 @@ opcode 998, r1
 
 >> input
 
+program "test" "test" 1;
+
 world code code_gen() -> handle(h) { impl() -> r1: handle(h) { opcode 999, r1; } }
 function gen() { let y = code_gen(); y }
 
@@ -55,4 +59,4 @@ cmp(a,b);
 
 >> narrow-fail strip
 
-type mismatch at sequences:93 (called from test:8) (called from test:12)
+type mismatch at sequences:93 (called from test:10) (called from test:14)

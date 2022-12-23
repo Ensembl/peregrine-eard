@@ -136,7 +136,9 @@ fn test_entry() {
 
 #[test]
 fn test_multi_generate() {
-    let source = "        
+    let source = "
+        program \"test\" \"test\" 1;
+
         world code wc1(number) -> number { impl(r1: number) -> r2: number { opcode 901, r2, r1; } }
         world code wc2(number) -> number { impl(r1: number) -> r2: number { opcode 902, r2, r1; } }
         world code wc3(number) -> number { impl(r1: number) -> r2: number { opcode 903, r2, r1; } }

@@ -255,7 +255,13 @@ inner_block = {
     (macro_call ~ ";")
 }
 
+prog_version = { ASCII_DIGIT+ }
+header = {
+    "program" ~ string ~ string ~ prog_version ~ ";"
+}
+
 block = {
+    header | /* Has to go at start of program, but this may not be the root file */
     code_block |
     include |
     fixed_include |

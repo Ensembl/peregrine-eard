@@ -4,6 +4,8 @@ code smoke 1
 
 >> input
 
+program "test" "test" 1;
+
 code __code_infseq(?X) -> seq(?X) {
   impl (r1: ?X) -> r2: seq(?X) {}
 }
@@ -58,23 +60,23 @@ let x = test(y,true);
 }
 
 3:func (x) {
-  test:14 (r1) <- (0#1 x)
-  test:14 let y
-  test:14 (y) <- #2 r1
+  test:16 (r1) <- (0#1 x)
+  test:16 let y
+  test:16 (y) <- #2 r1
   (y)
 }
 
 4:func () {
-  test:15 (r2) <- (1#3)
-  test:15 let y
-  test:15 (y) <- #4 r2
+  test:17 (r2) <- (1#3)
+  test:17 let y
+  test:17 (y) <- #4 r2
   (y)
 }
 
 5:proc (x,y) {
-  test:16 (r3) <- (2#5 x y)
-  test:16 let y
-  test:16 (y) <- #6 r3
+  test:18 (r3) <- (2#5 x y)
+  test:18 let y
+  test:18 (y) <- #6 r3
   (y)
 }
 
@@ -100,67 +102,68 @@ let x = test(y,true);
   }
 }
 
-test:14 define 3
-test:15 define 4
-test:16 define 5
-test:38 (r5) <- (4#7)
-test:38 (r5) <- (5#8 r5 1)
-test:38 (r5) <- (5#9 r5 2)
-test:38 (r5) <- (5#10 r5 3)
-test:38 (r4) <- #11 r5
-test:38 let y
-test:38 (y) <- #12 r4
-test:39 (r6) <- (6#13 y true)
-test:39 let x
-test:39 (x) <- #14 r6
+test:2 program "test" "test" 1
+test:16 define 3
+test:17 define 4
+test:18 define 5
+test:40 (r5) <- (4#7)
+test:40 (r5) <- (5#8 r5 1)
+test:40 (r5) <- (5#9 r5 2)
+test:40 (r5) <- (5#10 r5 3)
+test:40 (r4) <- #11 r5
+test:40 let y
+test:40 (y) <- #12 r4
+test:41 (r6) <- (6#13 y true)
+test:41 let x
+test:41 (x) <- #14 r6
 
 >> linearize strip
 
-test:15 r1 (1#1) 
-test:15 r2 <copy-from> r1
-test:15 r3 <copy-from> r2
-test:15 r4 <copy-from> r3
-test:38 r5 <copy-from> r4
-test:38 r6 <copy-from> r5
-test:38 r7 <constant> 1
-test:16 r8 <copy-from> r6
-test:16 r9 <copy-from> r7
-test:16 r10 <copy-from> r8
-test:16 r11 <copy-from> r9
-test:16 r12 (2#2) r10 r11
-test:16 r13 <copy-from> r12
-test:16 r14 <copy-from> r13
-test:16 r15 <copy-from> r14
-test:38 r5 <copy-from> r15
-test:38 r16 <copy-from> r5
-test:38 r17 <constant> 2
-test:16 r18 <copy-from> r16
-test:16 r19 <copy-from> r17
-test:16 r20 <copy-from> r18
-test:16 r21 <copy-from> r19
-test:16 r22 (2#3) r20 r21
-test:16 r13 <copy-from> r22
-test:16 r23 <copy-from> r13
-test:16 r24 <copy-from> r23
-test:38 r5 <copy-from> r24
-test:38 r25 <copy-from> r5
-test:38 r26 <constant> 3
-test:16 r27 <copy-from> r25
-test:16 r28 <copy-from> r26
-test:16 r29 <copy-from> r27
-test:16 r30 <copy-from> r28
-test:16 r31 (2#4) r29 r30
-test:16 r13 <copy-from> r31
-test:16 r32 <copy-from> r13
-test:16 r33 <copy-from> r32
-test:38 r5 <copy-from> r33
-test:38 r34 <copy-from> r5
-test:38 r35 <copy-from> r34
-test:38 r36 <copy-from> r35
-test:38 r37 <copy-from> r36
-test:39 r38 <copy-from> r37
-test:39 r39 <constant> true
-test:39 r40 r41 (3#5) r38 r39
-test:39 r42 <copy-from> r40
-test:39 r43 <copy-from> r42
-test:39 r44 <copy-from> r43
+test:17 r1 (1#1) 
+test:17 r2 <copy-from> r1
+test:17 r3 <copy-from> r2
+test:17 r4 <copy-from> r3
+test:40 r5 <copy-from> r4
+test:40 r6 <copy-from> r5
+test:40 r7 <constant> 1
+test:18 r8 <copy-from> r6
+test:18 r9 <copy-from> r7
+test:18 r10 <copy-from> r8
+test:18 r11 <copy-from> r9
+test:18 r12 (2#2) r10 r11
+test:18 r13 <copy-from> r12
+test:18 r14 <copy-from> r13
+test:18 r15 <copy-from> r14
+test:40 r5 <copy-from> r15
+test:40 r16 <copy-from> r5
+test:40 r17 <constant> 2
+test:18 r18 <copy-from> r16
+test:18 r19 <copy-from> r17
+test:18 r20 <copy-from> r18
+test:18 r21 <copy-from> r19
+test:18 r22 (2#3) r20 r21
+test:18 r13 <copy-from> r22
+test:18 r23 <copy-from> r13
+test:18 r24 <copy-from> r23
+test:40 r5 <copy-from> r24
+test:40 r25 <copy-from> r5
+test:40 r26 <constant> 3
+test:18 r27 <copy-from> r25
+test:18 r28 <copy-from> r26
+test:18 r29 <copy-from> r27
+test:18 r30 <copy-from> r28
+test:18 r31 (2#4) r29 r30
+test:18 r13 <copy-from> r31
+test:18 r32 <copy-from> r13
+test:18 r33 <copy-from> r32
+test:40 r5 <copy-from> r33
+test:40 r34 <copy-from> r5
+test:40 r35 <copy-from> r34
+test:40 r36 <copy-from> r35
+test:40 r37 <copy-from> r36
+test:41 r38 <copy-from> r37
+test:41 r39 <constant> true
+test:41 r40 r41 (3#5) r38 r39
+test:41 r42 <copy-from> r40
+test:41 r43 <copy-from> r42
+test:41 r44 <copy-from> r43

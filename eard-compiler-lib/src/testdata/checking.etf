@@ -4,6 +4,8 @@ length works
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -37,6 +39,8 @@ opcode 8, r1
 total works
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
@@ -77,6 +81,8 @@ bound works
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -116,6 +122,8 @@ checking length smoke
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -136,6 +144,8 @@ opcode 10, r1, r3, r2
 checking total smoke
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
@@ -162,6 +172,8 @@ checking length then total/bound
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -187,6 +199,8 @@ checking or-inf
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }
 
@@ -211,6 +225,8 @@ opcode 16, r1, r4, r2
 checking collapse only one
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 {} }
 function c(x) { let y = wc(x); y }

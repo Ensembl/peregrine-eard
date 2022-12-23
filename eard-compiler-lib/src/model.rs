@@ -165,6 +165,12 @@ impl fmt::Debug for Step {
     }
 }
 
+pub struct Metadata {
+    pub(crate) group: String,
+    pub(crate) name: String,
+    pub(crate) version: u32
+}
+
 pub struct CompiledBlock {
     pub constants: Vec<FullConstant>,
     pub program: Vec<(usize,Vec<usize>)>

@@ -4,6 +4,8 @@ type smoke 1
 
 >> input
 
+program "test" "test" 1;
+
 world code c (seq(?X) length(?Y)) -> (seq(?X) length(?Y)) {
     impl (r1: seq(boolean)) -> (r1) {
         opcode 14, r1;
@@ -71,6 +73,8 @@ checking fail
 
 >> input
 
+program "test" "test" 1;
+
 code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
 code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
 code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
@@ -89,7 +93,7 @@ let b : length(a) = [3,4];
 
 >> checking-fail trim
 
-checking error: cannot guarantee Length at test:16
+checking error: cannot guarantee Length at test:18
 
 >> test
 
@@ -97,6 +101,8 @@ checking assert
 
 >> input
 
+program "test" "test" 1;
+
 code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
 code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
 code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
@@ -115,13 +121,15 @@ let b : length(a) = [3,4];
 
 >> checking-fail trim
 
-checking error: cannot guarantee Length at test:16
+checking error: cannot guarantee Length at test:18
 
 >> test
 
 checking success
 
 >> input
+
+program "test" "test" 1;
 
 code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
 code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
@@ -165,6 +173,8 @@ checking success 2
 
 >> input
 
+program "test" "test" 1;
+
 code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
 code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }
 code __code_push(seq(?X), ?X) -> seq(?X) { impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {}}
@@ -202,6 +212,8 @@ type bug
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x : ?X, z : ?Z) -> (?Y,seq(?Y),?Z) {
     ("",[],z)
 }
@@ -227,6 +239,8 @@ string: 2, 10
 type challenge
 
 >> input
+
+program "test" "test" 1;
 
 world code __code_print(?X) { impl (r1: ?X) {} }
 procedure print(x: ?X) { __code_print(x); }
@@ -286,11 +300,13 @@ reject multi-wild 1 args
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x: ?X | ?Y) {}
 
 >> built-fail trim
 
-only one wildcard allowed per argument at test:2
+only one wildcard allowed per argument at test:4
 
 >> test
 
@@ -298,11 +314,13 @@ reject multi-wild 2 args
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x: ?X | seq(?X)) {}
 
 >> built-fail trim
 
-only one wildcard allowed per argument at test:2
+only one wildcard allowed per argument at test:4
 
 >> test
 
@@ -310,17 +328,21 @@ reject multi-wild 3 args
 
 >> input
 
+program "test" "test" 1;
+
 procedure p(x: seq(number) | seq(?X)) {}
 
 >> built-fail trim
 
-cannot match wild and non-wild sequences in argument at test:2
+cannot match wild and non-wild sequences in argument at test:4
 
 >> test
 
 sequence wildcard
 
 >> input
+
+program "test" "test" 1;
 
 code __code_infseq(?X) -> seq(?X) { impl (r1: ?X) -> r2: seq(?X) {} }
 code __code_finseq() -> seq(?X) { impl () -> r1: seq(?X) {} }

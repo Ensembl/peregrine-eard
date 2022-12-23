@@ -4,6 +4,8 @@ reust smoke test
 
 >> input
 
+program "test" "test" 1;
+
 code c(number, number, number) -> number {
     impl (r1: number, r2: number, r3: number) -> r3: number {}
 }
@@ -81,6 +83,8 @@ reust smoke test 2
 
 >> input
 
+program "test" "test" 1;
+
 code c(number, number, number) -> number {
     impl (r1: number, r2: number, r3: number) -> r3: number {}
 }
@@ -152,6 +156,8 @@ reorder smoke test
 
 >> input
 
+program "test" "test" 1;
+
 code c(number, number, number) -> number {
     impl (r1: number, r2: number, 0) -> r1 {}
     impl (r1: number, r2: number, r3: number) -> r3: number {}
@@ -217,6 +223,8 @@ spill smoke
 
 >> input
 
+program "test" "test" 1;
+
 world code c() {
     impl () {}
 }
@@ -238,7 +246,7 @@ pause();
 use(a);
 use(a);
 
->> spill strip
+>> spill strip nolines
 
 test:13 r1 <- 1
 test:14  (1#1) r1

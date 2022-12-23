@@ -4,22 +4,25 @@ linearize 1
 
 >> input
 
+program "test" "test" 1;
+
 let x : length(tr) = 0;
 
 >> built strip
 
-test:2 (r1) <- #1 0
-test:2 let x
-test:2 (x) <- #2 r1
-test:2 x <check> length(tr)
+test:2 program "test" "test" 1
+test:4 (r1) <- #1 0
+test:4 let x
+test:4 (x) <- #2 r1
+test:4 x <check> length(tr)
 
 >> linearize strip
 
-test:2 r1 <constant> 0
-test:2 r2 <copy-from> r1
-test:2 r3 <copy-from> r2
-test:2 r4 <copy-from> r3
-test:2 r4 <check:tr> Length 1
+test:4 r1 <constant> 0
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
+test:4 r4 <check:tr> Length 1
 
 >> test
 
@@ -27,36 +30,41 @@ linearize 2
 
 >> input
 
+program "test" "test" 1;
+
 let x : length(tr) = 0;
 let y = x;
 
 >> built strip
 
-test:2 (r1) <- #1 0
-test:2 let x
-test:2 (x) <- #2 r1
-test:2 x <check> length(tr)
-test:3 (r2) <- #3 x
-test:3 let y
-test:3 (y) <- #4 r2
+test:2 program "test" "test" 1
+test:4 (r1) <- #1 0
+test:4 let x
+test:4 (x) <- #2 r1
+test:4 x <check> length(tr)
+test:5 (r2) <- #3 x
+test:5 let y
+test:5 (y) <- #4 r2
 
 >> linearize strip
 
-test:2 r1 <constant> 0
-test:2 r2 <copy-from> r1
-test:2 r3 <copy-from> r2
-test:2 r4 <copy-from> r3
-test:2 r4 <check:tr> Length 1
-test:3 r5 <copy-from> r4
-test:3 r6 <copy-from> r5
-test:3 r7 <copy-from> r6
-test:3 r8 <copy-from> r7
+test:4 r1 <constant> 0
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
+test:4 r4 <check:tr> Length 1
+test:5 r5 <copy-from> r4
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
+test:5 r8 <copy-from> r7
 
 >> test
 
 linearize 3
 
 >> input
+
+program "test" "test" 1;
 
 let a.a = 1;
 let a.b = 2;
@@ -67,67 +75,70 @@ let y = b.b;
 
 >> built strip
 
-test:2 (r1) <- #1 1
-test:2 let a.a
-test:2 (a.a) <- #2 r1
-test:3 (r2) <- #3 2
-test:3 let a.b
-test:3 (a.b) <- #4 r2
-test:4 (r3) <- #5 3
-test:4 let a.c
-test:4 (a.c) <- #6 r3
-test:5 (*r4) <- #7 *a
-test:5 let *b
-test:5 (*b) <- #8 *r4
-test:6 (r5) <- #9 b.a
-test:6 let x
-test:6 (x) <- #10 r5
-test:7 (r6) <- #11 b.b
-test:7 let y
-test:7 (y) <- #12 r6
+test:2 program "test" "test" 1
+test:4 (r1) <- #1 1
+test:4 let a.a
+test:4 (a.a) <- #2 r1
+test:5 (r2) <- #3 2
+test:5 let a.b
+test:5 (a.b) <- #4 r2
+test:6 (r3) <- #5 3
+test:6 let a.c
+test:6 (a.c) <- #6 r3
+test:7 (*r4) <- #7 *a
+test:7 let *b
+test:7 (*b) <- #8 *r4
+test:8 (r5) <- #9 b.a
+test:8 let x
+test:8 (x) <- #10 r5
+test:9 (r6) <- #11 b.b
+test:9 let y
+test:9 (y) <- #12 r6
 
 >> linearize strip
 
-test:2 r1 <constant> 1
-test:2 r2 <copy-from> r1
-test:2 r3 <copy-from> r2
-test:2 r4 <copy-from> r3
+test:4 r1 <constant> 1
+test:4 r2 <copy-from> r1
+test:4 r3 <copy-from> r2
+test:4 r4 <copy-from> r3
 
-test:3 r5 <constant> 2
-test:3 r6 <copy-from> r5
-test:3 r7 <copy-from> r6
-test:3 r8 <copy-from> r7
+test:5 r5 <constant> 2
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
+test:5 r8 <copy-from> r7
 
-test:4 r9 <constant> 3
-test:4 r10 <copy-from> r9
-test:4 r11 <copy-from> r10
-test:4 r12 <copy-from> r11
+test:6 r9 <constant> 3
+test:6 r10 <copy-from> r9
+test:6 r11 <copy-from> r10
+test:6 r12 <copy-from> r11
 
-test:5 r13 <copy-from> r4
-test:5 r14 <copy-from> r8
-test:5 r15 <copy-from> r13
-test:5 r16 <copy-from> r14
+test:7 r13 <copy-from> r4
+test:7 r14 <copy-from> r8
+test:7 r15 <copy-from> r13
+test:7 r16 <copy-from> r14
 
-test:5 r17 <copy-from> r15
-test:5 r18 <copy-from> r16
-test:5 r19 <copy-from> r17
-test:5 r20 <copy-from> r18
+test:7 r17 <copy-from> r15
+test:7 r18 <copy-from> r16
+test:7 r19 <copy-from> r17
+test:7 r20 <copy-from> r18
 
-test:6 r21 <copy-from> r19
-test:6 r22 <copy-from> r21
-test:6 r23 <copy-from> r22
-test:6 r24 <copy-from> r23
+test:8 r21 <copy-from> r19
+test:8 r22 <copy-from> r21
+test:8 r23 <copy-from> r22
+test:8 r24 <copy-from> r23
 
-test:7 r25 <copy-from> r20
-test:7 r26 <copy-from> r25
-test:7 r27 <copy-from> r26
-test:7 r28 <copy-from> r27
+test:9 r25 <copy-from> r20
+test:9 r26 <copy-from> r25
+test:9 r27 <copy-from> r26
+test:9 r28 <copy-from> r27
 
 >> test
 
 linearize 4
 
 >> input
+
+program "test" "test" 1;
 
 procedure p(x) { x }
 
@@ -140,31 +151,34 @@ z = p(1);
   (x)
 }
 
-test:2 define 0
-test:4 (r1) <- #1 0
-test:4 let z
-test:4 (z) <- #2 r1
-test:5 (r2) <- (0#3 1)
-test:5 (z) <- #4 r2
+test:2 program "test" "test" 1
+test:4 define 0
+test:6 (r1) <- #1 0
+test:6 let z
+test:6 (z) <- #2 r1
+test:7 (r2) <- (0#3 1)
+test:7 (z) <- #4 r2
 
 >> linearize strip
 
-test:4 r1 <constant> 0
-test:4 r2 <copy-from> r1
-test:4 r3 <copy-from> r2
-test:4 r4 <copy-from> r3
+test:6 r1 <constant> 0
+test:6 r2 <copy-from> r1
+test:6 r3 <copy-from> r2
+test:6 r4 <copy-from> r3
+test:7 r5 <constant> 1
+test:4 r6 <copy-from> r5
+test:7 r7 <copy-from> r6
+test:7 r8 <copy-from> r7
+test:7 r9 <copy-from> r8
 
-test:5 r5 <constant> 1
-test:2 r6 <copy-from> r5
-test:5 r7 <copy-from> r6
-test:5 r8 <copy-from> r7
-test:5 r9 <copy-from> r8
 
 >> test
 
 linearize 5
 
 >> input
+
+program "test" "test" 1;
 
 procedure p(*x) { x.a }
 
@@ -179,47 +193,50 @@ a = p(*x);
   (x.a)
 }
 
-test:2 define 0
-test:4 (r1) <- #1 0
-test:4 let a
-test:4 (a) <- #2 r1
-test:5 (r2) <- #3 1
-test:5 let x.a
-test:5 (x.a) <- #4 r2
-test:6 (r3) <- #5 2
-test:6 let x.b
-test:6 (x.b) <- #6 r3
-test:7 (r4) <- (0#7 *x)
-test:7 (a) <- #8 r4
+test:2 program "test" "test" 1
+test:4 define 0
+test:6 (r1) <- #1 0
+test:6 let a
+test:6 (a) <- #2 r1
+test:7 (r2) <- #3 1
+test:7 let x.a
+test:7 (x.a) <- #4 r2
+test:8 (r3) <- #5 2
+test:8 let x.b
+test:8 (x.b) <- #6 r3
+test:9 (r4) <- (0#7 *x)
+test:9 (a) <- #8 r4
 
 >> linearize strip
 
-test:4 r1 <constant> 0
-test:4 r2 <copy-from> r1
-test:4 r3 <copy-from> r2
-test:4 r4 <copy-from> r3
+test:6 r1 <constant> 0
+test:6 r2 <copy-from> r1
+test:6 r3 <copy-from> r2
+test:6 r4 <copy-from> r3
 
-test:5 r5 <constant> 1
-test:5 r6 <copy-from> r5
-test:5 r7 <copy-from> r6
-test:5 r8 <copy-from> r7
+test:7 r5 <constant> 1
+test:7 r6 <copy-from> r5
+test:7 r7 <copy-from> r6
+test:7 r8 <copy-from> r7
 
-test:6 r9 <constant> 2
-test:6 r10 <copy-from> r9
-test:6 r11 <copy-from> r10
-test:6 r12 <copy-from> r11
+test:8 r9 <constant> 2
+test:8 r10 <copy-from> r9
+test:8 r11 <copy-from> r10
+test:8 r12 <copy-from> r11
 
-test:7 r13 <copy-from> r8
-test:2 r14 <copy-from> r13
-test:7 r15 <copy-from> r14
-test:7 r16 <copy-from> r15
-test:7 r17 <copy-from> r16
+test:9 r13 <copy-from> r8
+test:4 r14 <copy-from> r13
+test:9 r15 <copy-from> r14
+test:9 r16 <copy-from> r15
+test:9 r17 <copy-from> r16
 
 >> test
 
 linearize 6
 
 >> input
+
+program "test" "test" 1;
 
 procedure p(*x) { let b.w = x.a; *b }
 
@@ -232,66 +249,69 @@ a = z.w;
 >> built strip
 
 0:proc (*x) {
-  test:2 (r1) <- #1 x.a
-  test:2 let b.w
-  test:2 (b.w) <- #2 r1
+  test:4 (r1) <- #1 x.a
+  test:4 let b.w
+  test:4 (b.w) <- #2 r1
   (*b)
 }
 
-test:2 define 0
-test:4 (r2) <- #3 0
-test:4 let a
-test:4 (a) <- #4 r2
-test:5 (r3) <- #5 1
-test:5 let x.a
-test:5 (x.a) <- #6 r3
-test:6 (r4) <- #7 2
-test:6 let x.b
-test:6 (x.b) <- #8 r4
-test:7 (*r5) <- (0#9 *x)
-test:7 let *z
-test:7 (*z) <- #10 *r5
-test:8 (r6) <- #11 z.w
-test:8 (a) <- #12 r6
+test:2 program "test" "test" 1
+test:4 define 0
+test:6 (r2) <- #3 0
+test:6 let a
+test:6 (a) <- #4 r2
+test:7 (r3) <- #5 1
+test:7 let x.a
+test:7 (x.a) <- #6 r3
+test:8 (r4) <- #7 2
+test:8 let x.b
+test:8 (x.b) <- #8 r4
+test:9 (*r5) <- (0#9 *x)
+test:9 let *z
+test:9 (*z) <- #10 *r5
+test:10 (r6) <- #11 z.w
+test:10 (a) <- #12 r6
 
 >> linearize strip
 
-test:4 r1 <constant> 0
-test:4 r2 <copy-from> r1
-test:4 r3 <copy-from> r2
-test:4 r4 <copy-from> r3
+test:6 r1 <constant> 0
+test:6 r2 <copy-from> r1
+test:6 r3 <copy-from> r2
+test:6 r4 <copy-from> r3
 
-test:5 r5 <constant> 1
-test:5 r6 <copy-from> r5
-test:5 r7 <copy-from> r6
-test:5 r8 <copy-from> r7
+test:7 r5 <constant> 1
+test:7 r6 <copy-from> r5
+test:7 r7 <copy-from> r6
+test:7 r8 <copy-from> r7
 
-test:6 r9 <constant> 2
-test:6 r10 <copy-from> r9
-test:6 r11 <copy-from> r10
-test:6 r12 <copy-from> r11
+test:8 r9 <constant> 2
+test:8 r10 <copy-from> r9
+test:8 r11 <copy-from> r10
+test:8 r12 <copy-from> r11
 
-test:7 r13 <copy-from> r8
-test:2 r14 <copy-from> r13
-test:2 r15 <copy-from> r14
-test:2 r16 <copy-from> r15
-test:2 r17 <copy-from> r16
-test:2 r18 <copy-from> r17
+test:9 r13 <copy-from> r8
+test:4 r14 <copy-from> r13
+test:4 r15 <copy-from> r14
+test:4 r16 <copy-from> r15
+test:4 r17 <copy-from> r16
+test:4 r18 <copy-from> r17
+test:9 r19 <copy-from> r18
+test:9 r20 <copy-from> r19
+test:9 r21 <copy-from> r20
 
-test:7 r19 <copy-from> r18
-test:7 r20 <copy-from> r19
-test:7 r21 <copy-from> r20
+test:10 r22 <copy-from> r21
+test:10 r23 <copy-from> r22
+test:10 r24 <copy-from> r23
+test:10 r25 <copy-from> r24
 
-test:8 r22 <copy-from> r21
-test:8 r23 <copy-from> r22
-test:8 r24 <copy-from> r23
-test:8 r25 <copy-from> r24
 
 >> test 
 
 linearize 7
 
 >> input
+
+program "test" "test" 1;
 
 function f(*x) { let c.g = x.w; *c }
 procedure p(*x) { let b.w = x.a; f(*b) }
@@ -305,79 +325,82 @@ a = z.g;
 >> built strip
 
 0:func (*x) {
-  test:2 (r1) <- #1 x.w
-  test:2 let c.g
-  test:2 (c.g) <- #2 r1
+  test:4 (r1) <- #1 x.w
+  test:4 let c.g
+  test:4 (c.g) <- #2 r1
   (*c)
 }
 
 1:proc (*x) {
-  test:3 (r2) <- #3 x.a
-  test:3 let b.w
-  test:3 (b.w) <- #4 r2
+  test:5 (r2) <- #3 x.a
+  test:5 let b.w
+  test:5 (b.w) <- #4 r2
   ((0#5 *b))
 }
 
-test:2 define 0
-test:3 define 1
-test:5 (r3) <- #6 0
-test:5 let a
-test:5 (a) <- #7 r3
-test:6 (r4) <- #8 1
-test:6 let x.a
-test:6 (x.a) <- #9 r4
-test:7 (r5) <- #10 2
-test:7 let x.b
-test:7 (x.b) <- #11 r5
-test:8 (*r6) <- (1#12 *x)
-test:8 let *z
-test:8 (*z) <- #13 *r6
-test:9 (r7) <- #14 z.g
-test:9 (a) <- #15 r7
+test:2 program "test" "test" 1
+test:4 define 0
+test:5 define 1
+test:7 (r3) <- #6 0
+test:7 let a
+test:7 (a) <- #7 r3
+test:8 (r4) <- #8 1
+test:8 let x.a
+test:8 (x.a) <- #9 r4
+test:9 (r5) <- #10 2
+test:9 let x.b
+test:9 (x.b) <- #11 r5
+test:10 (*r6) <- (1#12 *x)
+test:10 let *z
+test:10 (*z) <- #13 *r6
+test:11 (r7) <- #14 z.g
+test:11 (a) <- #15 r7
 
 >> linearize strip
 
-test:5 r1 <constant> 0
-test:5 r2 <copy-from> r1
-test:5 r3 <copy-from> r2
-test:5 r4 <copy-from> r3
+test:7 r1 <constant> 0
+test:7 r2 <copy-from> r1
+test:7 r3 <copy-from> r2
+test:7 r4 <copy-from> r3
 
-test:6 r5 <constant> 1
-test:6 r6 <copy-from> r5
-test:6 r7 <copy-from> r6
-test:6 r8 <copy-from> r7
+test:8 r5 <constant> 1
+test:8 r6 <copy-from> r5
+test:8 r7 <copy-from> r6
+test:8 r8 <copy-from> r7
 
-test:7 r9 <constant> 2
-test:7 r10 <copy-from> r9
-test:7 r11 <copy-from> r10
-test:7 r12 <copy-from> r11
+test:9 r9 <constant> 2
+test:9 r10 <copy-from> r9
+test:9 r11 <copy-from> r10
+test:9 r12 <copy-from> r11
 
-test:8 r13 <copy-from> r8
-test:3 r14 <copy-from> r13
-test:3 r15 <copy-from> r14
-test:3 r16 <copy-from> r15
-test:3 r17 <copy-from> r16
-test:3 r18 <copy-from> r17
-test:3 r19 <copy-from> r18
-test:2 r20 <copy-from> r19
-test:2 r21 <copy-from> r20
-test:2 r22 <copy-from> r21
-test:2 r23 <copy-from> r22
-test:2 r24 <copy-from> r23
-test:8 r25 <copy-from> r24
-test:8 r26 <copy-from> r25
-test:8 r27 <copy-from> r26
+test:10 r13 <copy-from> r8
+test:5 r14 <copy-from> r13
+test:5 r15 <copy-from> r14
+test:5 r16 <copy-from> r15
+test:5 r17 <copy-from> r16
+test:5 r18 <copy-from> r17
+test:5 r19 <copy-from> r18
+test:4 r20 <copy-from> r19
+test:4 r21 <copy-from> r20
+test:4 r22 <copy-from> r21
+test:4 r23 <copy-from> r22
+test:4 r24 <copy-from> r23
+test:10 r25 <copy-from> r24
+test:10 r26 <copy-from> r25
+test:10 r27 <copy-from> r26
 
-test:9 r28 <copy-from> r27
-test:9 r29 <copy-from> r28
-test:9 r30 <copy-from> r29
-test:9 r31 <copy-from> r30
+test:11 r28 <copy-from> r27
+test:11 r29 <copy-from> r28
+test:11 r30 <copy-from> r29
+test:11 r31 <copy-from> r30
 
 >> test
 
 linearize 8
 
 >> input
+
+program "test" "test" 1;
 
 function f(*x) { let c.g = x.b; *c }
 procedure p(*x) { let b.w = x.g; *b }
@@ -391,78 +414,82 @@ a = z.w;
 >> built strip
 
 0:func (*x) {
-  test:2 (r1) <- #1 x.b
-  test:2 let c.g
-  test:2 (c.g) <- #2 r1
+  test:4 (r1) <- #1 x.b
+  test:4 let c.g
+  test:4 (c.g) <- #2 r1
   (*c)
 }
 
 1:proc (*x) {
-  test:3 (r2) <- #3 x.g
-  test:3 let b.w
-  test:3 (b.w) <- #4 r2
+  test:5 (r2) <- #3 x.g
+  test:5 let b.w
+  test:5 (b.w) <- #4 r2
   (*b)
 }
 
-test:2 define 0
-test:3 define 1
-test:5 (r3) <- #5 0
-test:5 let a
-test:5 (a) <- #6 r3
-test:6 (r4) <- #7 1
-test:6 let x.a
-test:6 (x.a) <- #8 r4
-test:7 (r5) <- #9 2
-test:7 let x.b
-test:7 (x.b) <- #10 r5
-test:8 (*r6) <- (1#12 (0#11 *x))
-test:8 let *z
-test:8 (*z) <- #13 *r6
-test:9 (r7) <- #14 z.w
-test:9 (a) <- #15 r7
+test:2 program "test" "test" 1
+test:4 define 0
+test:5 define 1
+test:7 (r3) <- #5 0
+test:7 let a
+test:7 (a) <- #6 r3
+test:8 (r4) <- #7 1
+test:8 let x.a
+test:8 (x.a) <- #8 r4
+test:9 (r5) <- #9 2
+test:9 let x.b
+test:9 (x.b) <- #10 r5
+test:10 (*r6) <- (1#12 (0#11 *x))
+test:10 let *z
+test:10 (*z) <- #13 *r6
+test:11 (r7) <- #14 z.w
+test:11 (a) <- #15 r7
+
 
 >> linearize strip
 
-test:5 r1 <constant> 0
-test:5 r2 <copy-from> r1
-test:5 r3 <copy-from> r2
-test:5 r4 <copy-from> r3
+test:7 r1 <constant> 0
+test:7 r2 <copy-from> r1
+test:7 r3 <copy-from> r2
+test:7 r4 <copy-from> r3
 
-test:6 r5 <constant> 1
-test:6 r6 <copy-from> r5
-test:6 r7 <copy-from> r6
-test:6 r8 <copy-from> r7
+test:8 r5 <constant> 1
+test:8 r6 <copy-from> r5
+test:8 r7 <copy-from> r6
+test:8 r8 <copy-from> r7
 
-test:7 r9 <constant> 2
-test:7 r10 <copy-from> r9
-test:7 r11 <copy-from> r10
-test:7 r12 <copy-from> r11
+test:9 r9 <constant> 2
+test:9 r10 <copy-from> r9
+test:9 r11 <copy-from> r10
+test:9 r12 <copy-from> r11
 
-test:8 r13 <copy-from> r12
-test:2 r14 <copy-from> r13
-test:2 r15 <copy-from> r14
-test:2 r16 <copy-from> r15
-test:2 r17 <copy-from> r16
-test:2 r18 <copy-from> r17
-test:3 r19 <copy-from> r18
-test:3 r20 <copy-from> r19
-test:3 r21 <copy-from> r20
-test:3 r22 <copy-from> r21
-test:3 r23 <copy-from> r22
-test:8 r24 <copy-from> r23
-test:8 r25 <copy-from> r24
-test:8 r26 <copy-from> r25
+test:10 r13 <copy-from> r12
+test:4 r14 <copy-from> r13
+test:4 r15 <copy-from> r14
+test:4 r16 <copy-from> r15
+test:4 r17 <copy-from> r16
+test:4 r18 <copy-from> r17
+test:5 r19 <copy-from> r18
+test:5 r20 <copy-from> r19
+test:5 r21 <copy-from> r20
+test:5 r22 <copy-from> r21
+test:5 r23 <copy-from> r22
+test:10 r24 <copy-from> r23
+test:10 r25 <copy-from> r24
+test:10 r26 <copy-from> r25
 
-test:9 r27 <copy-from> r26
-test:9 r28 <copy-from> r27
-test:9 r29 <copy-from> r28
-test:9 r30 <copy-from> r29
+test:11 r27 <copy-from> r26
+test:11 r28 <copy-from> r27
+test:11 r29 <copy-from> r28
+test:11 r30 <copy-from> r29
 
 >> test
 
 linearize 9
 
 >> input
+
+program "test" "test" 1;
 
 function f(x,y) { x }
 procedure p(z) { z }
@@ -484,30 +511,31 @@ let (m,n) = (y.a,y.b);
   (z)
 }
 
-test:2 define 0
-test:3 define 1
-test:5 (r1) <- #1 1
-test:5 let x.a
-test:5 (x.a) <- #2 r1
-test:6 (r2) <- #3 2
-test:6 let x.b
-test:6 (x.b) <- #4 r2
-test:7 (r3) <- #5 3
-test:7 let x.c
-test:7 (x.c) <- #6 r3
-test:8 (r4) <- #7 4
-test:8 let z
-test:8 (z) <- #8 r4
-test:9 let **y
-test:9 (**y) <- #10 (0#9 **x z)
-test:10 (r5) <- #11 y.a
-test:10 (r6) <- #12 y.b
-test:10 let m
-test:10 let n
-test:10 (m) <- #13 r5
-test:10 (n) <- #14 r6
+test:2 program "test" "test" 1
+test:4 define 0
+test:5 define 1
+test:7 (r1) <- #1 1
+test:7 let x.a
+test:7 (x.a) <- #2 r1
+test:8 (r2) <- #3 2
+test:8 let x.b
+test:8 (x.b) <- #4 r2
+test:9 (r3) <- #5 3
+test:9 let x.c
+test:9 (x.c) <- #6 r3
+test:10 (r4) <- #7 4
+test:10 let z
+test:10 (z) <- #8 r4
+test:11 let **y
+test:11 (**y) <- #10 (0#9 **x z)
+test:12 (r5) <- #11 y.a
+test:12 (r6) <- #12 y.b
+test:12 let m
+test:12 let n
+test:12 (m) <- #13 r5
+test:12 (n) <- #14 r6
 
->> linearize strip
+>> linearize strip nolines
 
 test:5 r1 <constant> 1
 test:5 r2 <copy-from> r1

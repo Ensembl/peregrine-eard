@@ -209,6 +209,7 @@ pub struct PTStatement {
 pub enum PTStatementValue {
     /* preprocessor */
     Include(String,bool),
+    Header(String,String,u32),
 
     /* definitions */
     Code(CodeBlock),

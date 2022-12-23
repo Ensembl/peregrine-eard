@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{model::{Variable, LinearStatement, LinearStatementValue, TypedArgument, TypeSpec}, source::ParsePosition, frontend::femodel::{OrBundle, OrBundleRepeater}};
+use crate::{model::{Variable, LinearStatement, LinearStatementValue, TypedArgument, TypeSpec, Metadata}, source::ParsePosition, frontend::femodel::{OrBundle, OrBundleRepeater}};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -38,7 +38,8 @@ struct Linearize<'a> {
     call_stack: Vec<usize>,
     captures: HashMap<usize,Vec<(Variable,usize)>>,
     checks: Checks,
-    allocator: Allocator
+    allocator: Allocator,
+    metadata: Option<Metadata>
 }
 
 impl<'a> Linearize<'a> {
@@ -55,7 +56,8 @@ impl<'a> Linearize<'a> {
             },
             call_stack: vec![],
             captures: HashMap::new(),
-            checks: Checks::new()
+            checks: Checks::new(),
+            metadata: None
         }
     }
 
@@ -473,16 +475,25 @@ impl<'a> Linearize<'a> {
                         return Err("cannot enter at code section!".to_string())
                     }
                 }
+            },
+            BTStatementValue::Header(group,name,version) => {
+                if self.output.len() > 0 {
+                    return Err("program headr must be first statement".to_string());
+                }
+                self.metadata = Some(Metadata { group: group.to_string(), name: name.to_string(), version: *version })
             }
         }
         Ok(())
     }
 }
 
-pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,Allocator),String> {
+pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits) -> Result<(Vec<LinearStatement>,Allocator,Metadata),String> {
     let mut linearize = Linearize::new(tree,bundles);
     for stmt in &tree.statements {
         linearize.statement(stmt).map_err(|e| linearize.positions.message(&e))?;
     }
-    Ok((linearize.output,linearize.allocator))
+    if linearize.metadata.is_none() {
+        return Err("missing program header".to_string());
+    }
+    Ok((linearize.output,linearize.allocator,linearize.metadata.unwrap()))
 }

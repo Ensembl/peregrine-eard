@@ -98,6 +98,7 @@ impl fmt::Debug for BTFuncCall {
 
 #[derive(Clone)]
 pub enum BTStatementValue {
+    Header(String,String,u32),
     Define(usize),
     Declare(OrBundleRepeater<Variable>),
     Check(Variable,Check),
@@ -108,6 +109,7 @@ pub enum BTStatementValue {
 impl fmt::Debug for BTStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Header(group,name,version) => write!(f,"program {:?} {:?} {:?}",group,name,version),
             Self::Define(v) => write!(f,"define {:?}",v),
             Self::Entry(v,s) => write!(f,"entry {:?} {:?}",v,s),
             Self::Declare(v) => write!(f,"let {:?}",v),

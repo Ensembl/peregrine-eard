@@ -2,6 +2,8 @@
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
 function c(x) { let y = wc(x); y }
 
@@ -15,67 +17,70 @@ entry procedure other() {
 
 >> built strip
 
-0:world code wc(?X ) -> (?X ) { impl (r1 : ?X) -> (r1)  { opcode 999, r1; } }
+0:world code wc(?X ) -> (?X )  {
+  impl (r1 : ?X) -> (r1)  { opcode 999, r1; }
+}
 
 1:func (x) {
-  test:3 (r1) <- (0#1 x)
-  test:3 let y
-  test:3 (y) <- #2 r1
+  test:5 (r1) <- (0#1 x)
+  test:5 let y
+  test:5 (y) <- #2 r1
   (y)
 }
 
 2:proc () {
-  test:5 #4 (1#3 "main")
+  test:7 #4 (1#3 "main")
   ()
 }
 
 3:proc () {
-  test:9 #6 (1#5 "other")
+  test:11 #6 (1#5 "other")
   ()
 }
 
-test:3 define 1
-test:5 define 2
-test:9 define 3
+test:2 program "test" "test" 1
+test:5 define 1
+test:7 define 2
+test:11 define 3
 *anon*:0 entry 2 "main"
 *anon*:0 entry 3 "other"
 
 >> linearize strip
 
 *anon*:0 <entry> "main"
-test:5 r1 <constant> "main"
-test:3 r2 <copy-from> r1
-test:3 r3 <copy-from> r2
-test:3 r4 (1#1) r3
-test:3 r5 <copy-from> r4
-test:3 r6 <copy-from> r5
-test:3 r7 <copy-from> r6
+test:7 r1 <constant> "main"
+test:5 r2 <copy-from> r1
+test:5 r3 <copy-from> r2
+test:5 r4 (1#1) r3
+test:5 r5 <copy-from> r4
+test:5 r6 <copy-from> r5
+test:5 r7 <copy-from> r6
 *anon*:0 <entry> "other"
-test:9 r8 <constant> "other"
-test:3 r9 <copy-from> r8
-test:3 r10 <copy-from> r9
-test:3 r11 (1#2) r10
-test:3 r5 <copy-from> r11
-test:3 r12 <copy-from> r5
-test:3 r13 <copy-from> r12
+test:11 r8 <constant> "other"
+test:5 r9 <copy-from> r8
+test:5 r10 <copy-from> r9
+test:5 r11 (1#2) r10
+test:5 r5 <copy-from> r11
+test:5 r12 <copy-from> r5
+test:5 r13 <copy-from> r12
 
 >> constfold strip
 
 *anon*:0 entrypoint main
-test:5 r1 <- "main"
-test:3 r4 (1#1) r1
+test:7 r1 <- "main"
+test:5 r4 (1#1) r1
 *anon*:0 entrypoint other
-test:9 r8 <- "other"
-test:3 r11 (1#2) r8
+test:11 r8 <- "other"
+test:5 r11 (1#2) r8
 
 >> spill strip
 
 *anon*:0 entrypoint main
-test:5 r1 <- "main"
-test:3 r0 (1#1) r1
+test:7 r1 <- "main"
+test:5 r0 (1#1) r1
 *anon*:0 entrypoint other
-test:9 r8 <- "other"
-test:3 r0 (1#2) r8
+test:11 r8 <- "other"
+test:5 r0 (1#2) r8
 
 >> generate strip
 
@@ -106,6 +111,8 @@ block: other
 
 >> input
 
+program "test" "test" 1;
+
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
 function c(x) { let y = wc(x); y }
 
@@ -115,11 +122,13 @@ entry procedure main(x) {
 
 >> built-fail strip
 
-entry procedure main can take no arguments at test:5
+entry procedure main can take no arguments at test:7
 
 >> test
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
 function c(x) { let y = wc(x); y }
@@ -131,11 +140,13 @@ entry procedure main() {
 
 >> built-fail strip
 
-entry procedure main can return no values at test:5
+entry procedure main can return no values at test:7
 
 >> test
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
 function c(x) { let y = wc(x); y }
@@ -150,11 +161,13 @@ entry procedure main() {
 
 >> built-fail strip
 
-entry procedure main cannot capture values at test:7
+entry procedure main cannot capture values at test:9
 
 >> test
 
 >> input
+
+program "test" "test" 1;
 
 world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
 function c(x) { let y = wc(x); y }
@@ -169,4 +182,4 @@ main();
 
 >> linearize-fail strip
 
-entry procedures cannot be explicitly called at test:11
+entry procedures cannot be explicitly called at test:13

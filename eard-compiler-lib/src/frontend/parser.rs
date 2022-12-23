@@ -190,6 +190,18 @@ impl EardParser {
         ))
     }
 
+    fn prog_version(input: Node) -> PestResult<u32> {
+        input.as_str().parse::<u32>().map_err(|e| input.error(e))
+    }
+
+    fn header(input: Node) -> PestResult<PTStatementValue> {
+        Ok(match_nodes!(input.into_children();
+          [string(group),string(name),prog_version(v)] => {
+            PTStatementValue::Header(group,name,v)
+          }
+        ))
+    }
+
     fn include(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children(); [string(s)] => s ))
     }
@@ -601,6 +613,7 @@ impl EardParser {
         let line_no = input.as_span().start_pos().line_col().0;
         let position = input.user_data().position.at_line(line_no as u32);
         let value = match_nodes!(input.into_children();
+            [header(v)] => v,
             [code_block(block)] => PTStatementValue::Code(block),
             [include(s)] => PTStatementValue::Include(s,false),
             [fixed_include(s)] => PTStatementValue::Include(s,true),

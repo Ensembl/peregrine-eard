@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, HashSet}, sync::Arc, mem};
-use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, codeblocks::{CodeBlock, CodeModifier}, model::operation::{Operation, OperationValue}};
+use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{operation::{Operation, OperationValue}, codeblocks::{CodeBlock, CodeModifier}}};
 
 struct CulDeSac<'a> {
     bt: &'a BuildTree,

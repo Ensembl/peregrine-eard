@@ -1,3 +1,11 @@
+mod controller {
+    pub(crate) mod compiler;
+    pub(crate) mod compilation;
+    pub(crate) mod source;
+    pub(crate) mod compiled;
+    pub(crate) mod serialise;    
+}
+
 mod frontend {
     pub(crate) mod buildtree;
     mod buildtreebuilder;    
@@ -27,6 +35,7 @@ mod middleend {
 
 mod model {
     pub(crate) mod checkstypes;
+    pub(crate) mod codeblocks;
     pub(crate) mod compiled;
     pub(crate) mod constants;
     pub(crate) mod linear;
@@ -54,10 +63,4 @@ mod util {
     pub(crate) mod equiv;
 }
 
-mod codeblocks;
-pub mod compiler;
-pub mod compilation;
-mod source;
-mod compiled;
-pub mod serialise;
-
+pub use crate::controller::{compiler::EardCompiler, compilation::EardCompilation, serialise::EardSerializeCode };

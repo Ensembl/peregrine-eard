@@ -1,4 +1,4 @@
-use crate::{codeblocks::CodeBlock, source::ParsePosition, model::{constants::Constant, checkstypes::{TypedArgument, ArgTypeSpec, Check}}};
+use crate::{model::{constants::Constant, checkstypes::{TypedArgument, ArgTypeSpec, Check}, codeblocks::CodeBlock}, controller::source::ParsePosition};
 use super::{buildtree::{BuildTree, Variable}, femodel::{OrBundle, OrBundleRepeater}};
 use super::buildtreebuilder::BuildContext;
 

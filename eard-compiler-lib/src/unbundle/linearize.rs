@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{source::ParsePosition, frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypeSpec, TypedArgument}, compiled::Metadata}};
+use crate::{frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypeSpec, TypedArgument}, compiled::Metadata}, controller::source::ParsePosition};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 

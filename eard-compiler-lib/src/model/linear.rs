@@ -15,7 +15,7 @@ pub enum LinearStatementValue {
 
 #[cfg(test)]
 use crate::test::testutil::AllocDumper;
-use crate::{test::testutil::sepfmt, source::ParsePosition};
+use crate::{test::testutil::sepfmt, controller::source::ParsePosition};
 
 impl LinearStatementValue {
     #[cfg(test)]

@@ -1,5 +1,5 @@
 use ordered_float::OrderedFloat;
-use crate::{ compiler::EardCompiler, compilation::EardCompilation, source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources, model::constants::Constant, test::testutil::sepfmt};
+use crate::{ controller::compiler::EardCompiler, controller::compilation::EardCompilation, controller::source::{CombinedSourceSourceBuilder, FixedSourceSource, CombinedSourceSource, ParsePosition, SourceSourceImpl}, libcore::libcore::libcore_sources, model::constants::Constant, test::testutil::sepfmt};
 use crate::frontend::parsetree::{PTExpression};
 use super::testharness::run_parse_tests;
 

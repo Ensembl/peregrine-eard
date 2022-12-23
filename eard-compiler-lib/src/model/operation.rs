@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::{source::ParsePosition, test::testutil::sepfmt};
+use crate::{test::testutil::sepfmt, controller::source::ParsePosition};
 use super::constants::FullConstant;
 
 #[derive(Clone)]

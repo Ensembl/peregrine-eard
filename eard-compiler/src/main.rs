@@ -1,8 +1,7 @@
 mod config;
 
 use std::{process::exit, fs::File, io::{Write, self}};
-
-use eard_compiler_lib::{compiler::EardCompiler, compilation::EardCompilation, serialise::EardSerializeCode };
+use eard_compiler_lib::{EardCompiler, EardCompilation, EardSerializeCode };
 use config::Config;
 use clap::Parser;
 

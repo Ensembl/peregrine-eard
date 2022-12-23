@@ -54,6 +54,9 @@ impl Reduce {
                 let src = self.equiv.get(src).unwrap_or(src);
                 self.equiv.insert(*dst,*src);
                 None
+            },
+            LinearStatementValue::Entry(s) => { 
+                Some(LinearStatementValue::Entry(s.to_string()))
             }
         };
         value.map(|value| {

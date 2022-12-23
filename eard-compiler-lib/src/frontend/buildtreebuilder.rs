@@ -14,6 +14,7 @@ struct CurrentFuncProcDefinition {
     block: Vec<BTStatement>,
     name: String,
     export: bool,
+    entry: bool,
     versions: Vec<Vec<String>>,
     args: Vec<OrBundle<TypedArgument>>,
     captures: Vec<OrBundle<Variable>>,
@@ -103,14 +104,14 @@ impl BuildContext {
             args: &[OrBundle<TypedArgument>],
             ret_type: Option<Vec<ArgTypeSpec>>,
             captures: &[OrBundle<Variable>],
-            export: bool, versions: Vec<Vec<String>>) {
+            export: bool, entry: bool, versions: Vec<Vec<String>>) {
         let variety = if is_proc { BTDefinitionVariety::Proc } else { BTDefinitionVariety::Func };
         self.funcproc_target = Some(CurrentFuncProcDefinition {
             position: self.location.clone(),
             name: name.to_string(),
             args: args.to_vec(),
             captures: captures.to_vec(),
-            export, variety,
+            export, entry, variety,
             block: vec![],
             ret_type, versions
         });
@@ -140,7 +141,7 @@ impl BuildContext {
     pub fn pop_funcproc_target(&mut self, ret: &[OrBundle<BTExpression>], bt: &mut BuildTree) -> Result<(),String> {
         let ctx = self.funcproc_target.take().expect("pop without push");
         if !self.versions_ok(&ctx.versions) { return Ok(()); }
-        let defn = match &ctx.variety {
+        let defn_id = match &ctx.variety {
             BTDefinitionVariety::Func => {                
                 self.define_funcproc(&ctx.name,ctx.to_funcproc(ret)?,false,bt,ctx.export)?
             },
@@ -148,7 +149,10 @@ impl BuildContext {
                 self.define_funcproc(&ctx.name,ctx.to_funcproc(ret)?,true,bt,ctx.export)?
             }
         };
-        self.add_statement(bt,defn)?;
+        self.add_statement(bt,BTStatementValue::Define(defn_id))?;
+        if ctx.entry {
+            bt.set_entry(defn_id,&ctx.name);
+        }
         Ok(())
     }
 
@@ -192,7 +196,7 @@ impl BuildContext {
         self.next_register
     }
 
-    pub(super) fn define_funcproc(&mut self, name: &str, fpdefn: BTFuncProcDefinition, is_proc: bool, bt: &mut BuildTree, export: bool) -> Result<BTStatementValue,String> {
+    pub(super) fn define_funcproc(&mut self, name: &str, fpdefn: BTFuncProcDefinition, is_proc: bool, bt: &mut BuildTree, export: bool) -> Result<usize,String> {
         let definition = if is_proc { BTDefinition::Proc(fpdefn) } else { BTDefinition::Func(fpdefn) };
         let id = bt.add_definition(definition);
         let name_id = if is_proc { DefName::Proc(id) } else { DefName::Func(id) };
@@ -202,7 +206,7 @@ impl BuildContext {
             return Err(format!("duplicate definition for {}",name));
         }
         self.defnames.insert(key,name_id);
-        Ok(BTStatementValue::Define(id))
+        Ok(id)
     }
 
     pub(crate) fn define_code(&mut self, block: &CodeBlock, bt: &mut BuildTree) -> Result<(),String> {
@@ -446,7 +450,7 @@ impl BuildContext {
         let ret_type = def.value_type.as_ref().map(|x| vec![x.clone()]);
         let export = def.modifiers.contains(&FuncProcModifier::Export);
         let versions = def.versions();
-        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export,versions);
+        self.push_funcproc_target(false,&def.name,&def.args,ret_type,&def.captures,export,false,versions);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }
@@ -458,7 +462,8 @@ impl BuildContext {
     fn build_procdef(&mut self, bt: &mut BuildTree, def: &PTProcDef) -> Result<(),String> {
         let versions = def.versions();
         let export = def.modifiers.contains(&FuncProcModifier::Export);
-        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export,versions);
+        let entry = def.modifiers.contains(&FuncProcModifier::Entry);
+        self.push_funcproc_target(true,&def.name,&def.args,def.ret_type.clone(),&def.captures,export,entry,versions);
         for stmt in &def.block {
             self.build_statement(bt,stmt)?;
         }

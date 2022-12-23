@@ -101,13 +101,15 @@ pub enum BTStatementValue {
     Define(usize),
     Declare(OrBundleRepeater<Variable>),
     Check(Variable,Check),
-    BundledStatement(BTProcCall<OrBundleRepeater<BTLValue>>)
+    BundledStatement(BTProcCall<OrBundleRepeater<BTLValue>>),
+    Entry(usize,String)
 }
 
 impl fmt::Debug for BTStatementValue {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Define(v) => write!(f,"define {:?}",v),
+            Self::Entry(v,s) => write!(f,"entry {:?} {:?}",v,s),
             Self::Declare(v) => write!(f,"let {:?}",v),
             Self::Check(v, c) => write!(f,"{:?} <check> {:?}",v,c),
             Self::BundledStatement(v) => write!(f,"{:?}",v),
@@ -194,17 +196,31 @@ pub enum BTTopDefn<'a> {
 #[derive(Clone)]
 pub struct BuildTree {
     pub(crate) statements: Vec<BTStatement>,
-    pub(crate) definitions: Vec<BTDefinition>,
-    pub(crate) specials: HashMap<String,usize>
+    definitions: Vec<BTDefinition>,
+    specials: HashMap<String,usize>,
+    entries: Vec<(usize,String)>
 }
 
 impl BuildTree {
     pub(crate) fn new() -> BuildTree {
-        BuildTree { statements: vec![], definitions: vec![], specials: HashMap::new() }
+        BuildTree { statements: vec![], definitions: vec![], specials: HashMap::new(), entries: vec![] }
+    }
+
+    pub(crate) fn finish(&mut self) {
+        for (idx,name) in &self.entries {
+            self.statements.push(BTStatement {
+                position: ParsePosition::empty("included"),
+                value: BTStatementValue::Entry(*idx,name.to_string()) 
+            });
+        }
     }
 
     pub(crate) fn get_special(&self, name: &str) -> usize {
         *self.specials.get(name).expect(&format!("missing special '{}'",name))
+    }
+
+    pub(super) fn set_entry(&mut self, id: usize, name: &str) {
+        self.entries.push((id,name.to_string()));
     }
 
     pub(super) fn add_definition(&mut self, defn: BTDefinition) -> usize {

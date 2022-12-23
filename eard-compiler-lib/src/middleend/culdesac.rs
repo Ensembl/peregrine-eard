@@ -32,6 +32,7 @@ impl<'a> CulDeSac<'a> {
 
     fn add_oper(&mut self, oper: &Operation) {
         match &oper.value {
+            OperationValue::Entry(_) => {},
             OperationValue::Constant(_, _) => {},
             OperationValue::Code(call,name,rets,args) => {
                 let block = self.get_block(*call,*name);
@@ -74,6 +75,9 @@ impl<'a> CulDeSac<'a> {
                     None
                 }
             },
+            OperationValue::Entry(_) => {
+                Some(oper.value.clone())
+            }
             OperationValue::Code(call,name,dst,src) => {
                 let regs_needed = dst.iter().any(|reg| self.needed.contains(reg));
                 if !regs_needed && !self.worlds.contains(call) { return None; }

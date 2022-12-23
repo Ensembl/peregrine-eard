@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{compiler::{EardCompiler}, model::{Variable, Constant, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::BuildTree, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EardCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources};
+use crate::{compiler::{EardCompiler}, model::{Variable, Constant, sepfmt, LinearStatement, FullConstant, dump_opers, dump_linear}, unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::BuildTree, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold}, compilation::EardCompilation, reorder::reorder, reuse::{test_reuse, reuse}, spill::spill, generate::generate, source::{ParsePosition, FixedSourceSource, SourceSourceImpl, CombinedSourceSource, CombinedSourceSourceBuilder}, libcore::libcore::libcore_sources, compiled::make_program};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
@@ -442,6 +442,22 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
             println!("steps:\n{}",sepfmt(&mut steps.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut steps.iter(),"\n",""),generate_options),process_ws(generate_correct,generate_options));
+        }
+        if let Some((compiled_options,compiled_correct)) = sections.get("compiled") {
+            let processed = processed.clone().expect("processing failed");
+            let (tree,linear,mut next_register) = frontend(&mut compilation,&processed);
+            let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad).expect("checking unexpectedly failed");
+            let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear);
+            opers = culdesac(&tree,&block_indexes,&opers);
+            opers = reuse(&tree,&block_indexes,&opers).expect("reuse failed");
+            opers = spill(next_register,&opers,&mut narrow);
+            opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+            let steps = generate(&tree,&block_indexes,&narrow,&opers).expect("generate failed");
+            let program = make_program(&steps);
+            println!("{:?}",program);
+            assert_eq!(process_ws(&format!("{:?}",program),compiled_options),process_ws(compiled_correct,compiled_options));
         }
     }
 }

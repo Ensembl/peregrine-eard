@@ -93,6 +93,7 @@ impl<'a> Generate<'a> {
         self.position = oper.position.clone();
         match &oper.value {
             OperationValue::Constant(_, _) => {},
+            OperationValue::Entry(_) => {},
             OperationValue::Code(_, _, _,args) => {
                 for arg in args {
                     self.last_use.insert(*arg,index);
@@ -150,7 +151,7 @@ impl<'a> Generate<'a> {
     }
 
     fn map_rets_and_detect_repeats(&mut self, mapping: &mut CodeMapping) {
-        for (ret,reg) in mapping.imp.results.iter().zip(mapping.rets.iter()) {
+        for (i,(ret,reg)) in mapping.imp.results.iter().zip(mapping.rets.iter()).enumerate() {
             match ret {
                 CodeReturn::Register(d) => {
                     let new_ret = self.reg_alloc.allocate();
@@ -160,7 +161,9 @@ impl<'a> Generate<'a> {
                 CodeReturn::Repeat(d) => {
                     let new_reg = mapping.def_to_reg.get(d).expect("missing repetition register");
                     self.regmap.insert(*reg,*new_reg);
-                    mapping.reused_def.insert(*d);
+                    if mapping.rets[i] != 0 {
+                        mapping.reused_def.insert(*d);
+                    }
                 }
             }
         }
@@ -246,6 +249,9 @@ impl<'a> Generate<'a> {
                 if let Some(step) = self.code(&block,index,rets,args)? {
                     self.out.push(step);
                 }
+            },
+            OperationValue::Entry(s) => {
+                self.out.push(Step::Entry(s.to_string()));
             }
         }
         Ok(())

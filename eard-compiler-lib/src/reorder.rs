@@ -100,6 +100,10 @@ impl<'a> Reorder<'a> {
                     self.worlds.push(index);
                 }
             },
+            OperationValue::Entry(_) => {
+                self.topo.node(ReorderNode::Instruction(index),None);
+                self.worlds.push(index);
+            }
         }
     }
 
@@ -118,7 +122,8 @@ impl<'a> Reorder<'a> {
 
     fn add_main_arcs(&mut self, index: usize, oper: &Operation) {
         match &oper.value {
-            OperationValue::Constant(_,_) => {}
+            OperationValue::Constant(_,_) => {},
+            OperationValue::Entry(_) => {},
             OperationValue::Code(_,_,_,args) => {
                 for arg in args {
                     /* register edge */
@@ -139,6 +144,7 @@ impl<'a> Reorder<'a> {
         self.position = oper.position.clone();
         match &oper.value {
             OperationValue::Constant(_, _) => {},
+            OperationValue::Entry(_) => {},
             OperationValue::Code(call,name,_,args) => {
                 let block = self.get_block(*call,*name);
                 let mut useful = vec![];

@@ -103,6 +103,9 @@ impl<'a> Spill<'a> {
                     value: OperationValue::Code(*call,*name,rets.to_vec(),new_args)
                 });
             },
+            OperationValue::Entry(_) => {
+                self.out.push(oper.clone());
+            }
         }
     }
 

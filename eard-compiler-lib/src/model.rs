@@ -1,9 +1,6 @@
-use std::{fmt::{self, Display}, cmp::Ordering};
+use std::{fmt::{self, Display}, cmp::Ordering, collections::HashMap};
 use ordered_float::OrderedFloat;
 use crate::source::ParsePosition;
-
-#[cfg(test)]
-use std::collections::HashMap;
 
 pub(crate) fn sepfmt<X>(input: &mut dyn Iterator<Item=X>, sep: &str, prefix: &str) -> String where X: fmt::Debug {
     input.map(|x| format!("{}{:?}",prefix,x)).collect::<Vec<_>>().join(sep)
@@ -58,7 +55,8 @@ impl fmt::Debug for FullConstant {
 #[derive(Clone)]
 pub enum OperationValue {
     Constant(usize,FullConstant),
-    Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args
+    Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args,
+    Entry(String)
 }
 
 impl fmt::Debug for OperationValue {
@@ -70,7 +68,10 @@ impl fmt::Debug for OperationValue {
                     sepfmt(&mut rets.iter()," ","r"),
                     *name,*call,
                     sepfmt(&mut args.iter()," ","r")
-                )
+                ),
+            OperationValue::Entry(s) => {
+                write!(f,"entrypoint {}",s)
+            }
         }
     }
 }
@@ -112,7 +113,10 @@ impl OperationValue {
                     sepfmt(&mut rets.iter()," ","r"),
                     ad.get(*name),*call,
                     sepfmt(&mut args.iter()," ","r")
-                )
+                ),
+            OperationValue::Entry(s) => {
+                format!("entrypoint {}",s)
+            }    
         }
     }
 }
@@ -143,7 +147,8 @@ impl fmt::Debug for Operation {
 
 pub enum Step {
     Constant(usize,FullConstant),
-    Opcode(usize,Vec<usize>)
+    Opcode(usize,Vec<usize>),
+    Entry(String)
 }
 
 impl fmt::Debug for Step {
@@ -152,14 +157,39 @@ impl fmt::Debug for Step {
             Step::Constant(r,c) => write!(f,"r{} <- {:?}",r,c),
             Step::Opcode(opcode,args) => {
                 write!(f,"opcode {}, {}",*opcode,sepfmt(&mut args.iter(),", ","r"))
+            },
+            Step::Entry(s) => {
+                write!(f,"entrypoint {}",s)
             }
         }
     }
 }
 
-pub struct CompiledCode {
+pub struct CompiledBlock {
     pub constants: Vec<FullConstant>,
     pub program: Vec<(usize,Vec<usize>)>
+}
+
+impl fmt::Debug for CompiledBlock {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"  constants:\n{}\n  program:\n{}\n",
+            sepfmt(&mut self.constants.iter(),"\n","    "),
+            sepfmt(&mut self.program.iter(),"\n","    ")
+        )
+    }
+}
+
+pub struct CompiledCode {
+    pub code: HashMap<String,CompiledBlock>
+}
+
+impl fmt::Debug for CompiledCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (block,code) in &self.code {
+            write!(f,"block: {}\n{:?}\n",block,code)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Clone,PartialEq,Eq)]
@@ -245,6 +275,7 @@ impl fmt::Debug for CodeReturn {
 #[derive(Debug,Clone,PartialEq,Eq)]
 pub enum FuncProcModifier {
     Export,
+    Entry,
     Version(Vec<String>)
 }
 
@@ -436,7 +467,8 @@ pub enum LinearStatementValue {
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
     Type(usize,Vec<TypeRestriction>),
-    WildEquiv(Vec<usize>)
+    WildEquiv(Vec<usize>),
+    Entry(String)
 }
 
 impl LinearStatementValue {
@@ -454,7 +486,8 @@ impl LinearStatementValue {
             Self::Code(call,name,rets,args) => {
                 format!("{} ({}#{}) {}",
                     sepfmt(&mut rets.iter()," ","r"),ad.get(*name),call,sepfmt(&mut args.iter()," ","r"))
-            }
+            },
+            Self::Entry(name) => format!("<entry> {:?}",name)
         }
     }
 }
@@ -473,7 +506,8 @@ impl fmt::Debug for LinearStatementValue {
             Self::Code(call,name,rets,args) => {
                 write!(f,"{} ({}#{}) {}",
                     sepfmt(&mut rets.iter()," ","r"),name,call,sepfmt(&mut args.iter()," ","r"))
-            }
+            },
+            Self::Entry(name) => write!(f,"<entry> {:?}",name)
         }
     }
 }

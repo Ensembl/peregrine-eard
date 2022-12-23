@@ -130,6 +130,11 @@ fn test_handle() {
 }
 
 #[test]
+fn test_entry() {
+    run_parse_tests(include_str!("testdata/entry.etf"),false,false);
+}
+
+#[test]
 fn test_multi_generate() {
     let source = "        
         world code wc1(number) -> number { impl(r1: number) -> r2: number { opcode 901, r2, r1; } }

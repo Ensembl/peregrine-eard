@@ -130,6 +130,7 @@ impl EardParser {
     }
 
     fn export(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
+    fn entry(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
     fn version_spec_part(input: Node) -> PestResult<String> { Ok(input.as_str().to_string()) }
 
     fn version_spec(input: Node) -> PestResult<Vec<String>> {
@@ -144,9 +145,17 @@ impl EardParser {
         ))
     }
 
-    fn funcproc_modifier(input: Node) -> PestResult<FuncProcModifier> {
+    fn func_modifier(input: Node) -> PestResult<FuncProcModifier> {
         Ok(match_nodes!(input.into_children();
           [export(_)] => FuncProcModifier::Export,
+          [version(v)] => FuncProcModifier::Version(v),
+        ))
+    }
+
+    fn proc_modifier(input: Node) -> PestResult<FuncProcModifier> {
+        Ok(match_nodes!(input.into_children();
+          [export(_)] => FuncProcModifier::Export,
+          [entry(_)] => FuncProcModifier::Entry,
           [version(v)] => FuncProcModifier::Version(v),
         ))
     }
@@ -409,10 +418,18 @@ impl EardParser {
         Ok(out)
     }
 
-    fn funcproc_modifiers(input: Node) -> PestResult<Vec<FuncProcModifier>> {
+    fn func_modifiers(input: Node) -> PestResult<Vec<FuncProcModifier>> {
         let mut out = vec![];
         for child in input.into_children() {
-            out.push(Self::funcproc_modifier(child)?);
+            out.push(Self::func_modifier(child)?);
+        }
+        Ok(out)
+    }
+
+    fn proc_modifiers(input: Node) -> PestResult<Vec<FuncProcModifier>> {
+        let mut out = vec![];
+        for child in input.into_children() {
+            out.push(Self::proc_modifier(child)?);
         }
         Ok(out)
     }
@@ -657,7 +674,7 @@ impl EardParser {
 
     fn function(input: Node) -> PestResult<PTFuncDef> {
         Ok(match_nodes!(input.into_children();
-            [funcproc_modifiers(f),identifier(id),funcproc_args(c),function_return(r),capture_decls(p),inner_block(b)..,function_value(x)] =>
+            [func_modifiers(f),identifier(id),funcproc_args(c),function_return(r),capture_decls(p),inner_block(b)..,function_value(x)] =>
                 PTFuncDef {
                     name: id,
                     args: c,
@@ -691,7 +708,7 @@ impl EardParser {
 
     fn procedure(input: Node) -> PestResult<PTProcDef> {
         Ok(match_nodes!(input.into_children();
-            [funcproc_modifiers(f),identifier(id),funcproc_args(args),procedure_return_option(ret_args),capture_decls(p),inner_block(b)..,procedure_expression(r)] => {
+            [proc_modifiers(f),identifier(id),funcproc_args(args),procedure_return_option(ret_args),capture_decls(p),inner_block(b)..,procedure_expression(r)] => {
                 PTProcDef {
                     name: id,
                     args,

@@ -87,6 +87,7 @@ impl<'a> BroadTyping<'a> {
             },
             LinearStatementValue::Check(_,_,_,_,_) => {},
             LinearStatementValue::WildEquiv(_) => {},
+            LinearStatementValue::Entry(_) => {},
         }
         Ok(())
     }

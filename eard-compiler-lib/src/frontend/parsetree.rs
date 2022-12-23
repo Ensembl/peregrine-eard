@@ -146,8 +146,8 @@ impl PTFuncDef {
     pub(crate) fn versions(&self) -> Vec<Vec<String>> {
         self.modifiers.iter().filter_map(|m| {
             match m {
-                FuncProcModifier::Export => None,
-                FuncProcModifier::Version(v) => Some(v.to_vec())
+                FuncProcModifier::Version(v) => Some(v.to_vec()),
+                _ => None
             }
         }).collect()
     }
@@ -191,8 +191,8 @@ impl PTProcDef {
     pub(crate) fn versions(&self) -> Vec<Vec<String>> {
         self.modifiers.iter().filter_map(|m| {
             match m {
-                FuncProcModifier::Export => None,
-                FuncProcModifier::Version(v) => Some(v.to_vec())
+                FuncProcModifier::Version(v) => Some(v.to_vec()),
+                _ => None
             }
         }).collect()
     }
@@ -297,6 +297,7 @@ impl PTStatement {
                 bc.location().message(&e)
             })?;
         }
+        bt.finish();
         Ok(bt)
     }
 }

@@ -173,9 +173,12 @@ function_return = { ("->" ~ funcproc_return_type)? }
 
 function_value = { expression|bundle }
 
+entry = { "entry" }
 export = { "export" }
-funcproc_modifier = { export | version }
-funcproc_modifiers = { funcproc_modifier* }
+func_modifier = { export | version }
+func_modifiers = { func_modifier* }
+proc_modifier = { export | version | entry }
+proc_modifiers = { proc_modifier* }
 
 // XXX let bundle call
 capture = { variable | bundle }
@@ -186,7 +189,7 @@ capture_decl = {
 capture_decls = { capture_decl* }
 
 function = {
-    funcproc_modifiers ~
+    func_modifiers ~
     "function" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ function_return  ~ "{" ~
         capture_decls ~
         inner_block* ~ function_value ~
@@ -200,7 +203,7 @@ procedure_return_option = { procedure_return? }
 procedure_expression = { ("(" ~ expr_or_bundle ~ ("," ~ expr_or_bundle)* ~ ")")| expr_or_bundle? }
 
 procedure = {
-    funcproc_modifiers ~
+    proc_modifiers ~
     "procedure" ~ identifier ~ "(" ~ funcproc_args ~ ")" ~ procedure_return_option  ~ "{" ~
         capture_decls ~
         inner_block* ~ procedure_expression ~

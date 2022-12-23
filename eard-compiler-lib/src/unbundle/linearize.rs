@@ -460,6 +460,17 @@ impl<'a> Linearize<'a> {
             BTStatementValue::BundledStatement(proc) => {
                 self.procedure(proc)?;
             },
+            BTStatementValue::Entry(idx,name) => {
+                self.add(LinearStatementValue::Entry(name.to_string()));
+                match self.tree.get_by_index(*idx)? {
+                    BTTopDefn::FuncProc(defn) => {
+                        self.callee(*idx,defn,&[])?;
+                    },
+                    BTTopDefn::Code(_) => {
+                        return Err("cannot enter at code section!".to_string())
+                    }
+                }
+            }
         }
         Ok(())
     }

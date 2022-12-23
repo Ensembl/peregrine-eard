@@ -74,6 +74,9 @@ impl<'a,'b> ConstFold<'a,'b> {
             },
             LinearStatementValue::Type(_, _) => {},
             LinearStatementValue::WildEquiv(_) => {},
+            LinearStatementValue::Entry(s) => {
+                self.out(OperationValue::Entry(s.to_string()));
+            },
         }
     }
 

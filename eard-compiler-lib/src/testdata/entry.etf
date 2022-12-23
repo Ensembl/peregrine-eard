@@ -1,0 +1,106 @@
+>> test
+
+>> input
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r1 { opcode 999, r1; } }
+function c(x) { let y = wc(x); y }
+
+entry procedure main() {
+    c("main");
+}
+
+entry procedure other() {
+    c("other");
+}
+
+//main();
+//other();
+
+>> built strip
+
+0:world code wc(?X ) -> (?X ) { impl (r1 : ?X) -> (r1)  { opcode 999, r1; } }
+
+1:func (x) {
+  test:3 (r1) <- (0#1 x)
+  test:3 let y
+  test:3 (y) <- #2 r1
+  (y)
+}
+
+2:proc () {
+  test:5 #4 (1#3 "main")
+  ()
+}
+
+3:proc () {
+  test:9 #6 (1#5 "other")
+  ()
+}
+
+test:3 define 1
+test:5 define 2
+test:9 define 3
+*anon*:0 entry 2 "main"
+*anon*:0 entry 3 "other"
+
+>> linearize strip
+
+*anon*:0 <entry> "main"
+test:5 r1 <constant> "main"
+test:3 r2 <copy-from> r1
+test:3 r3 <copy-from> r2
+test:3 r4 (1#1) r3
+test:3 r5 <copy-from> r4
+test:3 r6 <copy-from> r5
+test:3 r7 <copy-from> r6
+*anon*:0 <entry> "other"
+test:9 r8 <constant> "other"
+test:3 r9 <copy-from> r8
+test:3 r10 <copy-from> r9
+test:3 r11 (1#2) r10
+test:3 r5 <copy-from> r11
+test:3 r12 <copy-from> r5
+test:3 r13 <copy-from> r12
+
+>> constfold strip
+
+*anon*:0 entrypoint main
+test:5 r1 <- "main"
+test:3 r4 (1#1) r1
+*anon*:0 entrypoint other
+test:9 r8 <- "other"
+test:3 r11 (1#2) r8
+
+>> spill strip
+
+*anon*:0 entrypoint main
+test:5 r1 <- "main"
+test:3 r0 (1#1) r1
+*anon*:0 entrypoint other
+test:9 r8 <- "other"
+test:3 r0 (1#2) r8
+
+>> generate strip
+
+entrypoint main
+r1 <- "main"
+opcode 999, r1
+entrypoint other
+r1 <- "other"
+opcode 999, r1
+
+>> compiled strip
+
+block: main
+  constants:
+    "main"
+  program:
+    (0, [1, 0])
+    (999, [1])
+
+block: other
+  constants:
+    "other"
+  program:
+    (0, [1, 0])
+    (999, [1])

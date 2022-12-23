@@ -59,7 +59,7 @@ impl<'a> KnownValues<'a> {
 
     fn add_oper(&mut self, oper: &Operation) {
         match &oper.value {
-            OperationValue::Constant(_,_) => {
+            OperationValue::Constant(_,_) | OperationValue::Entry(_) => {
                 self.out.push(oper.clone());
             },
             OperationValue::Code(call,name,rets,args) => {
@@ -99,6 +99,9 @@ impl<'a> KnownValues<'a> {
                     self.add_oper(oper);
                 }
             },
+            OperationValue::Entry(_) => {
+                self.add_oper(oper);
+            }
             OperationValue::Code(call,name,rets,args) => {
                 let block = self.get_block(*call,*name);
                 if !block.modifiers.contains(&CodeModifier::World) {

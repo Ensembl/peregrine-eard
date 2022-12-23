@@ -154,7 +154,7 @@ impl<'a> Generate<'a> {
         for (i,(ret,reg)) in mapping.imp.results.iter().zip(mapping.rets.iter()).enumerate() {
             match ret {
                 CodeReturn::Register(d) => {
-                    let new_ret = self.reg_alloc.allocate();
+                    let new_ret = if mapping.rets[i] == 0 { NewRegister(0) } else { self.reg_alloc.allocate() };
                     mapping.def_to_reg.insert(d.reg_id,new_ret);
                     self.regmap.insert(*reg,new_ret);
                 },
@@ -201,6 +201,7 @@ impl<'a> Generate<'a> {
             def_to_reg: HashMap::new(),
             reused_def: HashSet::new()
         };
+        mapping.def_to_reg.insert(0,NewRegister(0));
         self.birth_and_map_args(&mut mapping);
         self.map_rets_and_detect_repeats(&mut mapping);
         self.free_last_arg_use(&mut mapping);
@@ -213,7 +214,7 @@ impl<'a> Generate<'a> {
         let def_to_reg = self.map_regs(&imp,index,rets,args)?;
         Ok(imp.command.as_ref().map(|opcode| {
             let opargs = opcode.1.iter().map(|d| 
-                def_to_reg.get(d).expect("missing register").0
+                def_to_reg.get(d).expect(&format!("missing register {}",d)).0
             ).collect::<Vec<_>>();
             Step::Opcode(opcode.0,opargs)
         }))

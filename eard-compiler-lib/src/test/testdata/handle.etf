@@ -1,33 +1,5 @@
 >> test
 
-type smoke 1
-
->> input
-
-program "test" "test" 1;
-
-world code h() -> handle(x) {
-    impl () ->r1 {
-        opcode 998, r1;
-    }
-}
-
-world code wc (seq(handle(?A))) -> handle(?A) {
-    impl (r1: seq(handle(?A))) -> r2: handle(?A) {
-        opcode 999, r2, r1;
-    }
-}
-
-function c(x) { let y = wc(x); y }
-
-let x = h();
-let y = c(x);
-
->> broad
-
-
->> test
-
 >> input
 
 program "test" "test" 1;
@@ -87,4 +59,4 @@ cmp(a,b);
 
 >> narrow-fail strip
 
-type mismatch at sequences:93 (called from test:10) (called from test:14)
+type mismatch at sequences:183 (called from test:10) (called from test:14)

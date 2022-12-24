@@ -102,7 +102,7 @@ impl<'a> NarrowTyping<'a> {
                 eprintln!("old_set={:?} new={:?}",old_set,new);
                 *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
                 if new.len() == 0 {
-                    return Err(format!("type mismatch/D"));
+                    return Err(format!("type mismatch"));
                 }
                 Ok(())
             })

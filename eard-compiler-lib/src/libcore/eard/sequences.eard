@@ -11,14 +11,6 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
         opcode 3, r3, r1, r2;
     }
 
-    impl (r1: seq(handle(?A)), r2: handle(?A)) -> r1 {
-        opcode 4, r1, r2;
-    }
-
-    impl (r1: seq(handle(?A)), r2: handle(?A)) -> r3: seq(handle(?A)) {
-        opcode 3, r3, r1, r2;
-    }
-
     impl (r1: seq(string), r2: string) -> r1 {
         opcode 44, r1, r2;
     }
@@ -34,14 +26,20 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
     impl (r1: seq(boolean), r2: boolean) -> r3: seq(boolean) {
         opcode 53, r3, r1, r2;
     }
+
+    /* handles */
+    impl (r1: seq(?X), r2: ?X) -> r1 {
+        opcode 4, r1, r2;
+    }
+
+    /* handles */
+    impl (r1: seq(?X), r2: ?X) -> r3: seq(?X) {
+        opcode 3, r3, r1, r2;
+    }
 }
 
 fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) { 
     impl (r1: number) -> r2: seq(number) {
-        opcode 1, r2, r1;
-    }
-
-    impl (r1: handle(?A)) -> r2: seq(handle(?A)) {
         opcode 1, r2, r1;
     }
 
@@ -52,14 +50,15 @@ fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) {
     impl (r1: boolean) -> r2: seq(boolean) {
         opcode 51, r2, r1;
     }
+
+    /* handles */
+    impl (r1: ?X) -> r2: seq(?X) {
+        opcode 1, r2, r1;
+    }
 }
 
 fold(libcore__finseq) code __code_finseq() -> seq(?X) {
     impl () -> r1: seq(number) { 
-        opcode 2, r1;
-    }
-
-    impl () -> r1: seq(handle(?A)) { 
         opcode 2, r1;
     }
 
@@ -69,6 +68,11 @@ fold(libcore__finseq) code __code_finseq() -> seq(?X) {
 
     impl () -> r1: seq(boolean) { 
         opcode 52, r1;
+    }
+
+    /* handles */
+    impl () -> r1: seq(?X) { 
+        opcode 2, r1;
     }
 }
 
@@ -81,10 +85,6 @@ fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
         opcode 5, r2, r1;
     }
 
-    impl (r1: seq(handle(?A))) -> r2 : handle(?A) {
-        opcode 5, r2, r1;
-    }
-
     impl (r1: seq(string)) -> r2 : number {
         opcode 45, r2, r1;
     }
@@ -92,14 +92,15 @@ fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
     impl (r1: seq(boolean)) -> r2 : number {
         opcode 55, r2, r1;
     }
+
+    /* handles */
+    impl (r1: seq(?X)) -> r2 : ?X {
+        opcode 5, r2, r1;
+    }
 }
 
 fold(libcore__total) special(total) code __code_total(seq(?X)) -> number {
     impl (r1: seq(number)) -> r2 : number {
-        opcode 6, r2, r1;
-    }
-
-    impl (r1: seq(handle(?A))) -> r2 : handle(?A) {
         opcode 6, r2, r1;
     }
 
@@ -110,14 +111,15 @@ fold(libcore__total) special(total) code __code_total(seq(?X)) -> number {
     impl (r1: seq(boolean)) -> r2 : number {
         opcode 56, r2, r1;
     }
+
+    /* handles */
+    impl (r1: seq(?X)) -> r2 : ?X {
+        opcode 6, r2, r1;
+    }
 }
 
 fold(libcore__bound) special(bound) code __code_bound(seq(?X)) -> number {
     impl (r1: seq(number)) -> r2 : number {
-        opcode 7, r2, r1;
-    }
-
-    impl (r1: seq(handle(?A))) -> r2 : handle(?A) {
         opcode 7, r2, r1;
     }
 
@@ -127,6 +129,10 @@ fold(libcore__bound) special(bound) code __code_bound(seq(?X)) -> number {
 
     impl (r1: seq(boolean)) -> r2 : number {
         opcode 57, r2, r1;
+    }
+
+    impl (r1: seq(?X)) -> r2 : ?X {
+        opcode 7, r2, r1;
     }
 }
 

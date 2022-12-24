@@ -91,6 +91,28 @@ macro_rules! number_un {
     }};
 }
 
+macro_rules! logic_bin {
+    ($op:expr,$a:expr,$b:expr) => {{
+        fn f0(a: &Constant, b: &Constant) -> Constant {
+            if let (Some(a),Some(b)) = (arm!(a,Boolean),arm!(b,Boolean)) {
+                Constant::Boolean(($op)(*a,*b))
+            } else {
+                Constant::Boolean(false)
+            }
+        }
+        
+        fn f1(a: &[Constant], b: &Constant) -> Vec<Constant> {
+            a.iter().map(|a| f0(a,b)).collect()
+        }
+        
+        fn f2(a: &[Constant], b: &[Constant]) -> Vec<Constant> {
+            a.iter().zip(b.iter()).map(|(a,b)| f0(a,b)).collect()
+        }
+
+        seq_flex!($a,$b,f0,f1,f2)
+    }};
+}
+
 pub(crate) fn fold_minus(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let Some(Some(a)) = inputs.get(0) {
         Some(vec![number_un!(|a: f64| -a,a)])
@@ -129,6 +151,21 @@ pub(crate) fn fold_div(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConsta
     }
 }
 
+pub(crate) fn fold_and(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
+        Some(vec![logic_bin!(|a: bool,b| a && b,a,b)])
+    } else {
+        None
+    }
+}
+
+pub(crate) fn fold_or(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
+        Some(vec![logic_bin!(|a: bool,b| a || b,a,b)])
+    } else {
+        None
+    }
+}
 
 pub(crate) fn fold_gt(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {

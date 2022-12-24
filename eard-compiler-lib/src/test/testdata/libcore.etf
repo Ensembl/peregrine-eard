@@ -998,3 +998,171 @@ opcode 999, r0, r7
 opcode 999, r0, r6
 opcode 999, r0, r3
 opcode 999, r0, r2
+
+>> test
+
+and/or fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(true&&false);
+c(true||false);
+c([true]&&false);
+c([true]||false);
+c(true&&[false]);
+c(true||[false]);
+c([true]&&[false]);
+c([true]||[false]);
+
+>> generate strip
+
+r1 <- false
+opcode 999, r0, r1
+r1 <- true
+opcode 999, r0, r1
+r1 <- [false]
+opcode 999, r0, r1
+r2 <- [true]
+opcode 999, r0, r2
+opcode 999, r0, r1
+opcode 999, r0, r2
+opcode 999, r0, r1
+opcode 999, r0, r2
+
+>> test
+
+and/or no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let t = c(true);
+let f = c(false);
+let ts = c([true]);
+let fs = c([false]);
+
+c(t&&f);
+c(t||f);
+c(ts&&f);
+c(ts||f);
+c(t&&fs);
+c(t||fs);
+c(ts&&fs);
+c(ts||fs);
+c(t);
+c(ts);
+c(f);
+c(fs);
+
+>> generate strip
+
+r1 <- true
+opcode 999, r2, r1
+r1 <- false
+opcode 999, r3, r1
+opcode 86, r1, r2, r3
+opcode 80, r4, r2, r3
+r5 <- [true]
+opcode 999, r6, r5
+r5 <- [false]
+opcode 999, r7, r5
+opcode 82, r5, r7, r2
+opcode 88, r8, r7, r2
+opcode 88, r9, r6, r3
+opcode 82, r10, r6, r3
+opcode 84, r11, r6, r7
+opcode 90, r12, r6, r7
+opcode 999, r0, r4
+opcode 999, r0, r1
+opcode 999, r0, r10
+opcode 999, r0, r9
+opcode 999, r0, r5
+opcode 999, r0, r8
+opcode 999, r0, r11
+opcode 999, r0, r12
+opcode 999, r0, r2
+opcode 999, r0, r6
+opcode 999, r0, r3
+opcode 999, r0, r7
+
+>> test
+
+and/or no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let t = c(true);
+let f = c(false);
+let ts = c([true]);
+let fs = c([false]);
+
+c(c(true)&&c(false));
+c(c(true)||c(false));
+c(c([true])&&c(false));
+c(c([true])||c(false));
+c(c(true)&&c([false]));
+c(c(true)||c([false]));
+c(c([true])&&c([false]));
+c(c([true])||c([false]));
+
+>> generate strip
+
+r1 <- true
+opcode 999, r0, r1
+r1 <- false
+opcode 999, r0, r1
+r2 <- [true]
+opcode 999, r0, r2
+r2 <- [false]
+opcode 999, r0, r2
+r2 <- true
+opcode 999, r3, r2
+opcode 999, r4, r1
+opcode 81, r3, r4
+opcode 999, r0, r3
+opcode 999, r3, r2
+opcode 999, r4, r1
+opcode 87, r3, r4
+opcode 999, r0, r3
+r3 <- [true]
+opcode 999, r4, r3
+opcode 999, r2, r1
+opcode 83, r4, r2
+opcode 999, r0, r4
+opcode 999, r2, r3
+opcode 999, r4, r1
+opcode 89, r2, r4
+opcode 999, r0, r2
+r2 <- true
+opcode 999, r4, r2
+r1 <- [false]
+opcode 999, r3, r1
+opcode 83, r3, r4
+opcode 999, r0, r4
+opcode 999, r3, r2
+opcode 999, r4, r1
+opcode 89, r4, r3
+opcode 999, r0, r3
+r3 <- [true]
+opcode 999, r4, r3
+opcode 999, r2, r1
+opcode 85, r4, r2
+opcode 999, r0, r4
+opcode 999, r2, r3
+opcode 999, r4, r1
+opcode 91, r2, r4
+opcode 999, r0, r2

@@ -2,8 +2,3 @@ refer "logic";
 refer "eq";
 refer "ineq";
 refer "arith";
-
-/*
-export function __operator_and(a: boolean, b: boolean) -> boolean { let y = __code_and(a,b); y }
-export function __operator_or(a: boolean, b: boolean) -> boolean { let y = __code_or(a,b); y }
-*/

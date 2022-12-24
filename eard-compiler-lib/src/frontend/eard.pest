@@ -124,7 +124,7 @@ infix1 = { "*"|"/" }
 infix2 = { "+"|"-" }
 infix3 = { ">="|"<="|">"|"<" }
 infix4 = { "=="|"!=" }
-infix5 = { "&& "}
+infix5 = { "&&" }
 infix6 = { "||" }
 
 prefix_operators = { "!"|"-" }

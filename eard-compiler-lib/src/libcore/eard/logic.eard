@@ -18,4 +18,126 @@ fold(libcore__not) code __code_not(seq(boolean)) -> seq(boolean) {
     }
 }
 
+fold(libcore__and) code __code_and(boolean,boolean) -> boolean {
+    impl (r1: boolean, true) -> r1 {}
+
+    impl (r1: boolean, true) -> r2: boolean {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: boolean, false) -> false {}
+
+    impl (r1: boolean, r2: boolean) -> r1 {
+        opcode 81, r1, r2;
+    }
+
+    impl (r1: boolean, r2: boolean) -> r3: boolean {
+        opcode 80, r3, r1, r2;
+    }
+}
+
+fold(libcore__and) code __code_and(seq(boolean),boolean) -> seq(boolean) {
+    impl (r1: seq(boolean), true) -> r1 {}
+
+    impl (r1: seq(boolean), true) -> r2: seq(boolean) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(boolean), r2: boolean) -> r1 {
+        opcode 83, r1, r2;
+    }
+
+    impl (r1: seq(boolean), r2: boolean) -> r3: seq(boolean) {
+        opcode 82, r3, r1, r2;
+    }
+}
+
+fold(libcore__and) code __code_and(boolean,seq(boolean)) -> seq(boolean) {
+    impl (0, r1: seq(boolean)) -> r1 {}
+
+    impl (0, r1: seq(boolean)) -> r2: seq(boolean) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: boolean, r2: seq(boolean)) -> r1 {
+        opcode 83, r2, r1;
+    }
+
+    impl (r1: boolean, r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 82, r3, r2, r1;
+    }
+}
+
+fold(libcore__and) code __code_and(seq(boolean),seq(boolean)) -> seq(boolean) {
+    impl (r1: seq(boolean), r2: seq(boolean)) -> r1 {
+        opcode 85, r1, r2;
+    }
+
+    impl (r1: seq(boolean), r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 84, r3, r1, r2;
+    }
+}
+
+fold(libcore__or) code __code_or(boolean,boolean) -> boolean {
+    impl (r1: boolean, true) -> r1 {}
+
+    impl (r1: boolean, true) -> r2: boolean {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: boolean, false) -> false {}
+
+    impl (r1: boolean, r2: boolean) -> r1 {
+        opcode 87, r1, r2;
+    }
+
+    impl (r1: boolean, r2: boolean) -> r3: boolean {
+        opcode 86, r3, r1, r2;
+    }
+}
+
+fold(libcore__or) code __code_or(seq(boolean),boolean) -> seq(boolean) {
+    impl (r1: seq(boolean), true) -> r1 {}
+
+    impl (r1: seq(boolean), true) -> r2: seq(boolean) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(boolean), r2: boolean) -> r1 {
+        opcode 89, r1, r2;
+    }
+
+    impl (r1: seq(boolean), r2: boolean) -> r3: seq(boolean) {
+        opcode 88, r3, r1, r2;
+    }
+}
+
+fold(libcore__or) code __code_or(boolean,seq(boolean)) -> seq(boolean) {
+    impl (0, r1: seq(boolean)) -> r1 {}
+
+    impl (0, r1: seq(boolean)) -> r2: seq(boolean) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: boolean, r2: seq(boolean)) -> r1 {
+        opcode 89, r2, r1;
+    }
+
+    impl (r1: boolean, r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 88, r3, r2, r1;
+    }
+}
+
+fold(libcore__or) code __code_or(seq(boolean),seq(boolean)) -> seq(boolean) {
+    impl (r1: seq(boolean), r2: seq(boolean)) -> r1 {
+        opcode 91, r1, r2;
+    }
+
+    impl (r1: seq(boolean), r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 90, r3, r1, r2;
+    }
+}
+
 export function __operator_not(a) { let y = __code_not(a); y }
+export function __operator_and(a,b) { let y = __code_and(a,b); y }
+export function __operator_or(a,b) { let y = __code_or(a,b); y }

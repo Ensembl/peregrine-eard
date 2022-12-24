@@ -1,5 +1,5 @@
 use crate::{controller::{compiler::EardCompiler, source::FixedSourceSource}};
-use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div, fold_gt, fold_ge, fold_not}};
+use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div, fold_gt, fold_ge, fold_not, fold_eq}};
 
 pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__infseq",fold_infseq)?;
@@ -15,6 +15,7 @@ pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__gt",fold_gt)?;
     compiler.add_constant_folder("libcore__ge",fold_ge)?;
     compiler.add_constant_folder("libcore__not",fold_not)?;
+    compiler.add_constant_folder("libcore__eq",fold_eq)?;
     Ok(())
 }
 
@@ -23,6 +24,10 @@ pub(crate) fn libcore_sources() -> FixedSourceSource {
         ("libcore",include_str!("eard/libcore.eard")),
         ("sequences",include_str!("eard/sequences.eard")),
         ("maths",include_str!("eard/maths.eard")),
-        ("print",include_str!("eard/print.eard"))
+        ("print",include_str!("eard/print.eard")),
+        ("eq",include_str!("eard/eq.eard")),
+        ("ineq",include_str!("eard/ineq.eard")),
+        ("logic",include_str!("eard/logic.eard")),
+        ("arith",include_str!("eard/arith.eard")),
     ])
 }

@@ -65,6 +65,26 @@ print:11  (2#3) r13
 
 >> test
 
+addition fold seq
+
+>> input
+
+program "test" "test" 1;
+
+print(format([1,4]+[2,3]));
+print(format([1,4]+2));
+
+>> constfold strip culdesac nolines
+
+arith:187 r53 <- [3,7]
+print:7 r59 (1#8) r53
+print:15  (2#9) r59
+arith:187 r93 <- [3,6]
+print:7 r98 (1#14) r93
+print:15  (2#15) r98
+
+>> test
+
 addition no fold modify
 
 >> input
@@ -83,6 +103,105 @@ opcode 999, r2, r1
 opcode 999, r3, r1
 opcode 18, r2, r3
 opcode 999, r0, r2
+
+>> test
+
+arith no fold seq
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c([2])+c(2));
+c(c([2])+c([2]));
+
+c(c([2])-c(2));
+c(c([2])-c([2]));
+
+c(c([2])*c(2));
+c(c([2])*c([2]));
+
+c(c([2])/c(2));
+c(c([2])/c([2]));
+
+
+>> generate strip
+
+r1 <- [2]
+opcode 999, r2, r1
+r3 <- 2
+opcode 999, r4, r3
+opcode 61, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 71, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 63, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 73, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 65, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 75, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 67, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 77, r2, r4
+opcode 999, r0, r2
+
+>> test
+
+arith no fold seq nomodify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c([1]);
+let b = c([2]);
+
+c(a+b);
+c(a-b);
+c(a*b);
+c(a/b);
+c(a);
+c(b);
+
+>> generate strip
+
+r1 <- [1]
+opcode 999, r2, r1
+r1 <- [2]
+opcode 999, r3, r1
+opcode 76, r1, r2, r3
+opcode 70, r4, r2, r3
+opcode 72, r5, r2, r3
+opcode 74, r6, r2, r3
+opcode 999, r0, r4
+opcode 999, r0, r5
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r2
+opcode 999, r0, r3
 
 >> test
 
@@ -354,7 +473,7 @@ print(format("hi"+3));
 
 >> broad-fail strip
 
-type check failed: expected number got string at maths:173 (called from test:4)
+could not find appropriate implementation for [string, number] at arith:235 (called from test:4)
 
 >> test
 
@@ -375,6 +494,8 @@ c(4<3);
 c(3<4);
 c(3<=3);
 c(3<=4);
+c([3,4,5]>4);
+c([3,4,5]>=4);
 
 >> generate strip
 
@@ -387,6 +508,10 @@ opcode 999, r0, r2
 opcode 999, r0, r2
 opcode 999, r0, r1
 opcode 999, r0, r1
+opcode 999, r0, r1
+r2 <- [false,false,true]
+opcode 999, r0, r2
+r1 <- [false,true,true]
 opcode 999, r0, r1
 
 >> test
@@ -429,6 +554,98 @@ opcode 27, r8, r2, r5
 opcode 26, r9, r2, r5
 opcode 26, r10, r5, r2
   # r8 = a>=b ; r9 = a>b ; r10 = b>a
+opcode 999, r0, r10
+opcode 999, r0, r9
+opcode 999, r0, r3
+opcode 999, r0, r8
+opcode 999, r0, r7
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r4
+
+>> test
+
+relate no-fold seq
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c([3]);
+let b = c([4]);
+
+c(b>a);
+c(a>b);
+c(a>=a);
+c(a>=b);
+c(b<a);
+c(a<b);
+c(a<=a);
+c(a<=b);
+
+>> generate strip comments
+
+r1 <- [3]
+opcode 999, r2, r1
+opcode 59, r1, r2, r2
+opcode 59, r3, r2, r2
+r4 <- [4]
+opcode 999, r5, r4
+opcode 59, r4, r5, r2
+opcode 58, r6, r5, r2
+opcode 58, r7, r2, r5
+opcode 59, r8, r2, r5
+opcode 58, r9, r2, r5
+opcode 58, r10, r5, r2
+opcode 999, r0, r10
+opcode 999, r0, r9
+opcode 999, r0, r3
+opcode 999, r0, r8
+opcode 999, r0, r7
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r4
+
+>> test
+
+relate no-fold seq/no-seq
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c(3);
+let b = c([4]);
+
+c(b>a);
+c(a>b);
+c(a>=a);
+c(a>=b);
+c(b<a);
+c(a<b);
+c(a<=a);
+c(a<=b);
+
+>> generate strip comments
+
+r1 <- 3
+opcode 999, r2, r1
+opcode 27, r1, r2, r2
+opcode 27, r3, r2, r2
+r4 <- [4]
+opcode 999, r5, r4
+opcode 49, r4, r5, r2
+opcode 48, r6, r5, r2
+opcode 48, r7, r5, r2
+opcode 49, r8, r5, r2
+opcode 48, r9, r5, r2
+opcode 48, r10, r5, r2
 opcode 999, r0, r10
 opcode 999, r0, r9
 opcode 999, r0, r3
@@ -549,3 +766,172 @@ opcode 999, r0, r1
 opcode 999, r0, r2
 opcode 999, r0, r6
 opcode 999, r0, r4
+
+>> test
+
+equal fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { 
+  impl(r1: number) -> r2: number { opcode 999, r2, r1; }
+  impl(r1: string) -> r2: string { opcode 999, r2, r1; }
+  impl(r1: boolean) -> r2: boolean { opcode 999, r2, r1; }
+  impl(r1: seq(boolean)) -> r2: seq(boolean) { opcode 999, r2, r1; }
+}
+function c(x) { let y = wc(x); y }
+
+c(1==1);
+c(1==2);
+c(1!=1);
+c(1!=2);
+c([1,...]==1);
+c([1,...]==2);
+c([1,...]!=1);
+c([1,...]!=2);
+c([1,...]==[1]);
+c([1,...]==[2]);
+c([1,...]!=[1]);
+c([1,...]!=[2]);
+c([1,...]==[1,...]);
+c([1,...]==[2,...]);
+c([1,...]!=[1,...]);
+c([1,...]!=[2,...]);
+c([1]==[1]);
+c([1]==[2]);
+c([1]!=[1]);
+c([1]!=[2]);
+
+>> generate strip
+
+r1 <- true
+opcode 999, r0, r1
+r2 <- false
+opcode 999, r0, r2
+opcode 999, r0, r2
+opcode 999, r0, r1
+r2 <- [true,...]
+opcode 999, r0, r2
+r1 <- [false,...]
+opcode 999, r0, r1
+opcode 999, r0, r1
+opcode 999, r0, r2
+r1 <- [true]
+opcode 999, r0, r1
+r2 <- [false]
+opcode 999, r0, r2
+opcode 999, r0, r2
+opcode 999, r0, r1
+r2 <- [true,...]
+opcode 999, r0, r2
+r3 <- [false,...]
+opcode 999, r0, r3
+opcode 999, r0, r3
+opcode 999, r0, r2
+opcode 999, r0, r1
+r3 <- [false]
+opcode 999, r0, r3
+opcode 999, r0, r3
+opcode 999, r0, r1
+
+>> test
+
+equal no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+procedure x(a,ai,af,b,bi,bf) {
+  c(a==b);
+  c(ai==b);
+  c(ai==bf);
+  c(ai==bi);
+  c(af==bf);
+}
+
+let a = "a";
+let b = "b";
+x(c(a),c([a,...]),c([a]),c(b),c([b,...]),c([b]));
+
+let a = true;
+let b = false;
+x(c(a),c([a,...]),c([a]),c(b),c([b,...]),c([b]));
+
+let a = 1;
+let b = 2;
+x(c(a),c([a,...]),c([a]),c(b),c([b,...]),c([b]));
+
+>> generate strip
+
+r1 <- "a"
+opcode 999, r2, r1
+r1 <- ["a",...]
+opcode 999, r3, r1
+r1 <- ["a"]
+opcode 999, r4, r1
+r1 <- "b"
+opcode 999, r5, r1
+opcode 34, r1, r3, r5
+opcode 31, r6, r2, r5
+r2 <- ["b",...]
+opcode 999, r5, r2
+opcode 37, r2, r3, r5
+r5 <- ["b"]
+opcode 999, r7, r5
+opcode 37, r5, r4, r7
+opcode 37, r4, r3, r7
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r4
+opcode 999, r0, r2
+opcode 999, r0, r5
+r1 <- true
+opcode 999, r2, r1
+r3 <- [true,...]
+opcode 999, r4, r3
+r5 <- [true]
+opcode 999, r6, r5
+r7 <- false
+opcode 999, r1, r7
+opcode 35, r7, r4, r1
+opcode 32, r5, r2, r1
+r1 <- [false,...]
+opcode 999, r2, r1
+opcode 38, r1, r4, r2
+r2 <- [false]
+opcode 999, r3, r2
+opcode 38, r2, r6, r3
+opcode 38, r6, r4, r3
+opcode 999, r0, r5
+opcode 999, r0, r7
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r2
+r1 <- 1
+opcode 999, r2, r1
+r3 <- [1,...]
+opcode 999, r4, r3
+r5 <- [1]
+opcode 999, r6, r5
+r7 <- 2
+opcode 999, r1, r7
+opcode 33, r7, r4, r1
+opcode 30, r5, r2, r1
+r1 <- [2,...]
+opcode 999, r2, r1
+opcode 36, r3, r4, r2
+r2 <- [2]
+opcode 999, r1, r2
+opcode 36, r2, r6, r1
+opcode 36, r6, r4, r1
+opcode 999, r0, r5
+opcode 999, r0, r7
+opcode 999, r0, r6
+opcode 999, r0, r3
+opcode 999, r0, r2

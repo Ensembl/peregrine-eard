@@ -1,0 +1,21 @@
+fold(libcore__not) code __code_not(boolean) -> boolean {
+    impl (r1: boolean) -> r1 {
+        opcode 29, r1;
+    }
+
+    impl (r1: boolean) -> r2: boolean {
+        opcode 28, r2, r1;
+    }
+}
+
+fold(libcore__not) code __code_not(seq(boolean)) -> seq(boolean) {
+    impl (r1: seq(boolean)) -> r1 {
+        opcode 40, r1;
+    }
+
+    impl (r1: seq(boolean)) -> r2: seq(boolean) {
+        opcode 39, r2, r1;
+    }
+}
+
+export function __operator_not(a) { let y = __code_not(a); y }

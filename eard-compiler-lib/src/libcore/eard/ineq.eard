@@ -1,0 +1,52 @@
+fold(libcore__gt) code __code_gt(number,number) -> boolean {
+    impl (r1: number, r2: number) -> r3: boolean {
+        opcode 26, r3, r1, r2;
+    }
+}
+
+fold(libcore__gt) code __code_gt(seq(number),number) -> seq(boolean) {
+    impl (r1: seq(number), r2: number) -> r3: seq(boolean) {
+        opcode 48, r3, r1, r2;
+    }
+}
+
+fold(libcore__gt) code __code_gt(number,seq(number)) -> seq(boolean) {
+    impl (r1: number, r2: seq(number)) -> r3: seq(boolean) {
+        opcode 48, r3, r2, r1;
+    }
+}
+
+fold(libcore__gt) code __code_gt(seq(?X),seq(?X)) -> seq(boolean) {
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(boolean) {
+        opcode 58, r3, r1, r2;
+    }
+}
+
+fold(libcore__ge) code __code_ge(number,number) -> boolean {
+    impl (r1: number, r2: number) -> r3: boolean {
+        opcode 27, r3, r1, r2;
+    }
+}
+
+fold(libcore__ge) code __code_ge(seq(number),number) -> seq(boolean) {
+    impl (r1: seq(number), r2: number) -> r3: seq(boolean) {
+        opcode 49, r3, r1, r2;
+    }
+}
+
+fold(libcore__ge) code __code_ge(number,seq(number)) -> seq(boolean) {
+    impl (r1: number, r2: seq(number)) -> r3: seq(boolean) {
+        opcode 49, r3, r2, r1;
+    }
+}
+
+fold(libcore__ge) code __code_ge(seq(?X),seq(?X)) -> seq(boolean) {
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(boolean) {
+        opcode 59, r3, r1, r2;
+    }
+}
+
+export function __operator_gt(a,b) { let y = __code_gt(a,b); y }
+export function __operator_lt(a,b) { let y = __code_gt(b,a); y }
+export function __operator_ge(a,b) { let y = __code_ge(a,b); y }
+export function __operator_le(a,b) { let y = __code_ge(b,a); y }

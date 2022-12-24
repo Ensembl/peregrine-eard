@@ -338,7 +338,7 @@ impl CodeDefinition {
                 return Ok((dst,i));
             }
         }
-        Err(format!("could not find appropriate implementation"))
+        Err(format!("could not find appropriate implementation for {:?}",src))
     }
 
     pub(crate) fn get_block(&self, index: usize) -> &CodeBlock { &self.blocks[index] }

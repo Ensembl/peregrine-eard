@@ -1,0 +1,70 @@
+fold(libcore__eq) code __code_eq(number,number) -> boolean {
+    impl (r1: number, r2: number) -> r3: boolean {
+        opcode 30, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(string,string) -> boolean {
+    impl (r1: string, r2: string) -> r3: boolean {
+        opcode 31, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(boolean,boolean) -> boolean {
+    impl (r1: boolean, r2: boolean) -> r3: boolean {
+        opcode 32, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(seq(number),number) -> seq(boolean) {
+    impl (r1: seq(number), r2: number) -> r3: seq(boolean) {
+        opcode 33, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(number,seq(number)) -> seq(boolean) {
+    impl (r1: number, r2: seq(number)) -> r3: seq(boolean) {
+        opcode 33, r3, r2, r1;
+    }
+}
+
+fold(libcore__eq) code __code_eq(seq(?X),seq(?X)) -> seq(boolean) {
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(boolean) {
+        opcode 36, r3, r1, r2;
+    }
+
+    impl (r1: seq(string), r2: seq(string)) -> r3: seq(boolean) {
+        opcode 37, r3, r1, r2;
+    }
+
+    impl (r1: seq(boolean), r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 38, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(seq(string),string) -> seq(boolean) {
+    impl (r1: seq(string), r2: string) -> r3: seq(boolean) {
+        opcode 34, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(string,seq(string)) -> seq(boolean) {
+    impl (r1: string, r2: seq(string)) -> r3: seq(boolean) {
+        opcode 34, r3, r2, r1;
+    }
+}
+
+fold(libcore__eq) code __code_eq(seq(boolean),boolean) -> seq(boolean) {
+    impl (r1: seq(boolean), r2: boolean) -> r3: seq(boolean) {
+        opcode 35, r3, r1, r2;
+    }
+}
+
+fold(libcore__eq) code __code_eq(boolean,seq(boolean)) -> seq(boolean) {
+    impl (r1: boolean, r2: seq(boolean)) -> r3: seq(boolean) {
+        opcode 35, r3, r2, r1;
+    }
+}
+
+export function __operator_eq(a,b) { let y = __code_eq(a,b); y }
+export function __operator_ne(a,b) { let y = !(__operator_eq(a,b)); y }

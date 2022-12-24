@@ -99,7 +99,6 @@ impl<'a> NarrowTyping<'a> {
             position: ParsePosition::empty("called"),
             possible: EquivalenceMap::new(|new: &mut Vec<AtomicTypeSpec>, old| {
                 let old_set = old.iter().collect::<HashSet<_>>();
-                eprintln!("old_set={:?} new={:?}",old_set,new);
                 *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
                 if new.len() == 0 {
                     return Err(format!("type mismatch"));

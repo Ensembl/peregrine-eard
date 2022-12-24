@@ -363,6 +363,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
+            eprintln!("{}",sepfmt(&mut linear.iter(),"\n",""));
             let narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
             let mut report = BTreeMap::new();
             for (reg,narrow) in sort_map(&narrow) {

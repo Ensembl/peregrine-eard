@@ -1,0 +1,238 @@
+fold(libcore__add) code __code_add(number,number) -> number {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (r1: number, 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 18, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 17, r3, r1, r2;
+    }
+}
+
+fold(libcore__add) code __code_add(seq(number),number) -> number {
+    impl (r1: seq(number), 0) -> r1 {}
+
+    impl (r1: seq(number), 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 61, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 60, r3, r1, r2;
+    }
+}
+
+fold(libcore__add) code __code_add(number,seq(number)) -> seq(number) {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (0, r1: seq(number)) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r1 {
+        opcode 61, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r3: seq(number) {
+        opcode 60, r3, r2, r1;
+    }
+}
+
+fold(libcore__add) code __code_add(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 71, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 70, r3, r1, r2;
+    }
+}
+
+fold(libcore__sub) code __code_sub(number,number) -> number {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (r1: number, 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 20, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 19, r3, r1, r2;
+    }
+}
+
+fold(libcore__sub) code __code_sub(seq(number),number) -> number {
+    impl (r1: seq(number), 0) -> r1 {}
+
+    impl (r1: seq(number), 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 63, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 62, r3, r1, r2;
+    }
+}
+
+fold(libcore__sub) code __code_sub(number,seq(number)) -> seq(number) {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (0, r1: seq(number)) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r1 {
+        opcode 63, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r3: seq(number) {
+        opcode 62, r3, r2, r1;
+    }
+}
+
+fold(libcore__sub) code __code_sub(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 73, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 72, r3, r1, r2;
+    }
+}
+
+fold(libcore__mul) code __code_mul(number,number) -> number {
+    impl (r1: number, 0) -> 0 {}
+
+    impl (r1: number, 1) -> r1 {}
+
+    impl (r1: number, 1) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 23, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 22, r3, r1, r2;
+    }
+}
+
+fold(libcore__mul) code __code_mul(seq(number),number) -> number {
+    impl (r1: seq(number), 0) -> r1 {}
+
+    impl (r1: seq(number), 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 65, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 64, r3, r1, r2;
+    }
+}
+
+fold(libcore__mul) code __code_mul(number,seq(number)) -> seq(number) {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (0, r1: seq(number)) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r1 {
+        opcode 65, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r3: seq(number) {
+        opcode 64, r3, r2, r1;
+    }
+}
+
+fold(libcore__mut) code __code_mul(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 75, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 74, r3, r1, r2;
+    }
+}
+
+fold(libcore__div) code __code_div(number,number) -> number {
+    impl (r1: number, 1) -> r1 {}
+
+    impl (r1: number, 1) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 25, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 24, r3, r1, r2;
+    }
+}
+
+fold(libcore__div) code __code_div(seq(number),number) -> number {
+    impl (r1: seq(number), 0) -> r1 {}
+
+    impl (r1: seq(number), 0) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 67, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 66, r3, r1, r2;
+    }
+}
+
+fold(libcore__div) code __code_div(number,seq(number)) -> seq(number) {
+    impl (r1: number, 0) -> r1 {}
+
+    impl (0, r1: seq(number)) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r1 {
+        opcode 67, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r3: seq(number) {
+        opcode 66, r3, r2, r1;
+    }
+}
+
+fold(libcore__div) code __code_div(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 77, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 76, r3, r1, r2;
+    }
+}
+
+export function __operator_add(a,b) { let y = __code_add(a,b); y }
+export function __operator_sub(a,b) { let y = __code_sub(a,b); y }
+export function __operator_mul(a,b) { let y = __code_mul(a,b); y }
+export function __operator_div(a,b) { let y = __code_div(a,b); y }

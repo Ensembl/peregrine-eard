@@ -39,7 +39,6 @@
  38 seq(boolean)/seq(boolean) eq
  39 not seq(boolean)
  40 not seq(boolean) modify 
-
  41 infseq string
  42 finseq string
  43 push (non-destructive) string
@@ -47,9 +46,9 @@
  45 length seq(string) -> number
  46 total seq(string) -> number (sum and positive int check)
  47 bound seq(string) -> number (max and positive int check)
-.
-.
-.
+ 48 gt seq(number)/number
+ 49 ge seq(number)/number
+
  51 infseq boolean
  52 finseq boolean
  53 push (non-destructive) boolean
@@ -57,3 +56,23 @@
  55 length seq(boolean) -> number
  56 total seq(boolean) -> number (sum and positive int check)
  57 bound seq(boolean) -> number (max and positive int check)
+ 58 gt seq(number)/seq(number)
+ 59 ge seq(number)/seq(number)
+
+ 60 add seq(number)/number
+ 61 add seq(number)/number modify
+ 62 sub seq(number)/number
+ 63 sub seq(number)/number modify
+ 64 mul seq(number)/number
+ 65 mul seq(number)/number modify
+ 66 div seq(number)/number
+ 67 div seq(number)/number modify
+
+ 70 add seq(number)/seq(number)
+ 71 add seq(number)/seq(number) modify
+ 72 sub seq(number)/seq(number)
+ 73 sub seq(number)/seq(number) modify
+ 74 mul seq(number)/seq(number)
+ 75 mul seq(number)/seq(number) modify
+ 76 div seq(number)/seq(number)
+ 77 div seq(number)/seq(number) modify

@@ -13,14 +13,55 @@ fold(libcore__if) code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
     }
 }
 
+code __code_set(seq(boolean), seq(?X)) -> seq(?X) {
+    impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
+        opcode 95, r2, r1;
+    }
+
+    impl (r1: seq(boolean), r2: seq(?X)) -> r3: seq(?X) {
+        opcode 94, r3, r2, r1;
+    }
+}
+
+code __code_set_skip(seq(boolean), seq(?X)) -> seq(?X) {
+    impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
+        opcode 97, r2, r1;
+    }
+
+    impl (r1: seq(boolean), r2: seq(?X)) -> r3: seq(?X) {
+        opcode 96, r3, r2, r1;
+    }
+}
+
+code __code_set_at(seq(number), seq(?X)) -> seq(?X) {
+    impl (r1: seq(number), r2: seq(?X)) -> r2 {
+        opcode 99, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: seq(?X)) -> r3: seq(?X) {
+        opcode 98, r3, r2, r1;
+    }
+}
+
+code __code_set_from(seq(number), seq(?X)) -> seq(?X) {
+    impl (r1: seq(number), r2: seq(?X)) -> r2 {
+        opcode 101, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: seq(?X)) -> r3: seq(?X) {
+        opcode 100, r3, r2, r1;
+    }
+}
+
+fold(libcore__repeat) code __code_repeat(?X, number) -> seq(?X) {
+    impl (r1: ?X, r2: number) -> r3: seq(?X) {
+        opcode 50, r3, r1, r2;
+    }
+}
+
 export function if(p,a,b) { let z = __code_if(p,a,b); z }
-
-/*
-
-set
-set_skip
-set_at
-make
-repeat
-
-*/
+export function set(p,x) { let z = __code_set(p,x); z }
+export function set_skip(p,x) { let z = __code_set_skip(p,x); z }
+export function set_at(p,x) { let z = __code_set_at(p,x); z }
+export function set_from(p,x) { let z = __code_set_from(p,x); z }
+export function repeat(d,n) { let z = __code_repeat(d,n); z }

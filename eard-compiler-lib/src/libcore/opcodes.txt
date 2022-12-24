@@ -48,7 +48,7 @@
  47 bound seq(string) -> number (max and positive int check)
  48 gt seq(number)/number
  49 ge seq(number)/number
-
+ 50 repeat
  51 infseq boolean
  52 finseq boolean
  53 push (non-destructive) boolean
@@ -92,4 +92,11 @@
  91 or seq(bool)/seq(bool) modify
  92 if bool
  93 if seq(bool)
- 
+ 94 set
+ 95 set modify
+ 96 set_skip
+ 97 set_skip modify
+ 98 set_at
+ 99 set_at modify
+100 set_from
+101 set_from modify

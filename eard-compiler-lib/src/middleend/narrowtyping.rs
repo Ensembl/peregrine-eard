@@ -99,9 +99,10 @@ impl<'a> NarrowTyping<'a> {
             position: ParsePosition::empty("called"),
             possible: EquivalenceMap::new(|new: &mut Vec<AtomicTypeSpec>, old| {
                 let old_set = old.iter().collect::<HashSet<_>>();
+                eprintln!("old_set={:?} new={:?}",old_set,new);
                 *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
                 if new.len() == 0 {
-                    return Err("type mismatch".to_string());
+                    return Err(format!("type mismatch/D"));
                 }
                 Ok(())
             })
@@ -262,7 +263,7 @@ impl<'a> NarrowTyping<'a> {
             let narrow = match broad {
                 BroadType::Atomic(a) => NarrowType::Atomic(a.clone()),
                 BroadType::Sequence => NarrowType::Sequence(
-                    seq_types.get(&reg).cloned().ok_or_else(|| format!("type mismatch/H"))?
+                    seq_types.get(&reg).cloned().ok_or_else(|| format!("type mismatch/A"))?
                 )
             };
             Ok((*reg,narrow))

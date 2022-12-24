@@ -1,5 +1,5 @@
 use crate::{controller::{compiler::EardCompiler, source::FixedSourceSource}};
-use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div}};
+use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div, fold_gt, fold_ge, fold_not}};
 
 pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__infseq",fold_infseq)?;
@@ -12,6 +12,9 @@ pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__sub",fold_sub)?;
     compiler.add_constant_folder("libcore__mul",fold_mul)?;
     compiler.add_constant_folder("libcore__div",fold_div)?;
+    compiler.add_constant_folder("libcore__gt",fold_gt)?;
+    compiler.add_constant_folder("libcore__ge",fold_ge)?;
+    compiler.add_constant_folder("libcore__not",fold_not)?;
     Ok(())
 }
 

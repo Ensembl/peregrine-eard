@@ -40,7 +40,7 @@ impl AtomicTypeSpec {
             AtomicTypeSpec::Boolean => (0,""),
             AtomicTypeSpec::Number => (1,""),
             AtomicTypeSpec::String => (2,""),
-            AtomicTypeSpec::Handle(s) => (3,s),
+            AtomicTypeSpec::Handle(s) => (3,s)
         }
     }
 }
@@ -51,7 +51,7 @@ impl fmt::Debug for AtomicTypeSpec {
             Self::Number => write!(f,"number"),
             Self::String => write!(f,"string"),
             Self::Boolean => write!(f,"boolean"),
-            Self::Handle(h) => write!(f,"handle({})",h),
+            Self::Handle(h) => write!(f,"handle({})",h)
         }
     }
 }
@@ -80,8 +80,7 @@ impl fmt::Debug for TypeRestriction {
         match self {
             Self::Atomic(v) => write!(f,"{:?}",v),
             Self::Sequence(v) => write!(f,"seq({:?})",v),
-            Self::AnySequence => write!(f,"seq"),
-        }
+            Self::AnySequence => write!(f,"seq")        }
     }
 }
 

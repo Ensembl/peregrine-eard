@@ -30,7 +30,7 @@ r2 <- -1
 opcode 9, r1, r2
 opcode 8, r1
 r1 <- []
-opcode 5, r2, r1
+opcode 55, r2, r1
 opcode 9, r1, r2
 opcode 8, r1
 

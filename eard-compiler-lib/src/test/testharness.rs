@@ -87,6 +87,18 @@ fn process_ws(input: &str, options: &HashSet<String>) -> String {
     } else {
         input.to_string()
     };
+    let input = if options.contains("comments") {
+        let mut comments = String::new();
+        for line in input.split("\n") {
+            if !line.trim().starts_with("#") {
+                comments.push_str(line);
+                comments.push('\n');
+            }
+        }
+        comments
+    } else {
+        input.to_string()
+    };
     let input = if options.contains("main") {
         let mut alpha = String::new();
         for line in input.split("\n") {

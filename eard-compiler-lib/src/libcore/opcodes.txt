@@ -1,11 +1,11 @@
   0 load constant
-  1 infseq
-  2 finseq
-  3 push (non-destructive)
-  4 push (destructive)
-  5 length seq -> number
-  6 total seq -> number (sum and positive int check)
-  7 bound seq -> number (max and positive int check)
+  1 infseq number
+  2 finseq number
+  3 push (non-destructive) number
+  4 push (destructive) number
+  5 length seq(number) -> number
+  6 total seq(number) -> number (sum and positive int check)
+  7 bound seq(number) -> number (max and positive int check)  
   8 print string
   9 format arbitrary as string
  10 runtime length/length check
@@ -24,19 +24,36 @@
  23 mul number/number modify
  24 div number/number
  25 div number/number modify
+ 26 gt number/number
+ 27 ge number/number
+ 28 not boolean
+ 29 not boolean modify
+ 30 number/number eq
+ 31 string/string eq
+ 32 boolean/boolean eq
+ 33 seq(number)/number eq
+ 34 seq(string)/string eq
+ 35 seq(boolean)/boolean eq
+ 36 seq(number)/seq(number) eq
+ 37 seq(string)/seq(string) eq
+ 38 seq(boolean)/seq(boolean) eq
+ 39 not seq(boolean)
+ 40 not seq(boolean) modify 
 
-
-export function __operator_add(a: number, b: number) -> number { let y = __code_add(a,b); y }
-export function __operator_sub(a: number, b: number) -> number { let y = __code_sub(a,b); y }
-export function __operator_mul(a: number, b: number) -> number { let y = __code_mul(a,b); y }
-export function __operator_div(a: number, b: number) -> number { let y = __code_div(a,b); y }
-export function __operator_gt(a: number, b: number) -> boolean { let y = __code_gt(a,b); y }
-export function __operator_lt(a: number, b: number) -> boolean { let y = __code_lt(a,b); y }
-export function __operator_ge(a: number, b: number) -> boolean { let y = __code_ge(a,b); y }
-export function __operator_le(a: number, b: number) -> boolean { let y = __code_le(a,b); y }
-export function __operator_eq(a: number, b: number) -> boolean { let y = __code_eq(a,b); y }
-export function __operator_ne(a: number, b: number) -> boolean { let y = __code_ne(a,b); y }
-export function __operator_and(a: boolean, b: boolean) -> boolean { let y = __code_and(a,b); y }
-export function __operator_or(a: boolean, b: boolean) -> boolean { let y = __code_or(a,b); y }
-export function __operator_minus(a: number) -> number { let y = __code_minus(a); y }
-export function __operator_not(a: boolean) -> boolean { let y = __code_not(a); y }
+ 41 infseq string
+ 42 finseq string
+ 43 push (non-destructive) string
+ 44 push (destructive) string
+ 45 length seq(string) -> number
+ 46 total seq(string) -> number (sum and positive int check)
+ 47 bound seq(string) -> number (max and positive int check)
+.
+.
+.
+ 51 infseq boolean
+ 52 finseq boolean
+ 53 push (non-destructive) boolean
+ 54 push (destructive) boolean
+ 55 length seq(boolean) -> number
+ 56 total seq(boolean) -> number (sum and positive int check)
+ 57 bound seq(boolean) -> number (max and positive int check)

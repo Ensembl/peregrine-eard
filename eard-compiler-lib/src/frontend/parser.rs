@@ -246,6 +246,7 @@ impl EardParser {
                 let inner = input.into_children().next().unwrap();
                 Ok(match inner.as_rule() {
                     Rule::identifier => AtomicTypeSpec::Handle(inner.as_str().to_string()),
+                    Rule::arg_wild_type => AtomicTypeSpec::Handle(inner.as_str().to_string()),
                     _ => unreachable!()
                 })
             }

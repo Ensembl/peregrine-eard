@@ -58,7 +58,6 @@
  57 bound seq(boolean) -> number (max and positive int check)
  58 gt seq(number)/seq(number)
  59 ge seq(number)/seq(number)
-
  60 add seq(number)/number
  61 add seq(number)/number modify
  62 sub seq(number)/number
@@ -67,7 +66,8 @@
  65 mul seq(number)/number modify
  66 div seq(number)/number
  67 div seq(number)/number modify
-
+ 68 negate
+ 69 negate modify
  70 add seq(number)/seq(number)
  71 add seq(number)/seq(number) modify
  72 sub seq(number)/seq(number)
@@ -76,3 +76,18 @@
  75 mul seq(number)/seq(number) modify
  76 div seq(number)/seq(number)
  77 div seq(number)/seq(number) modify
+ 78 negate seq
+ 79 negate seq modify
+
+ 80 and bool/bool
+ 81 and bool/bool modify
+ 82 and seq(bool)/bool
+ 83 and seq(bool)/bool modify
+ 84 and seq(bool)/seq(bool)
+ 85 and seq(bool)/seq(bool) modify
+ 86 or bool/bool
+ 87 or bool/bool modify
+ 88 or seq(bool)/bool
+ 89 or seq(bool)/bool modify
+ 90 or seq(bool)/seq(bool)
+ 91 or seq(bool)/seq(bool) modify

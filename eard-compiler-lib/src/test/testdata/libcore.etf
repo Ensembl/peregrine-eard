@@ -463,6 +463,69 @@ opcode 999, r0, r2
 
 >> test
 
+unary minus fold/modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(-2);
+c(-[2]);
+c(-c(2));
+c(-(c([2])));
+
+>> generate strip
+
+r1 <- -2
+opcode 999, r0, r1
+r1 <- [-2]
+opcode 999, r0, r1
+r1 <- 2
+opcode 999, r2, r1
+opcode 69, r2
+opcode 999, r0, r2
+r2 <- [2]
+opcode 999, r1, r2
+opcode 71, r1
+opcode 999, r0, r1
+
+>> test
+
+unary minus no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c(2);
+let b = c([2]);
+
+c(-a);
+c(-b);
+c(a);
+c(b);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 68, r1, r2
+r3 <- [2]
+opcode 999, r4, r3
+opcode 70, r3, r4
+opcode 999, r0, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+opcode 999, r0, r4
+
+>> test
+
 sane error messages
 
 >> input
@@ -473,7 +536,7 @@ print(format("hi"+3));
 
 >> broad-fail strip
 
-could not find appropriate implementation for [string, number] at arith:235 (called from test:4)
+could not find appropriate implementation for [string, number] at arith:255 (called from test:4)
 
 >> test
 

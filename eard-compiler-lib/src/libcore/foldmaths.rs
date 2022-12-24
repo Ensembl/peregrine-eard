@@ -17,6 +17,16 @@ macro_rules! seq_flex {
     };
 }
 
+macro_rules! seq_flex_un {
+    ($a:expr,$f0:ident,$f1:ident) => {
+        match ($a) {
+            FullConstant::Atomic(a) => FullConstant::Atomic($f0(a)),
+            FullConstant::Finite(a) => FullConstant::Finite($f1(a)),
+            FullConstant::Infinite(a) => FullConstant::Infinite($f0(a)),
+        }
+    };
+}
+
 macro_rules! arm {
     ($ex:expr,$arm:tt) => {
         match $ex { Constant::$arm(x) => Some(x), _ => None }
@@ -61,6 +71,32 @@ macro_rules! number_bin {
 
         seq_flex!($a,$b,f0,f1,f2)
     }};
+}
+
+macro_rules! number_un {
+    ($op:expr,$a:expr) => {{
+        fn f0(a: &Constant) -> Constant {
+            if let Some(a) = arm!(a,Number) {
+                Constant::Number(OrderedFloat(($op)(a.0)))
+            } else {
+                Constant::Number(OrderedFloat(f64::NAN))
+            }
+        }
+        
+        fn f1(a: &[Constant]) -> Vec<Constant> {
+            a.iter().map(|a| f0(a)).collect()
+        }
+        
+        seq_flex_un!($a,f0,f1)
+    }};
+}
+
+pub(crate) fn fold_minus(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(a)) = inputs.get(0) {
+        Some(vec![number_un!(|a: f64| -a,a)])
+    } else {
+        None
+    }
 }
 
 pub(crate) fn fold_add(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {

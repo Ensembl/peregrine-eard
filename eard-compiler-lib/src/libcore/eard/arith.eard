@@ -232,7 +232,28 @@ fold(libcore__div) code __code_div(seq(number),seq(number)) -> seq(number) {
     }
 }
 
+fold(libcore__minus) code __code_minus(number) -> number {
+    impl (r1: number) -> r1 {
+        opcode 69, r1;
+    }
+
+    impl (r1: number) -> r2 : number {
+        opcode 68, r2, r1;
+    }
+}
+
+fold(libcore__minus) code __code_minus(seq(number)) -> seq(number) {
+    impl (r1: seq(number)) -> r1 {
+        opcode 71, r1;
+    }
+
+    impl (r1: seq(number)) -> r2 : seq(number) {
+        opcode 70, r2, r1;
+    }
+}
+
 export function __operator_add(a,b) { let y = __code_add(a,b); y }
 export function __operator_sub(a,b) { let y = __code_sub(a,b); y }
 export function __operator_mul(a,b) { let y = __code_mul(a,b); y }
 export function __operator_div(a,b) { let y = __code_div(a,b); y }
+export function __operator_minus(a) { let y = __code_minus(a); y }

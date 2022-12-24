@@ -2,11 +2,29 @@ use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
 use crate::{unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::{BuildTree, Variable}, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold, reuse::{test_reuse, reuse}, spill::spill, reorder::reorder, generate::generate}, libcore::libcore::libcore_sources, model::{linear::{LinearStatement, dump_linear}, compiled::Metadata, operation::dump_opers, constants::{FullConstant, Constant}}, test::testutil::sepfmt, controller::{compiler::EardCompiler, source::{CombinedSourceSourceBuilder, SourceSourceImpl, ParsePosition, CombinedSourceSource, FixedSourceSource}, compilation::EardCompilation, compiled::make_program}};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
+use regex::{Regex, Captures};
 
 fn sort_map<'a,K: PartialEq+Eq+Hash+Ord,V>(h: &'a HashMap<K,V>) -> Vec<(&'a K,&'a V)> {
     let mut keys = h.keys().collect::<Vec<_>>();
     keys.sort();
     keys.iter().map(|k| (*k,h.get(k).unwrap())).collect()
+}
+
+fn fix_knowns_refs(lines: Vec<String>) -> Vec<String> {
+    let mut out = vec![];
+    let re = Regex::new(r"(\d+)/").expect("bag regex");
+    let mut next_index = 0;
+    let mut indexes = HashMap::new();
+    for line in &lines {
+        out.push(re.replace_all(line, |c: &Captures| {
+            let name = c.get(1).unwrap().as_str();
+            indexes.entry(name.to_string()).or_insert_with(|| {
+                next_index += 1;
+                format!("{}/",next_index)
+            }).to_string()
+        }).to_string());
+    }
+    out
 }
 
 pub(crate) fn make_compiler() -> Result<EardCompiler,String> {
@@ -410,6 +428,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             if let Some((knowns_options,knowns_correct)) = sections.get("reuse-known") {
                 let knowns = knowns.iter().collect::<BTreeMap<_,_>>();
                 let knowns = knowns.iter().map(|(k,v)| format!("{}: {:?}",k,v)).collect::<Vec<_>>();
+                let knowns = fix_knowns_refs(knowns);
                 println!("{}",knowns.join("\n"));
                 assert_eq!(process_ws(&knowns.join("\n"),knowns_options),process_ws(knowns_correct,knowns_options));
             }

@@ -1,0 +1,476 @@
+>> test
+
+addition fold
+
+>> input
+
+program "test" "test" 1;
+
+print(format(2+2));
+
+>> constfold strip culdesac nolines
+
+maths:9 r7 <- 4
+print:5 r13 (1#2) r7
+print:11  (2#3) r13
+
+>> test
+
+addition fold seq
+
+>> input
+
+program "test" "test" 1;
+
+print(format([1,4]+[2,3]));
+print(format([1,4]+2));
+
+>> constfold strip culdesac nolines
+
+arith:187 r53 <- [3,7]
+print:7 r59 (1#8) r53
+print:15  (2#9) r59
+arith:187 r93 <- [3,6]
+print:7 r98 (1#14) r93
+print:15  (2#15) r98
+
+>> test
+
+addition no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c(2)+c(2));
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 999, r3, r1
+opcode 18, r2, r3
+opcode 999, r0, r2
+
+>> test
+
+arith no fold seq
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c([2])+c(2));
+c(c([2])+c([2]));
+
+c(c([2])-c(2));
+c(c([2])-c([2]));
+
+c(c([2])*c(2));
+c(c([2])*c([2]));
+
+c(c([2])/c(2));
+c(c([2])/c([2]));
+
+
+>> generate strip
+
+r1 <- [2]
+opcode 999, r2, r1
+r3 <- 2
+opcode 999, r4, r3
+opcode 61, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 71, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 63, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 73, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 65, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 75, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r3
+opcode 67, r2, r4
+opcode 999, r0, r2
+opcode 999, r2, r1
+opcode 999, r4, r1
+opcode 77, r2, r4
+opcode 999, r0, r2
+
+>> test
+
+arith no fold seq nomodify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c([1]);
+let b = c([2]);
+
+c(a+b);
+c(a-b);
+c(a*b);
+c(a/b);
+c(a);
+c(b);
+
+>> generate strip
+
+r1 <- [1]
+opcode 999, r2, r1
+r1 <- [2]
+opcode 999, r3, r1
+opcode 76, r1, r2, r3
+opcode 70, r4, r2, r3
+opcode 72, r5, r2, r3
+opcode 74, r6, r2, r3
+opcode 999, r0, r4
+opcode 999, r0, r5
+opcode 999, r0, r6
+opcode 999, r0, r1
+opcode 999, r0, r2
+opcode 999, r0, r3
+
+>> test
+
+addition no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x+2);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 17, r3, r2, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+
+>> test
+
+subtraction fold
+
+>> input
+
+program "test" "test" 1;
+
+print(format(5-2));
+
+>> constfold strip culdesac nolines
+
+maths:10 r7 <- 3
+print:5 r13 (1#2) r7
+print:11  (2#3) r13
+
+>> test
+
+subtraction no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c(2)-c(2));
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 999, r3, r1
+opcode 20, r2, r3
+opcode 999, r0, r2
+
+>> test
+
+subtraction no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x-2);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 19, r3, r2, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+
+>> test
+
+multiplication fold
+
+>> input
+
+program "test" "test" 1;
+
+print(format(2*3));
+
+>> constfold strip culdesac nolines
+
+maths:9 r7 <- 6
+print:5 r13 (1#2) r7
+print:11  (2#3) r13
+
+>> test
+
+multiplication no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c(2)*c(2));
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 999, r3, r1
+opcode 23, r2, r3
+opcode 999, r0, r2
+
+>> test
+
+multiplication no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x*2);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 22, r3, r2, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+
+>> test
+
+multiplication by zero
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x*0);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+r1 <- 0
+opcode 999, r0, r1
+opcode 999, r0, r2
+
+>> test
+
+division fold
+
+>> input
+
+program "test" "test" 1;
+
+print(format(6/3));
+
+>> constfold strip culdesac nolines
+
+maths:9 r7 <- 2
+print:5 r13 (1#2) r7
+print:11  (2#3) r13
+
+>> test
+
+division no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c(2)/c(2));
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 999, r3, r1
+opcode 25, r2, r3
+opcode 999, r0, r2
+
+>> test
+
+division no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x/2);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 24, r3, r2, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+
+>> test
+
+maths copy
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+c(x+0);
+c(x-0);
+c(x*1);
+c(x/1);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 21, r1, r2
+opcode 21, r3, r2
+opcode 21, r4, r2
+opcode 21, r5, r2
+opcode 999, r0, r3
+opcode 999, r0, r1
+opcode 999, r0, r4
+opcode 999, r0, r5
+opcode 999, r0, r2
+
+>> test
+
+unary minus fold/modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(-2);
+c(-[2]);
+c(-c(2));
+c(-(c([2])));
+
+>> generate strip
+
+r1 <- -2
+opcode 999, r0, r1
+r1 <- [-2]
+opcode 999, r0, r1
+r1 <- 2
+opcode 999, r2, r1
+opcode 69, r2
+opcode 999, r0, r2
+r2 <- [2]
+opcode 999, r1, r2
+opcode 71, r1
+opcode 999, r0, r1
+
+>> test
+
+unary minus no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c(2);
+let b = c([2]);
+
+c(-a);
+c(-b);
+c(a);
+c(b);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 68, r1, r2
+r3 <- [2]
+opcode 999, r4, r3
+opcode 70, r3, r4
+opcode 999, r0, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+opcode 999, r0, r4

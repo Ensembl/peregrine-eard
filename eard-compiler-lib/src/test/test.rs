@@ -100,8 +100,13 @@ fn test_const_fold() {
 }
 
 #[test]
-fn test_libcore() {
-    run_parse_tests(include_str!("testdata/libcore.etf"),true,false);
+fn test_libcore_arith() {
+    run_parse_tests(include_str!("testdata/libcore-arith.etf"),true,false);
+}
+
+#[test]
+fn test_libcore_logic() {
+    run_parse_tests(include_str!("testdata/libcore-logic.etf"),true,false);
 }
 
 #[test]

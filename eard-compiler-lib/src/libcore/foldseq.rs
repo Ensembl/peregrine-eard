@@ -77,3 +77,13 @@ pub(super) fn fold_bound(inputs: &[Option<FullConstant>]) -> Option<Vec<FullCons
         None
     }
 }
+
+pub(super) fn fold_if(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Atomic(Constant::Boolean(b)))) = inputs.get(0) {
+        let idx = if *b { 1 } else { 2 };
+        if let Some(Some(x)) = inputs.get(idx) {
+            return Some(vec![x.clone()]);
+        }
+    }
+    None
+}

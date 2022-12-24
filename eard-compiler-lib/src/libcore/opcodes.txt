@@ -78,7 +78,6 @@
  77 div seq(number)/seq(number) modify
  78 negate seq
  79 negate seq modify
-
  80 and bool/bool
  81 and bool/bool modify
  82 and seq(bool)/bool
@@ -91,3 +90,6 @@
  89 or seq(bool)/bool modify
  90 or seq(bool)/seq(bool)
  91 or seq(bool)/seq(bool) modify
+ 92 if bool
+ 93 if seq(bool)
+ 

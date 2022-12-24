@@ -1,0 +1,26 @@
+fold(libcore__if) code __code_if(boolean,?X,?X) -> ?X {
+    impl (true, r2: ?X, r3: ?X) -> r2 {}
+    impl (false, r2: ?X, r3: ?X) -> r3 {}
+
+    impl (r1: boolean, r2: ?X, r3: ?X) -> r4: ?X {
+        opcode 92, r4, r1, r2, r3;
+    }
+}
+
+fold(libcore__if) code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
+    impl (r1: seq(boolean), r2: seq(?X), r3: seq(?X)) -> r4: seq(?X) {
+        opcode 93, r4, r1, r2, r3;
+    }
+}
+
+export function if(p,a,b) { let z = __code_if(p,a,b); z }
+
+/*
+
+set
+set_skip
+set_at
+make
+repeat
+
+*/

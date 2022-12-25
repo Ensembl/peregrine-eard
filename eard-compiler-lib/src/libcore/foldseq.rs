@@ -97,3 +97,14 @@ pub(super) fn fold_repeat(inputs: &[Option<FullConstant>]) -> Option<Vec<FullCon
         None
     }
 }
+
+pub(super) fn fold_index(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let (Some(Some(FullConstant::Finite(ff))),
+            Some(Some(FullConstant::Atomic(Constant::Number(n))))) = 
+               (inputs.get(0),inputs.get(1)) {
+        if let Some(value) = ff.get(n.0 as usize) {
+            return Some(vec![FullConstant::Atomic(value.clone())]);
+        }
+    }
+    None
+}

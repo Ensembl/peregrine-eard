@@ -59,9 +59,16 @@ fold(libcore__repeat) code __code_repeat(?X, number) -> seq(?X) {
     }
 }
 
+fold(libcore__index) code __code_index(seq(?X), number) -> ?X {
+    impl (r1: seq(?X), r2: number) -> r3: ?X {
+        opcode 102, r3, r1, r2;
+    }
+}
+
 export function if(p,a,b) { let z = __code_if(p,a,b); z }
 export function set(p,x) { let z = __code_set(p,x); z }
 export function set_skip(p,x) { let z = __code_set_skip(p,x); z }
 export function set_at(p,x) { let z = __code_set_at(p,x); z }
 export function set_from(p,x) { let z = __code_set_from(p,x); z }
 export function repeat(d,n) { let z = __code_repeat(d,n); z }
+export function index(s,i) { let z = __code_index(s,i); z }

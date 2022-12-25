@@ -34,9 +34,11 @@ test:11 r22 <type> [seq(boolean)]
 test:11 r22 <check:X> Length 1
 test:11 r29 <type> [number]
 test:10 r36 (3#4) r22
+test:10 <sig> r22: ?X ; r36: ?X
 test:10 <same-type> r22, r36
 test:11 r36 <type> [seq(boolean)]
 test:11 r36 <check:X> Length 1
+test:11 <sig> r29: number ; r22: seq(boolean) ; r29: number ; r36: seq(boolean)
 test:16 r36 <check:w> Length 1
 
 >> broad strip
@@ -57,8 +59,10 @@ test:11 r29 <type> [number]
 test:11 r22 <type> [seq(boolean)]
 test:11 r29 <type> [number]
 test:10 r36 (4#4) r22
+test:10 <sig> r22: ?X ; r36: ?X
 test:10 <same-type> r22, r36
 test:11 r36 <type> [seq(boolean)]
+test:11 <sig> r29: number ; r22: seq(boolean) ; r29: number ; r36: seq(boolean)
 
 >> narrow strip
 
@@ -221,11 +225,12 @@ let (c,d,f) = p(1,"hi");
 
 >> linearize strip reduce nolines
 
-test:6 r1 <constant> 1
-test:6 r2 <constant> "hi"
-sequences:75 r5 (1#1) 
-test:2 r10 <constant> ""
-test:2 r5 <type> [seq]
+test:8 r1 <constant> 1
+test:8 r2 <constant> "hi"
+sequences:182 r5 (1#1) 
+test:4 r10 <constant> ""
+test:4 r5 <type> [seq]
+test:4 <sig> r1: ?X ; r2: ?Z ; r10: ?Y ; r5: seq(?Y) ; r2: ?Z
 
 >> narrow strip
 
@@ -272,19 +277,28 @@ test:7 r16 <type> [seq]
 test:7 r28 <constant> ""
 test:7 r20 <type> [seq]
 test:7 r24 <type> [seq]
+test:7 <sig> r1: ?X ; r2: ?Z ; r16: seq(?X) ; r1: ?X ; r28: ?Y ; r20: seq(?Y) ; r24: seq(?Y) ; r2: ?Z
 test:7 <same-type> r20, r24
 sequences:182 r47 (1#5) 
 test:11 r20 <type> [seq(string)]
 test:11 r47 <type> [seq]
 test:11 r47 <type> [seq]
+test:11 <sig> r20: seq(string) ; r47: seq(?X) ; r47: seq(?X)
 test:12 r47 <type> [seq(number)]
 test:12 r56 <constant> 0
+test:12 <sig> r47: seq(number)
 test:5  (3#6) r16
+test:5 <sig> r16: ?X
 test:5  (3#7) r1
+test:5 <sig> r1: ?X
 test:5  (3#8) r28
+test:5 <sig> r28: ?X
 test:5  (3#9) r20
+test:5 <sig> r20: ?X
 test:5  (3#10) r24
+test:5 <sig> r24: ?X
 test:5  (3#11) r2
+test:5 <sig> r2: ?X
 
 >> narrow strip
 

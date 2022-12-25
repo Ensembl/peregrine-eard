@@ -1,6 +1,6 @@
 use std::fmt;
 
-use super::{checkstypes::{CheckType, TypeRestriction}, constants::Constant};
+use super::{checkstypes::{CheckType, TypeRestriction, TypeSpec}, constants::Constant};
 
 #[derive(Clone)]
 pub(crate) enum LinearStatementValue {
@@ -9,7 +9,7 @@ pub(crate) enum LinearStatementValue {
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
     Type(usize,Vec<TypeRestriction>),
-    Signature(Vec<(usize,Vec<TypeRestriction>)>),
+    Signature(Vec<(usize,Vec<TypeSpec>)>),
     SameType(Vec<usize>),
     Entry(String)
 }
@@ -32,7 +32,7 @@ impl LinearStatementValue {
                 let sig = r.iter().map(|(reg,retrs)| {
                     format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))
                 }).collect::<Vec<_>>();
-                format!("<sig> {}",sig.join("\n"))
+                format!("<sig> {}",sig.join(" ; "))
             },
             Self::Constant(v,c) => format!("r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => format!("r{:?} <copy-from> r{:?}",*to,*from),
@@ -58,7 +58,7 @@ impl fmt::Debug for LinearStatementValue {
                 let sig = r.iter().map(|(reg,retrs)| {
                     format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))
                 }).collect::<Vec<_>>();
-                write!(f,"<sig> {}",sig.join("\n"))
+                write!(f,"<sig> {}",sig.join(" ; "))
             },
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),

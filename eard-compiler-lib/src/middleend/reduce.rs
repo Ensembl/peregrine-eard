@@ -38,18 +38,6 @@ impl Reduce {
         }
     }
 
-    fn merge_restrictions(&mut self, restrs: &[(usize,Vec<TypeRestriction>)]) -> Result<Vec<(usize,Vec<TypeRestriction>)>,String> {
-        let mut restr_sets = HashMap::new();
-        for (reg,restrs) in restrs {
-            restr_sets.entry(self.canon(*reg)).or_insert(vec![]).push(restrs.clone());
-        }
-        let mut out = vec![];
-        for (canon,restr_set) in restr_sets.drain() {
-            out.push((canon,self.merge_restr_set(restr_set)?));
-        }
-        Ok(out)
-    }
-
     fn reduce(&mut self, stmt: &LinearStatement) -> Result<Option<LinearStatement>,String> {
         let value = match &stmt.value {
             LinearStatementValue::Check(name,reg,ct,ci,f) => {
@@ -66,7 +54,10 @@ impl Reduce {
                 }
             },
             LinearStatementValue::Signature(s) => {
-                Some(LinearStatementValue::Signature(self.merge_restrictions(s)?))
+                let s = s.iter().map(|(reg,spec)| {
+                    (self.canon(*reg),spec.to_vec())
+                }).collect::<Vec<_>>();
+                Some(LinearStatementValue::Signature(s))
             },
             LinearStatementValue::Constant(reg,c) => {
                 Some(LinearStatementValue::Constant(self.canon(*reg),c.clone()))

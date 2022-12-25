@@ -226,6 +226,25 @@ impl<'a> Linearize<'a> {
     }
 
     fn callee_matches(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize], ret_regs: &[usize]) -> Result<(),String> {
+        let mut regs = vec![];
+        for (defn,reg) in defn.args.iter().zip(arg_regs.iter()) {
+            match defn {
+                OrBundle::Normal(defn) => {
+                    regs.push((*reg,defn.typespec.arg_types.clone()));
+                }
+                _ => {}
+            }
+        }
+        if let Some(ret_type) = &defn.ret_type {
+            for (defn,reg) in ret_type.iter().zip(ret_regs.iter()) {
+                regs.push((*reg,defn.arg_types.clone()));
+            }
+        }
+        let regs = regs.iter().filter(|(_,t)| t.len()>0).cloned().collect::<Vec<_>>();
+        if regs.len() > 0 {
+            self.add(LinearStatementValue::Signature(regs));
+        }
+        /***/
         let mut wilds = HashMap::new();
         for (i,arg) in defn.args.iter().enumerate() {
             match arg {

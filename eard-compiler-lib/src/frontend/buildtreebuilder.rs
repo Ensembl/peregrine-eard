@@ -25,22 +25,22 @@ struct CurrentFuncProcDefinition {
 impl CurrentFuncProcDefinition {
     /* only one wild per arg_spec and if seqwild then no other seq */
     fn verify_argret(&self, spec: &[TypeSpec]) -> Result<(),String> {
-        let mut variety = [0,0,0,0];
+        let mut wild = 0;
+        let mut non_wild = 0;
         for argtype in spec {
-            let index = match argtype {
-                TypeSpec::Atomic(_) => 0,
-                TypeSpec::Sequence(_) => 1,
-                TypeSpec::Wildcard(_) => 2,
-                TypeSpec::AtomWildcard(_) => 2,
-                TypeSpec::SequenceWildcard(_) => 3
-            };
-            variety[index] += 1;
+            match argtype {
+                TypeSpec::Atomic(_) => { non_wild += 1; },
+                TypeSpec::Sequence(_) => { non_wild += 1; },
+                TypeSpec::Wildcard(_) => { wild += 1; },
+                TypeSpec::AtomWildcard(_) => { wild += 1; },
+                TypeSpec::SequenceWildcard(_) => { wild += 1; },
+            }
         }
-        if variety[2]+variety[3] > 1 {
+        if wild > 1 {
             return Err(format!("only one wildcard allowed per argument"));
         }
-        if variety[3] > 0 && variety[1] > 0 {
-            return Err(format!("cannot match wild and non-wild sequences in argument"));
+        if wild > 0 && non_wild > 0 {
+            return Err(format!("cannot mix wild and non-wild types in argument"));
         }
         Ok(())
     }

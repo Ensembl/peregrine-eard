@@ -347,7 +347,7 @@ procedure p(x: seq(number) | seq(?X)) {}
 
 >> built-fail trim
 
-cannot match wild and non-wild sequences in argument at test:4
+cannot mix wild and non-wild types in argument at test:4
 
 >> test
 

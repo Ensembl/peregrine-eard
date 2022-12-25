@@ -22,6 +22,7 @@ mod libcore {
 }
 
 mod middleend {
+    pub(crate) mod possible;
     pub(crate) mod reduce;
     pub(crate) mod broadtyping;
     pub(crate) mod narrowtyping;

@@ -382,7 +382,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
             eprintln!("{}",sepfmt(&mut linear.iter(),"\n",""));
-            let narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut report = BTreeMap::new();
             for (reg,narrow) in sort_map(&narrow) {
                 report.entry(format!("{:?}",narrow)).or_insert(vec![]).push(reg.to_string());
@@ -396,7 +396,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let error = narrow_type(&tree,&broad,&block_indexes, &linear).err().expect("narrow unespectedly succeeded");
+            let error = narrow_type(&tree,&block_indexes, &linear).err().expect("narrow unespectedly succeeded");
             println!("{}",error);
             assert_eq!(process_ws(&error,narrow_options),process_ws(narrow_correct,narrow_options));
         }
@@ -405,7 +405,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let _narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             if constfold_options.contains("culdesac") {
                 opers = culdesac(&tree,&block_indexes,&opers,true);
@@ -418,7 +418,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let _narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let _narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             let (new_opers, knowns) = test_reuse(&tree,&block_indexes,&opers).expect("reuse failed");
@@ -438,7 +438,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register, &mut broad,true).expect("checking unexpectedly failed");
-            let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
@@ -451,7 +451,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
@@ -465,7 +465,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
@@ -480,7 +480,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,metadata) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let mut narrow = narrow_type(&tree,&broad,&block_indexes, &linear).expect("narrow typing failed");
+            let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");

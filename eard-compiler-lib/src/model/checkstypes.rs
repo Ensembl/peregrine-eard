@@ -68,7 +68,7 @@ impl Ord for AtomicTypeSpec {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,PartialEq,Eq,Hash)]
 pub(crate) enum TypeRestriction {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),

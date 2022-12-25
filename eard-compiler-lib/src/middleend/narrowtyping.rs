@@ -1,78 +1,21 @@
-/* A narrow typing involves determiing which sequence to use for broad "sequence" types.
- * Again we proceed linearly through the program, leaving in our wake fully typed values.
- * Restrictions on which to use can only be imposed by code and type statements. Arguments to
- * a code statement can interact with each other to restrict thier wildcarded partners. They also
- * fully determine the type of their results.
- */
-
-use std::{collections::{HashMap, HashSet}, fmt};
-use crate::{frontend::{buildtree::{BuildTree, BTTopDefn}}, util::equiv::EquivalenceMap, model::{checkstypes::{AtomicTypeSpec, TypeSpec, TypeRestriction}, linear::{LinearStatement, LinearStatementValue}, codeblocks::CodeBlock}, controller::source::ParsePosition};
-use super::broadtyping::BroadType;
-
-/* Wildcards can never be constrained to be a non-wild seq(X) in a declaration, oddly,
- * so the enum has no such arm though its meaning would be well-defined
- */
-#[derive(Clone,Debug)]
-enum WildcardType {
-    Atomic(AtomicTypeSpec),
-    AnySequence,
-    AnyAtomic,
-    Any
-}
-
-impl WildcardType {
-    fn broad(&mut self, bt: &BroadType) -> Result<(),String> {
-        let ok = match (self.clone(),bt) {
-            (WildcardType::Atomic(a), BroadType::Atomic(b)) => &a == b,
-            (WildcardType::Atomic(_), BroadType::Sequence) => false,
-            (WildcardType::AnySequence, BroadType::Atomic(_)) => false,
-            (WildcardType::AnySequence, BroadType::Sequence) => true,
-            (WildcardType::AnyAtomic, BroadType::Atomic(a)) => {
-                *self = WildcardType::Atomic(a.clone());
-                true
-            },
-            (WildcardType::AnyAtomic, BroadType::Sequence) => false,
-            (WildcardType::Any, BroadType::Atomic(a)) => {
-                *self = WildcardType::Atomic(a.clone());
-                true
-            },
-            (WildcardType::Any, BroadType::Sequence) => {
-                *self = WildcardType::AnySequence;
-                true
-            }
-        };
-        if ok { Ok(()) } else { Err(format!("type mismatch/C {:?} {:?}",self,bt)) }
-    }
-
-    fn atomic(&mut self) -> Result<(),String> {
-        let ok = match self.clone() {
-            WildcardType::Atomic(_) => true,
-            WildcardType::AnySequence => false,
-            WildcardType::AnyAtomic => true,
-            WildcardType::Any => {
-                *self = WildcardType::AnyAtomic;
-                true
-            }
-        };
-        if ok { Ok(()) } else { Err(format!("type mismatch/H {:?}",self)) }
-    }
-
-    fn restricted_atomic(&self) -> Result<Option<&AtomicTypeSpec>,String> {
-        Ok(match self {
-            WildcardType::Atomic(a) => Some(a),
-            WildcardType::AnyAtomic => None,
-            WildcardType::Any => None,
-            _ => {
-                return Err("type mismatch/B".to_string())
-            }
-        })
-    }
-}
+use std::{collections::{HashMap, BTreeSet, HashSet}, mem, fmt};
+use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{linear::{LinearStatement, LinearStatementValue}, checkstypes::{AtomicTypeSpec, TypeSpec, TypeRestriction}, codeblocks::CodeArgument}, controller::source::ParsePosition, util::equiv::EquivalenceClass};
 
 #[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
 pub(crate) enum NarrowType {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
+}
+
+impl NarrowType {
+    pub(crate) fn meets_restriction(&self, restr: &TypeRestriction) -> bool {
+        match (self,restr) {
+            (NarrowType::Atomic(a), TypeRestriction::Atomic(b)) => a == b,
+            (NarrowType::Sequence(a), TypeRestriction::Sequence(b)) => a == b,
+            (NarrowType::Sequence(_), TypeRestriction::AnySequence) => true,
+            _ => false
+        }
+    }
 }
 
 impl fmt::Debug for NarrowType {
@@ -84,78 +27,290 @@ impl fmt::Debug for NarrowType {
     }
 }
 
+fn add_sequences(output: &mut HashSet<TypeRestriction>, input: &HashSet<TypeRestriction>) {
+    output.extend(input.iter().filter(|r| {
+        match r {
+            TypeRestriction::Sequence(_) => true,
+            _ => false
+        }
+    }).cloned())
+}
+
+fn intersect_restrictions(a: &HashSet<TypeRestriction>, b: &HashSet<TypeRestriction>) -> HashSet<TypeRestriction> {
+    let mut out = HashSet::new();
+    let a_any = a.contains(&TypeRestriction::AnySequence);
+    let b_any = b.contains(&TypeRestriction::AnySequence);
+    if a_any && b_any { out.insert(TypeRestriction::AnySequence); }
+    if a_any { add_sequences(&mut out,b); }
+    if b_any { add_sequences(&mut out,a); }
+    out.extend(a.intersection(b).cloned());
+    out
+}
+
+#[derive(Clone,Debug)]
+struct AtomPoss {
+    sequence: bool,
+    atom: bool,
+    number: bool,
+    string: bool,
+    boolean: bool,
+    any_handle: bool,
+    specific_handles: BTreeSet<String>,
+    restrictions: Option<HashSet<TypeRestriction>>
+}
+
+impl AtomPoss {
+    fn apply_restrs(&self, narrow: &NarrowType) -> bool {
+        if let Some(restrs) = &self.restrictions {
+            for restr in restrs {
+                if narrow.meets_restriction(restr) { return true; }
+            }
+            false
+        } else {
+            true
+        }
+    }
+
+    fn atom_type_options(&self) -> Vec<AtomicTypeSpec> {
+        let mut out = vec![];
+        if self.boolean { out.push(AtomicTypeSpec::Boolean); }
+        if self.number { out.push(AtomicTypeSpec::Number); }
+        if self.string { out.push(AtomicTypeSpec::String); }
+        if self.any_handle { out.push(AtomicTypeSpec::Handle("".to_string())); }
+        out.extend(self.specific_handles.iter().map(|name| AtomicTypeSpec::Handle(name.to_string())));
+        out
+    }
+
+    fn type_options(&self) -> Vec<NarrowType> {
+        let mut out = vec![];
+        let atoms = self.atom_type_options();
+        if self.atom { out.extend(atoms.iter().map(|a| NarrowType::Atomic(a.clone()))) }
+        if self.sequence { out.extend(atoms.iter().map(|a| NarrowType::Sequence(a.clone()))) }
+        out
+    }
+
+    fn calc_type(&self) -> Result<NarrowType,String> {
+        for narrow in self.type_options() {
+            if self.apply_restrs(&narrow) { return Ok(narrow); }
+        }
+        return Err(format!("cannot deduce type/A"));
+    }
+
+    fn any() -> AtomPoss {
+        AtomPoss { 
+            sequence: true, atom: true,
+            number: true, string: true, boolean: true, any_handle: true, 
+            specific_handles: BTreeSet::new(),
+            restrictions: None
+        }
+    }
+
+    fn none() -> AtomPoss {
+        AtomPoss { 
+            sequence: false, atom: false,
+            number: false, string: false, boolean: false, any_handle: false, 
+            specific_handles: BTreeSet::new(),
+            restrictions: None
+        }
+    }
+
+    fn check_valid_bool(&self) -> bool {
+        if !self.sequence && !self.atom { return false; }
+        if !self.number && !self.string && !self.boolean && !self.any_handle && self.specific_handles.len() == 0 {
+            return false;
+        }
+        if let Some(restrs) = &self.restrictions {
+            if restrs.len() == 0 { return false; }
+        }
+        true
+    }
+
+    fn check_valid(&self) -> Result<(),String> {
+        if self.check_valid_bool() { Ok(()) } else { Err(format!("cannot deduce type/B")) }
+    }
+
+    fn atom_to_seq(&self) -> Result<AtomPoss,String> {
+        let mut out = self.clone();
+        if !self.atom { return Err(format!("cannot deduce type")); }
+        out.atom = false;
+        out.sequence = true;
+        if let Some(restr) = &self.restrictions {
+            out.restrictions = Some(restr.iter().filter_map(|r| {
+                match r {
+                    TypeRestriction::Atomic(a) => Some(TypeRestriction::Sequence(a.clone())),
+                    TypeRestriction::Sequence(_) => None,
+                    TypeRestriction::AnySequence => None
+                }
+            }).collect());
+        }
+        out.check_valid()?;
+        Ok(out)
+    }
+
+    fn seq_to_atom(&self) -> Result<AtomPoss,String> {
+        let mut out = self.clone();
+        if !self.sequence { return Err(format!("cannot deduce type/C")); }
+        out.sequence = false;
+        out.atom = true;
+        if let Some(in_restr) = &self.restrictions {
+            let mut restrs = HashSet::new();
+            let mut any = false;
+            for restr in in_restr {
+                match restr {
+                    TypeRestriction::Atomic(_) => {},
+                    TypeRestriction::Sequence(s) => {
+                        restrs.insert(TypeRestriction::Atomic(s.clone()));
+                    },
+                    TypeRestriction::AnySequence => {
+                        any = true;
+                    }
+                }
+            }
+            out.restrictions = if any { None } else { Some(restrs) };
+        }
+        out.check_valid()?;
+        Ok(out)
+    }
+
+    fn acceptable_atom(&self, a: &AtomicTypeSpec) -> bool {
+        match a {
+            AtomicTypeSpec::Number => self.number,
+            AtomicTypeSpec::String => self.string,
+            AtomicTypeSpec::Boolean => self.boolean,
+            AtomicTypeSpec::Handle(h) => {
+                self.specific_handles.contains(h) || self.any_handle
+            }
+        }
+    }
+
+    fn filter_acceptable(&mut self) {
+        self.restrictions = self.restrictions.as_ref().map(|restrs| {
+            restrs.iter().filter(|r| {
+                match r {
+                    TypeRestriction::Atomic(a) => {
+                        self.atom && self.acceptable_atom(a)
+                    },
+                    TypeRestriction::Sequence(a) => {
+                        self.sequence && self.acceptable_atom(a)
+                    },
+                    TypeRestriction::AnySequence => self.sequence
+                }
+            }).cloned().collect::<HashSet<_>>()
+        });
+    }
+
+    fn sequence(&mut self) -> Result<(),String> {
+        self.atom = false;
+        self.filter_acceptable();
+        self.check_valid()?;
+        Ok(())
+    }
+
+    fn unify(&mut self, other: &AtomPoss) -> Result<(),String> {
+        self.sequence &= other.sequence;
+        self.atom &= other.atom;
+        self.number &= other.number;
+        self.string &= other.string;
+        self.boolean &= other.boolean;
+        match (self.any_handle,other.any_handle) {
+            (true, false) => {
+                self.specific_handles = other.specific_handles.clone();
+            },
+            (false, false) => {
+                self.specific_handles = self.specific_handles.intersection(&other.specific_handles).cloned().collect();
+            },
+            _ => {}
+        }
+        self.any_handle &= other.any_handle;
+        self.restrictions = match (&self.restrictions,&other.restrictions) {
+            (None, None) => { None },
+            (None, Some(r)) => { Some(r.clone()) },
+            (Some(r), None) => { Some(r.clone()) },
+            (Some(a), Some(b)) => {
+                Some(intersect_restrictions(a,b))
+            },
+        };
+        self.filter_acceptable();
+        self.check_valid()?;
+        Ok(())
+    }
+
+    fn restrict_by_type(&mut self, restrs: &[TypeRestriction]) -> Result<(),String> {
+        let restrs = restrs.iter().cloned().collect::<HashSet<_>>();
+        if let Some(self_restrs) = &mut self.restrictions {
+            *self_restrs = intersect_restrictions(&restrs,&self_restrs);
+        } else {
+            self.restrictions = Some(restrs);
+        }
+        self.filter_acceptable();
+        self.check_valid()?;
+        Ok(())
+    }
+
+    fn restrict_by_spec(&mut self, seq: bool, spec: &AtomicTypeSpec) -> Result<(),String> {
+        let mut new = Self::none();
+        let ok = match spec {
+            AtomicTypeSpec::Number => { new.number = true; self.number },
+            AtomicTypeSpec::String => { new.string = true; self.string },
+            AtomicTypeSpec::Boolean => { new.boolean = true; self.boolean }
+            AtomicTypeSpec::Handle(h) => {
+                new.specific_handles.insert(h.to_string());
+                self.any_handle || self.specific_handles.contains(h)
+            },
+        };
+        if !ok { return Err(format!("cannot deduce type/D")); }
+        let ok = if seq { new.sequence = true; self.sequence } else { new.atom = true; self.atom };
+        if !ok { return Err(format!("cannot deduce type/E")); }
+        *self = new;
+        self.filter_acceptable();
+        self.check_valid()?;
+        Ok(())
+    }
+}
+
 struct NarrowTyping<'a> {
     bt: &'a BuildTree,
-    broad: &'a HashMap<usize,BroadType>,
     block_index: &'a HashMap<usize,usize>,
     position: ParsePosition,
-    possible: EquivalenceMap<usize,Vec<AtomicTypeSpec>,String>
+    possible: HashMap<usize,AtomPoss>,
+    equivs: EquivalenceClass<usize>,
+    seen: HashSet<usize>
 }
 
 impl<'a> NarrowTyping<'a> {
-    fn new(bt: &'a BuildTree, broad: &'a HashMap<usize,BroadType>, block_index: &'a HashMap<usize,usize>) -> NarrowTyping<'a> {
+    fn new(bt: &'a BuildTree, block_index: &'a HashMap<usize,usize>) -> NarrowTyping<'a> {
         NarrowTyping {
-            bt, broad, block_index,
+            bt, block_index,
             position: ParsePosition::empty("called"),
-            possible: EquivalenceMap::new(|new: &mut Vec<AtomicTypeSpec>, old| {
-                let old_set = old.iter().collect::<HashSet<_>>();
-                *new = new.drain(..).filter(|v| old_set.contains(v)).collect::<Vec<_>>();
-                if new.len() == 0 {
-                    return Err(format!("type mismatch"));
-                }
-                Ok(())
-            })
+            possible: HashMap::new(),
+            equivs: EquivalenceClass::new(),
+            seen: HashSet::new(),
         }
     }
 
-    fn is_seq(&self, reg: usize) -> bool {
-        match self.broad.get(&reg).expect("missing register during typing") {
-            BroadType::Atomic(_) => false,
-            BroadType::Sequence => true,
-        }
+    fn poss_for_reg(&mut self, reg: usize) -> &mut AtomPoss {
+        self.seen.insert(reg);
+        let reg = self.equivs.canon(reg);
+        self.possible.entry(reg).or_insert_with(|| AtomPoss::any())
     }
 
-    fn make_wildcards(&mut self, block: &CodeBlock, args: &[usize]) -> Result<HashMap<String,WildcardType>,String> {
-        let mut wilds = HashMap::new();
-        for (spec,reg) in block.arguments.iter().zip(args.iter()) {
-            let reg_broad = self.broad.get(reg).expect("missing broad type for register");
-            match (&spec.arg_type,reg_broad) {
-                (TypeSpec::Atomic(a), BroadType::Atomic(b)) if a == b => {},
-                (TypeSpec::Sequence(_), BroadType::Sequence) => {}
-                (TypeSpec::Wildcard(w), bt) => {
-                    wilds.entry(w.to_string()).or_insert(WildcardType::Any).broad(bt)?;
-                },
-                (TypeSpec::SequenceWildcard(w), BroadType::Sequence) => {
-                    wilds.entry(w.to_string()).or_insert(WildcardType::Any).atomic()?;
-                },
-                (a,b) => {
-                    return Err(format!("type mismatch/E r{} {:?} {:?}: {:?}",reg,a,b,block));
-                }
+    fn arg(&mut self, ties: &mut HashMap<String,Vec<(bool,usize)>>, spec: &CodeArgument, reg: usize) -> Result<(),String> {
+        match &spec.arg_type {
+            TypeSpec::Atomic(a) => {
+                self.poss_for_reg(reg).restrict_by_spec(false,a)?;
+            },
+            TypeSpec::Sequence(a) => {
+                self.poss_for_reg(reg).restrict_by_spec(true,a)?;
+            },
+            TypeSpec::Wildcard(w) => {
+                ties.entry(w.to_string()).or_insert(vec![]).push((false,reg));
+            },
+            TypeSpec::SequenceWildcard(w) => {
+                self.poss_for_reg(reg).sequence()?;
+                ties.entry(w.to_string()).or_insert(vec![]).push((true,reg));
             }
         }
-        Ok(wilds)
-    }
-
-    fn apply_wildcard(&mut self, spec: &TypeSpec, wilds: &mut HashMap<String,WildcardType>) -> Result<Option<Vec<AtomicTypeSpec>>,String> {
-        Ok(match spec {
-            TypeSpec::Atomic(_) => None,
-            TypeSpec::Sequence(s) => {
-                Some(vec![s.clone()])
-            },
-            TypeSpec::Wildcard(_) => None,
-            TypeSpec::SequenceWildcard(w) => {
-                let wild = wilds.entry(w.to_string()).or_insert(WildcardType::Any);
-                let atom = match wild {
-                    WildcardType::Atomic(a) => Some(a.clone()),
-                    WildcardType::AnyAtomic => None,
-                    WildcardType::Any => None,
-                    _ => {
-                        return Err("type mismatch/F".to_string());
-                    },
-                };
-                atom.map(|x| vec![x])
-            },
-        })
+        Ok(())
     }
 
     fn code(&mut self, call: usize, name: usize, rets: &[usize], args: &[usize]) -> Result<(),String> {
@@ -164,67 +319,33 @@ impl<'a> NarrowTyping<'a> {
             BTTopDefn::Code(c) => c.get_block(block_index),
             _ => { panic!("didn't get code with code index"); }
         };
-        let mut wilds = self.make_wildcards(block,args)?;
+        /* arguments */
         let mut ties = HashMap::new();
-        /* process arguments */
         for (spec,reg) in block.arguments.iter().zip(args.iter()) {
-            match &spec.arg_type {
-                TypeSpec::Sequence(s) => {
-                    self.possible.set(*reg,vec![s.clone()])?;
-                },
-                TypeSpec::SequenceWildcard(w) => {
-                    let wild = wilds.get(w).expect("wildcard missed during generation");
-                    if let Some(atomic) = wild.restricted_atomic()? {
-                        self.possible.set(*reg,vec![atomic.clone()])?;
-                    }
-                    ties.entry((true,w)).or_insert(vec![]).push(*reg);
-                },
-                TypeSpec::Wildcard(w) => {
-                    ties.entry((false,w)).or_insert(vec![]).push(*reg);
-                }
-                _ => {}
-            }
+            self.arg(&mut ties,spec,*reg)?;
         }
-        /* process returns */
+        /* results */
         for (spec,reg) in block.results.iter().zip(rets.iter()) {
-            if let Some(restrs) = self.apply_wildcard(&spec.arg_type,&mut wilds)? {
-                self.possible.set(*reg,restrs)?;
-            }
-            match &spec.arg_type {
-                TypeSpec::Wildcard(w) => {
-                    ties.entry((false,w)).or_insert(vec![]).push(*reg);
-                },
-                TypeSpec::SequenceWildcard(w) => {
-                    ties.entry((true,w)).or_insert(vec![]).push(*reg);
-                },
-                _ => {}
-            }
+            self.arg(&mut ties,spec,*reg)?;
         }
-        /* tie sequences with matching wilds. 
-         * ?X is tied to ?X; seq(?X) to seq(?X).
-         * We don't need to associate ?X with seq(?X) as that means ?X is atomic and so known
-         *   completely by its broad type, and so seq(?X) will have just been bound.
-         */
-        for regs in ties.values() {
-            let reg1 = regs.first().unwrap();
-            for reg in regs {
-                self.possible.equiv(*reg1,*reg)?;
+        /* manage ties */
+        for (_,tied) in ties.drain() {
+            let mut wc = AtomPoss::any();
+            let mut swc = AtomPoss::any();
+            let mut seen_sw = false;
+            for (sw,reg) in &tied {
+                if *sw { seen_sw = true; }
+                let poss = if *sw { &mut swc } else { &mut wc };
+                poss.unify(&self.poss_for_reg(*reg))?;
             }
-        }
-        Ok(())
-    }
-
-    fn typestmt(&mut self, reg: usize, restrs: &[TypeRestriction]) -> Result<(),String> {
-        if !self.is_seq(reg) { return Ok(()); }
-        let restrs = restrs.iter().map(|r| {
-            match r {
-                TypeRestriction::Atomic(_) => None,
-                TypeRestriction::AnySequence => None,
-                TypeRestriction::Sequence(s) => Some(s.clone()),
+            if seen_sw {
+                swc.unify(&wc.atom_to_seq()?)?;
+                wc.unify(&swc.seq_to_atom()?)?;
             }
-        }).collect::<Option<Vec<_>>>();
-        if let Some(restrs) = restrs {
-            self.possible.set(reg,restrs)?;
+            for (sw,reg) in &tied {
+                let poss = if *sw { &mut swc } else { &mut wc };
+                self.poss_for_reg(*reg).unify(&poss)?;
+            }
         }
         Ok(())
     }
@@ -236,13 +357,26 @@ impl<'a> NarrowTyping<'a> {
                 self.code(*call,*name,rets,args)?;
             },
             LinearStatementValue::Type(reg,restrs) => {
-                self.typestmt(*reg,&restrs)?;
+                self.poss_for_reg(*reg).restrict_by_type(restrs)?;
             },
             LinearStatementValue::WildEquiv(regs) => {
-                let reg1 = regs[0];
+                let mut poss = AtomPoss::any();
                 for reg in regs {
-                    self.possible.equiv(reg1,*reg)?;
+                    poss.unify(&self.poss_for_reg(*reg))?;
                 }
+                for reg in regs {
+                    self.poss_for_reg(*reg).unify(&poss)?;
+                }
+                let mut rest = regs.to_vec();
+                if let Some(first) = rest.pop() {
+                    for another in &rest {
+                        self.equivs.equiv(first,*another);
+                    }
+                }
+            },
+            LinearStatementValue::Constant(reg,c) => {
+                let spec = c.to_atomic_type();
+                self.poss_for_reg(*reg).restrict_by_spec(false,&spec)?;
             }
             _ => {}
         }
@@ -250,28 +384,18 @@ impl<'a> NarrowTyping<'a> {
     }
 
     fn finalise(&mut self) -> Result<HashMap<usize,NarrowType>,String> {
-        self.position = ParsePosition::empty("called");
-        let mut seq_types = HashMap::new();
-        for reg in self.possible.keys() {
-            let mut types = self.possible.get(*reg).cloned().unwrap_or(vec![AtomicTypeSpec::Boolean]);
-            types.sort();
-            if types.len() == 0 { return Err(format!("type mismatch/G r{:?}",*reg)); }
-            seq_types.insert(*reg,types.swap_remove(0));
+        let mut out = HashMap::new();
+        let seen = mem::replace(&mut self.seen,HashSet::new());
+        for reg in seen {
+            let narrow = self.poss_for_reg(reg).calc_type()?;
+            out.insert(reg,narrow);
         }
-        self.broad.iter().map(|(reg,broad)| {
-            let narrow = match broad {
-                BroadType::Atomic(a) => NarrowType::Atomic(a.clone()),
-                BroadType::Sequence => NarrowType::Sequence(
-                    seq_types.get(&reg).cloned().ok_or_else(|| format!("type mismatch/A"))?
-                )
-            };
-            Ok((*reg,narrow))
-        }).collect::<Result<_,_>>()
+        Ok(out)
     }
 }
 
-pub(crate) fn narrow_type(bt: &BuildTree, broad: &HashMap<usize,BroadType>, block_index: &HashMap<usize,usize>, stmts: &[LinearStatement]) -> Result<HashMap<usize,NarrowType>,String> {
-    let mut typing = NarrowTyping::new(bt,broad,block_index);
+pub(crate) fn narrow_type(bt: &BuildTree, block_index: &HashMap<usize,usize>, stmts: &[LinearStatement]) -> Result<HashMap<usize,NarrowType>,String> {
+    let mut typing = NarrowTyping::new(bt,block_index);
     for stmt in stmts {
         typing.add(stmt).map_err(|e| typing.position.message(&e))?;
     }

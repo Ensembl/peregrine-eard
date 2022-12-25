@@ -59,4 +59,4 @@ cmp(a,b);
 
 >> narrow-fail strip
 
-type mismatch at sequences:183 (called from test:10) (called from test:14)
+cannot deduce type/B at sequences:183 (called from test:10) (called from test:14)

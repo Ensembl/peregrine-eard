@@ -1,4 +1,4 @@
-use std::{collections::{HashMap, HashSet}, hash::Hash, fmt};
+use std::{collections::{HashMap}, hash::Hash};
 
 #[derive(Debug)]
 pub(crate) struct EquivalenceClass<X: PartialEq+Eq+Hash+Clone> {
@@ -39,68 +39,5 @@ impl<X: PartialEq+Eq+Hash+Clone> EquivalenceClass<X> {
 
     pub(crate) fn get<'a>(&'a self, k: &'a X) -> &'a X {
         self.equiv.get(k).unwrap_or_else(|| k)
-    }
-}
-
-pub(crate) struct EquivalenceMap<K: PartialEq+Eq+Hash+Clone,V,E> {
-    merge: Box<dyn Fn(&mut V,&V) -> Result<(),E>>,
-    equiv: EquivalenceClass<K>,
-    values: HashMap<K,V>,
-    keys: HashSet<K>
-}
-
-impl<K: PartialEq+Eq+Hash+Clone+fmt::Debug,V: fmt::Debug,E> fmt::Debug for EquivalenceMap<K,V,E> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("EquivalenceMap").field("equiv", &self.equiv).field("values", &self.values).field("keys", &self.keys).finish()
-    }
-}
-
-impl<K: PartialEq+Eq+Hash+Clone,V,E> EquivalenceMap<K,V,E> {
-    pub(crate) fn new<F>(merge: F) -> EquivalenceMap<K,V,E> where F: Fn(&mut V,&V) -> Result<(),E> + 'static {
-        EquivalenceMap {
-            merge: Box::new(merge),
-            equiv: EquivalenceClass::new(),
-            values: HashMap::new(),
-            keys: HashSet::new()
-        }
-    }
-
-    pub(crate) fn equiv(&mut self, a: K, b: K) -> Result<(),E> {
-        self.keys.insert(a.clone());
-        self.keys.insert(b.clone());
-        let a = self.equiv.canon(a);
-        let b = self.equiv.canon(b);
-        self.equiv.equiv(a.clone(),b.clone());
-        if a != b {
-            let old_b  = self.values.remove(&b);
-            match (self.values.get_mut(&a),old_b) {
-                (None, Some(v)) => {
-                    self.values.insert(a,v);
-                },
-                (Some(v1), Some(v2)) => {
-                    (self.merge)(v1,&v2)?;
-                }
-                _ => {}
-            }
-        }
-        Ok(())
-    }
-
-    pub(crate) fn set(&mut self, key: K, mut value: V) -> Result<(),E> {
-        self.keys.insert(key.clone());
-        let key = self.equiv.canon(key);
-        if let Some(old) = self.values.get(&key) {
-            (self.merge)(&mut value,old)?;
-        }
-        self.values.insert(key,value);
-        Ok(())
-    }
-
-    pub(crate) fn get(&self, key: K) -> Option<&V> {
-        self.values.get(&self.equiv.canon(key))
-    }
-
-    pub(crate) fn keys(&self) -> &HashSet<K> {
-        &self.keys
     }
 }

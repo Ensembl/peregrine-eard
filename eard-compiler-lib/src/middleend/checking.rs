@@ -94,7 +94,7 @@ impl<'a> Checking<'a> {
 
     fn add_check_code(&mut self, check_name: &str, check_fn: &str, a_reg: usize, b_reg: usize) {
         let checkname_reg = self.allocator.next_register();
-        self.broad.insert(checkname_reg,BroadType::Atomic(AtomicTypeSpec::String));
+        self.broad.insert(checkname_reg,BroadType::Atomic);
         self.out.push(LinearStatement { 
             value: LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())),
             position: self.position.clone()
@@ -109,7 +109,7 @@ impl<'a> Checking<'a> {
 
     fn add_runtime_check(&mut self, reg: usize, check_name: &str, ct: &CheckType, ci: usize) {
         let value_reg = self.allocator.next_register();
-        self.broad.insert(value_reg,BroadType::Atomic(AtomicTypeSpec::Number));
+        self.broad.insert(value_reg,BroadType::Atomic);
         let value_fn = match ct {
             CheckType::Length => "length",
             CheckType::LengthOrInfinite => "length",

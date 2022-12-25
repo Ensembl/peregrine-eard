@@ -32,7 +32,7 @@
 		"types": {
 			"patterns": [{
 				"name": "support.type.eard",
-				"match": "\\b(boolean|number|string|bytes|seq|handle)\\b"
+				"match": "\\b(boolean|number|string|bytes|seq|atom|handle)\\b"
 			}]
 		},
 		"functions": {

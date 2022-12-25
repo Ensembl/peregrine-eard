@@ -11,6 +11,7 @@ impl NarrowType {
     pub(crate) fn meets_restriction(&self, restr: &TypeRestriction) -> bool {
         match (self,restr) {
             (NarrowType::Atomic(a), TypeRestriction::Atomic(b)) => a == b,
+            (NarrowType::Atomic(_),TypeRestriction::AnyAtomic) => true,
             (NarrowType::Sequence(a), TypeRestriction::Sequence(b)) => a == b,
             (NarrowType::Sequence(_), TypeRestriction::AnySequence) => true,
             _ => false
@@ -126,6 +127,7 @@ impl AtomPoss {
     }
 
     fn check_valid(&self) -> Result<(),String> {
+        eprintln!("{:?}",self);
         if self.check_valid_bool() { Ok(()) } else { Err(format!("cannot deduce type/B")) }
     }
 
@@ -139,7 +141,8 @@ impl AtomPoss {
                 match r {
                     TypeRestriction::Atomic(a) => Some(TypeRestriction::Sequence(a.clone())),
                     TypeRestriction::Sequence(_) => None,
-                    TypeRestriction::AnySequence => None
+                    TypeRestriction::AnySequence => None,
+                    TypeRestriction::AnyAtomic => Some(TypeRestriction::AnySequence)
                 }
             }).collect());
         }
@@ -158,6 +161,7 @@ impl AtomPoss {
             for restr in in_restr {
                 match restr {
                     TypeRestriction::Atomic(_) => {},
+                    TypeRestriction::AnyAtomic => {},
                     TypeRestriction::Sequence(s) => {
                         restrs.insert(TypeRestriction::Atomic(s.clone()));
                     },
@@ -193,10 +197,18 @@ impl AtomPoss {
                     TypeRestriction::Sequence(a) => {
                         self.sequence && self.acceptable_atom(a)
                     },
-                    TypeRestriction::AnySequence => self.sequence
+                    TypeRestriction::AnySequence => self.sequence,
+                    TypeRestriction::AnyAtomic => self.atom,
                 }
             }).cloned().collect::<HashSet<_>>()
         });
+    }
+
+    fn atomic(&mut self) -> Result<(),String> {
+        self.sequence = false;
+        self.filter_acceptable();
+        self.check_valid()?;
+        Ok(())
     }
 
     fn sequence(&mut self) -> Result<(),String> {
@@ -303,6 +315,10 @@ impl<'a> NarrowTyping<'a> {
                 self.poss_for_reg(reg).restrict_by_spec(true,a)?;
             },
             TypeSpec::Wildcard(w) => {
+                ties.entry(w.to_string()).or_insert(vec![]).push((false,reg));
+            },
+            TypeSpec::AtomWildcard(w) => {
+                self.poss_for_reg(reg).atomic()?;
                 ties.entry(w.to_string()).or_insert(vec![]).push((false,reg));
             },
             TypeSpec::SequenceWildcard(w) => {

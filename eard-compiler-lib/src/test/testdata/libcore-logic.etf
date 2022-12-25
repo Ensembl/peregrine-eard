@@ -57,9 +57,9 @@ program "test" "test" 1;
 
 print(format("hi"+3));
 
->> broad-fail strip
+>> narrow-fail strip
 
-could not find appropriate implementation for [string, number] at arith:255 (called from test:4)
+cannot deduce type/D at arith:255 (called from test:4)
 
 >> test
 
@@ -904,8 +904,12 @@ world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
 function c(x) { let y = wc(x); y }
 
 let x = [2,4,6,8,10,12,14,16];
-//c(index(x,2));
-//c(index(x,5));
+c(index(x,2));
+c(index(x,5));
 
 >> generate strip
 
+r1 <- 6
+opcode 999, r0, r1
+r1 <- 12
+opcode 999, r0, r1

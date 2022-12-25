@@ -31,6 +31,7 @@ impl CurrentFuncProcDefinition {
                 TypeSpec::Atomic(_) => 0,
                 TypeSpec::Sequence(_) => 1,
                 TypeSpec::Wildcard(_) => 2,
+                TypeSpec::AtomWildcard(_) => 2,
                 TypeSpec::SequenceWildcard(_) => 3
             };
             variety[index] += 1;

@@ -218,6 +218,7 @@ impl<'a> Linearize<'a> {
                 TypeSpec::Atomic(_) => {},
                 TypeSpec::Sequence(_) => {},
                 TypeSpec::Wildcard(w) => { return Some((false,w.to_string())); },
+                TypeSpec::AtomWildcard(w) => { return Some((false,w.to_string())); },
                 TypeSpec::SequenceWildcard(w) => { return Some((true,w.to_string())); },
             }
         }

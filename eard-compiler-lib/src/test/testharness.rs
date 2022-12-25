@@ -357,7 +357,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let processed = processed.clone().expect("processing failed");
             let (tree,linear,_,_) = frontend(&mut compilation,&processed);
             println!("{}",dump_linear(&linear));
-            let got = broad_type(&tree,&linear).err().expect("typing failed");
+            let got = broad_type(&tree,&linear).err().expect("typing unexpectedly succeeded");
             println!("{}",got);
             assert_eq!(process_ws(&got,broad_options),process_ws(broad_correct,broad_options));
         }

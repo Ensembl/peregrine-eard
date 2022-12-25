@@ -72,7 +72,8 @@ impl Ord for AtomicTypeSpec {
 pub(crate) enum TypeRestriction {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
-    AnySequence
+    AnySequence,
+    AnyAtomic
 }
 
 impl fmt::Debug for TypeRestriction {
@@ -80,7 +81,9 @@ impl fmt::Debug for TypeRestriction {
         match self {
             Self::Atomic(v) => write!(f,"{:?}",v),
             Self::Sequence(v) => write!(f,"seq({:?})",v),
-            Self::AnySequence => write!(f,"seq")        }
+            Self::AnySequence => write!(f,"seq"),
+            Self::AnyAtomic => write!(f,"atom"),
+        }
     }
 }
 
@@ -89,6 +92,7 @@ pub enum TypeSpec {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),
     Wildcard(String),
+    AtomWildcard(String),
     SequenceWildcard(String)
 }
 
@@ -97,7 +101,8 @@ impl TypeSpec {
         match self {
             TypeSpec::Atomic(a) => Some(TypeRestriction::Atomic(a.clone())),
             TypeSpec::Sequence(s) => Some(TypeRestriction::Sequence(s.clone())),
-            TypeSpec::Wildcard(_) => { None }
+            TypeSpec::Wildcard(_) => { None },
+            TypeSpec::AtomWildcard(_) => { Some(TypeRestriction::AnyAtomic) },
             TypeSpec::SequenceWildcard(_) =>  { Some(TypeRestriction::AnySequence) },
         }
     }
@@ -110,6 +115,7 @@ impl fmt::Debug for TypeSpec {
             Self::Sequence(v) => write!(f,"seq({:?})",v),
             Self::Wildcard(v) => write!(f,"?{}",v),
             Self::SequenceWildcard(v) => write!(f,"seq(?{})",v),
+            Self::AtomWildcard(v) => write!(f,"atom(?{})",v),
         }
     }
 }

@@ -41,8 +41,7 @@ test:14 r36 <check:w> Length 1
 
 >> broad strip
 
-boolean: 7, 17
-number: 29
+atom: 7, 17, 29
 seq: 1, 12, 22, 36
 
 >> checking strip nolines

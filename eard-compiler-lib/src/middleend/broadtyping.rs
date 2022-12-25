@@ -3,25 +3,17 @@ use crate::{model::{checkstypes::{TypeSpec, TypeRestriction, AtomicTypeSpec}, li
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {
-    Atomic(AtomicTypeSpec),
+    Atomic,
     Sequence
 }
 
 impl BroadType {
-    pub(crate) fn from_typespec(spec: &TypeSpec) -> Result<BroadType,String> {
-        match spec {
-            TypeSpec::Atomic(a) => Ok(BroadType::Atomic(a.clone())),
-            TypeSpec::Sequence(_) => Ok(BroadType::Sequence),
-            TypeSpec::Wildcard(w) => Err(w.to_string()),
-            TypeSpec::SequenceWildcard(_) => Ok(BroadType::Sequence),
-        }
-    }
-
     pub(crate) fn from_restriction(spec: &TypeRestriction) -> BroadType {
         match spec {
-            TypeRestriction::Atomic(a) => BroadType::Atomic(a.clone()),
+            TypeRestriction::Atomic(a) => BroadType::Atomic,
             TypeRestriction::Sequence(_) => BroadType::Sequence,
-            TypeRestriction::AnySequence => BroadType::Sequence
+            TypeRestriction::AnySequence => BroadType::Sequence,
+            TypeRestriction::AnyAtomic => BroadType::Atomic
         }
     }
 }
@@ -29,7 +21,7 @@ impl BroadType {
 impl fmt::Debug for BroadType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Atomic(t) => write!(f,"{:?}",t),
+            Self::Atomic => write!(f,"atom"),
             Self::Sequence => write!(f, "seq"),
         }
     }
@@ -55,7 +47,7 @@ impl<'a> BroadTyping<'a> {
         self.position = stmt.position.clone();
         match &stmt.value {
             LinearStatementValue::Constant(reg,c) => {
-                self.types.insert(*reg,BroadType::Atomic(c.to_atomic_type()));
+                self.types.insert(*reg,BroadType::Atomic);
             },
             LinearStatementValue::Copy(dst,src) => {
                 self.types.insert(*dst,self.get(*src));

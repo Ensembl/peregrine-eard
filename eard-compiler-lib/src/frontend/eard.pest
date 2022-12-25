@@ -61,8 +61,9 @@ check_annotation = { length_check | lengthorinf_check | total_check | ref_check 
 
 /* arguments */
 arg_types = { (arg_type ~ ("|" ~ arg_type)*)? }
-arg_type = { arg_atomic_type | arg_seq_type | arg_seq_wild_type | arg_wild_type }
+arg_type = { arg_atomic_type | arg_seq_type | arg_seq_wild_type | arg_atom_wild_type | arg_wild_type }
 arg_atomic_type = { "number" | "string" | "boolean" | ("handle(" ~ (identifier|arg_wild_type) ~ ")")  }
+arg_atom_wild_type = { "atom(" ~  arg_wild_type ~ ")" }
 arg_seq_type = { "seq(" ~ arg_atomic_type ~ ")" }
 arg_seq_wild_type = { "seq(" ~ arg_wild_type ~ ")" }
 arg_wild_type = { "?" ~ arg_check_variable }

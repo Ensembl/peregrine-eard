@@ -261,6 +261,7 @@ impl EardParser {
         Ok(match_nodes!(input.into_children();
           [arg_atomic_type(a)] => TypeSpec::Atomic(a),
           [arg_seq_type(s)] => TypeSpec::Sequence(s),
+          [arg_atom_wild_type(s)] => TypeSpec::AtomWildcard(s),
           [arg_seq_wild_type(s)] => TypeSpec::SequenceWildcard(s),
           [arg_wild_type(s)] => TypeSpec::Wildcard(s)
         ))
@@ -285,6 +286,12 @@ impl EardParser {
     }
 
     fn arg_seq_wild_type(input: Node) -> PestResult<String> {
+        Ok(match_nodes!(input.into_children();
+            [arg_wild_type(x)] => x
+        ))
+    }
+
+    fn arg_atom_wild_type(input: Node) -> PestResult<String> {
         Ok(match_nodes!(input.into_children();
             [arg_wild_type(x)] => x
         ))

@@ -132,6 +132,21 @@ impl ImplBlock {
                         wilds.insert(w.to_string(),narrow.clone());
                     }
                 },
+                TypeSpec::AtomWildcard(w) => {
+                    match narrow {
+                        NarrowType::Sequence(_) => { return false; },
+                        _ => {}
+                    }
+                    if let Some(value) = wilds.get(w) {
+                        match value {
+                            NarrowType::Sequence(_) => { return false; },
+                            _ => {}
+                        }
+                        if value != narrow { return false; }
+                    } else {
+                        wilds.insert(w.to_string(),narrow.clone());
+                    }
+                },
                 TypeSpec::SequenceWildcard(w) => {
                     if let Some(value) = wilds.get(w) {
                         let value = match value {
@@ -238,6 +253,46 @@ impl fmt::Debug for ImplBlock {
     }
 }
 
+fn set_wild(wilds: &mut HashMap<String,BroadType>, name: &str, broad: &BroadType) -> Result<(),String> {
+    if let Some(old) = wilds.get(name) {
+        if old != broad { return Err(format!("cannot deduce value of wildcard")); }
+    } else {
+        wilds.insert(name.to_string(),broad.clone());
+    }
+    Ok(())
+}
+
+fn unify_wild(wilds: &mut HashMap<String,BroadType>,spec: &TypeSpec, broad: Option<&BroadType>) -> Result<(),String> {
+    match &spec {
+        TypeSpec::Atomic(_) => {},
+        TypeSpec::Sequence(_) => {},
+        TypeSpec::Wildcard(w) => {
+            if let Some(src) = broad {
+                set_wild(wilds,w,src)?;
+            }
+        },
+        TypeSpec::AtomWildcard(w) => {
+            set_wild(wilds,w,&BroadType::Atomic)?;
+        },
+        TypeSpec::SequenceWildcard(w) => {
+            set_wild(wilds,w,&BroadType::Atomic)?;
+        }
+    }
+    Ok(())
+}
+
+fn get_type(wilds: &HashMap<String,BroadType>, spec: &TypeSpec) -> Result<BroadType,String> {
+    match spec {
+        TypeSpec::Atomic(_) => Ok(BroadType::Atomic),
+        TypeSpec::Sequence(_) => Ok(BroadType::Sequence),
+        TypeSpec::Wildcard(w) => {
+            wilds.get(w).cloned().ok_or_else(|| format!("untypable wildcard"))
+        },
+        TypeSpec::AtomWildcard(_) => Ok(BroadType::Atomic),
+        TypeSpec::SequenceWildcard(_) => Ok(BroadType::Sequence),
+    }
+}
+
 #[derive(Clone)]
 pub struct CodeBlock {
     pub name: String,
@@ -249,24 +304,21 @@ pub struct CodeBlock {
 
 impl CodeBlock {
     fn broad_typing(&self, src: &[BroadType]) -> Result<Option<Vec<BroadType>>,String> {
-        let mut wilds = HashMap::new();
-        /* go through arguments to check for applicatility and set any wilds */
         if src.len() != self.arguments.len() { return Ok(None); }
+        let mut wilds = HashMap::new();
         for (src,spec) in src.iter().zip(self.arguments.iter()) {
-            let broad_spec = BroadType::from_typespec(&spec.arg_type);
-            let wanted = broad_spec.as_ref().map_or_else(|w| {
-                &*wilds.entry(w.to_string()).or_insert_with(|| src.clone())
-            },|w| w);            
-            if src != wanted {
-                return Ok(None);
-            }
+            unify_wild(&mut wilds,&spec.arg_type,Some(src))?;
         }
-        /* go through results setting types */
-        let typing = self.results.iter().map(|s| {
-            BroadType::from_typespec(&s.arg_type).map_err(|w| {
-                wilds.get(&w).cloned().ok_or_else(|| format!("unbound wildcard {}",w))
-            }).map_or_else(|x| x,|x| Ok(x))
-        }).collect::<Result<Vec<_>,_>>()?;
+        for spec in self.results.iter() {
+            unify_wild(&mut wilds,&spec.arg_type,None)?;
+        }
+        for (src,spec) in src.iter().zip(self.arguments.iter()) {
+            let broad = get_type(&wilds,&spec.arg_type)?;
+            if &broad != src { return Ok(None); }
+        }
+        let typing = self.results.iter().map(|spec| {
+            get_type(&wilds,&spec.arg_type)
+        }).collect::<Result<_,_>>()?;
         Ok(Some(typing))
     }
 

@@ -1,4 +1,4 @@
-use std::{fmt, cmp::Ordering};
+use std::{fmt, cmp::Ordering, collections::HashSet};
 
 #[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub enum CheckType {
@@ -85,6 +85,26 @@ impl fmt::Debug for TypeRestriction {
             Self::AnyAtomic => write!(f,"atom"),
         }
     }
+}
+
+fn add_sequences(output: &mut HashSet<TypeRestriction>, input: &HashSet<TypeRestriction>) {
+    output.extend(input.iter().filter(|r| {
+        match r {
+            TypeRestriction::Sequence(_) => true,
+            _ => false
+        }
+    }).cloned())
+}
+
+pub(crate) fn intersect_restrictions(a: &HashSet<TypeRestriction>, b: &HashSet<TypeRestriction>) -> HashSet<TypeRestriction> {
+    let mut out = HashSet::new();
+    let a_any = a.contains(&TypeRestriction::AnySequence);
+    let b_any = b.contains(&TypeRestriction::AnySequence);
+    if a_any && b_any { out.insert(TypeRestriction::AnySequence); }
+    if a_any { add_sequences(&mut out,b); }
+    if b_any { add_sequences(&mut out,a); }
+    out.extend(a.intersection(b).cloned());
+    out
 }
 
 #[derive(Clone)]

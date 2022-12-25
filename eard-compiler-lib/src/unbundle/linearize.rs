@@ -246,7 +246,7 @@ impl<'a> Linearize<'a> {
             equiv.sort();
             equiv.dedup();
             if equiv.len() > 1 {
-                self.add(LinearStatementValue::WildEquiv(equiv));
+                self.add(LinearStatementValue::SameType(equiv));
             }
         }
         Ok(())

@@ -73,7 +73,8 @@ impl<'a,'b> ConstFold<'a,'b> {
                 self.code(&block,*call,*name,rets,args);
             },
             LinearStatementValue::Type(_, _) => {},
-            LinearStatementValue::WildEquiv(_) => {},
+            LinearStatementValue::SameType(_) => {},
+            LinearStatementValue::Signature(_) => {},
             LinearStatementValue::Entry(s) => {
                 self.out(OperationValue::Entry(s.to_string()));
             },

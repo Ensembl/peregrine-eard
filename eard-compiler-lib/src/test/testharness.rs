@@ -154,7 +154,7 @@ fn frontend(compilation: &mut EardCompilation, processed: &[PTStatement]) -> (Bu
     let tree = compilation.build(processed.to_vec()).expect("build failed");
     let bundles = build_unbundle(&tree).expect("unbundle failed");
     let (linear,next_register,metadata) = linearize(&tree,&bundles,true).expect("linearize failed");
-    (tree,reduce(&linear,true),next_register,metadata)
+    (tree,reduce(&linear,true).expect("reduce failed"),next_register,metadata)
 }
 
 pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
@@ -327,7 +327,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let bundles = build_unbundle(&tree).expect("unbundle failed");
             let (mut linear,_,_) = linearize(&tree,&bundles,true).expect("linearize failed");
             if linearized_options.contains("reduce") {
-                linear = reduce(&linear,true);
+                linear = reduce(&linear,true).expect("reduce failed");
             }
             println!("{}",dump_linear(&linear));
             assert_eq!(process_ws(&dump_linear(&linear),linearized_options),process_ws(linearized_correct,linearized_options));

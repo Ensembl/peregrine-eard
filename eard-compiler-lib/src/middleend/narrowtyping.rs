@@ -1,5 +1,5 @@
 use std::{collections::{HashMap, BTreeSet, HashSet}, mem, fmt};
-use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{linear::{LinearStatement, LinearStatementValue}, checkstypes::{AtomicTypeSpec, TypeSpec, TypeRestriction}, codeblocks::CodeArgument}, controller::source::ParsePosition, util::equiv::EquivalenceClass};
+use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{linear::{LinearStatement, LinearStatementValue}, checkstypes::{AtomicTypeSpec, TypeSpec, TypeRestriction, intersect_restrictions}, codeblocks::CodeArgument}, controller::source::ParsePosition, util::equiv::EquivalenceClass};
 
 #[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
 pub(crate) enum NarrowType {
@@ -28,28 +28,8 @@ impl fmt::Debug for NarrowType {
     }
 }
 
-fn add_sequences(output: &mut HashSet<TypeRestriction>, input: &HashSet<TypeRestriction>) {
-    output.extend(input.iter().filter(|r| {
-        match r {
-            TypeRestriction::Sequence(_) => true,
-            _ => false
-        }
-    }).cloned())
-}
-
-fn intersect_restrictions(a: &HashSet<TypeRestriction>, b: &HashSet<TypeRestriction>) -> HashSet<TypeRestriction> {
-    let mut out = HashSet::new();
-    let a_any = a.contains(&TypeRestriction::AnySequence);
-    let b_any = b.contains(&TypeRestriction::AnySequence);
-    if a_any && b_any { out.insert(TypeRestriction::AnySequence); }
-    if a_any { add_sequences(&mut out,b); }
-    if b_any { add_sequences(&mut out,a); }
-    out.extend(a.intersection(b).cloned());
-    out
-}
-
 #[derive(Clone,Debug)]
-struct AtomPoss {
+struct NarrowPoss {
     sequence: bool,
     atom: bool,
     number: bool,
@@ -60,7 +40,7 @@ struct AtomPoss {
     restrictions: Option<HashSet<TypeRestriction>>
 }
 
-impl AtomPoss {
+impl NarrowPoss {
     fn apply_restrs(&self, narrow: &NarrowType) -> bool {
         if let Some(restrs) = &self.restrictions {
             for restr in restrs {
@@ -97,8 +77,8 @@ impl AtomPoss {
         return Err(format!("cannot deduce type/A"));
     }
 
-    fn any() -> AtomPoss {
-        AtomPoss { 
+    fn any() -> NarrowPoss {
+        NarrowPoss { 
             sequence: true, atom: true,
             number: true, string: true, boolean: true, any_handle: true, 
             specific_handles: BTreeSet::new(),
@@ -106,8 +86,8 @@ impl AtomPoss {
         }
     }
 
-    fn none() -> AtomPoss {
-        AtomPoss { 
+    fn none() -> NarrowPoss {
+        NarrowPoss { 
             sequence: false, atom: false,
             number: false, string: false, boolean: false, any_handle: false, 
             specific_handles: BTreeSet::new(),
@@ -131,7 +111,7 @@ impl AtomPoss {
         if self.check_valid_bool() { Ok(()) } else { Err(format!("cannot deduce type/B")) }
     }
 
-    fn atom_to_seq(&self) -> Result<AtomPoss,String> {
+    fn atom_to_seq(&self) -> Result<NarrowPoss,String> {
         let mut out = self.clone();
         if !self.atom { return Err(format!("cannot deduce type")); }
         out.atom = false;
@@ -150,7 +130,7 @@ impl AtomPoss {
         Ok(out)
     }
 
-    fn seq_to_atom(&self) -> Result<AtomPoss,String> {
+    fn seq_to_atom(&self) -> Result<NarrowPoss,String> {
         let mut out = self.clone();
         if !self.sequence { return Err(format!("cannot deduce type/C")); }
         out.sequence = false;
@@ -218,7 +198,7 @@ impl AtomPoss {
         Ok(())
     }
 
-    fn unify(&mut self, other: &AtomPoss) -> Result<(),String> {
+    fn unify(&mut self, other: &NarrowPoss) -> Result<(),String> {
         self.sequence &= other.sequence;
         self.atom &= other.atom;
         self.number &= other.number;
@@ -284,7 +264,7 @@ struct NarrowTyping<'a> {
     bt: &'a BuildTree,
     block_index: &'a HashMap<usize,usize>,
     position: ParsePosition,
-    possible: HashMap<usize,AtomPoss>,
+    possible: HashMap<usize,NarrowPoss>,
     equivs: EquivalenceClass<usize>,
     seen: HashSet<usize>
 }
@@ -300,10 +280,10 @@ impl<'a> NarrowTyping<'a> {
         }
     }
 
-    fn poss_for_reg(&mut self, reg: usize) -> &mut AtomPoss {
+    fn poss_for_reg(&mut self, reg: usize) -> &mut NarrowPoss {
         self.seen.insert(reg);
         let reg = self.equivs.canon(reg);
-        self.possible.entry(reg).or_insert_with(|| AtomPoss::any())
+        self.possible.entry(reg).or_insert_with(|| NarrowPoss::any())
     }
 
     fn arg(&mut self, ties: &mut HashMap<String,Vec<(bool,usize)>>, spec: &CodeArgument, reg: usize) -> Result<(),String> {
@@ -346,8 +326,8 @@ impl<'a> NarrowTyping<'a> {
         }
         /* manage ties */
         for (_,tied) in ties.drain() {
-            let mut wc = AtomPoss::any();
-            let mut swc = AtomPoss::any();
+            let mut wc = NarrowPoss::any();
+            let mut swc = NarrowPoss::any();
             let mut seen_sw = false;
             for (sw,reg) in &tied {
                 if *sw { seen_sw = true; }
@@ -375,8 +355,8 @@ impl<'a> NarrowTyping<'a> {
             LinearStatementValue::Type(reg,restrs) => {
                 self.poss_for_reg(*reg).restrict_by_type(restrs)?;
             },
-            LinearStatementValue::WildEquiv(regs) => {
-                let mut poss = AtomPoss::any();
+            LinearStatementValue::SameType(regs) => {
+                let mut poss = NarrowPoss::any();
                 for reg in regs {
                     poss.unify(&self.poss_for_reg(*reg))?;
                 }

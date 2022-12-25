@@ -66,7 +66,7 @@ impl<'a> EardCompilation<'a> {
         let verbose = self.compiler.verbose();
         let bundles = build_unbundle(&tree)?;
         let (linear,mut allocator,metadata) = linearize(&tree,&bundles,verbose)?;
-        let linear = reduce(&linear,verbose);
+        let linear = reduce(&linear,verbose)?;
         let (mut broad,block_indexes) = broad_type(&tree,&linear)?;
         let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad,verbose)?;
         let mut narrow = narrow_type(&tree,&block_indexes,&linear)?;

@@ -9,7 +9,8 @@ pub(crate) enum LinearStatementValue {
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
     Type(usize,Vec<TypeRestriction>),
-    WildEquiv(Vec<usize>),
+    Signature(Vec<(usize,Vec<TypeRestriction>)>),
+    SameType(Vec<usize>),
     Entry(String)
 }
 
@@ -26,7 +27,13 @@ impl LinearStatementValue {
                 format!("r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
             },
             Self::Type(v, c) => format!("r{:?} <type> {:?}",v,c),
-            Self::WildEquiv(r) => format!("<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
+            Self::SameType(r) => format!("<same-type> {}",sepfmt(&mut r.iter(),", ","r")),
+            Self::Signature(r) => {
+                let sig = r.iter().map(|(reg,retrs)| {
+                    format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))
+                }).collect::<Vec<_>>();
+                format!("<sig> {}",sig.join("\n"))
+            },
             Self::Constant(v,c) => format!("r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => format!("r{:?} <copy-from> r{:?}",*to,*from),
             Self::Code(call,name,rets,args) => {
@@ -46,7 +53,13 @@ impl fmt::Debug for LinearStatementValue {
                 write!(f,"r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
             },
             Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
-            Self::WildEquiv(r) => write!(f,"<wild-equiv> {}",sepfmt(&mut r.iter(),", ","r")),
+            Self::SameType(r) => write!(f,"<same-type> {}",sepfmt(&mut r.iter(),", ","r")),
+            Self::Signature(r) => {
+                let sig = r.iter().map(|(reg,retrs)| {
+                    format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))
+                }).collect::<Vec<_>>();
+                write!(f,"<sig> {}",sig.join("\n"))
+            },
             Self::Constant(v,c) => write!(f,"r{:?} <constant> {:?}",v,c),
             Self::Copy(to,from) => write!(f,"r{:?} <copy-from> r{:?}",*to,*from),
             Self::Code(call,name,rets,args) => {

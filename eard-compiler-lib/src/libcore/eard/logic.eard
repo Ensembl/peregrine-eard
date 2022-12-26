@@ -138,6 +138,27 @@ fold(libcore__or) code __code_or(seq(boolean),seq(boolean)) -> seq(boolean) {
     }
 }
 
+fold(libcore__any) code __code_any(seq(boolean)) -> boolean {
+    impl (r1: seq(boolean)) -> r2 : boolean {
+        opcode 116, r2, r1;
+    }
+}
+
+fold(libcore__all) code __code_all(seq(boolean)) -> boolean {
+    impl (r1: seq(boolean)) -> r2 : boolean {
+        opcode 117, r2, r1;
+    }
+}
+
+fold(libcore__position) code __code_position(seq(boolean)) -> seq(number) {
+    impl (r1: seq(boolean)) -> r2: boolean {
+        opcode 118, r2, r1;
+    }
+}
+
 export function __operator_not(a) { let y = __code_not(a); y }
 export function __operator_and(a,b) { let y = __code_and(a,b); y }
 export function __operator_or(a,b) { let y = __code_or(a,b); y }
+export function any(a) { let z = __code_any(a); z }
+export function all(a) { let z = __code_all(a); z }
+export function position(a) { let z = __code_position(a); z }

@@ -55,3 +55,12 @@ pub(crate) fn to_string(input: &[Constant]) -> Option<Vec<String>> {
         }
     }).collect::<Option<Vec<_>>>()
 }
+
+pub(crate) fn to_boolean(input: &[Constant]) -> Option<Vec<bool>> {
+    input.iter().map(|idx| {
+        match idx {
+            Constant::Boolean(b) => Some(*b),
+            _ => None
+        }
+    }).collect::<Option<Vec<_>>>()
+}

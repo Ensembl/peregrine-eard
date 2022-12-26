@@ -1,6 +1,6 @@
 use crate::model::constants::{FullConstant, Constant};
 use ordered_float::OrderedFloat;
-use super::util::{ arm, seq_flex, seq_flex_un};
+use super::util::{ arm, seq_flex, seq_flex_un, to_boolean};
 
 macro_rules! number_pred {
     ($pred:expr,$a:expr,$b:expr) => {{
@@ -175,4 +175,34 @@ pub(crate) fn fold_eq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstan
     } else {
         None
     }
+}
+
+pub(crate) fn fold_any(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(s))) = inputs.get(0) {
+        if let Some(b) = to_boolean(s) {
+            return Some(vec![FullConstant::Atomic(Constant::Boolean(b.iter().any(|b| *b)))]);
+        }
+    }
+    None
+}
+
+pub(crate) fn fold_all(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(s))) = inputs.get(0) {
+        if let Some(b) = to_boolean(s) {
+            return Some(vec![FullConstant::Atomic(Constant::Boolean(b.iter().all(|b| *b)))]);
+        }
+    }
+    None
+}
+
+pub(crate) fn fold_position(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(s))) = inputs.get(0) {
+        if let Some(b) = to_boolean(s) {
+            let pos = b.iter().enumerate().filter_map(|(i,p)| {
+                if *p { Some(Constant::Number(OrderedFloat(i as f64))) } else { None }
+            }).collect();
+            return Some(vec![FullConstant::Finite(pos)]);
+        }
+    }
+    None
 }

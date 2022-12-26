@@ -1,0 +1,69 @@
+fold(libcore__join) code __code_join(string,seq(string)) -> string {
+    impl (r1: string, r2: seq(string)) -> r3: string {
+        opcode 106, r2, r1;
+    }
+}
+
+fold(libcore__push_str) code __code_push_str(string,string) -> string {
+    impl (r1: string, r2:string) -> r3: string {
+        opcode 107, r2, r1;
+    }
+}
+
+fold(libcore__push_str) code __code_push_str(seq(string),string) -> string {
+    impl (r1: seq(string), r2:string) -> r3: seq(string) {
+        opcode 108, r2, r1;
+    }
+}
+
+fold(libcore__split) code __code_split(string,string) -> seq(string) {
+    impl (r1: string, r2:string) -> r3: string {
+        opcode 109, r2, r1;
+    }
+}
+
+code __code_split_start(string,seq(string)) -> handle(split) {
+    impl (r1: string, r2: seq(string)) -> r3: handle(split) {
+        opcode 111, r3, r2, r1;
+    }
+}
+
+code __code_split_get(handle(split), number) -> seq(string) {
+    impl (r1: handle(split), r2: number) -> r3: seq(string) {
+        opcode 112, r3, r1, r2;
+    }
+}
+
+code __code_template_start(string) -> handle(template) {
+    impl (r1: string) -> r2: handle(template) {
+        opcode 113, r2, r1;
+    }
+}
+
+world code __code_template_set(handle(template), number, seq(string)) {
+    impl (r1: handle(template), r2: number, r3: seq(string)) {
+        opcode 114, r1, r2, r3;
+    }
+}
+
+code __code_template_end(handle(template)) -> seq(string) {
+    impl (r1: handle(template)) -> r2: string {
+        opcode 115, r2, r1;
+    }
+}
+
+fold(libcore__template) code __code_template(string,seq(string)) -> string {
+    impl (r1: string, r2: seq(string)) -> r3: string {
+        opcode 110, r3, r1, r2;
+    }
+}
+
+export function join(sep,parts) { let out = __code_join(sep,parts); out }
+export function push_str(input,value) { let out = __code_push_str(input,value); out }
+export function split(sep,input) { let out = __code_split(sep,input); out }
+export function split_start(sep,input) { let out = __code_split_start(sep,input); out }
+export function split_get(split,pos) { let out = __code_split_get(split,pos); out }
+export function template_start(pattern) { let out = __code_template_start(pattern); out }
+export procedure template_set(tmpl,pos,values) { __code_template_set(tmpl,pos,values); }
+export function template_end(tmpl) { let out = __code_template_end(tmpl); out }
+export function template(pattern,values) { let out = __code_template(pattern,values); out }

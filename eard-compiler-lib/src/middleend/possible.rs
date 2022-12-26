@@ -82,7 +82,7 @@ impl NarrowPoss {
     }
 
     fn check_valid(&self) -> Result<(),String> {
-        eprintln!("{:?}",self);
+        //eprintln!("{:?}",self);
         if self.check_valid_bool() { Ok(()) } else { Err(format!("cannot deduce type/B")) }
     }
 

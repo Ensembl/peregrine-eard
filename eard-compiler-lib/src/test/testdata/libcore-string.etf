@@ -1,0 +1,241 @@
+>> test
+
+join fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(join(",",[]));
+c(join(",",[""]));
+c(join(",",["1","2","3"]));
+
+>> generate strip
+
+r1 <- ""
+opcode 999, r0, r1
+opcode 999, r0, r1
+r1 <- "1,2,3"
+opcode 999, r0, r1
+
+>> test
+
+join no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(join(",",c([])));
+c(join(",",c([""])));
+c(join(",",c(["1","2","3"])));
+
+>> generate strip
+
+r1 <- []
+opcode 999, r2, r1
+r1 <- ","
+opcode 106, r2, r1
+opcode 999, r0, r3
+r2 <- [""]
+opcode 999, r3, r2
+opcode 106, r3, r1
+opcode 999, r0, r2
+r2 <- ["1","2","3"]
+opcode 999, r3, r2
+opcode 106, r3, r1
+opcode 999, r0, r2
+
+>> test
+
+push_str fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(push_str("a","b"));
+c(push_str(["a","b","c"],"z"));
+
+>> generate strip
+
+r1 <- "ab"
+opcode 999, r0, r1
+r1 <- ["az","bz","cz"]
+opcode 999, r0, r1
+
+>> test
+
+push_str no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(push_str("a",c("b")));
+c(push_str(["a","b","c"],c("z")));
+
+>> generate strip
+
+r1 <- "b"
+opcode 999, r2, r1
+r1 <- "a"
+opcode 107, r2, r1
+opcode 999, r0, r3
+r2 <- "z"
+opcode 999, r3, r2
+r1 <- ["a","b","c"]
+opcode 108, r3, r1
+opcode 999, r0, r2
+
+>> test
+
+split fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(split("/","1/2/3/4"));
+
+>> generate strip
+
+r1 <- ["1","2","3","4"]
+opcode 999, r0, r1
+
+>> test
+
+split no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(split("/",c("1/2/3/4")));
+
+>> generate strip
+
+r1 <- "1/2/3/4"
+opcode 999, r2, r1
+r1 <- "/"
+opcode 109, r2, r1
+opcode 999, r0, r3
+
+>> test
+
+split parts
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let s = split_start("/",["a/b/c","x/y/z"]);
+let first = split_get(s,0);
+c(first);
+
+>> generate strip
+
+r1 <- "/"
+r2 <- ["a/b/c","x/y/z"]
+opcode 111, r3, r2, r1
+r1 <- 0
+opcode 112, r2, r3, r1
+opcode 999, r0, r2
+
+>> test
+
+template parts
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let t = template_start("hello: {0}. goodbye: {1}");
+template_set(t,0,["a","b","c"]);
+template_set(t,1,["x","y","z"]);
+c(template_end(t));
+
+>> generate strip
+
+r1 <- "hello: {0}. goodbye: {1}"
+opcode 113, r2, r1
+opcode 115, r1, r2
+r3 <- 0
+r4 <- ["a","b","c"]
+opcode 114, r2, r3, r4
+r3 <- 1
+r4 <- ["x","y","z"]
+opcode 114, r2, r3, r4
+opcode 999, r0, r1
+
+>> test
+
+template fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(template("hello, {0}",["world"]));
+c(template("hello, {0}{{}}; goodnight {{{1}}}",["world","moon"]));
+
+>> generate strip
+
+r1 <- "hello, world"
+opcode 999, r0, r1
+r1 <- "hello, world{}; goodnight {moon}"
+opcode 999, r0, r1
+
+>> test
+
+template no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(template(c("hello, {0}"),["world"]));
+c(template(c("hello, {0}{{}}; goodnight {{{1}}}"),["world","moon"]));
+
+>> generate strip
+
+r1 <- "hello, {0}"
+opcode 999, r2, r1
+r1 <- ["world"]
+opcode 110, r3, r2, r1
+opcode 999, r0, r3
+r2 <- "hello, {0}{{}}; goodnight {{{1}}}"
+opcode 999, r3, r2
+r2 <- ["world","moon"]
+opcode 110, r1, r3, r2
+opcode 999, r0, r1

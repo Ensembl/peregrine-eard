@@ -110,6 +110,11 @@ fn test_libcore_logic() {
 }
 
 #[test]
+fn test_libcore_string() {
+    run_parse_tests(include_str!("testdata/libcore-string.etf"),true,false);
+}
+
+#[test]
 fn test_reorder() {
     run_parse_tests(include_str!("testdata/reorder.etf"),true,false);
 }

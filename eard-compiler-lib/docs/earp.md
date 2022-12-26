@@ -102,8 +102,8 @@ With the addition of some helpful primitives this allows operations to be perfor
 
 Working out the right sequence of these three functions can be fiddly, but there are only three and what each does is easy to understand: think of how complex SQL queris and maps and filters can become in other languages. These functions alone can express things like "for genes of biotype protein_coding with more than one transcript, for any exons in the first transcript to display, set the colour to black".
 
-* `lookup` lookup value of sequenceat offsets given to make new sequence.
-* `count_to_index` takes a sequence of counts and replaces them with that many of an increasing integer, staring at zero. eg `[2,1,3,0,1]` -> `[0,0,1,2,2,2,4]`: 2 zeros, 1 one, 3 twos, 0 threes and 1 four.
+* `index` lookup value of sequenceat offsets given to make new sequence.
+* `count` takes a sequence of counts and replaces them with that many of an increasing integer, staring at zero. eg `[2,1,3,0,1]` -> `[0,0,1,2,2,2,4]`: 2 zeros, 1 one, 3 twos, 0 threes and 1 four.
 * `enumerate` takes a similar seqeunce of counts but for each value resets to zero. eg `[2,1,3,0,1]` -> `[0,1,0,0,1,2,0]`: a seeuqnce of length two `[0,1,`... a sequence of length 1 ...`0,`..., a sequence of length 3, ...`0,1,2`..., a sequence of length zero, and a sequence of length 1 `,0]`.
 
 For example say you have three genes, 'X', 'Y', and 'Z', of which 'X' and 'Z' are 'major' and Y is not, and which have 1, 4, and 2 transcripts respectively, for transcripts named A..G.

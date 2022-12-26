@@ -65,6 +65,24 @@ fold(libcore__index) code __code_index(seq(?X), number) -> ?X {
     }
 }
 
+fold(libcore__index) code __code_index(seq(?X), seq(number)) -> seq(?X) {
+    impl (r1: seq(?X), r2: seq(number)) -> r3: seq(?X) {
+        opcode 103, r3, r1, r2;
+    }
+}
+
+fold(libcore__count) code __code_count(seq(number)) -> seq(number) {
+    impl (r1: seq(number)) -> r2: seq(number) {
+        opcode 104, r2, r1;
+    }
+}
+
+fold(libcore__enumerate) code __code_enumerate(seq(number)) -> seq(number) {
+    impl (r1: seq(number)) -> r2: seq(number) {
+        opcode 105, r2, r1;
+    }
+}
+
 export function if(p,a,b) { let z = __code_if(p,a,b); z }
 export function set(p,x) { let z = __code_set(p,x); z }
 export function set_skip(p,x) { let z = __code_set_skip(p,x); z }
@@ -72,3 +90,5 @@ export function set_at(p,x) { let z = __code_set_at(p,x); z }
 export function set_from(p,x) { let z = __code_set_from(p,x); z }
 export function repeat(d,n) { let z = __code_repeat(d,n); z }
 export function index(s,i) { let z = __code_index(s,i); z }
+export function count(x) { let z = __code_count(x); z }
+export function enumerate(x) { let z = __code_enumerate(x); z }

@@ -17,6 +17,8 @@ mod frontend {
 
 mod libcore {
     pub(crate) mod libcore;
+    mod util;
+    mod foldstring;
     mod foldseq;
     mod foldmaths;
 }

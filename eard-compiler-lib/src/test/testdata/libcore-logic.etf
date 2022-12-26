@@ -906,6 +906,7 @@ function c(x) { let y = wc(x); y }
 let x = [2,4,6,8,10,12,14,16];
 c(index(x,2));
 c(index(x,5));
+c(index(x,[0,1,3,7]));
 
 >> generate strip
 
@@ -913,3 +914,92 @@ r1 <- 6
 opcode 999, r0, r1
 r1 <- 12
 opcode 999, r0, r1
+r1 <- [2,4,8,16]
+opcode 999, r0, r1
+
+>> test
+
+index no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c([2,4,6,8,10,12,14,16]);
+c(index(x,2));
+c(index(x,5));
+c(index(x,[0,1,3,7]));
+
+>> generate strip
+
+r1 <- [2,4,6,8,10,12,14,16]
+opcode 999, r2, r1
+r1 <- 2
+opcode 102, r3, r2, r1
+opcode 999, r0, r3
+r3 <- 5
+opcode 102, r1, r2, r3
+opcode 999, r0, r1
+r1 <- [0,1,3,7]
+opcode 103, r3, r2, r1
+opcode 999, r0, r3
+
+>> test
+
+count fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(count([2,1,3,0,1]));
+
+>> generate strip
+
+r1 <- [0,0,1,2,2,2,4]
+opcode 999, r0, r1
+
+>> test
+
+enumerate fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(enumerate([2,1,3,0,1]));
+
+>> generate strip
+
+r1 <- [0,1,0,0,1,2,0]
+opcode 999, r0, r1
+
+>> test
+
+enumerate no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(enumerate(c([2,1,3,0,1])));
+
+>> generate strip
+
+r1 <- [2,1,3,0,1]
+opcode 999, r2, r1
+opcode 105, r1, r2
+opcode 999, r0, r1
+

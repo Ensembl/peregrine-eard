@@ -2,6 +2,8 @@ use ordered_float::OrderedFloat;
 
 use crate::model::constants::{FullConstant, Constant};
 
+use super::util::to_usize;
+
 pub(super) fn fold_infseq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let Some(Some(FullConstant::Atomic(x))) = inputs.get(0) {
         Some(vec![FullConstant::Infinite(x.clone())])
@@ -104,6 +106,44 @@ pub(super) fn fold_index(inputs: &[Option<FullConstant>]) -> Option<Vec<FullCons
                (inputs.get(0),inputs.get(1)) {
         if let Some(value) = ff.get(n.0 as usize) {
             return Some(vec![FullConstant::Atomic(value.clone())]);
+        }
+    }
+    if let (Some(Some(FullConstant::Finite(ff))),
+            Some(Some(FullConstant::Finite(idxs)))) = 
+               (inputs.get(0),inputs.get(1)) {
+        if let Some(idxs) = to_usize(idxs) {
+            let values = idxs.iter().map(|idx| ff.get(*idx).cloned()).collect::<Option<Vec<_>>>();
+            if let Some(values) = values {
+                return Some(vec![FullConstant::Finite(values)]);
+            }
+        }
+    }
+    None
+}
+
+pub(super) fn fold_count(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(idxs))) = inputs.get(0) {
+        if let Some(idxs) = to_usize(idxs) {
+            let mut out = vec![];
+            for (i,num) in idxs.iter().enumerate() {
+                out.append(&mut vec![Constant::Number(OrderedFloat(i as f64));*num]);
+            }
+            return Some(vec![FullConstant::Finite(out)]);
+        }
+    }
+    None
+}
+
+pub(super) fn fold_enumerate(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(idxs))) = inputs.get(0) {
+        if let Some(idxs) = to_usize(idxs) {
+            let mut out = vec![];
+            for num in idxs.iter() {
+                for i in 0..*num {
+                    out.push(Constant::Number(OrderedFloat(i as f64)));
+                }
+            }
+            return Some(vec![FullConstant::Finite(out)]);
         }
     }
     None

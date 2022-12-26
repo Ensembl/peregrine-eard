@@ -1,37 +1,6 @@
 use crate::model::constants::{FullConstant, Constant};
 use ordered_float::OrderedFloat;
-
-macro_rules! seq_flex {
-    ($a:expr,$b:expr,$f0:ident,$f1:ident,$f2:ident) => {
-        match ($a,$b) {
-            (FullConstant::Atomic(a), FullConstant::Atomic(b)) => FullConstant::Atomic($f0(a,b)),
-            (FullConstant::Atomic(a), FullConstant::Finite(b)) => FullConstant::Finite($f1(b,a)),
-            (FullConstant::Atomic(a), FullConstant::Infinite(b)) => FullConstant::Infinite($f0(a,b)),
-            (FullConstant::Finite(a), FullConstant::Atomic(b)) => FullConstant::Finite($f1(a,b)),
-            (FullConstant::Finite(a), FullConstant::Finite(b)) => FullConstant::Finite($f2(a,b)),
-            (FullConstant::Finite(a), FullConstant::Infinite(b)) => FullConstant::Finite($f1(a,b)),
-            (FullConstant::Infinite(a), FullConstant::Atomic(b)) => FullConstant::Infinite($f0(a,b)),
-            (FullConstant::Infinite(a), FullConstant::Finite(b)) => FullConstant::Finite($f1(b,a)),
-            (FullConstant::Infinite(a), FullConstant::Infinite(b)) => FullConstant::Infinite($f0(a,b)),
-        }
-    };
-}
-
-macro_rules! seq_flex_un {
-    ($a:expr,$f0:ident,$f1:ident) => {
-        match ($a) {
-            FullConstant::Atomic(a) => FullConstant::Atomic($f0(a)),
-            FullConstant::Finite(a) => FullConstant::Finite($f1(a)),
-            FullConstant::Infinite(a) => FullConstant::Infinite($f0(a)),
-        }
-    };
-}
-
-macro_rules! arm {
-    ($ex:expr,$arm:tt) => {
-        match $ex { Constant::$arm(x) => Some(x), _ => None }
-    };
-}
+use super::util::{ arm, seq_flex, seq_flex_un};
 
 macro_rules! number_pred {
     ($pred:expr,$a:expr,$b:expr) => {{
@@ -136,6 +105,7 @@ pub(crate) fn fold_sub(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConsta
         None
     }
 }
+
 pub(crate) fn fold_mul(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
         Some(vec![number_bin!(|a,b| a*b,a,b)])
@@ -143,6 +113,7 @@ pub(crate) fn fold_mul(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConsta
         None
     }
 }
+
 pub(crate) fn fold_div(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
         Some(vec![number_bin!(|a,b| a/b,a,b)])

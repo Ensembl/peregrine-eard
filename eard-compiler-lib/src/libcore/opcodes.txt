@@ -101,3 +101,16 @@
 100 set_from
 101 set_from modify
 102 index
+103 index seq
+104 count
+105 enumerate
+106 concat
+107 push_str
+108 push_str (seq)
+109 split
+110 template
+111 split_start
+112 split_get
+113 template_start
+114 template_set
+115 template_end

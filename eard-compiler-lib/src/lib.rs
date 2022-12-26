@@ -21,6 +21,7 @@ mod libcore {
     mod foldstring;
     mod foldseq;
     mod foldmaths;
+    mod foldconvert;
 }
 
 mod middleend {

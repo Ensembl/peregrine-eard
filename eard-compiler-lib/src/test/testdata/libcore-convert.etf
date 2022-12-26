@@ -1,0 +1,163 @@
+>> test
+
+convert fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(to_boolean(0));
+c(to_boolean(1));
+c(to_boolean([1,2,3]));
+c(to_boolean(""));
+c(to_boolean("hi"));
+c(to_boolean(["","hi","lo"]));
+c(to_boolean(false));
+c(to_boolean(true));
+c(to_boolean([false,true,true]));
+
+c(to_string(0));
+c(to_string(1));
+c(to_string([1,2,3]));
+c(to_string(""));
+c(to_string("hi"));
+c(to_string(["","hi","lo"]));
+c(to_string(false));
+c(to_string(true));
+c(to_string([false,true,true]));
+
+c(to_number(0));
+c(to_number(1));
+c(to_number([1,2,3]));
+c(to_number(""));
+c(to_number("hi"));
+c(to_number(["","hi","lo"]));
+c(to_number(false));
+c(to_number(true));
+c(to_number([false,true,true]));
+
+>> generate strip
+
+r1 <- false
+opcode 999, r0, r1
+r2 <- true
+opcode 999, r0, r2
+r3 <- [true,true,true]
+opcode 999, r0, r3
+opcode 999, r0, r1
+opcode 999, r0, r2
+r3 <- [false,true,true]
+opcode 999, r0, r3
+opcode 999, r0, r1
+opcode 999, r0, r2
+opcode 999, r0, r3
+r1 <- "0"
+opcode 999, r0, r1
+r1 <- "1"
+opcode 999, r0, r1
+r1 <- ["1","2","3"]
+opcode 999, r0, r1
+r2 <- ""
+opcode 999, r0, r2
+r2 <- "hi"
+opcode 999, r0, r2
+r2 <- ["","hi","lo"]
+opcode 999, r0, r2
+r2 <- "false"
+opcode 999, r0, r2
+r2 <- "true"
+opcode 999, r0, r2
+r2 <- ["false","true","true"]
+opcode 999, r0, r2
+r1 <- 0
+opcode 999, r0, r1
+r2 <- 1
+opcode 999, r0, r2
+r2 <- [1,2,3]
+opcode 999, r0, r2
+opcode 999, r0, r1
+opcode 999, r0, r1
+r2 <- [0,0,0]
+opcode 999, r0, r2
+opcode 999, r0, r1
+r1 <- 1
+opcode 999, r0, r1
+r1 <- [0,1,1]
+opcode 999, r0, r1
+
+>> test
+
+convert fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let a = c(0);
+let b = c([1,2,3]);
+
+c(to_boolean(a));
+c(to_boolean(b));
+c(to_boolean(a));
+c(to_boolean(b));
+
+let a = c(0);
+let b = c([1,2,3]);
+
+c(to_string(a));
+c(to_string(b));
+c(to_string(a));
+c(to_string(b));
+
+let a = c(0);
+let b = c([1,2,3]);
+
+c(to_number(a));
+c(to_number(b));
+c(to_number(a));
+c(to_number(b));
+
+>> generate strip
+
+r1 <- 0
+opcode 999, r2, r1
+opcode 125, r1, r2
+opcode 126, r2
+r3 <- [1,2,3]
+opcode 999, r4, r3
+opcode 127, r3, r4
+opcode 128, r4
+opcode 999, r0, r2
+opcode 999, r0, r4
+opcode 999, r0, r1
+opcode 999, r0, r3
+r1 <- 0
+opcode 999, r2, r1
+opcode 133, r3, r2
+opcode 134, r2
+r4 <- [1,2,3]
+opcode 999, r1, r4
+opcode 135, r4, r1
+opcode 136, r1
+opcode 999, r0, r2
+opcode 999, r0, r1
+opcode 999, r0, r3
+opcode 999, r0, r4
+r1 <- 0
+opcode 999, r2, r1
+opcode 129, r3, r2
+opcode 130, r2
+r4 <- [1,2,3]
+opcode 999, r1, r4
+opcode 131, r4, r1
+opcode 132, r1
+opcode 999, r0, r2
+opcode 999, r0, r1
+opcode 999, r0, r3
+opcode 999, r0, r4

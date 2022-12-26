@@ -1,0 +1,63 @@
+fold(libcore__to_boolean) code __code_to_boolean(atom(?X)) -> boolean {
+    impl (r1: ?X) -> r1 {
+        opcode 126, r1;
+    }
+
+    impl (r1: ?X) -> r2: boolean {
+        opcode 125, r2, r1;
+    }
+}
+
+fold(libcore__to_boolean) code __code_to_boolean(seq(?X)) -> seq(boolean) {
+    impl (r1: ?X) -> r1 {
+        opcode 128, r1;
+    }
+
+    impl (r1: ?X) -> r2: boolean {
+        opcode 127, r2, r1;
+    }
+}
+
+fold(libcore__to_number) code __code_to_number(atom(?X)) -> number {
+    impl (r1: ?X) -> r1 {
+        opcode 130, r1;
+    }
+
+    impl (r1: ?X) -> r2: number {
+        opcode 129, r2, r1;
+    }
+}
+
+fold(libcore__to_number) code __code_to_number(seq(?X)) -> seq(number) {
+    impl (r1: ?X) -> r1 {
+        opcode 132, r1;
+    }
+
+    impl (r1: ?X) -> r2: number {
+        opcode 131, r2, r1;
+    }
+}
+
+fold(libcore__to_string) code __code_to_string(atom(?X)) -> string {
+    impl (r1: ?X) -> r1 {
+        opcode 134, r1;
+    }
+
+    impl (r1: ?X) -> r2: string {
+        opcode 133, r2, r1;
+    }
+}
+
+fold(libcore__to_string) code __code_to_string(seq(?X)) -> seq(string) {
+    impl (r1: ?X) -> r1 {
+        opcode 136, r1;
+    }
+
+    impl (r1: ?X) -> r2: string {
+        opcode 135, r2, r1;
+    }
+}
+
+export function to_boolean(a) { let z = __code_to_boolean(a); z }
+export function to_number(a) { let z = __code_to_number(a); z }
+export function to_string(a) { let z = __code_to_string(a); z }

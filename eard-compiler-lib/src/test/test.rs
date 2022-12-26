@@ -115,6 +115,11 @@ fn test_libcore_string() {
 }
 
 #[test]
+fn test_libcore_convert() {
+    run_parse_tests(include_str!("testdata/libcore-convert.etf"),true,false);
+}
+
+#[test]
 fn test_reorder() {
     run_parse_tests(include_str!("testdata/reorder.etf"),true,false);
 }

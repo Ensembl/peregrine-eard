@@ -123,3 +123,15 @@
 122 mod seq(number)/number modify
 123 mod seq(number)/seq(number)
 124 mod seq(number)/seq(number) modify
+125 to_boolean
+126 to_boolean (modify)
+127 to_boolean seq
+128 to_boolean seq (modify)
+129 to_number
+130 to_number (modify)
+131 to_number seq
+132 to_number seq (modify)
+133 to_string
+134 to_string (modify)
+135 to_string seq
+136 to_string seq (modify)

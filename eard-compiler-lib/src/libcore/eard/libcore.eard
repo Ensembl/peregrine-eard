@@ -3,3 +3,4 @@ refer "print";
 refer "sequences";
 refer "cond";
 refer "string";
+refer "convert";

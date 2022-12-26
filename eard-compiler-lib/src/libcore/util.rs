@@ -34,6 +34,14 @@ macro_rules! seq_flex_un {
             FullConstant::Infinite(a) => FullConstant::Infinite($f0(a)),
         }
     };
+
+    ($a:expr,$f0:ident) => {
+        match ($a) {
+            FullConstant::Atomic(a) => FullConstant::Atomic($f0(&a)),
+            FullConstant::Finite(s) => FullConstant::Finite(s.iter().map(|a| $f0(a)).collect() ),
+            FullConstant::Infinite(a) => FullConstant::Infinite($f0(&a)),
+        }
+    };
 }
 
 pub(crate) use seq_flex_un;

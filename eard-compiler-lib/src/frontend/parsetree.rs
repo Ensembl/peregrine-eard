@@ -205,6 +205,12 @@ impl PTProcDef {
     }
 }
 
+#[derive(Clone)]
+pub enum ImplArgModifier {
+    Large,
+    Sparse
+}
+
 #[derive(Debug,Clone)]
 pub struct PTStatement {
     pub value: PTStatementValue,

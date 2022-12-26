@@ -54,7 +54,7 @@ code __code_set_from(seq(number), seq(?X)) -> seq(?X) {
 }
 
 fold(libcore__repeat) code __code_repeat(?X, number) -> seq(?X) {
-    impl (r1: ?X, r2: number) -> r3: seq(?X) {
+    impl (r1: ?X, r2: number) -> r3: large seq(?X) {
         opcode 50, r3, r1, r2;
     }
 }
@@ -66,19 +66,19 @@ fold(libcore__index) code __code_index(seq(?X), number) -> ?X {
 }
 
 fold(libcore__index) code __code_index(seq(?X), seq(number)) -> seq(?X) {
-    impl (r1: seq(?X), r2: seq(number)) -> r3: seq(?X) {
+    impl (r1: sparse seq(?X), r2: seq(number)) -> r3: seq(?X) {
         opcode 103, r3, r1, r2;
     }
 }
 
 fold(libcore__count) code __code_count(seq(number)) -> seq(number) {
-    impl (r1: seq(number)) -> r2: seq(number) {
+    impl (r1: seq(number)) -> r2: large seq(number) {
         opcode 104, r2, r1;
     }
 }
 
 fold(libcore__enumerate) code __code_enumerate(seq(number)) -> seq(number) {
-    impl (r1: seq(number)) -> r2: seq(number) {
+    impl (r1: seq(number)) -> r2: large seq(number) {
         opcode 105, r2, r1;
     }
 }

@@ -81,15 +81,15 @@ fold(libcore__finseq) code __code_finseq() -> seq(?X) {
  */
 
 fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
-    impl (r1: seq(number)) -> r2 : number {
+    impl (r1: sparse seq(number)) -> r2 : number {
         opcode 5, r2, r1;
     }
 
-    impl (r1: seq(string)) -> r2 : number {
+    impl (r1: sparse seq(string)) -> r2 : number {
         opcode 45, r2, r1;
     }
 
-    impl (r1: seq(boolean)) -> r2 : number {
+    impl (r1: sparse seq(boolean)) -> r2 : number {
         opcode 55, r2, r1;
     }
 

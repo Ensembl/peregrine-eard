@@ -1,5 +1,5 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{checkstypes::{Check, TypeSpec}, constants::{FullConstant, Constant}, compiled::Opcode}, middleend::{narrowtyping::NarrowType, broadtyping::BroadType}, test::testutil::sepfmt};
+use crate::{model::{checkstypes::{Check, TypeSpec}, constants::{FullConstant, Constant}, compiled::Opcode}, middleend::{narrowtyping::NarrowType, broadtyping::BroadType}, test::testutil::sepfmt, frontend::parsetree::ImplArgModifier};
 
 #[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
@@ -38,6 +38,7 @@ impl fmt::Debug for CodeArgument {
 #[derive(Clone)]
 pub struct CodeImplVariable {
     pub reg_id: usize,
+    pub modifiers: Vec<ImplArgModifier>,
     pub arg_type: TypeSpec
 }
 

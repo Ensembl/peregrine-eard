@@ -103,7 +103,8 @@ impl_arguments = { (impl_arg_var ~ ("," ~ impl_arg_var)*)? }
 impl_return_var = { (impl_real_arg|register|constant) }
 impl_arg_var = { (impl_real_arg|constant) }
 
-impl_real_arg = { register ~ ":" ~ arg_type }
+impl_arg_modifier = { "large" | "sparse" }
+impl_real_arg = { register ~ ":" ~ impl_arg_modifier* ~ arg_type }
 
 /* code blocks */
 world = { "world" }

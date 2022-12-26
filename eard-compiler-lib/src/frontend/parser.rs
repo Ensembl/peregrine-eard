@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
 use crate::{model::{checkstypes::{CheckType, Check, AtomicTypeSpec, TypeSpec, TypedArgument, ArgTypeSpec}, constants::Constant, compiled::Opcode, codeblocks::{CodeImplArgument, CodeReturn, CodeImplVariable, CodeArgument, ImplBlock, CodeBlock, CodeModifier}}, controller::source::ParsePosition};
-use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, FuncProcModifier }, femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable};
+use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, FuncProcModifier, ImplArgModifier }, femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable};
 
 #[derive(Parser)]
 #[grammar = "frontend/eard.pest"]
@@ -528,11 +528,20 @@ impl EardParser {
         ))
     }
 
+    fn impl_arg_modifier(input: Node) -> PestResult<ImplArgModifier> {
+        Ok(match input.as_str() {
+            "large" => ImplArgModifier::Large,
+            "sparse" => ImplArgModifier::Sparse,
+            _ => { panic!("unexpected impl_arg_modifier"); }
+        })
+    }
+
     fn impl_real_arg(input: Node) -> PestResult<CodeImplVariable> {
         Ok(match_nodes!(input.into_children();
-            [register(r),arg_type(t)] => {
+            [register(r),impl_arg_modifier(m)..,arg_type(t)] => {
                 CodeImplVariable {
                     reg_id: r,
+                    modifiers: m.collect(),
                     arg_type: t
                 }
             }

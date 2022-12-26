@@ -109,3 +109,27 @@ pub(crate) fn fold_template(inputs: &[Option<FullConstant>]) -> Option<Vec<FullC
     }
     None
 }
+
+fn format(input: &Constant) -> String {
+    match input {
+        Constant::Number(n) => format!("{}",n.0),
+        Constant::String(s) => format!("{}",s),
+        Constant::Boolean(b) => format!("{:?}",b),
+    }
+}
+
+pub(crate) fn fold_format(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(value)) = inputs.get(0) {
+        Some(vec![FullConstant::Atomic(Constant::String(match value {
+            FullConstant::Atomic(a) => format(a),
+            FullConstant::Finite(s) => {
+                format!("[{}]",s.iter().map(|a| format(a)).collect::<Vec<_>>().join(","))
+            },
+            FullConstant::Infinite(a) => {
+                format!("[{},...]",format(a))
+            }
+        }))])
+    } else {
+        None
+    }
+}

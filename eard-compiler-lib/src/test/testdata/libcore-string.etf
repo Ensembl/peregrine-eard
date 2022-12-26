@@ -239,3 +239,21 @@ opcode 999, r3, r2
 r2 <- ["world","moon"]
 opcode 110, r1, r3, r2
 opcode 999, r0, r1
+
+>> test
+
+template no fold
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+print(format(1));
+
+>> generate strip
+
+r1 <- "1"
+opcode 8, r1

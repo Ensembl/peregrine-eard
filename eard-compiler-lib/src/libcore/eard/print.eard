@@ -1,10 +1,8 @@
-code __code_format(?X) -> string {
+fold(libcore__format) code __code_format(?X) -> string {
     impl (r1: ?X) -> r2: string {
         opcode 9, r2, r1;
     }
 }
-
-export function format(x: ?X) -> string { let y = __code_format(x); y }
 
 world code __code_print(string) {
     impl (r1: string) {
@@ -12,4 +10,5 @@ world code __code_print(string) {
     }
 }
 
+export function format(x: ?X) -> string { let y = __code_format(x); y }
 export procedure print(x: string) { __code_print(x); }

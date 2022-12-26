@@ -17,17 +17,13 @@ print(format(__test_length(c([]))));
 
 >> generate strip
 
-r1 <- 0
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- 1
-opcode 9, r1, r2
+r1 <- "0"
 opcode 8, r1
-r1 <- 2
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- -1
-opcode 9, r1, r2
+r1 <- "1"
+opcode 8, r1
+r1 <- "2"
+opcode 8, r1
+r1 <- "-1"
 opcode 8, r1
 r1 <- []
 opcode 55, r2, r1
@@ -54,26 +50,22 @@ print(format(__test_total([1.3,2])));
 
 >> generate strip
 
-r1 <- 0
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- 1
+r1 <- "0"
+opcode 8, r1
+r1 <- "1"
+opcode 8, r1
+r1 <- "3"
+opcode 8, r1
+r1 <- [1,2]
+opcode 6, r2, r1
 opcode 9, r1, r2
 opcode 8, r1
-r1 <- 3
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- [1,2]
-opcode 6, r1, r2
-opcode 9, r2, r1
-opcode 8, r2
 r1 <- [1,...]
 opcode 6, r2, r1
 opcode 9, r1, r2
 opcode 8, r1
-r1 <- -1
-opcode 9, r2, r1
-opcode 8, r2
+r1 <- "-1"
+opcode 8, r1
 
 >> test
 
@@ -95,26 +87,22 @@ print(format(__test_bound([1.3,2])));
 
 >> generate strip
 
-r1 <- 0
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- 1
+r1 <- "0"
+opcode 8, r1
+r1 <- "1"
+opcode 8, r1
+r1 <- "7"
+opcode 8, r1
+r1 <- [1,2]
+opcode 7, r2, r1
 opcode 9, r1, r2
 opcode 8, r1
-r1 <- 7
-opcode 9, r2, r1
-opcode 8, r2
-r2 <- [1,2]
-opcode 7, r1, r2
-opcode 9, r2, r1
-opcode 8, r2
 r1 <- [1,...]
 opcode 7, r2, r1
 opcode 9, r1, r2
 opcode 8, r1
-r1 <- -1
-opcode 9, r2, r1
-opcode 8, r2
+r1 <- "-1"
+opcode 8, r1
 
 >> test
 

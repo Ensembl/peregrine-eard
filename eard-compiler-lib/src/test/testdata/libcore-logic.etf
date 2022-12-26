@@ -6,14 +6,16 @@ finite sequences
 
 program "test" "test" 1;
 
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
 let a = [1,2,3];
-print(format(a));
+c(a);
 
 >> constfold strip culdesac nolines
 
-sequences:47 r31 <- [1,2,3]
-print:5 r41 (1#5) r31
-print:11  (2#6) r41
+sequences:183 r31 <- [1,2,3]
+test:3 r0 (1#5) r31
 
 >> test
 
@@ -23,13 +25,15 @@ empty sequence
 
 program "test" "test" 1;
 
-print(format([]));
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c([]);
 
 >> constfold strip culdesac nolines
 
-sequences:46 r1 <- []
-print:5 r9 (1#2) r1
-print:11  (2#3) r9
+sequences:182 r1 <- []
+test:5 r0 (1#2) r1
 
 >> test
 
@@ -39,13 +43,15 @@ infinite sequence
 
 program "test" "test" 1;
 
-print(format([true,...]));
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c([true,...]);
 
 >> constfold strip culdesac nolines
 
-sequences:45 r4 <- [true,...]
-print:5 r10 (1#2) r4
-print:11  (2#3) r10
+sequences:181 r4 <- [true,...]
+test:5 r0 (1#2) r4
 
 >> test
 

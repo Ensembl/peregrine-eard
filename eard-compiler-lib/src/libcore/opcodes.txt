@@ -117,3 +117,9 @@
 116 any
 117 all
 118 match
+119 mod number/number
+120 mod number/number modify
+121 mod seq(number)/number
+122 mod seq(number)/number modify
+123 mod seq(number)/seq(number)
+124 mod seq(number)/seq(number) modify

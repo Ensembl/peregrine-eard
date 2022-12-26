@@ -122,6 +122,14 @@ pub(crate) fn fold_div(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConsta
     }
 }
 
+pub(crate) fn fold_mod(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
+        Some(vec![number_bin!(|a,b| a%b,a,b)])
+    } else {
+        None
+    }
+}
+
 pub(crate) fn fold_and(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
         Some(vec![logic_bin!(|a: bool,b| a && b,a,b)])

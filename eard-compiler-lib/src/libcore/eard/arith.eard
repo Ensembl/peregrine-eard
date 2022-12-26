@@ -232,6 +232,64 @@ fold(libcore__div) code __code_div(seq(number),seq(number)) -> seq(number) {
     }
 }
 
+fold(libcore__mod) code __code_mod(number,number) -> number {
+    impl (r1: number, 1) -> r1 {}
+
+    impl (r1: number, 1) -> r2: number {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r1 {
+        opcode 120, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 119, r3, r1, r2;
+    }
+}
+
+fold(libcore__mod) code __code_mod(seq(number),number) -> seq(number) {
+    impl (r1: seq(number), 0) -> r1 {}
+
+    impl (r1: seq(number), 0) -> r2: seq(number) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 122, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: number) -> r3: seq(number) {
+        opcode 121, r3, r1, r2;
+    }
+}
+
+fold(libcore__mod) code __code_mod(number,seq(number)) -> seq(number) {
+    impl (0, r1: seq(number)) -> r1 {}
+
+    impl (0, r1: seq(number)) -> r2: seq(number) {
+        opcode 21, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r1 {
+        opcode 122, r2, r1;
+    }
+
+    impl (r1: number, r2: seq(number)) -> r3: seq(number) {
+        opcode 121, r3, r2, r1;
+    }
+}
+
+fold(libcore__mod) code __code_mod(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 124, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 123, r3, r1, r2;
+    }
+}
+
 fold(libcore__minus) code __code_minus(number) -> number {
     impl (r1: number) -> r1 {
         opcode 69, r1;
@@ -256,4 +314,5 @@ export function __operator_add(a,b) { let y = __code_add(a,b); y }
 export function __operator_sub(a,b) { let y = __code_sub(a,b); y }
 export function __operator_mul(a,b) { let y = __code_mul(a,b); y }
 export function __operator_div(a,b) { let y = __code_div(a,b); y }
+export function __operator_mod(a,b) { let y = __code_mod(a,b); y }
 export function __operator_minus(a) { let y = __code_minus(a); y }

@@ -3,9 +3,10 @@ use crate::controller::{compiler::EardCompiler, compilation::EardCompilation, so
 
 use super::{parsetree::{PTTransformer, PTCall, PTExpression, PTStatement, at}, femodel::OrBundleRepeater};
 
-const INFIX_OPERATORS : [(&'static str,&'static str);12] = [
+const INFIX_OPERATORS : [(&'static str,&'static str);13] = [
     ("*", "__operator_mul"),
     ("/", "__operator_div"),
+    ("%", "__operator_mod"),
     ("+", "__operator_add"),
     ("-", "__operator_sub"),
     (">", "__operator_gt"),

@@ -376,6 +376,66 @@ opcode 999, r0, r2
 
 >> test
 
+mod fold
+
+>> input
+
+program "test" "test" 1;
+
+print(format(4%3));
+
+>> constfold strip culdesac nolines
+
+print:13 r13 <- "1"
+print:14  (1#3) r13
+
+>> test
+
+division no fold modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+c(c(7)%c(2));
+
+>> generate strip
+
+r1 <- 7
+opcode 999, r2, r1
+r1 <- 2
+opcode 999, r3, r1
+opcode 120, r2, r3
+opcode 999, r0, r2
+
+>> test
+
+division no fold no modify
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+let x = c(2);
+let y = c(x%2);
+c(x);
+
+>> generate strip
+
+r1 <- 2
+opcode 999, r2, r1
+opcode 119, r3, r2, r1
+opcode 999, r0, r3
+opcode 999, r0, r2
+
+>> test
+
 maths copy
 
 >> input

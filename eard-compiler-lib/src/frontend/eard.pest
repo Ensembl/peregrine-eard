@@ -121,7 +121,7 @@ opcode_args = { ("," ~ register)* }
 
 /* operators */
 
-infix1 = { "*"|"/" }
+infix1 = { "*"|"/"|"%" }
 infix2 = { "+"|"-" }
 infix3 = { ">="|"<="|">"|"<" }
 infix4 = { "=="|"!=" }

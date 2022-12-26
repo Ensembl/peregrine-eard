@@ -65,7 +65,7 @@ print(format("hi"+3));
 
 >> narrow-fail strip
 
-cannot deduce type/D at arith:255 (called from test:4)
+cannot deduce type/D at arith:313 (called from test:4)
 
 >> test
 

@@ -1,6 +1,9 @@
 special(libcore__call_up) world code __code_call_up() { impl() { opcode 1; } }
 
-refer "maths";
+refer "logic";
+refer "eq";
+refer "ineq";
+refer "arith";
 refer "print";
 refer "sequences";
 refer "cond";

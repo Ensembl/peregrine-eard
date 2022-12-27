@@ -58,14 +58,14 @@ impl<'a> NarrowTyping<'a> {
             TypeSpec::AtomWildcard(w) => {
                 match broad {
                     BroadType::Atomic => {},
-                    BroadType::Sequence => { return Err(format!("cannot unify types")); },
+                    BroadType::Sequence => { return Err(format!("cannot unify types/A")); },
                 }
                 ties.entry(w.to_string()).or_insert(vec![]).push((false,reg));
             },
             TypeSpec::SequenceWildcard(w) => {
                 match broad {
                     BroadType::Sequence => {},
-                    BroadType::Atomic => { return Err(format!("cannot unify types")); },
+                    BroadType::Atomic => { return Err(format!("cannot unify types {}/B",w)); },
                 }
                 ties.entry(w.to_string()).or_insert(vec![]).push((true,reg));
             }
@@ -110,6 +110,7 @@ impl<'a> NarrowTyping<'a> {
             BTTopDefn::Code(c) => c.get_block(block_index),
             _ => { panic!("didn't get code with code index"); }
         };
+        eprintln!("{:?}",block);
         /* arguments */
         let mut ties = HashMap::new();
         for (spec,reg) in block.arguments.iter().zip(args.iter()) {

@@ -8,7 +8,7 @@ fold(libcore__to_boolean) code __code_to_boolean(atom(?X)) -> boolean {
     }
 }
 
-fold(libcore__to_boolean) code __code_to_boolean(seq(?X)) -> seq(boolean) {
+fold(libcore__to_boolean) code __code_to_boolean(seq(?X) length(?X)) -> seq(boolean) length(?X) {
     impl (r1: ?X) -> r1 {
         opcode 128, r1;
     }
@@ -28,7 +28,7 @@ fold(libcore__to_number) code __code_to_number(atom(?X)) -> number {
     }
 }
 
-fold(libcore__to_number) code __code_to_number(seq(?X)) -> seq(number) {
+fold(libcore__to_number) code __code_to_number(seq(?X) length(?X)) -> seq(number) length(?X) {
     impl (r1: ?X) -> r1 {
         opcode 132, r1;
     }
@@ -48,7 +48,7 @@ fold(libcore__to_string) code __code_to_string(atom(?X)) -> string {
     }
 }
 
-fold(libcore__to_string) code __code_to_string(seq(?X)) -> seq(string) {
+fold(libcore__to_string) code __code_to_string(seq(?X) length(?X)) -> seq(string) length(?X) {
     impl (r1: ?X) -> r1 {
         opcode 136, r1;
     }

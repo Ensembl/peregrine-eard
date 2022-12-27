@@ -43,7 +43,6 @@ pub(crate) fn libcore_sources() -> FixedSourceSource {
     FixedSourceSource::new_vec(vec![
         ("libcore",include_str!("eard/libcore.eard")),
         ("sequences",include_str!("eard/sequences.eard")),
-        ("maths",include_str!("eard/maths.eard")),
         ("print",include_str!("eard/print.eard")),
         ("eq",include_str!("eard/eq.eard")),
         ("ineq",include_str!("eard/ineq.eard")),

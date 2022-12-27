@@ -13,7 +13,7 @@ fold(libcore__if) code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
     }
 }
 
-code __code_set(seq(boolean), seq(?X)) -> seq(?X) {
+code __code_set(seq(boolean), seq(?X) length(?X)) -> seq(?X) length(?X) {
     impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
         opcode 95, r2, r1;
     }
@@ -23,7 +23,7 @@ code __code_set(seq(boolean), seq(?X)) -> seq(?X) {
     }
 }
 
-code __code_set_skip(seq(boolean), seq(?X)) -> seq(?X) {
+code __code_set_skip(seq(boolean), seq(?X) length(?X)) -> seq(?X) length(?X) {
     impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
         opcode 97, r2, r1;
     }
@@ -33,7 +33,7 @@ code __code_set_skip(seq(boolean), seq(?X)) -> seq(?X) {
     }
 }
 
-code __code_set_at(seq(number), seq(?X)) -> seq(?X) {
+code __code_set_at(seq(number), seq(?X) length(?X)) -> seq(?X) length(?X) {
     impl (r1: seq(number), r2: seq(?X)) -> r2 {
         opcode 99, r2, r1;
     }
@@ -43,7 +43,7 @@ code __code_set_at(seq(number), seq(?X)) -> seq(?X) {
     }
 }
 
-code __code_set_from(seq(number), seq(?X)) -> seq(?X) {
+code __code_set_from(seq(number), seq(?X) length(?X)) -> seq(?X) length(?X) {
     impl (r1: seq(number), r2: seq(?X)) -> r2 {
         opcode 101, r2, r1;
     }
@@ -65,7 +65,7 @@ fold(libcore__index) code __code_index(seq(?X), number) -> ?X {
     }
 }
 
-fold(libcore__index) code __code_index(sparse seq(?X), seq(number)) -> seq(?X) {
+fold(libcore__index) code __code_index(sparse seq(?X) length(?X), seq(number)) -> seq(?X) length(?X) {
     impl (r1: seq(?X), r2: seq(number)) -> r3: seq(?X) {
         opcode 103, r3, r1, r2;
     }

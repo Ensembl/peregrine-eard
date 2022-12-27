@@ -14,7 +14,7 @@ fold(libcore__add) code __code_add(number,number) -> number {
     }
 }
 
-fold(libcore__add) code __code_add(seq(number),number) -> seq(number) {
+fold(libcore__add) code __code_add(seq(number) length(?X),number) -> seq(number) length(?X) {
     impl (r1: seq(number), 0) -> r1 {}
 
     impl (r1: seq(number), 0) -> r2: seq(number) {
@@ -30,7 +30,7 @@ fold(libcore__add) code __code_add(seq(number),number) -> seq(number) {
     }
 }
 
-fold(libcore__add) code __code_add(number,seq(number)) -> seq(number) {
+fold(libcore__add) code __code_add(number,seq(number) length(?X)) -> seq(number) length(?X) {
     impl (0, r1: seq(number)) -> r1 {}
 
     impl (0, r1: seq(number)) -> r2: seq(number) {
@@ -46,7 +46,7 @@ fold(libcore__add) code __code_add(number,seq(number)) -> seq(number) {
     }
 }
 
-fold(libcore__add) code __code_add(seq(number),seq(number)) -> seq(number) {
+fold(libcore__add) code __code_add(seq(number) length(?X),seq(number)) -> seq(number) length(?X) {
     impl (r1: seq(number), r2: seq(number)) -> r1 {
         opcode 71, r1, r2;
     }
@@ -72,7 +72,7 @@ fold(libcore__sub) code __code_sub(number,number) -> number {
     }
 }
 
-fold(libcore__sub) code __code_sub(seq(number),number) -> seq(number) {
+fold(libcore__sub) code __code_sub(seq(number) length(?X),number) -> seq(number) length(?X) {
     impl (r1: seq(number), 0) -> r1 {}
 
     impl (r1: seq(number), 0) -> r2: seq(number) {
@@ -88,7 +88,7 @@ fold(libcore__sub) code __code_sub(seq(number),number) -> seq(number) {
     }
 }
 
-fold(libcore__sub) code __code_sub(number,seq(number)) -> seq(number) {
+fold(libcore__sub) code __code_sub(number,seq(number) length(?X)) -> seq(number) length(?X) {
     impl (0, r1: seq(number)) -> r1 {}
 
     impl (0, r1: seq(number)) -> r2: seq(number) {
@@ -104,7 +104,7 @@ fold(libcore__sub) code __code_sub(number,seq(number)) -> seq(number) {
     }
 }
 
-fold(libcore__sub) code __code_sub(seq(number),seq(number)) -> seq(number) {
+fold(libcore__sub) code __code_sub(seq(number) length(?X),seq(number)) -> seq(number) length(?X) {
     impl (r1: seq(number), r2: seq(number)) -> r1 {
         opcode 73, r1, r2;
     }
@@ -132,7 +132,7 @@ fold(libcore__mul) code __code_mul(number,number) -> number {
     }
 }
 
-fold(libcore__mul) code __code_mul(seq(number),number) -> seq(number) {
+fold(libcore__mul) code __code_mul(seq(number) length(?X),number) -> seq(number) length(?X) {
     impl (r1: seq(number), 0) -> r1 {}
 
     impl (r1: seq(number), 0) -> r2: number {
@@ -148,7 +148,7 @@ fold(libcore__mul) code __code_mul(seq(number),number) -> seq(number) {
     }
 }
 
-fold(libcore__mul) code __code_mul(number,seq(number)) -> seq(number) {
+fold(libcore__mul) code __code_mul(number,seq(number) length(?X)) -> seq(number) length(?X) {
     impl (0, r1: seq(number)) -> r1 {}
 
     impl (0, r1: seq(number)) -> r2: seq(number) {
@@ -164,7 +164,7 @@ fold(libcore__mul) code __code_mul(number,seq(number)) -> seq(number) {
     }
 }
 
-fold(libcore__mut) code __code_mul(seq(number),seq(number)) -> seq(number) {
+fold(libcore__mut) code __code_mul(seq(number) length(?X),seq(number)) -> seq(number) length(?X) {
     impl (r1: seq(number), r2: seq(number)) -> r1 {
         opcode 75, r1, r2;
     }
@@ -190,7 +190,7 @@ fold(libcore__div) code __code_div(number,number) -> number {
     }
 }
 
-fold(libcore__div) code __code_div(seq(number),number) -> seq(number) {
+fold(libcore__div) code __code_div(seq(number) length(?X),number) -> seq(number) length(?X) {
     impl (r1: seq(number), 0) -> r1 {}
 
     impl (r1: seq(number), 0) -> r2: seq(number) {
@@ -206,7 +206,7 @@ fold(libcore__div) code __code_div(seq(number),number) -> seq(number) {
     }
 }
 
-fold(libcore__div) code __code_div(number,seq(number)) -> seq(number) {
+fold(libcore__div) code __code_div(number,seq(number) length(?X)) -> seq(number) length(?X) {
     impl (0, r1: seq(number)) -> r1 {}
 
     impl (0, r1: seq(number)) -> r2: seq(number) {
@@ -222,7 +222,7 @@ fold(libcore__div) code __code_div(number,seq(number)) -> seq(number) {
     }
 }
 
-fold(libcore__div) code __code_div(seq(number),seq(number)) -> seq(number) {
+fold(libcore__div) code __code_div(seq(number) length(?X),seq(number)) -> seq(number) length(?X) {
     impl (r1: seq(number), r2: seq(number)) -> r1 {
         opcode 77, r1, r2;
     }
@@ -248,7 +248,7 @@ fold(libcore__mod) code __code_mod(number,number) -> number {
     }
 }
 
-fold(libcore__mod) code __code_mod(seq(number),number) -> seq(number) {
+fold(libcore__mod) code __code_mod(seq(number) length(?X),number) -> seq(number) length(?X) {
     impl (r1: seq(number), 0) -> r1 {}
 
     impl (r1: seq(number), 0) -> r2: seq(number) {
@@ -264,7 +264,7 @@ fold(libcore__mod) code __code_mod(seq(number),number) -> seq(number) {
     }
 }
 
-fold(libcore__mod) code __code_mod(number,seq(number)) -> seq(number) {
+fold(libcore__mod) code __code_mod(number,seq(number) length(?X)) -> seq(number) length(?X) {
     impl (0, r1: seq(number)) -> r1 {}
 
     impl (0, r1: seq(number)) -> r2: seq(number) {
@@ -280,7 +280,7 @@ fold(libcore__mod) code __code_mod(number,seq(number)) -> seq(number) {
     }
 }
 
-fold(libcore__mod) code __code_mod(seq(number),seq(number)) -> seq(number) {
+fold(libcore__mod) code __code_mod(seq(number) length(?X),seq(number)) -> seq(number) length(?X) {
     impl (r1: seq(number), r2: seq(number)) -> r1 {
         opcode 124, r1, r2;
     }
@@ -300,7 +300,7 @@ fold(libcore__minus) code __code_minus(number) -> number {
     }
 }
 
-fold(libcore__minus) code __code_minus(seq(number)) -> seq(number) {
+fold(libcore__minus) code __code_minus(seq(number) length(?X)) -> seq(number) length(?X) {
     impl (r1: seq(number)) -> r1 {
         opcode 71, r1;
     }

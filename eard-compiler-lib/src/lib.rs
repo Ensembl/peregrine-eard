@@ -36,6 +36,7 @@ mod middleend {
     pub(crate) mod reorder;
     pub(crate) mod generate;
     pub(crate) mod spill;
+    pub(crate) mod large;
 }
 
 mod model {

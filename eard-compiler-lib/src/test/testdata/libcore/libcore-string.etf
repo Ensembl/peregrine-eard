@@ -256,4 +256,4 @@ print(format(1));
 >> generate strip
 
 r1 <- "1"
-opcode 8, r1
+opcode 137, r1

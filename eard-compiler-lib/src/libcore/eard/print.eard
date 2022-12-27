@@ -1,12 +1,12 @@
 fold(libcore__format) code __code_format(?X) -> string {
     impl (r1: ?X) -> r2: string {
-        opcode 9, r2, r1;
+        opcode 138, r2, r1;
     }
 }
 
 world code __code_print(string) {
     impl (r1: string) {
-        opcode 8, r1;
+        opcode 137, r1;
     }
 }
 

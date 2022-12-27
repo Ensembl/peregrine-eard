@@ -25,13 +25,13 @@ struct Spill<'a> {
     in_use: HashMap<usize,Option<usize>>, // reg -> instr number for const regs still alive
     constants: HashMap<usize,FullConstant>, // reg -> value
     alias: HashMap<usize,usize>, // reg input -> reg output
-    allocator: Allocator,
+    allocator: &'a mut Allocator,
     narrow: &'a mut HashMap<usize,NarrowType>,
     out: Vec<Operation>
 }
 
 impl<'a> Spill<'a> {
-    fn new(allocator: Allocator, narrow: &'a mut HashMap<usize,NarrowType>) -> Spill<'a> {
+    fn new(allocator: &'a mut Allocator, narrow: &'a mut HashMap<usize,NarrowType>) -> Spill<'a> {
         Spill {
             in_use: HashMap::new(),
             constants: HashMap::new(),
@@ -112,7 +112,7 @@ impl<'a> Spill<'a> {
     fn take(self) -> Vec<Operation> { self.out }
 }
 
-pub(crate) fn spill(allocator: Allocator, opers: &[Operation], narrow: &mut HashMap<usize,NarrowType>) -> Vec<Operation> {
+pub(crate) fn spill(allocator: &mut Allocator, opers: &[Operation], narrow: &mut HashMap<usize,NarrowType>) -> Vec<Operation> {
     let mut spill = Spill::new(allocator,narrow);
     for (i,oper) in opers.iter().enumerate() {
         spill.add(i,oper);

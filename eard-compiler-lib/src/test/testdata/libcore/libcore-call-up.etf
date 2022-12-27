@@ -1,0 +1,49 @@
+>> test
+
+call up smoke
+
+>> input
+
+program "test" "test" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 999, r2, r1; } }
+function c(x) { let y = wc(x); y }
+
+world code wg(?X) -> large ?X { impl(r1: ?X) -> r2: ?X { opcode 998, r2, r1; } }
+function g(x) { let y = wg(x); y }
+
+world code ws(sparse ?X, ?X) -> ?X { impl(r1: ?X, r2: ?X) -> r3: ?X { opcode 997, r3, r1, r2; } }
+function s(x,y) { let y = ws(x,y); y }
+
+let a = g([1,2,3]); // a is now large
+let b = c([1,2,3]); // b is not
+c(a);
+let d = a+b; // d is large because a is large
+c(d);
+let e = b+b; // but e is not
+c(e);
+let f = s(a,b); // f is not large because first arg is sparse
+c(f);
+let g = s(b,a); // but g is because second is not
+c(g);
+
+>> generate strip
+
+r1 <- [1,2,3]
+opcode 998, r2, r1
+opcode 1, 
+opcode 999, r3, r1
+opcode 70, r1, r3, r3
+opcode 70, r4, r2, r3
+opcode 1, 
+opcode 999, r0, r2
+opcode 1, 
+opcode 999, r0, r4
+opcode 1, 
+opcode 999, r0, r1
+opcode 997, r1, r2, r3
+opcode 999, r0, r1
+opcode 997, r1, r3, r2
+opcode 1, 
+opcode 999, r0, r1
+opcode 1,

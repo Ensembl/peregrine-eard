@@ -1,5 +1,5 @@
 use std::{fmt, collections::HashMap};
-use crate::{model::{checkstypes::{Check, TypeSpec}, constants::{FullConstant, Constant}, compiled::Opcode}, middleend::{narrowtyping::NarrowType, broadtyping::BroadType}, test::testutil::sepfmt, frontend::parsetree::ImplArgModifier};
+use crate::{model::{checkstypes::{Check, TypeSpec}, constants::{FullConstant, Constant}, compiled::Opcode}, middleend::{narrowtyping::NarrowType, broadtyping::BroadType}, test::testutil::sepfmt, frontend::parsetree::{CodeArgModifier}};
 
 #[derive(Clone,PartialEq,Eq)]
 pub enum CodeModifier {
@@ -22,6 +22,7 @@ impl fmt::Debug for CodeModifier {
 #[derive(Clone)]
 pub struct CodeArgument {
     pub arg_type: TypeSpec,
+    pub modifiers: Vec<CodeArgModifier>,
     pub checks: Vec<Check>
 }
 
@@ -38,7 +39,6 @@ impl fmt::Debug for CodeArgument {
 #[derive(Clone)]
 pub struct CodeImplVariable {
     pub reg_id: usize,
-    pub modifiers: Vec<ImplArgModifier>,
     pub arg_type: TypeSpec
 }
 
@@ -338,6 +338,21 @@ impl CodeBlock {
 
     pub(crate) fn choose_imps(&self, args: &[Option<FullConstant>], narrow: Option<&[NarrowType]>, modify: Option<&Vec<Option<usize>>>) -> Vec<&ImplBlock> {
         self.impls.iter().filter(|imp| imp.unifies(args,narrow,modify)).collect()
+    }
+
+    pub(crate) fn is_large(&self, large_args: &[bool]) -> Result<(bool,Vec<usize>),String> {
+        let mut instr_large = false;
+        for (arg,arg_large) in self.arguments.iter().zip(large_args.iter()) {
+            if *arg_large && !arg.modifiers.contains(&CodeArgModifier::Sparse) { instr_large = true; }
+        }
+        let mut large_regs = vec![];
+        for (i,ret) in self.results.iter().enumerate() {
+            if ret.modifiers.contains(&CodeArgModifier::Large) || instr_large {
+                instr_large = true;
+                large_regs.push(i);
+            }
+        }
+        Ok((instr_large,large_regs))
     }
 }
 

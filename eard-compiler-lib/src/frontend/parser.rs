@@ -1,7 +1,7 @@
 use ordered_float::OrderedFloat;
 use pest_consume::{Parser, Error, match_nodes};
 use crate::{model::{checkstypes::{CheckType, Check, AtomicTypeSpec, TypeSpec, TypedArgument, ArgTypeSpec}, constants::Constant, compiled::Opcode, codeblocks::{CodeImplArgument, CodeReturn, CodeImplVariable, CodeArgument, ImplBlock, CodeBlock, CodeModifier}}, controller::source::ParsePosition};
-use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, FuncProcModifier, ImplArgModifier }, femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable};
+use super::{parsetree::{ PTExpression, PTCall, PTFuncDef, PTProcDef, PTStatement, PTStatementValue, FuncProcModifier, CodeArgModifier }, femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable};
 
 #[derive(Parser)]
 #[grammar = "frontend/eard.pest"]
@@ -489,9 +489,10 @@ impl EardParser {
 
     fn code_arg(input: Node) -> PestResult<CodeArgument> {
         Ok(match_nodes!(input.into_children();
-            [arg_type(t),arg_check(c)..] => {
+            [code_arg_modifiers(m),arg_type(t),arg_check(c)..] => {
                 CodeArgument {
                     arg_type: t,
+                    modifiers: m,
                     checks: c.collect()
                 }
             }
@@ -528,20 +529,27 @@ impl EardParser {
         ))
     }
 
-    fn impl_arg_modifier(input: Node) -> PestResult<ImplArgModifier> {
+    fn code_arg_modifier(input: Node) -> PestResult<CodeArgModifier> {
         Ok(match input.as_str() {
-            "large" => ImplArgModifier::Large,
-            "sparse" => ImplArgModifier::Sparse,
-            _ => { panic!("unexpected impl_arg_modifier"); }
+            "large" => CodeArgModifier::Large,
+            "sparse" => CodeArgModifier::Sparse,
+            _ => { panic!("unexpected code_arg_modifier"); }
         })
+    }
+
+    fn code_arg_modifiers(input: Node) -> PestResult<Vec<CodeArgModifier>> {
+        Ok(match_nodes!(input.into_children();
+            [code_arg_modifier(m)..] => {
+                m.collect()
+            }
+        ))
     }
 
     fn impl_real_arg(input: Node) -> PestResult<CodeImplVariable> {
         Ok(match_nodes!(input.into_children();
-            [register(r),impl_arg_modifier(m)..,arg_type(t)] => {
+            [register(r),arg_type(t)] => {
                 CodeImplVariable {
                     reg_id: r,
-                    modifiers: m.collect(),
                     arg_type: t
                 }
             }

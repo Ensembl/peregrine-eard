@@ -40,7 +40,7 @@ fold(libcore__push) code __code_push(seq(?X), ?X) -> seq(?X) {
 
 fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) { 
     impl (r1: number) -> r2: seq(number) {
-        opcode 1, r2, r1;
+        opcode 8, r2, r1;
     }
 
     impl (r1: string) -> r2: seq(string) {
@@ -53,13 +53,13 @@ fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) {
 
     /* handles */
     impl (r1: ?X) -> r2: seq(?X) {
-        opcode 1, r2, r1;
+        opcode 8, r2, r1;
     }
 }
 
 fold(libcore__finseq) code __code_finseq() -> seq(?X) {
     impl () -> r1: seq(number) { 
-        opcode 2, r1;
+        opcode 9, r1;
     }
 
     impl () -> r1: seq(string) { 
@@ -72,7 +72,7 @@ fold(libcore__finseq) code __code_finseq() -> seq(?X) {
 
     /* handles */
     impl () -> r1: seq(?X) { 
-        opcode 2, r1;
+        opcode 9, r1;
     }
 }
 
@@ -80,16 +80,16 @@ fold(libcore__finseq) code __code_finseq() -> seq(?X) {
  * Checking
  */
 
-fold(libcore__length) special(length) code __code_length(seq(?X)) -> number {
-    impl (r1: sparse seq(number)) -> r2 : number {
+fold(libcore__length) special(length) code __code_length(sparse seq(?X)) -> number {
+    impl (r1: seq(number)) -> r2 : number {
         opcode 5, r2, r1;
     }
 
-    impl (r1: sparse seq(string)) -> r2 : number {
+    impl (r1: seq(string)) -> r2 : number {
         opcode 45, r2, r1;
     }
 
-    impl (r1: sparse seq(boolean)) -> r2 : number {
+    impl (r1: seq(boolean)) -> r2 : number {
         opcode 55, r2, r1;
     }
 

@@ -205,8 +205,8 @@ impl PTProcDef {
     }
 }
 
-#[derive(Clone)]
-pub enum ImplArgModifier {
+#[derive(Clone,PartialEq,Eq)]
+pub enum CodeArgModifier {
     Large,
     Sparse
 }

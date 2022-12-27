@@ -1,13 +1,13 @@
   0 load constant
-  1 infseq number
-  2 finseq number
+  1 call up
+  2 *reserved*
   3 push (non-destructive) number
   4 push (destructive) number
   5 length seq(number) -> number
   6 total seq(number) -> number (sum and positive int check)
   7 bound seq(number) -> number (max and positive int check)  
-  8 print string
-  9 format arbitrary as string
+  8 infseq number
+  9 finseq number
  10 runtime length/length check
  11 runtime total/total check
  12 runtime bound/bound check
@@ -135,3 +135,5 @@
 134 to_string (modify)
 135 to_string seq
 136 to_string seq (modify)
+137 print
+138 format

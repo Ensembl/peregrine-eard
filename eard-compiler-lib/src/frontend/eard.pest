@@ -83,10 +83,12 @@ code_header = {
      code_modifiers ~ "code" ~ identifier ~ "(" ~ code_arguments ~ ")" ~ code_return
 }
 
+code_arg_modifier = { "large" | "sparse" }
+code_arg_modifiers = { code_arg_modifier* }
 code_return =  { ("->" ~ (("(" ~ code_return_arguments ~ ")")|code_arg))? }
 code_return_arguments = _{ code_arg ~ ("," ~ code_arg)* }
 code_arguments = { (code_arg ~ ("," ~ code_arg)*)? }
-code_arg = { arg_type ~ arg_check* }
+code_arg = { code_arg_modifiers ~ arg_type ~ arg_check* }
 
 code_impl = { impl_header ~ "{" ~  opcode_statement? ~ "}" }
 
@@ -103,8 +105,7 @@ impl_arguments = { (impl_arg_var ~ ("," ~ impl_arg_var)*)? }
 impl_return_var = { (impl_real_arg|register|constant) }
 impl_arg_var = { (impl_real_arg|constant) }
 
-impl_arg_modifier = { "large" | "sparse" }
-impl_real_arg = { register ~ ":" ~ impl_arg_modifier* ~ arg_type }
+impl_real_arg = { register ~ ":" ~ arg_type }
 
 /* code blocks */
 world = { "world" }

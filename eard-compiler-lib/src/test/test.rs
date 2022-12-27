@@ -5,37 +5,37 @@ use super::testharness::run_parse_tests;
 
 #[test]
 fn test_parse_smoke() {
-    run_parse_tests(include_str!("testdata/parser-smoke.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-smoke.etf"),false,false);
 }
 
 #[test]
 fn test_parse_constants() {
-    run_parse_tests(include_str!("testdata/parser-constants.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-constants.etf"),false,false);
 }
 
 #[test]
 fn test_parse_general() {
-    run_parse_tests(include_str!("testdata/parser-general.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-general.etf"),false,false);
 }
 
 #[test]
 fn test_parse_expressions() {
-    run_parse_tests(include_str!("testdata/parser-expressions.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-expressions.etf"),false,false);
 }
 
 #[test]
 fn test_parse_funcproc() {
-    run_parse_tests(include_str!("testdata/parser-funcproc.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-funcproc.etf"),false,false);
 }
 
 #[test]
 fn test_parse_code() {
-    run_parse_tests(include_str!("testdata/parser-code.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/parser-code.etf"),false,false);
 }
 
 #[test]
 fn test_preprocess() {
-    run_parse_tests(include_str!("testdata/preprocess.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/preprocess.etf"),false,false);
 }
 
 #[test]
@@ -51,102 +51,107 @@ fn test_macro_clash() {
 
 #[test]
 fn test_buildtree_smoke() {
-    run_parse_tests(include_str!("testdata/buildtree-smoke.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/buildtree-smoke.etf"),false,false);
 }
 
 #[test]
 fn test_bundle_smoke() {
-    run_parse_tests(include_str!("testdata/bundle-smoke.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/bundle-smoke.etf"),false,false);
 }
 
 #[test]
 fn test_bundle_inch() {
-    run_parse_tests(include_str!("testdata/bundle-inch.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/bundle-inch.etf"),false,false);
 }
 
 #[test]
 fn test_repeat_smoke() {
-    run_parse_tests(include_str!("testdata/repeat-smoke.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/repeat-smoke.etf"),false,false);
 }
 
 #[test]
 fn test_linearize_smoke() {
-    run_parse_tests(include_str!("testdata/linearize-smoke.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/linearize-smoke.etf"),false,false);
 }
 
 #[test]
 fn test_linearize_fail_smoke() {
-    run_parse_tests(include_str!("testdata/linearize-fail.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/linearize-fail.etf"),false,false);
 }
 
 #[test]
 fn test_linearize_code_smoke() {
-    run_parse_tests(include_str!("testdata/linearize-code.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/linearize-code.etf"),false,false);
 }
 
 #[test]
 fn test_capture_smoke() {
-    run_parse_tests(include_str!("testdata/linearize-capture.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/linearize-capture.etf"),false,false);
 }
 
 #[test]
 fn test_types() {
-    run_parse_tests(include_str!("testdata/types.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/types.etf"),true,false);
 }
 
 #[test]
 fn test_const_fold() {
-    run_parse_tests(include_str!("testdata/constfold.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/constfold.etf"),true,false);
 }
 
 #[test]
 fn test_libcore_arith() {
-    run_parse_tests(include_str!("testdata/libcore-arith.etf"),true,false);
+    run_parse_tests(include_str!("testdata/libcore/libcore-arith.etf"),true,false);
 }
 
 #[test]
 fn test_libcore_logic() {
-    run_parse_tests(include_str!("testdata/libcore-logic.etf"),true,false);
+    run_parse_tests(include_str!("testdata/libcore/libcore-logic.etf"),true,false);
 }
 
 #[test]
 fn test_libcore_string() {
-    run_parse_tests(include_str!("testdata/libcore-string.etf"),true,false);
+    run_parse_tests(include_str!("testdata/libcore/libcore-string.etf"),true,false);
 }
 
 #[test]
 fn test_libcore_convert() {
-    run_parse_tests(include_str!("testdata/libcore-convert.etf"),true,false);
+    run_parse_tests(include_str!("testdata/libcore/libcore-convert.etf"),true,false);
 }
 
 #[test]
 fn test_reorder() {
-    run_parse_tests(include_str!("testdata/reorder.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/reorder.etf"),true,false);
 }
 
 #[test]
 fn test_generate() {
-    run_parse_tests(include_str!("testdata/generate.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/generate.etf"),true,false);
 }
 
 #[test]
 fn test_checking() {
-    run_parse_tests(include_str!("testdata/checking.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/checking.etf"),true,false);
 }
 
 #[test]
 fn test_checking_opt() {
-    run_parse_tests(include_str!("testdata/checking-opt.etf"),true,true);
+    run_parse_tests(include_str!("testdata/compiler/checking-opt.etf"),true,true);
 }
 
 #[test]
 fn test_handle() {
-    run_parse_tests(include_str!("testdata/handle.etf"),true,false);
+    run_parse_tests(include_str!("testdata/compiler/handle.etf"),true,false);
 }
 
 #[test]
 fn test_entry() {
-    run_parse_tests(include_str!("testdata/entry.etf"),false,false);
+    run_parse_tests(include_str!("testdata/compiler/entry.etf"),false,false);
+}
+
+#[test]
+fn test_libcore_call_up() {
+    run_parse_tests(include_str!("testdata/libcore/libcore-call-up.etf"),true,false);
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use crate::{ frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac, reuse::reuse, spill::spill, reorder::reorder, generate::generate}, libcore::libcore::libcore_sources, model::{step::Step, compiled::{Metadata, CompiledCode}}};
+use crate::{ frontend::{parsetree::{PTStatement, PTStatementValue}, buildtree::BuildTree, preprocess::preprocess, parser::{parse_eard}}, unbundle::{buildunbundle::build_unbundle, linearize::linearize}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, constfold::const_fold, culdesac::culdesac, reuse::reuse, spill::spill, reorder::reorder, generate::generate, large::large}, libcore::libcore::libcore_sources, model::{step::Step, compiled::{Metadata, CompiledCode}}};
 use super::{compiler::EardCompiler, source::{CombinedSourceSourceBuilder, FixedSourceSource, ParsePosition, CombinedSourceSource, SourceSourceImpl}, compiled::make_program};
 
 pub struct EardCompilation<'a> {
@@ -74,8 +74,11 @@ impl<'a> EardCompilation<'a> {
         let opers = culdesac(tree,&block_indexes,&opers,verbose);
         let opers = reuse(tree,&block_indexes,&opers,verbose)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
-        let opers = spill(allocator,&opers, &mut narrow);
-        let opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+        let opers = spill(&mut allocator,&opers, &mut narrow);
+        let mut opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+        if !self.compiler().has_flag("no-call-up") {
+            opers = large(tree,&block_indexes,&mut allocator,&opers)?;
+        }
         let steps = generate(&tree,&block_indexes,&narrow,&opers,verbose).expect("generate failed");
         Ok((steps,metadata))
     }

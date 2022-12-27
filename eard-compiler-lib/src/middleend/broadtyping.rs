@@ -1,5 +1,5 @@
 use std::{collections::HashMap, fmt};
-use crate::{model::{checkstypes::{TypeSpec, TypeRestriction, AtomicTypeSpec}, linear::{LinearStatementValue, LinearStatement}}, frontend::buildtree::{BuildTree, BTTopDefn}, controller::source::ParsePosition};
+use crate::{model::{checkstypes::{TypeRestriction}, linear::{LinearStatementValue, LinearStatement}}, frontend::buildtree::{BuildTree, BTTopDefn}, controller::source::ParsePosition};
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {
@@ -10,7 +10,7 @@ pub(crate) enum BroadType {
 impl BroadType {
     pub(crate) fn from_restriction(spec: &TypeRestriction) -> BroadType {
         match spec {
-            TypeRestriction::Atomic(a) => BroadType::Atomic,
+            TypeRestriction::Atomic(_) => BroadType::Atomic,
             TypeRestriction::Sequence(_) => BroadType::Sequence,
             TypeRestriction::AnySequence => BroadType::Sequence,
             TypeRestriction::AnyAtomic => BroadType::Atomic
@@ -46,7 +46,7 @@ impl<'a> BroadTyping<'a> {
     fn add(&mut self, stmt: &LinearStatement) -> Result<(),String> {
         self.position = stmt.position.clone();
         match &stmt.value {
-            LinearStatementValue::Constant(reg,c) => {
+            LinearStatementValue::Constant(reg,_) => {
                 self.types.insert(*reg,BroadType::Atomic);
             },
             LinearStatementValue::Copy(dst,src) => {

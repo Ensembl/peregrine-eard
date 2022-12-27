@@ -1,6 +1,6 @@
 use std::{collections::{HashMap, HashSet, BTreeMap}, hash::Hash};
 use ordered_float::OrderedFloat;
-use crate::{unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::{BuildTree, Variable}, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold, reuse::{test_reuse, reuse}, spill::spill, reorder::reorder, generate::generate}, libcore::libcore::libcore_sources, model::{linear::{LinearStatement, dump_linear}, compiled::Metadata, operation::dump_opers, constants::{FullConstant, Constant}}, test::testutil::sepfmt, controller::{compiler::EardCompiler, source::{CombinedSourceSourceBuilder, SourceSourceImpl, ParsePosition, CombinedSourceSource, FixedSourceSource}, compilation::EardCompilation, compiled::make_program}};
+use crate::{unbundle::{buildunbundle::{trace_build_unbundle, build_unbundle}, linearize::{linearize, Allocator}}, frontend::{buildtree::{BuildTree, Variable}, femodel::{OrBundleRepeater, OrBundle}}, middleend::{reduce::reduce, checking::run_checking, broadtyping::broad_type, narrowtyping::narrow_type, culdesac::culdesac, constfold::const_fold, reuse::{test_reuse, reuse}, spill::spill, reorder::reorder, generate::generate, large::large}, libcore::libcore::libcore_sources, model::{linear::{LinearStatement, dump_linear}, compiled::Metadata, operation::dump_opers, constants::{FullConstant, Constant}}, test::testutil::sepfmt, controller::{compiler::EardCompiler, source::{CombinedSourceSourceBuilder, SourceSourceImpl, ParsePosition, CombinedSourceSource, FixedSourceSource}, compilation::EardCompilation, compiled::make_program}};
 use crate::frontend::parsetree::{PTExpression, PTStatement, PTStatementValue};
 use regex::{Regex, Captures};
 
@@ -442,7 +442,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
-            opers = spill(next_register,&opers, &mut narrow);
+            opers = spill(&mut next_register,&opers, &mut narrow);
             println!("spilled:\n{}",dump_opers(&opers));
             assert_eq!(process_ws(&dump_opers(&opers),spill_options),process_ws(spill_correct,spill_options));
         }
@@ -455,37 +455,39 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
-            opers = spill(next_register,&opers,&mut narrow);
+            opers = spill(&mut next_register,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
             println!("reordered:\n{}",dump_opers(&opers));
             assert_eq!(process_ws(&dump_opers(&opers),reorder_options),process_ws(reorder_correct,reorder_options));
         }
         if let Some((generate_options,generate_correct)) = sections.get("generate") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
+            let (tree,linear,mut allocator,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad,true).expect("checking unexpectedly failed");
             let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
-            opers = spill(next_register,&opers,&mut narrow);
+            opers = spill(&mut allocator,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+            opers = large(&tree,&block_indexes,&mut allocator,&opers).expect("large failed");
             let steps = generate(&tree,&block_indexes,&narrow,&opers,true).expect("generate failed");
             println!("steps:\n{}",sepfmt(&mut steps.iter(),"\n",""));
             assert_eq!(process_ws(&sepfmt(&mut steps.iter(),"\n",""),generate_options),process_ws(generate_correct,generate_options));
         }
         if let Some((compiled_options,compiled_correct)) = sections.get("compiled") {
             let processed = processed.clone().expect("processing failed");
-            let (tree,linear,mut next_register,metadata) = frontend(&mut compilation,&processed);
+            let (tree,linear,mut allocator,metadata) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
-            let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
+            let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad,true).expect("checking unexpectedly failed");
             let mut narrow = narrow_type(&tree,&block_indexes, &linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
             opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
-            opers = spill(next_register,&opers,&mut narrow);
+            opers = spill(&mut allocator,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
+            opers = large(&tree,&block_indexes,&mut allocator,&opers).expect("large failed");
             let steps = generate(&tree,&block_indexes,&narrow,&opers,true).expect("generate failed");
             let program = make_program(&steps,&metadata);
             println!("{:?}",program);

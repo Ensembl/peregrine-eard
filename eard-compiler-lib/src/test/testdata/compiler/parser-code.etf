@@ -191,7 +191,7 @@ code test_string(r1) {
 
 >> parse-fail strip
 
-expected arg_type
+expected code_arg
 
 >> test
 

@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap};
+use std::{collections::{BTreeMap, HashSet}};
 use crate::{model::{checkstypes::{TypedArgument, ArgTypeSpec, TypeSpec, Check}, codeblocks::{CodeDefinition, CodeBlock}}, controller::source::ParsePosition};
 use super::{buildtree::{BuildTree, BTStatementValue, BTStatement, BTExpression, BTDefinitionVariety, BTFuncProcDefinition, BTDefinition, BTFuncCall, BTLValue, BTProcCall, BTRegisterType, Variable}, parsetree::{PTExpression, PTCall, PTStatement, PTStatementValue, PTFuncDef, PTProcDef, FuncProcModifier}, femodel::{OrBundle, OrBundleRepeater}};
 
@@ -26,11 +26,12 @@ impl CurrentFuncProcDefinition {
     /* only one wild per arg_spec and if seqwild then no other seq */
     fn verify_argret(&self, spec: &[TypeSpec]) -> Result<(),String> {
         let mut wild = 0;
-        let mut non_wild = 0;
+        let mut atomic = HashSet::new();
+        let mut sequence = HashSet::new();
         for argtype in spec {
             match argtype {
-                TypeSpec::Atomic(_) => { non_wild += 1; },
-                TypeSpec::Sequence(_) => { non_wild += 1; },
+                TypeSpec::Atomic(a) => { atomic.insert(a.clone()); },
+                TypeSpec::Sequence(a) => { sequence.insert(a.clone()); },
                 TypeSpec::Wildcard(_) => { wild += 1; },
                 TypeSpec::AtomWildcard(_) => { wild += 1; },
                 TypeSpec::SequenceWildcard(_) => { wild += 1; },
@@ -39,8 +40,11 @@ impl CurrentFuncProcDefinition {
         if wild > 1 {
             return Err(format!("only one wildcard allowed per argument"));
         }
-        if wild > 0 && non_wild > 0 {
+        if wild > 0 && atomic.len()+sequence.len() > 0 {
             return Err(format!("cannot mix wild and non-wild types in argument"));
+        }
+        if atomic != sequence && atomic.len() > 0 && sequence.len() > 0 {
+            return Err(format!("sequence types must match non-sequence types in single signature"));
         }
         Ok(())
     }

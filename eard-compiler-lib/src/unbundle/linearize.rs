@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypeSpec, TypedArgument}, compiled::Metadata}, controller::source::ParsePosition};
+use crate::{frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypedArgument}, compiled::Metadata}, controller::source::ParsePosition};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -87,11 +87,8 @@ impl<'a> Linearize<'a> {
                     let var_reg = self.allocator.next_register();
                     self.var_registers.add(&Variable { name: arg.id.clone(), prefix: None },var_reg);
                     self.add(LinearStatementValue::Copy(var_reg,*regs.next().unwrap()));
-                    let types = arg.typespec.arg_types.iter().filter_map(|t| {
-                        t.as_restriction()
-                    }).collect::<Vec<_>>();
-                    if types.len() > 0 {
-                        self.add(LinearStatementValue::Type(var_reg,types));
+                    if arg.typespec.arg_types.len() > 0 {
+                        self.add(LinearStatementValue::Signature(vec![(var_reg,arg.typespec.arg_types.clone())]));
                     }
                     for check in &arg.typespec.checks {
                         let check_index = self.checks.get(&check.check_type,&check.name);
@@ -129,11 +126,8 @@ impl<'a> Linearize<'a> {
 
     fn ret_checks(&mut self, index: usize, reg: usize, defn: &BTFuncProcDefinition) -> Result<(),String> {
         if let Some(type_spec) = defn.ret_type.as_ref().and_then(|v| v.get(index)) {
-            let types = type_spec.arg_types.iter().filter_map(|t| {
-                t.as_restriction()
-            }).collect::<Vec<_>>();
-            if types.len() > 0 {
-                self.add(LinearStatementValue::Type(reg,types));
+            if type_spec.arg_types.len() > 0 {
+                self.add(LinearStatementValue::Signature(vec![(reg,type_spec.arg_types.clone())]));
             }
             for check in &type_spec.checks {
                 let check_index = self.checks.get(&check.check_type,&check.name);
@@ -212,19 +206,6 @@ impl<'a> Linearize<'a> {
         Ok(())
     }
 
-    fn get_wild(&self, spec: &[TypeSpec]) -> Option<(bool,String)> {
-        for arg in spec {
-            match arg {
-                TypeSpec::Atomic(_) => {},
-                TypeSpec::Sequence(_) => {},
-                TypeSpec::Wildcard(w) => { return Some((false,w.to_string())); },
-                TypeSpec::AtomWildcard(w) => { return Some((false,w.to_string())); },
-                TypeSpec::SequenceWildcard(w) => { return Some((true,w.to_string())); },
-            }
-        }
-        None
-    }
-
     fn callee_matches(&mut self, defn: &BTFuncProcDefinition, arg_regs: &[usize], ret_regs: &[usize]) -> Result<(),String> {
         let mut regs = vec![];
         for (defn,reg) in defn.args.iter().zip(arg_regs.iter()) {
@@ -243,30 +224,6 @@ impl<'a> Linearize<'a> {
         let regs = regs.iter().filter(|(_,t)| t.len()>0).cloned().collect::<Vec<_>>();
         if regs.len() > 0 {
             self.add(LinearStatementValue::Signature(regs));
-        }
-        /***/
-        let mut wilds = HashMap::new();
-        for (i,arg) in defn.args.iter().enumerate() {
-            match arg {
-                OrBundle::Normal(defn) => {
-                    if let Some(wild_key) = self.get_wild(&defn.typespec.arg_types) {
-                        wilds.entry(wild_key).or_insert(vec![]).push(arg_regs[i]);
-                    }
-                },
-                OrBundle::Bundle(_) => {}
-            }
-        }
-        for (i,defn) in defn.ret_type.as_ref().unwrap_or(&vec![]).iter().enumerate() {
-            if let Some(wild_key) = self.get_wild(&defn.arg_types) {
-                wilds.entry(wild_key).or_insert(vec![]).push(ret_regs[i]);
-            }
-        }
-        for (_,mut equiv) in wilds.drain() {
-            equiv.sort();
-            equiv.dedup();
-            if equiv.len() > 1 {
-                self.add(LinearStatementValue::SameType(equiv));
-            }
         }
         Ok(())
     }

@@ -1,4 +1,4 @@
-use std::{fmt, cmp::Ordering, collections::HashSet};
+use std::{fmt, cmp::Ordering};
 
 #[derive(Debug,Clone,PartialEq,Eq,Hash)]
 pub enum CheckType {
@@ -68,45 +68,6 @@ impl Ord for AtomicTypeSpec {
     }
 }
 
-#[derive(Clone,PartialEq,Eq,Hash)]
-pub(crate) enum TypeRestriction {
-    Atomic(AtomicTypeSpec),
-    Sequence(AtomicTypeSpec),
-    AnySequence,
-    AnyAtomic
-}
-
-impl fmt::Debug for TypeRestriction {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Atomic(v) => write!(f,"{:?}",v),
-            Self::Sequence(v) => write!(f,"seq({:?})",v),
-            Self::AnySequence => write!(f,"seq"),
-            Self::AnyAtomic => write!(f,"atom"),
-        }
-    }
-}
-
-fn add_sequences(output: &mut HashSet<TypeRestriction>, input: &HashSet<TypeRestriction>) {
-    output.extend(input.iter().filter(|r| {
-        match r {
-            TypeRestriction::Sequence(_) => true,
-            _ => false
-        }
-    }).cloned())
-}
-
-pub(crate) fn intersect_restrictions(a: &HashSet<TypeRestriction>, b: &HashSet<TypeRestriction>) -> HashSet<TypeRestriction> {
-    let mut out = HashSet::new();
-    let a_any = a.contains(&TypeRestriction::AnySequence);
-    let b_any = b.contains(&TypeRestriction::AnySequence);
-    if a_any && b_any { out.insert(TypeRestriction::AnySequence); }
-    if a_any { add_sequences(&mut out,b); }
-    if b_any { add_sequences(&mut out,a); }
-    out.extend(a.intersection(b).cloned());
-    out
-}
-
 #[derive(Clone)]
 pub enum TypeSpec {
     Atomic(AtomicTypeSpec),
@@ -114,18 +75,6 @@ pub enum TypeSpec {
     Wildcard(String),
     AtomWildcard(String),
     SequenceWildcard(String)
-}
-
-impl TypeSpec {
-    pub(crate) fn as_restriction(&self) -> Option<TypeRestriction> {
-        match self {
-            TypeSpec::Atomic(a) => Some(TypeRestriction::Atomic(a.clone())),
-            TypeSpec::Sequence(s) => Some(TypeRestriction::Sequence(s.clone())),
-            TypeSpec::Wildcard(_) => { None },
-            TypeSpec::AtomWildcard(_) => { Some(TypeRestriction::AnyAtomic) },
-            TypeSpec::SequenceWildcard(_) =>  { Some(TypeRestriction::AnySequence) },
-        }
-    }
 }
 
 impl fmt::Debug for TypeSpec {

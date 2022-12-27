@@ -1,21 +1,10 @@
 use std::{collections::HashMap, fmt};
-use crate::{model::{checkstypes::{TypeRestriction}, linear::{LinearStatementValue, LinearStatement}}, frontend::buildtree::{BuildTree, BTTopDefn}, controller::source::ParsePosition};
+use crate::{model::{linear::{LinearStatementValue, LinearStatement}}, frontend::buildtree::{BuildTree, BTTopDefn}, controller::source::ParsePosition};
 
 #[derive(Clone,PartialEq,Eq)]
 pub(crate) enum BroadType {
     Atomic,
     Sequence
-}
-
-impl BroadType {
-    pub(crate) fn from_restriction(spec: &TypeRestriction) -> BroadType {
-        match spec {
-            TypeRestriction::Atomic(_) => BroadType::Atomic,
-            TypeRestriction::Sequence(_) => BroadType::Sequence,
-            TypeRestriction::AnySequence => BroadType::Sequence,
-            TypeRestriction::AnyAtomic => BroadType::Atomic
-        }
-    }
 }
 
 impl fmt::Debug for BroadType {
@@ -67,17 +56,7 @@ impl<'a> BroadTyping<'a> {
                     self.types.insert(*reg,broad.clone());
                 }
             },
-            LinearStatementValue::Type(reg,spec) => {
-                let got = self.get(*reg);
-                for broad in spec {
-                    let want = BroadType::from_restriction(broad);
-                    if want != got {
-                        return Err(format!("type check failed: expected {:?} got {:?}",want,got));
-                    }
-                }
-            },
             LinearStatementValue::Check(_,_,_,_,_) => {},
-            LinearStatementValue::SameType(_) => {},
             LinearStatementValue::Signature(_) => {},
             LinearStatementValue::Entry(_) => {},
         }

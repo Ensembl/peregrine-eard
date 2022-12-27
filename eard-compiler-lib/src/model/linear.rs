@@ -1,6 +1,5 @@
 use std::fmt;
-
-use super::{checkstypes::{CheckType, TypeRestriction, TypeSpec}, constants::Constant};
+use super::{checkstypes::{CheckType, TypeSpec}, constants::Constant};
 
 #[derive(Clone)]
 pub(crate) enum LinearStatementValue {
@@ -8,9 +7,7 @@ pub(crate) enum LinearStatementValue {
     Constant(usize,Constant),
     Copy(usize,usize), // to,from
     Code(usize,usize,Vec<usize>,Vec<usize>), // call,index,rets,args
-    Type(usize,Vec<TypeRestriction>),
     Signature(Vec<(usize,Vec<TypeSpec>)>),
-    SameType(Vec<usize>),
     Entry(String)
 }
 
@@ -26,8 +23,6 @@ impl LinearStatementValue {
                 let force = if *force { "f" } else { "" };
                 format!("r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
             },
-            Self::Type(v, c) => format!("r{:?} <type> {:?}",v,c),
-            Self::SameType(r) => format!("<same-type> {}",sepfmt(&mut r.iter(),", ","r")),
             Self::Signature(r) => {
                 let sig = r.iter().map(|(reg,retrs)| {
                     format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))
@@ -52,8 +47,6 @@ impl fmt::Debug for LinearStatementValue {
                 let force = if *force { "f" } else { "" };
                 write!(f,"r{:?} <check:{}>{} {:?} {:?}",v,name,force,ct,c)
             },
-            Self::Type(v, c) => write!(f,"r{:?} <type> {:?}",v,c),
-            Self::SameType(r) => write!(f,"<same-type> {}",sepfmt(&mut r.iter(),", ","r")),
             Self::Signature(r) => {
                 let sig = r.iter().map(|(reg,retrs)| {
                     format!("r{}: {}",reg,sepfmt(&mut retrs.iter(),", ",""))

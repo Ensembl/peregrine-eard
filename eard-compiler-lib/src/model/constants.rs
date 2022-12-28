@@ -21,9 +21,23 @@ impl Constant {
             Constant::Boolean(_) => AtomicTypeSpec::Boolean
         }
     }
-}
 
-impl Constant {
+    fn to_index(&self) -> Option<u32> {
+        match self {
+            Constant::Number(n) => {
+                if n.0.fract() == 0. && n.0 > 0. && n.0 < 2_000_000_000. {
+                    return Some(n.0 as u32);
+                }
+            },
+            _ => {}
+        }
+        None
+    }
+
+    fn vec_to_index(values: &[Self]) -> Option<Vec<u32>> {
+        values.iter().map(|v| v.to_index()).collect::<Option<Vec<_>>>()
+    }
+
     fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         match self {
             Constant::Number(n) => { 
@@ -71,17 +85,31 @@ impl FullConstant {
     pub(crate) fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         match self {
             FullConstant::Atomic(c) => {
-                c.encode(encoder)?;
+                if let Some(value) = c.to_index() {
+                    encoder.u32(value as u32)?;
+                } else {
+                    c.encode(encoder)?;
+                }
             },
             FullConstant::Finite(seq) => {
                 encoder.array(seq.len() as u64)?;
-                for c in seq {
-                    c.encode(encoder)?;
+                if let Some(value) = Constant::vec_to_index(seq) {
+                    for v in value {
+                        encoder.u32(v)?;
+                    }
+                } else {
+                    for c in seq {
+                        c.encode(encoder)?;
+                    }
                 }
             },
             FullConstant::Infinite(c) => {
                 encoder.begin_map()?.str("")?;
-                c.encode(encoder)?;
+                if let Some(value) = c.to_index() {
+                    encoder.u32(value as u32)?;
+                } else {
+                    c.encode(encoder)?;
+                }
                 encoder.end()?;
             }
         }

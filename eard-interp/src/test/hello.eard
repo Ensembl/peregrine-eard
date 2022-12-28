@@ -1,0 +1,8 @@
+program "group" "Program" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X {} }
+function c(x) { let y = wc(x); y }
+
+print(format("hello, world!"));
+print(format([1,2,3]));
+print(format(["hi",...]));

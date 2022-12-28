@@ -110,7 +110,6 @@ impl<'a> NarrowTyping<'a> {
             BTTopDefn::Code(c) => c.get_block(block_index),
             _ => { panic!("didn't get code with code index"); }
         };
-        eprintln!("{:?}",block);
         /* arguments */
         let mut ties = HashMap::new();
         for (spec,reg) in block.arguments.iter().zip(args.iter()) {

@@ -1,0 +1,11 @@
+[package]
+name = "eard-interp"
+version = "0.0.0"
+authors = ["ensembl-webteam@ebi.ac.uk"]
+edition = "2018"
+
+
+[dependencies]
+async-std="*"
+async-thread="*"
+minicbor={ version="*", features=["std"] }

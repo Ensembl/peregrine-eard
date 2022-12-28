@@ -7,9 +7,9 @@ use crate::model::compiled::CompiledCode;
 
 fn compactify(s: &str) -> String {
     let re1 = Regex::new(r"\n {12,}").unwrap();
-    let re2 = Regex::new(r"\n {10,}]").unwrap();
+    let re2 = Regex::new(r"\n {10,}([\]}])").unwrap();
     let s = re1.replace_all(s," ");
-    let s = re2.replace_all(&s," ]").to_string();
+    let s = re2.replace_all(&s," $1").to_string();
     s
 }
 

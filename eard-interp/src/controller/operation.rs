@@ -1,9 +1,10 @@
 use std::{future::Future, pin::Pin, sync::Arc, mem};
-use crate::{globalcontext::{GlobalContext, GlobalBuildContext}, value::Value};
+
+use super::globalcontext::{GlobalBuildContext, GlobalContext};
 
 pub enum Return {
     Sync,
-    Async(Pin<Box<dyn Future<Output = ()>>>)
+    Async(Pin<Box<dyn Future<Output = Result<(),String>>>>)
 }
 
 pub struct OperationStore {
@@ -28,26 +29,26 @@ impl OperationStore {
 }
 
 pub struct Operation {
-    callback: Box<dyn Fn(&GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Return>,String>>
+    callback: Box<dyn Fn(&GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Result<Return,String>>,String>>
 }
 
 impl Operation {
     pub fn new<F>(callback: F) -> Operation
-            where F: Fn(&GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Return>,String> + 'static {
+            where F: Fn(&GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Result<Return,String>>,String> + 'static {
         Operation { callback: Box::new(callback) }
     }
 
     pub fn nop() -> Operation {
-        Operation::new(|_| Ok(Box::new(|_,_| Return::Sync)))
+        Operation::new(|_| Ok(Box::new(|_,_| Ok(Return::Sync))))
     }
 
-    fn make(&self, gbctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Return>,String> {
+    fn make(&self, gbctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext, &[usize]) -> Result<Return,String>>,String> {
         (self.callback)(gbctx)
     }
 }
 
 pub(crate) struct Step {
-    callback: Box<dyn Fn(&mut GlobalContext, &[usize]) -> Return>,
+    callback: Box<dyn Fn(&mut GlobalContext, &[usize]) -> Result<Return,String>>,
     registers: Vec<usize>
 }
 
@@ -56,9 +57,9 @@ impl Step {
         Ok(Step { callback: operation.make(gbctx)?, registers })
     }
 
-    pub(crate) async fn run(&self, gctx: &mut GlobalContext) {
-        match (self.callback)(gctx,&self.registers) {
-            Return::Sync => {}
+    pub(crate) async fn run(&self, gctx: &mut GlobalContext) -> Result<(),String> {
+        match (self.callback)(gctx,&self.registers)? {
+            Return::Sync => Ok(()),
             Return::Async(w) => w.await,
         }
     }

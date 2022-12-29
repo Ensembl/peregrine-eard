@@ -57,7 +57,7 @@ fold(libcore__infseq) code __code_infseq(?X) -> seq(?X) {
     }
 }
 
-fold(libcore__finseq) code __code_finseq() -> seq(?X) {
+world fold(libcore__finseq) code __code_finseq() -> seq(?X) {
     impl () -> r1: seq(number) { 
         opcode 9, r1;
     }
@@ -188,3 +188,4 @@ export function __test_total(x) { let y = __code_total(x); y }
 export function __test_bound(x) { let y = __code_bound(x); y }
 
 export function len(x) { let y = __code_length(x); y }
+export function push(x,v) { let z = __code_push(x,y); z }

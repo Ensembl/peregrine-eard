@@ -53,7 +53,7 @@ impl RunContext {
         RunContext { context: vec![] }
     }
 
-    pub fn add<T: Any>(&mut self, atom: ContextItem<T>, value: T) {
+    pub fn add<T: Any>(&mut self, atom: &ContextItem<T>, value: T) {
         if self.context.len() <= atom.0 {
             self.context.resize_with(atom.0+1,|| None);
         }

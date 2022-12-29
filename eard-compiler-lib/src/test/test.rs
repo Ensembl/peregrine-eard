@@ -155,6 +155,11 @@ fn test_libcore_call_up() {
 }
 
 #[test]
+fn test_libcore_regressions() {
+    run_parse_tests(include_str!("testdata/libcore/libcore-regressions.etf"),true,false);
+}
+
+#[test]
 fn test_multi_generate() {
     let source = "
         program \"test\" \"test\" 1;

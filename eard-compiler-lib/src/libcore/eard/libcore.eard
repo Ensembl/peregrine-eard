@@ -1,4 +1,5 @@
 special(libcore__call_up) world code __code_call_up() { impl() { opcode 1; } }
+export procedure call_up() { __code_call_up(); }
 
 refer "logic";
 refer "eq";

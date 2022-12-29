@@ -2,7 +2,7 @@ use std::{collections::{HashMap, HashSet}, mem, fmt};
 use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{linear::{LinearStatement, LinearStatementValue}, checkstypes::{AtomicTypeSpec, TypeSpec}, codeblocks::CodeArgument}, controller::source::ParsePosition, util::equiv::EquivalenceClass};
 use super::{possible::NarrowPoss, broadtyping::BroadType};
 
-#[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
+#[derive(PartialEq,Eq,Clone,PartialOrd,Ord,Hash)]
 pub(crate) enum NarrowType {
     Atomic(AtomicTypeSpec),
     Sequence(AtomicTypeSpec),

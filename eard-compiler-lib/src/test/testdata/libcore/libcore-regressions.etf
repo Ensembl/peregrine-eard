@@ -1,0 +1,53 @@
+
+>> test
+
+regression
+
+>> input
+
+program "group" "program" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 21, r2 ,r1; } }
+function c(x) { let y = wc(x); y }
+
+c([c(1)]);
+c([c(true)]);
+
+>> linearize strip reduce
+
+sequences:182 r1 (1#1) 
+test:7 r7 <constant> 1
+test:5 r10 (2#2) r7
+sequences:183 r18 (3#3) r1 r10
+test:5 r25 (2#4) r18
+sequences:182 r28 (1#5) 
+test:8 r33 <constant> true
+test:5 r36 (2#6) r33
+sequences:183 r43 (3#7) r28 r36
+test:5 r49 (2#8) r43
+
+>> reuse strip
+
+sequences:182 r1 <- []
+test:7 r7 <- 1
+test:5 r10 (1#2) r7
+sequences:183 r18 (2#3) r1 r10
+test:5 r0 (1#4) r18
+sequences:182 r28 <- []
+test:8 r33 <- true
+test:5 r36 (1#6) r33
+sequences:183 r43 (2#7) r28 r36
+test:5 r0 (1#8) r43
+
+>> generate strip
+
+r1 <- 1
+opcode 21, r2, r1
+r1 <- []
+opcode 4, r1, r2
+opcode 21, r0, r1
+r1 <- true
+opcode 21, r2, r1
+r1 <- []
+opcode 54, r1, r2
+opcode 21, r0, r1

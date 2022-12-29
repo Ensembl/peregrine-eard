@@ -418,15 +418,15 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let (tree,linear,mut next_register,_) = frontend(&mut compilation,&processed);
             let (mut broad,block_indexes) = broad_type(&tree,&linear).expect("broad typing failed");
             let linear = run_checking(&tree,&linear,&block_indexes,&mut next_register,&mut broad,true).expect("checking unexpectedly failed");
-            let _narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
+            let narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
-            let (new_opers, knowns) = test_reuse(&tree,&block_indexes,&opers).expect("reuse failed");
+            let (new_opers, knowns) = test_reuse(&tree,&broad,&narrow,&block_indexes,&opers).expect("reuse failed");
             println!("FROM:\n {}\n\n",dump_opers(&opers));
             println!("TO:\n{}\n",dump_opers(&new_opers));
             assert_eq!(process_ws(&dump_opers(&new_opers),reuse_options),process_ws(reuse_correct,reuse_options));
             if let Some((knowns_options,knowns_correct)) = sections.get("reuse-known") {
-                let knowns = knowns.iter().collect::<BTreeMap<_,_>>();
+                let knowns = knowns.iter().map(|(k,v)| (k.0,v)).collect::<BTreeMap<usize,_>>();
                 let knowns = knowns.iter().map(|(k,v)| format!("{}: {:?}",k,v)).collect::<Vec<_>>();
                 let knowns = fix_knowns_refs(knowns);
                 println!("{}",knowns.join("\n"));
@@ -441,7 +441,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
-            opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
+            opers = reuse(&tree,&broad,&narrow,&block_indexes,&opers,true).expect("reuse failed");
             opers = spill(&mut next_register,&opers, &mut narrow);
             println!("spilled:\n{}",dump_opers(&opers));
             assert_eq!(process_ws(&dump_opers(&opers),spill_options),process_ws(spill_correct,spill_options));
@@ -454,7 +454,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
-            opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
+            opers = reuse(&tree,&broad,&narrow,&block_indexes,&opers,true).expect("reuse failed");
             opers = spill(&mut next_register,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
             println!("reordered:\n{}",dump_opers(&opers));
@@ -468,7 +468,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
-            opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
+            opers = reuse(&tree,&broad,&narrow,&block_indexes,&opers,true).expect("reuse failed");
             opers = spill(&mut allocator,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
             opers = large(&tree,&block_indexes,&mut allocator,&opers).expect("large failed");
@@ -484,7 +484,7 @@ pub(super) fn run_parse_tests(data: &str, libcore: bool, optimise: bool) {
             let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear).expect("narrow typing failed");
             let mut opers = const_fold(&compilation,&tree,&block_indexes,&linear,true);
             opers = culdesac(&tree,&block_indexes,&opers,true);
-            opers = reuse(&tree,&block_indexes,&opers,true).expect("reuse failed");
+            opers = reuse(&tree,&broad,&narrow,&block_indexes,&opers,true).expect("reuse failed");
             opers = spill(&mut allocator,&opers,&mut narrow);
             opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");
             opers = large(&tree,&block_indexes,&mut allocator,&opers).expect("large failed");

@@ -1,5 +1,5 @@
 use std::{sync::Arc, mem, collections::HashMap};
-use crate::{operation::{Step, OperationStore}, value::Value, globalcontext::{GlobalContext, GlobalBuildContext}, objectcode::Metadata, context::RunContext};
+use super::{objectcode::Metadata, operation::{OperationStore, Step}, context::RunContext, globalcontext::{GlobalContext, GlobalBuildContext}, value::Value};
 
 pub struct ProgramStore {
     store: OperationStore,

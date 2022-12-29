@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt};
 use crate::{model::{linear::{LinearStatementValue, LinearStatement}}, frontend::buildtree::{BuildTree, BTTopDefn}, controller::source::ParsePosition};
 
-#[derive(Clone,PartialEq,Eq)]
+#[derive(Clone,PartialEq,Eq,Hash,PartialOrd,Ord)]
 pub(crate) enum BroadType {
     Atomic,
     Sequence

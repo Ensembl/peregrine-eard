@@ -1,8 +1,33 @@
-program "group" "Program" 1;
+program "group" "program" 1;
 
-world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X {} }
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 21, r2 ,r1; } }
 function c(x) { let y = wc(x); y }
 
-print(format("hello, world!"));
-print(format([1,2,3]));
-print(format(["hi",...]));
+print(format(c("hello, world!")));
+print(format(c([1,2,3])));
+print(format(c(["hi",...])));
+
+let a = c(1);
+let b = c(true);
+let c = c("hello");
+
+let x = c([a,2,3]);
+let y = c([b,false]);
+let z = c([c,"world"]);
+
+print(format(x));
+print(format(y));
+print(format(z));
+
+let x = c([a,2,3]);
+let y = c([b,false]);
+let z = c([c,"world"]);
+
+print(format(x));
+print(format(y));
+print(format(z));
+print(format([c(6),...]));
+print(format([c(true),...]));
+print(format([c("boo"),...]));
+
+call_up();

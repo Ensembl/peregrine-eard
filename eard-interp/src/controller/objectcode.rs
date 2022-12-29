@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use minicbor::{Decoder, Decode, decode::Error, data::Type};
-use crate::{value::Value, program::{Program, ProgramBuilder}, globalcontext::GlobalBuildContext};
+
+use super::{globalcontext::GlobalBuildContext, value::Value, program::{ProgramBuilder, Program}};
 
 pub(crate) fn cbor_map<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),Error>
         where F: FnMut(&str,&mut T,&mut Decoder<'b>) -> Result<(),Error> {
@@ -34,6 +35,12 @@ pub struct Metadata {
     pub group: String,
     pub name: String,
     pub version: u32
+}
+
+impl Metadata {
+    pub(crate) fn new(group: &str, name: &str, version: u32) -> Metadata {
+        Metadata { group: group.to_string(), name: name.to_string(), version }
+    }
 }
 
 impl<'b> Decode<'b,()> for Metadata {

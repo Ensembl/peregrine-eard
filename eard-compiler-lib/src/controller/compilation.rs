@@ -72,7 +72,7 @@ impl<'a> EardCompilation<'a> {
         let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear)?;
         let opers = const_fold(&self,tree,&block_indexes,&linear,verbose);
         let opers = culdesac(tree,&block_indexes,&opers,verbose);
-        let opers = reuse(tree,&block_indexes,&opers,verbose)?;
+        let opers = reuse(tree,&broad,&narrow,&block_indexes,&opers,verbose)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;
         let opers = spill(&mut allocator,&opers, &mut narrow);
         let mut opers = reorder(&tree,&block_indexes,&opers).expect("reorder failed");

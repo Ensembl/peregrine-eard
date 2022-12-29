@@ -1,4 +1,5 @@
-use crate::{operation::{OperationStore, self, Operation}, program::{Program, ProgramStore}, objectcode::{CompiledBlock, Metadata}, globalcontext::GlobalBuildContext, context::{ContextTemplateBuilder, ContextItem, RunContext}};
+use super::{operation::{OperationStore, Operation}, context::{ContextTemplateBuilder, ContextItem, RunContext}, globalcontext::GlobalBuildContext, program::ProgramStore, objectcode::{ObjectFile, Metadata, CompiledBlock}};
+
 
 pub struct InterpreterBuilder {
     pub context: ContextTemplateBuilder,
@@ -33,6 +34,21 @@ impl Interpreter {
             gbctx: GlobalBuildContext::new(builder.context),
             store: ProgramStore::new(builder.store)
         }
+    }
+
+    pub fn load(&mut self, bytes: &[u8]) -> Result<(),String> {
+        let block = ObjectFile::decode(bytes.to_vec()).expect("decoding");
+        self.add(&block)?;
+        Ok(())
+    }
+
+    pub(crate) fn add(&mut self, file: &ObjectFile) -> Result<(),String> {
+        for code in &file.code {
+            for (name,block) in &code.code {
+                self.build(&code.metadata,name,block.clone())?;
+            }
+        }
+        Ok(())
     }
 
     pub(crate) fn build(&mut self, metadata: &Metadata, block: &str, code: CompiledBlock) -> Result<(),String> {

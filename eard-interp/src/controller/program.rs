@@ -11,8 +11,6 @@ impl ProgramStore {
         ProgramStore { store, program: HashMap::new() }
     }
 
-    pub(crate) fn store(&self) -> &OperationStore { &self.store }
-
     pub(crate) fn program_builder(&self) -> ProgramBuilder {
         ProgramBuilder::new(&self.store)
     }
@@ -25,7 +23,7 @@ impl ProgramStore {
         let program = self.program
             .get(&(metadata.clone(),block.to_string()))
             .ok_or_else(|| format!("no such program {:?} {:?}",metadata,block))?;
-        program.run(context).await;
+        program.run(context).await?;
         Ok(())
     }
 }
@@ -37,11 +35,12 @@ pub struct Program {
 }
 
 impl Program {
-    async fn run(&self, context: RunContext) {
+    async fn run(&self, context: RunContext) -> Result<(),String> {
         let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
         for step in self.steps.as_ref().iter() {
-            step.run(&mut gctx).await;
+            step.run(&mut gctx).await?;
         }
+        Ok(())
     }
 }
 

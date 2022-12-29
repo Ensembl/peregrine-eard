@@ -4,7 +4,7 @@ use super::libcore::LibcoreTemplate;
 
 fn reduce_num(n: f64) -> String {
     if n.fract() == 0.0 {
-        format!("{}",n as u64)
+        format!("{}",n as i64)
     } else {
         format!("{}",n)
     }

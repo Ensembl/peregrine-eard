@@ -1,6 +1,6 @@
 use std::{time::Duration, sync::{Arc, Mutex}, mem, pin::Pin, future::Future, collections::HashSet};
 use async_std::task::{self, block_on};
-use crate::{controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{Interpreter, InterpreterBuilder}, objectcode::{Metadata, CompiledBlock, ObjectFile}, context::RunContext, value::Value, program}, libcore::libcore::{LibcoreTemplate, build_libcore, prepare_libcore, LibcoreBuilder}};
+use crate::{controller::{interpreter::{Interpreter, InterpreterBuilder}, objectcode::{Metadata, ObjectFile}, context::RunContext}, libcore::libcore::{LibcoreTemplate, build_libcore, prepare_libcore, LibcoreBuilder}};
 
 #[derive(Clone)]
 struct LibcoreTest {
@@ -84,6 +84,7 @@ fn test_load() {
         "[\"hello\", \"world\"]",
         "[6,...]",
         "[true,...]",
-        "[\"boo\",...]"
+        "[\"boo\",...]",
+        "3", "-1", "-1"
     ],out);
 }

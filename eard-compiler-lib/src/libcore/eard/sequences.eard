@@ -99,39 +99,14 @@ fold(libcore__length) special(length) code __code_length(sparse seq(?X)) -> numb
     }
 }
 
-fold(libcore__total) special(total) code __code_total(seq(?X)) -> number {
+fold(libcore__total) special(total) code __code_total(seq(number)) -> number {
     impl (r1: seq(number)) -> r2 : number {
-        opcode 6, r2, r1;
-    }
-
-    impl (r1: seq(string)) -> r2 : number {
-        opcode 46, r2, r1;
-    }
-
-    impl (r1: seq(boolean)) -> r2 : number {
-        opcode 56, r2, r1;
-    }
-
-    /* handles */
-    impl (r1: seq(?X)) -> r2 : ?X {
         opcode 6, r2, r1;
     }
 }
 
-fold(libcore__bound) special(bound) code __code_bound(seq(?X)) -> number {
+fold(libcore__bound) special(bound) code __code_bound(seq(number)) -> number {
     impl (r1: seq(number)) -> r2 : number {
-        opcode 7, r2, r1;
-    }
-
-    impl (r1: seq(boolean)) -> r2 : number {
-        opcode 47, r2, r1;
-    }
-
-    impl (r1: seq(boolean)) -> r2 : number {
-        opcode 57, r2, r1;
-    }
-
-    impl (r1: seq(?X)) -> r2 : ?X {
         opcode 7, r2, r1;
     }
 }

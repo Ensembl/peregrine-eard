@@ -37,7 +37,7 @@ impl Interpreter {
     }
 
     pub fn load(&mut self, bytes: &[u8]) -> Result<(),String> {
-        let block = ObjectFile::decode(bytes.to_vec()).expect("decoding");
+        let block = ObjectFile::decode(bytes.to_vec()).map_err(|e| format!("loading error: {}",e))?;
         self.add(&block)?;
         Ok(())
     }

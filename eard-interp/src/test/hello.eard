@@ -30,4 +30,8 @@ print(format([c(6),...]));
 print(format([c(true),...]));
 print(format([c("boo"),...]));
 
+print(format(len(x)));
+print(format(len(c(["hi",...]))));
+print(format(len(c([true,...]))));
+
 call_up();

@@ -11,10 +11,15 @@ mod controller {
 
 mod libcore {
     pub(crate) mod libcore;
+    mod checks;
     mod print;
+    mod seqctors;
 }
 
 #[cfg(test)]
 mod test {
     mod test;
 }
+
+pub use controller::interpreter::Interpreter;
+pub use libcore::libcore::{ prepare_libcore, build_libcore, LibcoreBuilder };

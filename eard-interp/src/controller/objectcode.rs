@@ -14,7 +14,7 @@ pub(crate) fn cbor_map<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> R
         if let Some(len) = entries { if len == index { break; } }
         if let Type::Break = d.datatype()? { d.skip()?; break; }
     }
-    Ok(())           
+    Ok(())
 }
 
 fn cbor_array<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),Error>
@@ -38,13 +38,13 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    pub(crate) fn new(group: &str, name: &str, version: u32) -> Metadata {
+    pub fn new(group: &str, name: &str, version: u32) -> Metadata {
         Metadata { group: group.to_string(), name: name.to_string(), version }
     }
 }
 
 impl<'b> Decode<'b,()> for Metadata {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut ()) -> Result<Self, Error> {
+    fn decode(d: &mut Decoder<'b>, _ctx: &mut ()) -> Result<Self, Error> {
         let mut out = Metadata { group: "".to_string(), name: "".to_string(), version: 0 };
         cbor_array(d, &mut out, |idx,out,d| {
             match idx {

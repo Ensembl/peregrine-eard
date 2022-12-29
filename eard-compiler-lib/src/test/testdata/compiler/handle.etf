@@ -60,4 +60,4 @@ cmp(a,b);
 
 >> narrow-fail strip
 
-cannot deduce type/B at sequences:183 (called from test:10) (called from test:14)
+cannot deduce type/B at sequences:158 (called from test:10) (called from test:14)

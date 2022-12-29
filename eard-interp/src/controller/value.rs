@@ -22,8 +22,8 @@ impl CborVariety {
             Type::String | Type::StringIndef => CborVariety::String,
             Type::Array | Type::ArrayIndef => CborVariety::Array,
             Type::Map | Type::MapIndef => CborVariety::Map,
-            _ => { 
-                return Err(Error::message("bad constant"));
+            x => { 
+                return Err(Error::message(&format!("bad constant {}",x)));
             }
         })
     }
@@ -107,7 +107,7 @@ fn from_array<'a,T: Decode<'a,()>>(d: &mut Decoder<'a>) -> Result<Vec<T>,Error> 
 }
 
 impl<'b> Decode<'b,()> for Value {
-    fn decode(d: &mut Decoder<'b>, ctx: &mut ()) -> Result<Self, Error> {
+    fn decode(d: &mut Decoder<'b>, _ctx: &mut ()) -> Result<Self, Error> {
         Ok(match CborVariety::peek(d)? {
             CborVariety::Float => Value::Number(d.f64()?),
             CborVariety::Integer => Value::Number(d.u32()? as f64),
@@ -132,7 +132,6 @@ impl<'b> Decode<'b,()> for Value {
                 cbor_map(d,&mut out,|key,out,d| {
                     if key == "" {
                         let mut p = d.probe();
-                        p.array().ok();
                         *out = Some(match CborVariety::peek(&mut p)? {
                             CborVariety::Float => Value::InfiniteNumber(d.f64()?),
                             CborVariety::Integer => {

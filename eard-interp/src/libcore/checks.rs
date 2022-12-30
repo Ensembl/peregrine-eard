@@ -78,35 +78,39 @@ pub(super) fn op_bound(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glo
     }))
 }
 
-pub(super) fn op_check_l(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
-    Ok(Box::new(|ctx,regs| {
-        let a = ctx.force_number(regs[1])? as usize;
-        let b = ctx.force_number(regs[2])? as usize;
-        if a != b {
-            return Err(format!("failed length check"));
+fn check_or_fail<F>(check_name: &str, cb: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
+        where F: Fn(i32,i32) -> bool + 'static {
+    let check_name = check_name.to_string();
+    Ok(Box::new(move |ctx,regs| {
+        let a = ctx.force_number(regs[1])? as i32;
+        let b = ctx.force_number(regs[2])? as i32;
+        if !cb(a,b) {
+            return Err(format!("failed {} check",check_name));
         }
         Ok(Return::Sync)
     }))
+}
+
+pub(super) fn op_check_l(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    check_or_fail("length",|a,b| a==b)
+}
+
+pub(super) fn op_check_tt(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    check_or_fail("length/total",|a,b| a==b)
 }
 
 pub(super) fn op_check_t(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
-    Ok(Box::new(|ctx,regs| {
-        let a = ctx.force_number(regs[1])? as usize;
-        let b = ctx.force_number(regs[2])? as usize;
-        if a != b {
-            return Err(format!("failed total check"));
-        }
-        Ok(Return::Sync)
-    }))
+    check_or_fail("total",|a,b| a==b)
 }
 
 pub(super) fn op_check_b(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
-    Ok(Box::new(|ctx,regs| {
-        let a = ctx.force_number(regs[1])? as usize;
-        let b = ctx.force_number(regs[2])? as usize;
-        if a != b {
-            return Err(format!("failed total check"));
-        }
-        Ok(Return::Sync)
-    }))
+    check_or_fail("ref",|a,b| a>b)
+}
+
+pub(super) fn op_check_li(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    check_or_fail("inf/inf",|a,b| a==b || b==-1)
+}
+
+pub(super) fn op_check_ii(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    check_or_fail("inf/inf",|a,b| a==b || a==-1 || b==-1)
 }

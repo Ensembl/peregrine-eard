@@ -1,6 +1,6 @@
 use std::{pin::Pin, future::Future};
 use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}};
-use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss}};
+use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3}};
 
 pub trait LibcoreTemplate {
     fn print(&self, s: &str);
@@ -39,6 +39,7 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     let context = builder.add_context::<Box<dyn LibcoreTemplate>>("libcore");
     builder.add_operation(0,Operation::new(op_const));
     builder.add_operation(1,Operation::new(op_async));
+    /* 2 is reserved */
     builder.add_operation(3,Operation::new(op_push_n3));
     builder.add_operation(4,Operation::new(op_push_n2));
     builder.add_operation(5,Operation::new(op_len_n));
@@ -46,6 +47,17 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(7,Operation::new(op_bound));
     builder.add_operation(8,Operation::new(op_infseq_n));
     builder.add_operation(9,Operation::new(op_finseq_n));
+    builder.add_operation(10,Operation::new(op_check_l));
+    builder.add_operation(11,Operation::new(op_check_tt));
+    /* 12 is unused */
+    builder.add_operation(13,Operation::new(op_check_t));
+    builder.add_operation(14,Operation::new(op_check_b));
+    builder.add_operation(15,Operation::new(op_check_ii));
+    builder.add_operation(16,Operation::new(op_check_li));
+    builder.add_operation(17,Operation::new(op_add3));
+    builder.add_operation(18,Operation::new(op_add2));
+    builder.add_operation(19,Operation::new(op_sub3));
+    builder.add_operation(20,Operation::new(op_sub2));
     builder.add_operation(21,Operation::new(op_copy));
     builder.add_operation(41,Operation::new(op_infseq_s));
     builder.add_operation(42,Operation::new(op_finseq_s));
@@ -61,6 +73,14 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(55,Operation::new(op_len_b));
     builder.add_operation(56,Operation::new(op_min3));
     builder.add_operation(57,Operation::new(op_min2));
+    builder.add_operation(60,Operation::new(op_add3s));
+    builder.add_operation(61,Operation::new(op_add2s));
+    builder.add_operation(62,Operation::new(op_sub3s));
+    builder.add_operation(63,Operation::new(op_sub2s));
+    builder.add_operation(70,Operation::new(op_add3ss));
+    builder.add_operation(71,Operation::new(op_add2ss));
+    builder.add_operation(72,Operation::new(op_sub3ss));
+    builder.add_operation(73,Operation::new(op_sub2ss));
     builder.add_operation(137,Operation::new(op_print));
     builder.add_operation(138,Operation::new(op_format));
     builder.add_operation(141,Operation::new(op_max3s));

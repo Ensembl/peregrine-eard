@@ -13,6 +13,7 @@ fn compactify(s: &str) -> String {
     s
 }
 
+#[derive(Debug)]
 pub struct EardSerializeCode {
     code: Vec<CompiledCode>
 }

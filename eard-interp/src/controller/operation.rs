@@ -49,7 +49,7 @@ impl Operation {
 
 pub(crate) struct Step {
     callback: Box<dyn Fn(&mut GlobalContext, &[usize]) -> Result<Return,String>>,
-    registers: Vec<usize>
+    pub(crate) registers: Vec<usize>
 }
 
 impl Step {

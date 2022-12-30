@@ -92,19 +92,21 @@ impl<'a> Checking<'a> {
         }
     }
 
-    fn add_check_code(&mut self, check_name: &str, check_fn: &str, a_reg: usize, b_reg: usize) {
+    fn add_statement(&mut self, value: LinearStatementValue) {
+        self.out.push(LinearStatement { value, position: self.position.clone() });
+    }
+
+    fn add_opcode(&mut self, special: &str, ret_regs: &[usize], arg_regs: &[usize]) {
+        let name = self.bt.get_special(special);
+        let call = self.allocator.next_call();
+        self.add_statement(LinearStatementValue::Code(call,name,ret_regs.to_vec(),arg_regs.to_vec()));
+    }
+
+    fn add_check_code(&mut self, check_name: &str, check_fn: &str, ret_regs: Vec<usize>, a_reg: usize, b_reg: usize) {
         let checkname_reg = self.allocator.next_register();
         self.broad.insert(checkname_reg,BroadType::Atomic);
-        self.out.push(LinearStatement { 
-            value: LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())),
-            position: self.position.clone()
-        });
-        let name = self.bt.get_special(&check_fn);
-        let call = self.allocator.next_call();
-        self.out.push(LinearStatement {
-            value: LinearStatementValue::Code(call,name,vec![],vec![checkname_reg,a_reg,b_reg]),
-            position: self.position.clone(),
-        });
+        self.add_statement(LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())));
+        self.add_opcode(check_fn,&ret_regs,&[checkname_reg,a_reg,b_reg]);
     }
 
     fn add_runtime_check(&mut self, reg: usize, check_name: &str, ct: &CheckType, ci: usize) {
@@ -116,55 +118,55 @@ impl<'a> Checking<'a> {
             CheckType::Reference => "bound",
             CheckType::Sum => "total",
         };
-        let name = self.bt.get_special(value_fn);
-        let call = self.allocator.next_call();
-        self.out.push(LinearStatement {
-            value: LinearStatementValue::Code(call,name,vec![value_reg],vec![reg]),
-            position: self.position.clone(),
-        });
+        /* collect the parameter for this variable */
+        self.add_opcode(value_fn,&[value_reg],&[reg]);
+        /* verify our parameter is compatible with the check variable */
         match ct {
             CheckType::Length => {
                 if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
-                    self.add_check_code(check_name,"check_length",value_reg,*existing);
+                    self.add_check_code(check_name,"check_length",vec![],value_reg,*existing);
                 } else {
                     if let Some(existing) = self.check_register.get(&(CheckType::Sum,ci)) {
-                        self.add_check_code(check_name,"check_length_total",value_reg,*existing);
+                        self.add_check_code(check_name,"check_length_total",vec![],value_reg,*existing);
                     }
                     if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)) {
-                        self.add_check_code(check_name,"check_length_bound",value_reg,*existing);
+                        self.add_check_code(check_name,"check_length_bound",vec![],value_reg,*existing);
                     }
                     if let Some(existing) = self.check_register.get(&(CheckType::LengthOrInfinite,ci)) {
-                        self.add_check_code(check_name,"check_length_inf",value_reg,*existing);
+                        self.add_check_code(check_name,"check_length_inf",vec![],value_reg,*existing);
                     }
                     self.check_register.insert((ct.clone(),ci),value_reg);
                 }
             },
             CheckType::Reference => {
-                if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)) {
-                    self.add_check_code(check_name,"check_bound",value_reg,*existing);
+                if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)).cloned() {
+                    let new_value_reg = self.allocator.next_register();
+                    self.broad.insert(new_value_reg,BroadType::Atomic);
+                    self.check_register.insert((ct.clone(),ci),new_value_reg);
                 } else {
-                    if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
-                        self.add_check_code(check_name,"check_length_bound",*existing,value_reg);
-                    }
                     self.check_register.insert((ct.clone(),ci),value_reg);
+                }
+                /* always recheck bounds against length as bound (uniquely) can grow */
+                if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
+                    self.add_check_code(check_name,"check_length_bound",vec![],*existing,value_reg);
                 }
             },
             CheckType::Sum => {
                 if let Some(existing) = self.check_register.get(&(CheckType::Sum,ci)) {
-                    self.add_check_code(check_name,"check_total",value_reg,*existing);
+                    self.add_check_code(check_name,"check_total",vec![],value_reg,*existing);
                 } else {
                     if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
-                        self.add_check_code(check_name,"check_length_total",*existing,value_reg);
+                        self.add_check_code(check_name,"check_length_total",vec![],*existing,value_reg);
                     }
                     self.check_register.insert((ct.clone(),ci),value_reg);
                 }
             },
             CheckType::LengthOrInfinite => {
                 if let Some(existing) = self.check_register.get(&(CheckType::LengthOrInfinite,ci)) {
-                    self.add_check_code(check_name,"check_inf",*existing,value_reg);
+                    self.add_check_code(check_name,"check_inf",vec![],*existing,value_reg);
                 } else {
                     if let Some(existing) = self.check_register.get(&(CheckType::Length,ci)) {
-                        self.add_check_code(check_name,"check_length_inf",*existing,value_reg);
+                        self.add_check_code(check_name,"check_length_inf",vec![],*existing,value_reg);
                     }
                     self.check_register.insert((ct.clone(),ci),value_reg);
                 }
@@ -182,6 +184,10 @@ impl<'a> Checking<'a> {
                     self.forced.insert(reg_group);
                     self.add_runtime_check(*reg,name,ct,*ci);
                 }
+            },
+            LinearStatementValue::Entry(e) => {
+                self.check_register.clear();
+                self.out.push(stmt.clone());
             },
             _ => {
                 self.out.push(stmt.clone());

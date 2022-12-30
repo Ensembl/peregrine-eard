@@ -7,7 +7,10 @@ pub(crate) enum Format {
     Standard,
     /// Expanded (for debugging)
     #[value(alias("x"))]
-    Expanded
+    Expanded,
+    /// Dump (for debugging)
+    #[value(alias("d"))]
+    Dump    
 }
 
 

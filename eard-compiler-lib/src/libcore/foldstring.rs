@@ -113,7 +113,7 @@ pub(crate) fn fold_template(inputs: &[Option<FullConstant>]) -> Option<Vec<FullC
 fn format(input: &Constant) -> String {
     match input {
         Constant::Number(n) => format!("{}",n.0),
-        Constant::String(s) => format!("{}",s),
+        Constant::String(s) => format!("{:?}",s),
         Constant::Boolean(b) => format!("{:?}",b),
     }
 }

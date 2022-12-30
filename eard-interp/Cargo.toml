@@ -9,3 +9,4 @@ edition = "2018"
 async-std="*"
 async-thread="*"
 minicbor={ version="*", features=["std"] }
+serde_json="*"

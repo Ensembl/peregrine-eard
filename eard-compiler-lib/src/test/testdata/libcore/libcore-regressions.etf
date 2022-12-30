@@ -51,3 +51,49 @@ opcode 21, r2, r1
 r1 <- []
 opcode 54, r1, r2
 opcode 21, r0, r1
+
+>> test
+
+check 1
+
+>> input
+
+program "group" "program" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 21, r2 ,r1; } }
+function c(x) { let y = wc(x); y }
+
+let a : length(!x) = c([1,2,3]);
+let b : length(!x) = c([4,5]);
+print(format(a));
+print(format(b));
+
+>> reordered strip nolines
+
+sequences:158 r31 <- [1,2,3]
+test:5 r37 (1#5) r31
+print:13 r78 (2#10) r37
+test:7 r92 (3#14) r37
+sequences:158 r63 <- [4,5]
+test:5 r69 (1#9) r63
+print:13 r87 (2#12) r69
+test:8 r93 (3#15) r69
+test:8 r94 <- "x"
+test:8  (4#16) r94 r93 r92
+print:14  (5#11) r78
+print:14  (5#13) r87
+
+>> generate strip
+
+r1 <- [1,2,3]
+opcode 21, r2, r1
+opcode 138, r1, r2
+opcode 5, r3, r2
+r2 <- [4,5]
+opcode 21, r4, r2
+opcode 138, r2, r4
+opcode 5, r5, r4
+r4 <- "x"
+opcode 10, r4, r5, r3
+opcode 137, r1
+opcode 137, r2

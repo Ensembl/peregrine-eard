@@ -72,3 +72,16 @@ print(format(max(c(a),c(d))));
 print(format(min(c(a),c(d))));
 
 call_up();
+
+let a : length(!x) = [1,2,3];
+let b : length(!x) = [4,5,6];
+
+print(format(c(2)+c(3)));
+print(format(c([1,2])+c(3)));
+print(format(c([1,2])+c([3,4])));
+print(format(c([1,2])+c([5.2,...])));
+
+print(format(c(2)-c(3)));
+print(format(c([1,2])-c(3)));
+print(format(c([1,2])-c([3,4])));
+print(format(c([1,2])-c([5.2,...])));

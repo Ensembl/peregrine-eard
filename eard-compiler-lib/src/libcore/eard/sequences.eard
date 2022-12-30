@@ -123,12 +123,6 @@ debug special(check_total) code __code_check_total(string,number,number) {
     }
 }
 
-debug special(check_bound) code __code_check_bound(string,number,number) {
-    impl (r1: string, r2: number, r3: number) {
-        opcode 12, r1, r2, r3;
-    }
-}
-
 debug special(check_length_total) code __code_check_length_total(string,number,number) {
     impl (r1: string, r2: number, r3: number) {
         opcode 13, r1, r2, r3;

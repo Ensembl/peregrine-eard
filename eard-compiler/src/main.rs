@@ -2,7 +2,7 @@ mod config;
 
 use std::{process::exit, fs::File, io::{Write, self}};
 use eard_compiler_lib::{EardCompiler, EardCompilation, EardSerializeCode };
-use config::Config;
+use config::{Config, Format};
 use clap::Parser;
 
 fn do_it(config: &Config) -> Result<(),String> {
@@ -23,11 +23,14 @@ fn do_it(config: &Config) -> Result<(),String> {
         output.add(code);
     }
     let binary = match &config.format {
-        config::Format::Standard => {
+        Format::Standard => {
             output.serialize()?
         },
-        config::Format::Expanded => {
+        Format::Expanded => {
             output.serialize_json().as_bytes().to_vec()
+        },
+        Format::Dump => {
+            format!("{:?}",output).as_bytes().to_vec()
         }
     };
     if config.outfile == "-" {

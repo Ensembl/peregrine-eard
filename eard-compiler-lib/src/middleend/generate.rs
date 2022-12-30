@@ -89,6 +89,13 @@ impl<'a> Generate<'a> {
         }
     }
 
+    fn clear(&mut self) {
+        self.constants.clear();
+        self.unborn_constants.clear();
+        self.regmap.clear();
+        self.reg_alloc = RegAllocate::new();
+    }
+
     fn find_last(&mut self, index: usize, oper: &Operation) {
         self.position = oper.position.clone();
         match &oper.value {
@@ -258,6 +265,7 @@ impl<'a> Generate<'a> {
             },
             OperationValue::Entry(s) => {
                 self.out.push(Step::Entry(s.to_string()));
+                self.clear();
             }
         }
         Ok(())

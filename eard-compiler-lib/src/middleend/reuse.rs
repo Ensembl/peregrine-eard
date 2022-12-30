@@ -112,6 +112,9 @@ impl<'a> KnownValues<'a> {
             },
             OperationValue::Entry(_) => {
                 self.add_oper(oper);
+                self.reg_value.clear();
+                self.value_reg.clear();
+                self.alias_to.clear();
             }
             OperationValue::Code(call,name,rets,args) => {
                 let block = self.get_block(*call,*name);

@@ -1,0 +1,83 @@
+program "group" "program" 1;
+
+world code wc(?X) -> ?X { impl(r1: ?X) -> r2: ?X { opcode 21, r2 ,r1; } }
+function c(x) { let y = wc(x); y }
+
+entry procedure main() {
+    print(format([
+        "general",
+        "length1",
+        "length2",
+        "length3",
+        "length4"
+    ]));
+    print(format([
+        9,
+        1,
+        1,
+        1,
+        1
+    ]));
+    print(format([
+        "general",
+        "[1,2,3]",
+        "[4,5,6]",
+        "[0,0,1,0,2,0,0]",
+        "[0,1,0,0,2,0,2,2,1]",
+        "[3]", "[0,0,0]", "[5,...]", "[0,0,0]",
+
+        "failed total check",
+
+        "failed length check",
+
+        "failed ref check",
+
+        "failed inf/inf check"
+    ]));
+}
+
+entry procedure general() {
+    print("general");
+    let a : length(!x) = c([1,2,3]);
+    let b : length(!x) = c([4,5,6]);
+    print(format(a));
+    print(format(b));
+    let c : total(!x) = c([0,0,1,0,2,0,0]);
+    print(format(c));
+    let d : ref(!x) = c([0,1,0,0,2,0,2,2,1]);
+    print(format(d));
+    let e : total(!x) = c([3]);
+    let f : ref(!x) = c([0,0,0]);
+    let g : length(!x...) = c([5,...]);
+    let h : length(!x...) = c([0,0,0]);
+    print(format(e));
+    print(format(f));
+    print(format(g));
+    print(format(h));
+}
+
+entry procedure length1() {
+    let a : length(!x) = c([1,2,3]);
+    let c : total(!x) = c([0,0,2,0,2,0,0]);
+    print(format(c));
+}
+
+entry procedure length2() {
+    print("length2");
+    let a : length(!x) = c([1,2,3]);
+    let b : length(!x) = c([4,5]);
+    print(format(a));
+    print(format(b));
+}
+
+entry procedure length3() {
+    let a : length(!x) = c([1,2,3]);
+    let c : ref(!x) = c([0,1,3]);
+    print(format(c));
+}
+
+entry procedure length4() {
+    let a : length(!x) = c([1,2,3]);
+    let c : length(!x...) = c([0,1]);
+    print(format(c));
+}

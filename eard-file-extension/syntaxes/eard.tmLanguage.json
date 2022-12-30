@@ -26,7 +26,7 @@
 		"keywords": {
 			"patterns": [{
 				"name": "keyword.control.eard",
-				"match": "\\b(program|include|special|large|sparse|code|world|opcode|register|function|procedure|let|refer|impl|debug|export|fold)\\b"
+				"match": "\\b(entry|program|include|special|large|sparse|code|world|opcode|register|function|procedure|let|refer|impl|debug|export|fold)\\b"
 			}]
 		},
 		"types": {

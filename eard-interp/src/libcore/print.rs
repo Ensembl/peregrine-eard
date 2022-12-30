@@ -24,7 +24,7 @@ pub(crate) fn op_format(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Gl
         let out = match value {
             Value::Boolean(b) => format!("{:?}",b),
             Value::Number(n) => reduce_num(*n),
-            Value::String(s) => format!("{}",s),
+            Value::String(s) => format!("{:?}",s),
             Value::FiniteBoolean(b) => format!("[{}]",fmt_seq(b)),
             Value::FiniteNumber(n) => format!("[{}]",fmt_seq_num(n)),
             Value::FiniteString(s) => format!("[{}]",fmt_seq(s)),

@@ -74,6 +74,7 @@ impl<'a,'b> ConstFold<'a,'b> {
             },
             LinearStatementValue::Signature(_) => {},
             LinearStatementValue::Entry(s) => {
+                self.values.clear();
                 self.out(OperationValue::Entry(s.to_string()));
             },
         }

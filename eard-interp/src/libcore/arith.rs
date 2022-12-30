@@ -1,82 +1,97 @@
+use std::mem;
+
 use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::Return, value::Value};
 
 fn op_num2<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> 
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
-        let a = ctx.force_number(regs[0])?;
+        let mut a = ctx.force_number(regs[0])?;
         let b = ctx.force_number(regs[1])?;
-        ctx.set(regs[0],Value::Number(f(a,b)))?;
+        f(&mut a,b);
+        ctx.set(regs[0],Value::Number(a))?;
         Ok(Return::Sync)
     }))
 }
 
 fn op_num3<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
-        let a = ctx.force_number(regs[1])?;
+        let mut a = ctx.force_number(regs[1])?;
         let b = ctx.force_number(regs[2])?;
-        ctx.set(regs[0],Value::Number(f(a,b)))?;
+        f(&mut a,b);
+        ctx.set(regs[0],Value::Number(a))?;
         Ok(Return::Sync)
     }))
 }
 
 fn op_num2s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> 
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
         if ctx.is_finite(regs[0])? {
-            let a = ctx.force_finite_number(regs[0])?;
+            let mut a = mem::replace(ctx.force_finite_number_mut(regs[0])?,vec![]);
             let b = ctx.force_number(regs[1])?;
-            let v = a.iter().map(|a| f(*a,b)).collect();
-            ctx.set(regs[0],Value::FiniteNumber(v))?;
+            for v in &mut a {
+                f(v,b);
+            }
+           *ctx.force_finite_number_mut(regs[0])? = a;
         } else {
-            let a = ctx.force_infinite_number(regs[0])?;
+            let mut a = ctx.force_infinite_number(regs[0])?;
             let b = ctx.force_number(regs[1])?;
-            ctx.set(regs[0],Value::InfiniteNumber(f(a,b)))?;    
+            f(&mut a,b);
+            ctx.set(regs[0],Value::InfiniteNumber(a))?;    
         }
         Ok(Return::Sync)
     }))
 }
 
 fn op_num3s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
         if ctx.is_finite(regs[0])? {
-            let a = ctx.force_finite_number(regs[1])?;
+            let mut a = ctx.force_finite_number(regs[1])?.to_vec();
             let b = ctx.force_number(regs[2])?;
-            let v = a.iter().map(|a| f(*a,b)).collect();
-            ctx.set(regs[0],Value::FiniteNumber(v))?;
+            for v in &mut a {
+                f(v,b);
+            }
+            ctx.set(regs[0],Value::FiniteNumber(a))?;
         } else {
-            let a = ctx.force_infinite_number(regs[1])?;
+            let mut a = ctx.force_infinite_number(regs[1])?;
             let b = ctx.force_number(regs[2])?;
-            ctx.set(regs[0],Value::InfiniteNumber(f(a,b)))?;    
+            f(&mut a,b);
+            ctx.set(regs[0],Value::InfiniteNumber(a))?;    
         }
         Ok(Return::Sync)
     }))
 }
 
 fn op_num2ss<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> 
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
         match (ctx.is_finite(regs[0])?,ctx.is_finite(regs[1])?) {
             (true, true) => {
-                let a = ctx.force_finite_number(regs[0])?;
+                let mut a = mem::replace(ctx.force_finite_number_mut(regs[0])?,vec![]);
                 let b = ctx.force_finite_number(regs[1])?;  
-                let v = a.iter().zip(b.iter()).map(|(a,b)| f(*a,*b)).collect();
-                ctx.set(regs[0],Value::FiniteNumber(v))?;
+                for (x,y) in a.iter_mut().zip(b.iter()) {
+                    f(x,*y);
+                }
+                *ctx.force_finite_number_mut(regs[0])? = a;
             },
             (true, false) => {
-                let a = ctx.force_finite_number(regs[0])?;
-                let b = ctx.force_infinite_number(regs[1])?;  
-                let v = a.iter().map(|a| f(*a,b)).collect();
-                ctx.set(regs[0],Value::FiniteNumber(v))?;
+                let mut a = mem::replace(ctx.force_finite_number_mut(regs[0])?,vec![]);
+                let b = ctx.force_infinite_number(regs[1])?;
+                for v in &mut a {
+                    f(v,b);
+                }
+               *ctx.force_finite_number_mut(regs[0])? = a;
             },
             (false, true) => {
                 return Err(format!("length mismatch"));
             },
             (false, false) => {
-                let a = ctx.force_infinite_number(regs[0])?;
+                let mut a = ctx.force_infinite_number(regs[0])?;
                 let b = ctx.force_infinite_number(regs[1])?;
-                ctx.set(regs[0],Value::InfiniteNumber(f(a,b)))?;        
+                f(&mut a,b);
+                ctx.set(regs[0],Value::InfiniteNumber(a))?;        
             }
         }
         Ok(Return::Sync)
@@ -84,28 +99,33 @@ fn op_num2ss<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Resul
 }
 
 fn op_num3ss<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> 
-        where F: Fn(f64,f64) -> f64 + 'static {
+        where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
         match (ctx.is_finite(regs[1])?,ctx.is_finite(regs[2])?) {
             (true, true) => {
-                let a = ctx.force_finite_number(regs[1])?;
-                let b = ctx.force_finite_number(regs[2])?;  
-                let v = a.iter().zip(b.iter()).map(|(a,b)| f(*a,*b)).collect();
-                ctx.set(regs[0],Value::FiniteNumber(v))?;
+                let mut a = ctx.force_finite_number(regs[1])?.to_vec();
+                let b = ctx.force_finite_number(regs[2])?;
+                for (x,y) in a.iter_mut().zip(b.iter()) {
+                    f(x,*y);
+                }
+                ctx.set(regs[0],Value::FiniteNumber(a))?;
             },
             (true, false) => {
-                let a = ctx.force_finite_number(regs[1])?;
-                let b = ctx.force_infinite_number(regs[2])?;  
-                let v = a.iter().map(|a| f(*a,b)).collect();
-                ctx.set(regs[0],Value::FiniteNumber(v))?;
+                let mut a = ctx.force_finite_number(regs[1])?.to_vec();
+                let b = ctx.force_infinite_number(regs[2])?;
+                for x in a.iter_mut() {
+                    f(x,b);
+                }
+                ctx.set(regs[0],Value::FiniteNumber(a))?;
             },
             (false, true) => {
                 return Err(format!("length mismatch"));
             },
             (false, false) => {
-                let a = ctx.force_infinite_number(regs[1])?;
+                let mut a = ctx.force_infinite_number(regs[1])?;
                 let b = ctx.force_infinite_number(regs[2])?;
-                ctx.set(regs[0],Value::InfiniteNumber(f(a,b)))?;        
+                f(&mut a,b);
+                ctx.set(regs[0],Value::InfiniteNumber(a))?;        
             }
         }
         Ok(Return::Sync)
@@ -140,7 +160,9 @@ macro_rules! op_binnum {
     };
 }
 
-op_binnum!(op_max2,op_max3,op_max2s,op_max3s,op_max2ss,op_max3ss,|a,b| a.max(b));
-op_binnum!(op_min2,op_min3,op_min2s,op_min3s,op_min2ss,op_min3ss,|a,b| a.min(b));
-op_binnum!(op_add2,op_add3,op_add2s,op_add3s,op_add2ss,op_add3ss,|a,b| a+b);
-op_binnum!(op_sub2,op_sub3,op_sub2s,op_sub3s,op_sub2ss,op_sub3ss,|a,b| a-b);
+op_binnum!(op_max2,op_max3,op_max2s,op_max3s,op_max2ss,op_max3ss,|a,b| *a = a.max(b));
+op_binnum!(op_min2,op_min3,op_min2s,op_min3s,op_min2ss,op_min3ss,|a,b| *a = a.min(b));
+op_binnum!(op_add2,op_add3,op_add2s,op_add3s,op_add2ss,op_add3ss,|a,b| *a += b);
+op_binnum!(op_sub2,op_sub3,op_sub2s,op_sub3s,op_sub2ss,op_sub3ss,|a,b| *a -= b);
+op_binnum!(op_mul2,op_mul3,op_mul2s,op_mul3s,op_mul2ss,op_mul3ss,|a,b| *a *= b);
+op_binnum!(op_div2,op_div3,op_div2s,op_div3s,op_div2ss,op_div3ss,|a,b| *a /= b);

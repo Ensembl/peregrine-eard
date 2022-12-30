@@ -85,3 +85,13 @@ print(format(c(2)-c(3)));
 print(format(c([1,2])-c(3)));
 print(format(c([1,2])-c([3,4])));
 print(format(c([1,2])-c([5.2,...])));
+
+print(format(c(2)*c(3)));
+print(format(c([1,2])*c(3)));
+print(format(c([1,2])*c([3,4])));
+print(format(c([1,2])*c([5.2,...])));
+
+print(format(c(19)/c(2)));
+print(format(c([1,2])/c(2)));
+print(format(c([1,2])/c([2,4])));
+print(format(c([1,2])/c([0.25,...])));

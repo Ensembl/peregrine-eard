@@ -1,6 +1,6 @@
 use std::{pin::Pin, future::Future};
 use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}};
-use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound}};
+use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss}};
 
 pub trait LibcoreTemplate {
     fn print(&self, s: &str);
@@ -52,13 +52,25 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(43,Operation::new(op_push_s3));
     builder.add_operation(44,Operation::new(op_push_s2));
     builder.add_operation(45,Operation::new(op_len_s));
+    builder.add_operation(46,Operation::new(op_max3));
+    builder.add_operation(47,Operation::new(op_max2));
     builder.add_operation(51,Operation::new(op_infseq_b));
     builder.add_operation(52,Operation::new(op_finseq_b));
     builder.add_operation(53,Operation::new(op_push_b3));
     builder.add_operation(54,Operation::new(op_push_b2));
     builder.add_operation(55,Operation::new(op_len_b));
+    builder.add_operation(56,Operation::new(op_min3));
+    builder.add_operation(57,Operation::new(op_min2));
     builder.add_operation(137,Operation::new(op_print));
     builder.add_operation(138,Operation::new(op_format));
+    builder.add_operation(141,Operation::new(op_max3s));
+    builder.add_operation(142,Operation::new(op_max2s));
+    builder.add_operation(143,Operation::new(op_max3ss));
+    builder.add_operation(144,Operation::new(op_max2ss));
+    builder.add_operation(145,Operation::new(op_min3s));
+    builder.add_operation(146,Operation::new(op_min2s));
+    builder.add_operation(147,Operation::new(op_min3ss));
+    builder.add_operation(148,Operation::new(op_min2ss));
     Ok(LibcoreBuilder { context })
 }
 

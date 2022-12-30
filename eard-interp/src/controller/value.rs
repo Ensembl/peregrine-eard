@@ -89,6 +89,9 @@ impl Value {
     force!(force_boolean,force_boolean_mut,Boolean,bool,true);
     force!(force_number,force_number_mut,Number,f64,true);
     force!(force_string,force_string_mut,String,str,false);
+    force!(force_infinite_boolean,force_infinite_boolean_mut,InfiniteBoolean,bool,true);
+    force!(force_infinite_number,force_infinite_number_mut,InfiniteNumber,f64,true);
+    force!(force_infinite_string,force_infinite_string_mut,InfiniteString,str,false);
     force!(force_finite_boolean,force_finite_boolean_mut,FiniteBoolean,Vec<bool>,false);
     force!(force_finite_number,force_finite_number_mut,FiniteNumber,Vec<f64>,false);
     force!(force_finite_string,force_finite_string_mut,FiniteString,Vec<String>,false);
@@ -134,10 +137,7 @@ impl<'b> Decode<'b,()> for Value {
                         let mut p = d.probe();
                         *out = Some(match CborVariety::peek(&mut p)? {
                             CborVariety::Float => Value::InfiniteNumber(d.f64()?),
-                            CborVariety::Integer => {
-                                let v = from_array::<u32>(d)?;
-                                Value::FiniteNumber(v.iter().map(|x| *x as f64).collect())
-                            },
+                            CborVariety::Integer => Value::InfiniteNumber(d.u32()? as f64),
                             CborVariety::String => Value::InfiniteString(d.str()?.to_string()),
                             CborVariety::Boolean => Value::InfiniteBoolean(d.bool()?),
                             _ => { return Err(Error::message("bad constant")); }

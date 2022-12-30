@@ -1,4 +1,4 @@
-use crate::model::constants::Constant;
+use crate::model::constants::{Constant, FullConstant};
 
 macro_rules! arm {
     ($ex:expr,$arm:tt) => {
@@ -24,6 +24,7 @@ macro_rules! seq_flex {
     };
 }
 
+use ordered_float::OrderedFloat;
 pub(crate) use seq_flex;
 
 macro_rules! seq_flex_un {
@@ -71,4 +72,38 @@ pub(crate) fn to_boolean(input: &[Constant]) -> Option<Vec<bool>> {
             _ => None
         }
     }).collect::<Option<Vec<_>>>()
+}
+
+pub(crate) fn fold_num_bin<F>(inputs: &[Option<FullConstant>], cb: F) -> Option<Vec<FullConstant>>
+        where F: Fn(f64,f64) -> f64 {
+    if let (Some(Some(FullConstant::Atomic(a))),
+            Some(Some(FullConstant::Atomic(b)))) = (inputs.get(0),inputs.get(1)) {
+        if let (Some(a),Some(b)) = (arm!(a,Number),arm!(b,Number)) {
+            return Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(cb(a.0,b.0))))]);
+        }
+    } else if let (Some(Some(FullConstant::Infinite(a))),
+                   Some(Some(FullConstant::Atomic(b)))) = (inputs.get(0),inputs.get(1)) {
+        if let (Some(a),Some(b)) = (arm!(a,Number),arm!(b,Number)) {
+            return Some(vec![FullConstant::Infinite(Constant::Number(OrderedFloat(cb(a.0,b.0))))]);
+        }
+    } else if let (Some(Some(FullConstant::Finite(a))),
+                   Some(Some(FullConstant::Atomic(Constant::Number(b))))) = (inputs.get(0),inputs.get(1)) {
+        let out = a.iter().map(|c| arm!(c,Number)).collect::<Option<Vec<_>>>()?;
+        let z = out.iter().map(|v| Constant::Number(OrderedFloat(cb(v.0,b.0)))).collect::<Vec<_>>();
+        return Some(vec![FullConstant::Finite(z)]);
+    } else if let (Some(Some(FullConstant::Finite(a))),
+                   Some(Some(FullConstant::Infinite(Constant::Number(b))))) = (inputs.get(0),inputs.get(1)) {
+        let out = a.iter().map(|c| arm!(c,Number)).collect::<Option<Vec<_>>>()?;
+        let z = out.iter().map(|v| Constant::Number(OrderedFloat(cb(v.0,b.0)))).collect::<Vec<_>>();
+        return Some(vec![FullConstant::Finite(z)]);
+    } else if let (Some(Some(FullConstant::Finite(a))),
+                   Some(Some(FullConstant::Finite(b)))) = (inputs.get(0),inputs.get(1)) {
+        let a = a.iter().map(|c| arm!(c,Number)).collect::<Option<Vec<_>>>()?;
+        let b = b.iter().map(|c| arm!(c,Number)).collect::<Option<Vec<_>>>()?;
+        let z = a.iter().zip(b.iter())
+            .map(|(a,b)| Constant::Number(OrderedFloat(cb(a.0,b.0))))
+            .collect::<Vec<_>>();
+        return Some(vec![FullConstant::Finite(z)]);
+    }
+    None
 }

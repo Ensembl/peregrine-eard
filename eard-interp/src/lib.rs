@@ -11,6 +11,7 @@ mod controller {
 
 mod libcore {
     pub(crate) mod libcore;
+    mod arith;
     mod checks;
     mod print;
     mod seqctors;

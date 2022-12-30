@@ -310,9 +310,93 @@ fold(libcore__minus) code __code_minus(seq(number) length(?X)) -> seq(number) le
     }
 }
 
+fold(libcore__max) code __code_max(number,number) -> number {
+    impl (r1: number, r2: number) -> r1 {
+        opcode 47, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r2 {
+        opcode 47, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 46, r3, r1, r2;
+    }
+}
+
+fold(libcore__max) code __code_max(seq(number),number) -> seq(number) {
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 142, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: number) -> r3: seq(number) {
+        opcode 141, r3, r1, r2;
+    }
+}
+
+fold(libcore__max) code __code_max(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 144, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 143, r3, r1, r2;
+    }
+}
+
+fold(libcore__min) code __code_min(number,number) -> number {
+    impl (r1: number, r2: number) -> r1 {
+        opcode 57, r1, r2;
+    }
+
+    impl (r1: number, r2: number) -> r2 {
+        opcode 57, r2, r1;
+    }
+
+    impl (r1: number, r2: number) -> r3: number {
+        opcode 56, r3, r1, r2;
+    }
+}
+
+fold(libcore__min) code __code_min(seq(number),number) -> seq(number) {
+    impl (r1: seq(number), r2: number) -> r1 {
+        opcode 146, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: number) -> r3: seq(number) {
+        opcode 145, r3, r1, r2;
+    }
+}
+
+fold(libcore__min) code __code_min(seq(number),seq(number)) -> seq(number) {
+    impl (r1: seq(number), r2: seq(number)) -> r1 {
+        opcode 148, r1, r2;
+    }
+
+    impl (r1: seq(number), r2: seq(number)) -> r3: seq(number) {
+        opcode 147, r3, r1, r2;
+    }
+}
+
+fold(libcore__max_seq) code __code_max_seq(seq(number)) -> number {
+    impl (r1: seq(number)) -> r2: number {
+        opcode 139, r2, r1;
+    }
+}
+
+fold(libcore__min_seq) code __code_min_seq(seq(number)) -> number {
+    impl (r1: seq(number)) -> r2: number {
+        opcode 140, r2, r1;
+    }
+}
+
 export function __operator_add(a,b) { let y = __code_add(a,b); y }
 export function __operator_sub(a,b) { let y = __code_sub(a,b); y }
 export function __operator_mul(a,b) { let y = __code_mul(a,b); y }
 export function __operator_div(a,b) { let y = __code_div(a,b); y }
 export function __operator_mod(a,b) { let y = __code_mod(a,b); y }
 export function __operator_minus(a) { let y = __code_minus(a); y }
+export function max(a,b) { let z = __code_max(a,b); z }
+export function max_seq(a) { let z = __code_max_seq(a); z }
+export function min(a,b) { let z = __code_min(a,b); z }
+export function min_seq(a) { let z = __code_min_seq(a); z }

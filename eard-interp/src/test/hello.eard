@@ -30,8 +30,45 @@ print(format([c(6),...]));
 print(format([c(true),...]));
 print(format([c("boo"),...]));
 
-print(format(len(x)));
-print(format(len(c(["hi",...]))));
-print(format(len(c([true,...]))));
+print(format(max(-1,2)));
+print(format(min(-1,2)));
+
+let a = c(2);
+let b = c(3);
+
+print(format(max(a,b)));
+print(format(max(a,b)));
+
+let a = c(2);
+let b = c(3);
+
+print(format(min(a,b)));
+print(format(min(a,b)));
+
+print(format(max([1,2,3],[2,1,5])));
+print(format(min([1,2,3],[2,1,5])));
+print(format(max([1,2,3],2)));
+print(format(min([1,2,3],2)));
+print(format(max([1,2,3],[2,...])));
+print(format(min([1,2,3],[2,...])));
+
+let a = c([1,2,3]);
+let b = c([2,1,5]);
+let c = c(2);
+let d = c([2,...]);
+
+print(format(max(a,b)));
+print(format(min(a,b)));
+print(format(max(a,c)));
+print(format(min(a,c)));
+print(format(max(a,d)));
+print(format(min(a,d)));
+c(a);
+print(format(max(c(a),c(b))));
+print(format(min(c(a),c(b))));
+print(format(max(c(a),c(c))));
+print(format(min(c(a),c(c))));
+print(format(max(c(a),c(d))));
+print(format(min(c(a),c(d))));
 
 call_up();

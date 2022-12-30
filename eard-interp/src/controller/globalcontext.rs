@@ -66,6 +66,9 @@ impl GlobalContext {
     force!(force_finite_boolean,force_finite_boolean_mut,Vec<bool>,false);
     force!(force_finite_number,force_finite_number_mut,Vec<f64>,false);
     force!(force_finite_string,force_finite_string_mut,Vec<String>,false);
+    force!(force_infinite_boolean,force_infinite_boolean_mut,bool,true);
+    force!(force_infinite_number,force_infinite_number_mut,f64,true);
+    force!(force_infinite_string,force_infinite_string_mut,str,false);
 
     pub fn is_finite(&self, reg: usize) -> Result<bool,String> {
         Ok(self.registers.get(reg)?.is_finite())

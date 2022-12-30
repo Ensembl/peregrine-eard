@@ -139,3 +139,11 @@
 138 format
 139 max seq(number)
 140 min seq(number)
+141 max (non-destructive) seq(number)/number
+142 max (destructive) seq(number)/number
+143 max (non-destructive) seq(number)/seq(number)
+144 max (destructive) seq(number)/seq(number)
+145 min (non-destructive) seq(number)/number
+146 min (destructive) seq(number)/number
+147 min (non-destructive) seq(number)/seq(number)
+148 min (destructive) seq(number)/seq(number)

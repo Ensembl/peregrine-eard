@@ -11,11 +11,11 @@ fn reduce_num(n: f64) -> String {
 }
 
 fn fmt_seq<T: fmt::Debug>(x: &[T]) -> String {
-    x.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>().join(", ")
+    x.iter().map(|x| format!("{:?}",x)).collect::<Vec<_>>().join(",")
 }
 
 fn fmt_seq_num(x: &[f64]) -> String {
-    x.iter().map(|x| reduce_num(*x)).collect::<Vec<_>>().join(", ")
+    x.iter().map(|x| reduce_num(*x)).collect::<Vec<_>>().join(",")
 }
 
 pub(crate) fn op_format(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {

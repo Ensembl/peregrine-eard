@@ -1,6 +1,6 @@
 use crate::model::constants::{FullConstant, Constant};
 use ordered_float::OrderedFloat;
-use super::util::{ arm, seq_flex, seq_flex_un, to_boolean};
+use super::util::{ arm, seq_flex, seq_flex_un, to_boolean, fold_num_bin};
 
 macro_rules! number_pred {
     ($pred:expr,$a:expr,$b:expr) => {{
@@ -210,6 +210,46 @@ pub(crate) fn fold_position(inputs: &[Option<FullConstant>]) -> Option<Vec<FullC
                 if *p { Some(Constant::Number(OrderedFloat(i as f64))) } else { None }
             }).collect();
             return Some(vec![FullConstant::Finite(pos)]);
+        }
+    }
+    None
+}
+
+pub(crate) fn fold_max(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    fold_num_bin(inputs,|a,b| a.max(b))
+}
+
+pub(crate) fn fold_max_seq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(s))) = inputs.get(0) {
+        let value = s.iter().map(|c| {
+            match c {
+                Constant::Number(n) => Some(n.0),
+                _ => None
+            }
+        }).collect::<Option<Vec<f64>>>();
+        if let Some(value) = value {
+            let max = value.into_iter().reduce(f64::max).unwrap();
+            return Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(max)))]);
+        }
+    }
+    None
+}
+
+pub(crate) fn fold_min(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    fold_num_bin(inputs,|a,b| a.min(b))
+}
+
+pub(crate) fn fold_min_seq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(FullConstant::Finite(s))) = inputs.get(0) {
+        let value = s.iter().map(|c| {
+            match c {
+                Constant::Number(n) => Some(n.0),
+                _ => None
+            }
+        }).collect::<Option<Vec<f64>>>();
+        if let Some(value) = value {
+            let min = value.into_iter().reduce(f64::min).unwrap();
+            return Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(min)))]);
         }
     }
     None

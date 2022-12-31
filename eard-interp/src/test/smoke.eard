@@ -149,3 +149,19 @@ print(format(f||f));
 print(format(f||t));
 print(format([f,t]||f));
 print(format([f,t,f,t]||[f,f,t,t]));
+
+let a = c(6);
+let b = c([-2,-1,1,2]);
+
+print(format(-a));
+print(format(-b));
+
+let f = c(false);
+let t = c(!f);
+
+print(format(!f));
+print(format(![t,f,!t,!f]));
+
+print(format(repeat(true,5)));
+print(format(repeat("hi",0)));
+print(format(repeat(3,10)));

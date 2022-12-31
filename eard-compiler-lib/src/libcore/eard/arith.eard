@@ -302,11 +302,11 @@ fold(libcore__minus) code __code_minus(number) -> number {
 
 fold(libcore__minus) code __code_minus(seq(number) length(?X)) -> seq(number) length(?X) {
     impl (r1: seq(number)) -> r1 {
-        opcode 71, r1;
+        opcode 79, r1;
     }
 
     impl (r1: seq(number)) -> r2 : seq(number) {
-        opcode 70, r2, r1;
+        opcode 78, r2, r1;
     }
 }
 

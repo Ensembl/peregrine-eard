@@ -433,6 +433,7 @@ macro_rules! op_binstrbool {
 
 macro_rules! op_binbool {
     ($op2:ident,$op3:ident,$op2s:ident,$op3s:ident,$op2ss:ident,$op3ss:ident,$cb:expr) => {
+        #[allow(unused)]
         pub(super) fn $op2(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_bool2($cb)
         }
@@ -440,7 +441,8 @@ macro_rules! op_binbool {
         pub(super) fn $op3(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_bool3($cb)
         }
-                
+
+        #[allow(unused)]
         pub(super) fn $op2s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_bool2_s($cb)
         }
@@ -449,6 +451,7 @@ macro_rules! op_binbool {
             op_bool3_s($cb)
         }
 
+        #[allow(unused)]
         pub(super) fn $op2ss(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_bool2_ss($cb)
         }
@@ -458,7 +461,6 @@ macro_rules! op_binbool {
         }
     };
 }
-
 
 op_binnum!(op_max2,op_max3,op_max2s,op_max3s,op_max2ss,op_max3ss,|a,b| *a = a.max(b));
 op_binnum!(op_min2,op_min3,op_min2s,op_min3s,op_min2ss,op_min3ss,|a,b| *a = a.min(b));

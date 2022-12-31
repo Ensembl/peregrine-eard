@@ -118,7 +118,7 @@ impl<'b> Decode<'b,()> for Value {
     fn decode(d: &mut Decoder<'b>, _ctx: &mut ()) -> Result<Self, Error> {
         Ok(match CborVariety::peek(d)? {
             CborVariety::Float => Value::Number(d.f64()?),
-            CborVariety::Integer => Value::Number(d.u32()? as f64),
+            CborVariety::Integer => Value::Number(d.i64()? as f64),
             CborVariety::String => Value::String(d.str()?.to_string()),
             CborVariety::Boolean => Value::Boolean(d.bool()?),
             CborVariety::Array => {
@@ -127,7 +127,7 @@ impl<'b> Decode<'b,()> for Value {
                 match CborVariety::peek(&mut p)? {
                     CborVariety::Float => Value::FiniteNumber(from_array(d)?),
                     CborVariety::Integer => {
-                        let v = from_array::<u32>(d)?;
+                        let v = from_array::<i64>(d)?;
                         Value::FiniteNumber(v.iter().map(|x| *x as f64).collect())
                     }
                     CborVariety::String => Value::FiniteString(from_array(d)?),
@@ -142,7 +142,7 @@ impl<'b> Decode<'b,()> for Value {
                         let mut p = d.probe();
                         *out = Some(match CborVariety::peek(&mut p)? {
                             CborVariety::Float => Value::InfiniteNumber(d.f64()?),
-                            CborVariety::Integer => Value::InfiniteNumber(d.u32()? as f64),
+                            CborVariety::Integer => Value::InfiniteNumber(d.i64()? as f64),
                             CborVariety::String => Value::InfiniteString(d.str()?.to_string()),
                             CborVariety::Boolean => Value::InfiniteBoolean(d.bool()?),
                             _ => { return Err(Error::message("bad constant")); }

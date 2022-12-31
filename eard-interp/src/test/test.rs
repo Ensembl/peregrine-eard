@@ -110,6 +110,11 @@ fn test_load() {
         "false", "true", "[false,true]", "[false,false,false,true]",
         "false", "true", "[false,true]", "[false,true,true,true]",
 
+        "-6", "[2,1,-1,-2]",
+
+        "true", "[false,true,true,false]",
+
+        "[true,true,true,true,true]", "[]", "[3,3,3,3,3,3,3,3,3,3]"
     ],out);
 }
 

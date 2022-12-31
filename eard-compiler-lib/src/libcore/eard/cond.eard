@@ -13,23 +13,23 @@ code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
     }
 }
 
-code __code_set(seq(boolean), seq(?X) length(?X)) -> seq(?X) length(?X) {
-    impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
-        opcode 95, r2, r1;
+code __code_set(seq(?X) length(?X), seq(boolean), seq(?X)) -> seq(?X) length(?X) {
+    impl (r1: seq(?X), r2: seq(boolean), r3: seq(?X)) -> r1 {
+        opcode 95, r1, r2, r3;
     }
 
-    impl (r1: seq(boolean), r2: seq(?X)) -> r3: seq(?X) {
-        opcode 94, r3, r2, r1;
+    impl (r1: seq(?X), r2: seq(boolean), r3: seq(?X)) -> r4: seq(?X) {
+        opcode 94, r4, r1, r2, r3;
     }
 }
 
-code __code_set_skip(seq(boolean), seq(?X) length(?X)) -> seq(?X) length(?X) {
-    impl (r1: seq(boolean), r2: seq(?X)) -> r2 {
-        opcode 97, r2, r1;
+code __code_set_skip(seq(?X) length(?X), seq(boolean), seq(?X)) -> seq(?X) length(?X) {
+    impl (r1: seq(?X), r2: seq(boolean), r3: seq(?X)) -> r1 {
+        opcode 97, r1, r2, r3;
     }
 
-    impl (r1: seq(boolean), r2: seq(?X)) -> r3: seq(?X) {
-        opcode 96, r3, r2, r1;
+    impl (r1: seq(?X), r2: seq(boolean), r3: seq(?X)) -> r4: seq(?X) {
+        opcode 96, r4, r1, r2, r3;
     }
 }
 
@@ -84,8 +84,8 @@ fold(libcore__enumerate) code __code_enumerate(seq(number)) -> seq(number) {
 }
 
 export function if(p,a,b) { let z = __code_if(p,a,b); z }
-export function set(p,x) { let z = __code_set(p,x); z }
-export function set_skip(p,x) { let z = __code_set_skip(p,x); z }
+export function set(x,p,y) { let z = __code_set(x,p,y); z }
+export function set_skip(x,p,y) { let z = __code_set_skip(x,p,y); z }
 export function set_at(p,x) { let z = __code_set_at(p,x); z }
 export function set_from(p,x) { let z = __code_set_from(p,x); z }
 export function repeat(d,n) { let z = __code_repeat(d,n); z }

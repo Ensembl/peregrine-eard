@@ -171,4 +171,18 @@ let b = c([6,7,8,9,0]);
 
 print(format(if(c(false),a,b)));
 print(format(if(c(true),a,b)));
-print(format(if(c([true,true,false,true,false]),a,b)));
+print(format(set_skip(a,c([true,true,false,true,false]),b)));
+print(format(set_skip(a,c([false,...]),b)));
+print(format(set_skip(a,c([true,...]),b)));
+
+print(format(set_skip(a,c([true,true,false,true,false]),[-1,...])));
+print(format(set_skip(a,c([false,...]),[-1,...])));
+print(format(set_skip(a,c([true,...]),[-1,...])));
+
+print(format(set(a,c([true,true,false,true,false]),b)));
+print(format(set(a,c([false,...]),b)));
+print(format(set(a,c([true,...]),b)));
+
+print(format(set(a,c([true,true,false,true,false]),[-1,...])));
+print(format(set(a,c([false,...]),[-1,...])));
+print(format(set(a,c([true,...]),[-1,...])));

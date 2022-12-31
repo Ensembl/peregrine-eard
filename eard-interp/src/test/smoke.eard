@@ -95,3 +95,57 @@ print(format(c(19)/c(2)));
 print(format(c([1,2])/c(2)));
 print(format(c([1,2])/c([2,4])));
 print(format(c([1,2])/c([0.25,...])));
+
+print(format(c(19)%c(2)));
+print(format(c([1,2])%c(2)));
+print(format(c([1,5])%c([2,3])));
+print(format(c([3,10])%c([3,...])));
+
+let a = c(3);
+print(format(a>2));
+print(format(a>3));
+print(format(a>4));
+print(format(a>=2));
+print(format(a>=3));
+print(format(a>=4));
+
+let a = c([1,2,3,4]);
+print(format(a>2));
+print(format(a>3));
+print(format(a>4));
+print(format(a>=2));
+print(format(a>=3));
+print(format(a>=4));
+
+let a = c([1,2,3,4]);
+let b = c([4,3,3,1]);
+print(format(a>b));
+print(format(a>=b));
+
+print(format(c(3)==3));
+print(format(c(3)==4));
+print(format(c([3,4])==3));
+print(format(c([3,4,3,4])==[3,3,4,4]));
+
+print(format(c(false)==false));
+print(format(c(false)==true));
+print(format(c([false,true])==false));
+print(format(c([false,true,false,true])==[false,false,true,true]));
+
+print(format(c("3")=="3"));
+print(format(c("3")=="4"));
+print(format(c(["3","4"])=="3"));
+print(format(c(["3","4","3","4"])==["3","3","4","4"]));
+
+let f = c(false);
+let t = c(true);
+
+print(format(t&&f));
+print(format(t&&t));
+print(format([f,t]&&t));
+print(format([f,t,f,t]&&[f,f,t,t]));
+
+print(format(f||f));
+print(format(f||t));
+print(format([f,t]||f));
+print(format([f,t,f,t]||[f,f,t,t]));

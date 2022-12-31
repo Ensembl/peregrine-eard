@@ -240,7 +240,7 @@ r1 <- 1
 opcode 999, r2, r1
 r1 <- 2
 opcode 999, r3, r1
-r1 <- []
+r1 <- []n
 opcode 4, r1, r2
 opcode 4, r1, r3
 r2 <- 3

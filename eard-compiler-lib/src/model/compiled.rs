@@ -2,7 +2,8 @@ use std::{convert::Infallible, fmt, collections::HashMap};
 use json::{JsonValue, object::Object};
 use minicbor::{Encoder, encode::Error};
 use crate::test::testutil::sepfmt;
-use super::constants::FullConstant;
+
+use super::constants::OperationConstant;
 
 #[derive(Clone)]
 pub(crate) struct Metadata {
@@ -27,7 +28,7 @@ impl Metadata {
 }
 
 pub(crate) struct CompiledBlock {
-    pub(crate) constants: Vec<FullConstant>,
+    pub(crate) constants: Vec<OperationConstant>,
     pub(crate) program: Vec<(usize,Vec<usize>)>
 }
 

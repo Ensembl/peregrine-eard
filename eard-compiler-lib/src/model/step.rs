@@ -1,10 +1,9 @@
 use std::fmt;
 use crate::test::testutil::sepfmt;
-
-use super::constants::FullConstant;
+use super::constants::OperationConstant;
 
 pub(crate) enum Step {
-    Constant(usize,FullConstant),
+    Constant(usize,OperationConstant),
     Opcode(usize,Vec<usize>),
     Entry(String)
 }

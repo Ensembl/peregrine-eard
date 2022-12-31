@@ -35,7 +35,7 @@
  */
 
 use std::{collections::HashMap, mem};
-use crate::{frontend::{buildtree::{BTTopDefn, BuildTree}}, util::toposort::TopoSort, model::{operation::{Operation, OperationValue}, constants::FullConstant, codeblocks::{CodeModifier, CodeBlock}}, controller::source::ParsePosition};
+use crate::{frontend::{buildtree::{BTTopDefn, BuildTree}}, util::toposort::TopoSort, model::{operation::{Operation, OperationValue}, codeblocks::{CodeModifier, CodeBlock}, constants::OperationConstant}, controller::source::ParsePosition};
 
 #[derive(PartialEq,Eq,Hash,Clone,Debug)]
 enum ReorderNode {
@@ -49,7 +49,7 @@ struct Reorder<'a> {
     topo: TopoSort<ReorderNode>,
     reg_birth: HashMap<usize,usize>,
     worlds: Vec<usize>,
-    constants: HashMap<usize,FullConstant>,
+    constants: HashMap<usize,OperationConstant>,
     uses: HashMap<usize,Vec<usize>>,
     useful_arcs: Vec<(ReorderNode,ReorderNode)>, // src -> dst
     position: ParsePosition,
@@ -148,7 +148,7 @@ impl<'a> Reorder<'a> {
             OperationValue::Code(call,name,_,args) => {
                 let block = self.get_block(*call,*name);
                 let mut useful = vec![];
-                let inputs = args.iter().map(|a| self.constants.get(a).cloned()).collect::<Vec<_>>();
+                let inputs = args.iter().map(|a| self.constants.get(a).map(|x| x.to_full_constant())).collect::<Vec<_>>();
                 let imps = block.choose_imps(&inputs,None,None);
                 for imp in imps {
                     for (_,arg_pos) in imp.reg_reuse()? {

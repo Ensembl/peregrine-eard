@@ -1,6 +1,6 @@
 use std::{pin::Pin, future::Future};
 use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}};
-use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss}};
+use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss, op_gt, op_ge, op_gt_s, op_ge_s, op_gt_ss, op_ge_ss, op_eq_num, op_eq_str, op_eq_num_s, op_eq_str_s, op_eq_num_ss, op_eq_str_ss, op_mod3, op_mod2, op_mod3s, op_mod2s, op_mod3ss, op_mod2ss, op_eq3_bool, op_eq3_bool_s, op_eq3_bool_ss, op_and3, op_and2, op_and3_s, op_and2_s, op_and3_ss, op_and2_ss, op_or3, op_or2, op_or3_s, op_or2_s, op_or3_ss, op_or2_ss}};
 
 pub trait LibcoreTemplate {
     fn print(&self, s: &str);
@@ -63,6 +63,17 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(23,Operation::new(op_mul2));
     builder.add_operation(24,Operation::new(op_div3));
     builder.add_operation(25,Operation::new(op_div2));
+    builder.add_operation(26,Operation::new(op_gt));
+    builder.add_operation(27,Operation::new(op_ge));
+    builder.add_operation(30,Operation::new(op_eq_num));
+    builder.add_operation(31,Operation::new(op_eq_str));
+    builder.add_operation(32,Operation::new(op_eq3_bool));
+    builder.add_operation(33,Operation::new(op_eq_num_s));
+    builder.add_operation(34,Operation::new(op_eq_str_s));
+    builder.add_operation(35,Operation::new(op_eq3_bool_s));
+    builder.add_operation(36,Operation::new(op_eq_num_ss));
+    builder.add_operation(37,Operation::new(op_eq_str_ss));
+    builder.add_operation(38,Operation::new(op_eq3_bool_ss));
     builder.add_operation(41,Operation::new(op_infseq_s));
     builder.add_operation(42,Operation::new(op_finseq_s));
     builder.add_operation(43,Operation::new(op_push_s3));
@@ -70,6 +81,8 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(45,Operation::new(op_len_s));
     builder.add_operation(46,Operation::new(op_max3));
     builder.add_operation(47,Operation::new(op_max2));
+    builder.add_operation(48,Operation::new(op_gt_s));
+    builder.add_operation(49,Operation::new(op_ge_s));
     builder.add_operation(51,Operation::new(op_infseq_b));
     builder.add_operation(52,Operation::new(op_finseq_b));
     builder.add_operation(53,Operation::new(op_push_b3));
@@ -77,6 +90,8 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(55,Operation::new(op_len_b));
     builder.add_operation(56,Operation::new(op_min3));
     builder.add_operation(57,Operation::new(op_min2));
+    builder.add_operation(58,Operation::new(op_gt_ss));
+    builder.add_operation(59,Operation::new(op_ge_ss));
     builder.add_operation(60,Operation::new(op_add3s));
     builder.add_operation(61,Operation::new(op_add2s));
     builder.add_operation(62,Operation::new(op_sub3s));
@@ -93,6 +108,24 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(75,Operation::new(op_mul2ss));
     builder.add_operation(76,Operation::new(op_div3ss));
     builder.add_operation(77,Operation::new(op_div2ss));
+    builder.add_operation(80,Operation::new(op_and3));
+    builder.add_operation(81,Operation::new(op_and2));
+    builder.add_operation(82,Operation::new(op_and3_s));
+    builder.add_operation(83,Operation::new(op_and2_s));
+    builder.add_operation(84,Operation::new(op_and3_ss));
+    builder.add_operation(85,Operation::new(op_and2_ss));
+    builder.add_operation(86,Operation::new(op_or3));
+    builder.add_operation(87,Operation::new(op_or2));
+    builder.add_operation(88,Operation::new(op_or3_s));
+    builder.add_operation(89,Operation::new(op_or2_s));
+    builder.add_operation(90,Operation::new(op_or3_ss));
+    builder.add_operation(91,Operation::new(op_or2_ss));
+    builder.add_operation(119,Operation::new(op_mod3));
+    builder.add_operation(120,Operation::new(op_mod2));
+    builder.add_operation(121,Operation::new(op_mod3s));
+    builder.add_operation(122,Operation::new(op_mod2s));
+    builder.add_operation(123,Operation::new(op_mod3ss));
+    builder.add_operation(124,Operation::new(op_mod2ss));
     builder.add_operation(137,Operation::new(op_print));
     builder.add_operation(138,Operation::new(op_format));
     builder.add_operation(141,Operation::new(op_max3s));

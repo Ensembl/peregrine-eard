@@ -70,7 +70,7 @@ impl<'a> EardCompilation<'a> {
         let (mut broad,block_indexes) = broad_type(&tree,&linear)?;
         let linear = run_checking(&tree,&linear,&block_indexes,&mut allocator,&mut broad,verbose)?;
         let mut narrow = narrow_type(&tree,&block_indexes,&broad,&linear)?;
-        let opers = const_fold(&self,tree,&block_indexes,&linear,verbose);
+        let opers = const_fold(&self,tree,&block_indexes,&narrow,&linear,verbose);
         let opers = culdesac(tree,&block_indexes,&opers,verbose);
         let opers = reuse(tree,&broad,&narrow,&block_indexes,&opers,verbose)?;
         let opers = reorder(&tree,&block_indexes,&opers)?;

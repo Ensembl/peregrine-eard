@@ -29,19 +29,24 @@ impl CborVariety {
     }
 }
 
+fn unexpected_type() -> String {
+    panic!();
+    format!("unexpected type")
+}
+
 macro_rules! force {
     ($name:ident,$mname:ident,$arm:tt,$out:ty,false) => {
         pub fn $name(&self) -> Result<&$out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(format!("unexpected type"))
+                _ => Err(unexpected_type())
             }
         }
 
         pub fn $mname(&mut self) -> Result<&mut $out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(format!("unexpected type"))
+                _ => Err(unexpected_type())
             }
         }
     };
@@ -50,14 +55,14 @@ macro_rules! force {
         pub fn $name(&self) -> Result<$out,String> {
             match self {
                 Value::$arm(v) => Ok(*v),
-                _ => Err(format!("unexpected type"))
+                _ => Err(unexpected_type())
             }
         }
 
         pub fn $mname(&mut self) -> Result<&mut $out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(format!("unexpected type"))
+                _ => Err(unexpected_type())
             }
         }
     };
@@ -142,6 +147,16 @@ impl<'b> Decode<'b,()> for Value {
                             CborVariety::Boolean => Value::InfiniteBoolean(d.bool()?),
                             _ => { return Err(Error::message("bad constant")); }
                         });
+                    } else if key == "e" {
+                        let v = d.str()?;
+                        *out = match v.chars().next() {
+                            Some('b') => Some(Value::FiniteBoolean(vec![])),
+                            Some('n') => Some(Value::FiniteNumber(vec![])),
+                            Some('s') => Some(Value::FiniteString(vec![])),
+                            Some('h') => Some(Value::FiniteNumber(vec![])),
+                            _ => { return Err(Error::message("bad constant")); }
+
+                        };
                     } else {
                         d.skip()?;
                     }

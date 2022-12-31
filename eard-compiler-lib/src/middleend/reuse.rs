@@ -1,10 +1,10 @@
 use std::{collections::{HashMap, BTreeMap}, fmt};
-use crate::{frontend::buildtree::{BTTopDefn, BuildTree}, model::{constants::FullConstant, operation::{OperationValue, Operation}, codeblocks::{CodeBlock, CodeModifier}}, test::testutil::sepfmt};
+use crate::{frontend::buildtree::{BTTopDefn, BuildTree}, model::{constants::{OperationConstant}, operation::{OperationValue, Operation}, codeblocks::{CodeBlock, CodeModifier}}, test::testutil::sepfmt};
 use super::{broadtyping::BroadType, narrowtyping::NarrowType};
 
 #[derive(PartialEq,Eq,Clone,PartialOrd,Ord)]
 pub(crate) enum KnownValue {
-    Constant(FullConstant),
+    Constant(OperationConstant),
     Derived(usize,Vec<Box<KnownValue>>,usize)
 }
 

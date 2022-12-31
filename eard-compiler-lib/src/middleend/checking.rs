@@ -139,7 +139,7 @@ impl<'a> Checking<'a> {
                 }
             },
             CheckType::Reference => {
-                if let Some(existing) = self.check_register.get(&(CheckType::Reference,ci)).cloned() {
+                if let Some(_) = self.check_register.get(&(CheckType::Reference,ci)).cloned() {
                     let new_value_reg = self.allocator.next_register();
                     self.broad.insert(new_value_reg,BroadType::Atomic);
                     self.check_register.insert((ct.clone(),ci),new_value_reg);
@@ -185,7 +185,7 @@ impl<'a> Checking<'a> {
                     self.add_runtime_check(*reg,name,ct,*ci);
                 }
             },
-            LinearStatementValue::Entry(e) => {
+            LinearStatementValue::Entry(_) => {
                 self.check_register.clear();
                 self.out.push(stmt.clone());
             },

@@ -54,13 +54,13 @@ let a = [1,2,3];
 
 >> constfold strip nolines
 
-sequences:46 r1 <- []
-test:2 r7 <- 1
-sequences:47 r12 <- [1]
-test:2 r17 <- 2
-sequences:47 r22 <- [1,2]
-test:2 r26 <- 3
-sequences:47 r31 <- [1,2,3]
+sequences:151 r1 <- []n
+test:4 r7 <- 1
+sequences:152 r12 <- [1]
+test:4 r17 <- 2
+sequences:152 r22 <- [1,2]
+test:4 r26 <- 3
+sequences:152 r31 <- [1,2,3]
 
 >> test
 
@@ -75,12 +75,12 @@ let a = [x-1,x,x+1];
 
 >> constfold strip nolines
 
-test:2 r1 <- 1
-sequences:46 r5 <- []
-test:3 r12 <- 1
-maths:10 r17 <- 0
-sequences:47 r25 <- [0]
-sequences:47 r35 <- [0,1]
-test:3 r40 <- 1
-maths:9 r45 <- 2
-sequences:47 r53 <- [0,1,2]
+test:4 r1 <- 1
+sequences:151 r5 <- []n
+test:5 r12 <- 1
+arith:394 r17 <- 0
+sequences:152 r25 <- [0]
+sequences:152 r35 <- [0,1]
+test:5 r40 <- 1
+arith:393 r45 <- 2
+sequences:152 r53 <- [0,1,2]

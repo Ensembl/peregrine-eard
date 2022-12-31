@@ -1,9 +1,11 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{constants::FullConstant, operation::{Operation, OperationValue}, linear::{LinearStatementValue, LinearStatement}, codeblocks::{CodeBlock, CodeModifier}}, controller::{compilation::EardCompilation, source::ParsePosition}};
+use crate::{frontend::buildtree::{BuildTree, BTTopDefn}, model::{constants::{FullConstant, OperationConstant}, operation::{Operation, OperationValue}, linear::{LinearStatementValue, LinearStatement}, codeblocks::{CodeBlock, CodeModifier}, checkstypes::AtomicTypeSpec}, controller::{compilation::EardCompilation, source::ParsePosition}};
+use super::narrowtyping::NarrowType;
 
 struct ConstFold<'a,'b> {
     comp: &'b EardCompilation<'a>,
     bt: &'b BuildTree,
+    narrow: &'b HashMap<usize,NarrowType>,
     block_indexes: &'b HashMap<usize,usize>,
     values: HashMap<usize,FullConstant>,
     position: ParsePosition,
@@ -11,9 +13,9 @@ struct ConstFold<'a,'b> {
 }
 
 impl<'a,'b> ConstFold<'a,'b> {
-    fn new(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>) -> ConstFold<'a,'b> {
+    fn new(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, narrow: &'b HashMap<usize,NarrowType>) -> ConstFold<'a,'b> {
         ConstFold {
-            comp: compilation, bt, block_indexes,
+            comp: compilation, bt, block_indexes, narrow,
             values: HashMap::new(),
             position: ParsePosition::empty("called"),
             out: vec![]
@@ -33,12 +35,34 @@ impl<'a,'b> ConstFold<'a,'b> {
         self.out.push(Operation { position: self.position.clone(), value });
     }
 
+    fn to_constant(&mut self, reg: usize, c: FullConstant) {
+        let mut empty_list = false;
+        if let FullConstant::Finite(a) = &c {
+            if a.len() == 0 { empty_list = true; }
+        }
+        let value = if empty_list {
+            let n = match self.narrow.get(&reg).expect("missing register") {
+                NarrowType::Sequence(n) => n,
+                _ => { panic!("contradictory typing in constfold") }
+            };
+            match n {
+                AtomicTypeSpec::Number => OperationConstant::EmptyNumberSeq,
+                AtomicTypeSpec::String => OperationConstant::EmptyStringSeq,
+                AtomicTypeSpec::Boolean => OperationConstant::EmptyBooleanSeq,
+                AtomicTypeSpec::Handle(c) => OperationConstant::EmptyHandleSeq(c.to_string())
+            }
+        } else {
+            OperationConstant::Constant(c)
+        };
+        self.out(OperationValue::Constant(reg,value));
+    }
+
     fn fold(&mut self, name: &str, rets: &[usize], args: &[usize]) -> bool {
         let inputs = args.iter().map(|a| self.values.get(a).cloned()).collect::<Vec<_>>();
         if let Some(outputs) = self.comp.compiler().fold(name,&inputs) {
             for (reg,c) in rets.iter().zip(outputs.iter()) {
                 self.values.insert(*reg,c.clone());
-                self.out(OperationValue::Constant(*reg,c.clone()));
+                self.to_constant(*reg,c.clone());
             }
             true
         } else {
@@ -64,7 +88,7 @@ impl<'a,'b> ConstFold<'a,'b> {
         match &stmt.value {
             LinearStatementValue::Check(_,_,_,_,_) => {},
             LinearStatementValue::Constant(reg,c) => {
-                self.out(OperationValue::Constant(*reg,FullConstant::Atomic(c.clone())));
+                self.out(OperationValue::Constant(*reg,OperationConstant::Constant(FullConstant::Atomic(c.clone()))));
                 self.values.insert(*reg,FullConstant::Atomic(c.clone()));
             },
             LinearStatementValue::Copy(_, _) => { panic!("copy occurred in constfold") },
@@ -83,8 +107,8 @@ impl<'a,'b> ConstFold<'a,'b> {
     fn take(self) -> Vec<Operation> { self.out }
 }
 
-pub(crate) fn const_fold<'a,'b>(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, stmts: &[LinearStatement], verbose: bool) -> Vec<Operation> {
-    let mut fold = ConstFold::new(compilation,bt,block_indexes);
+pub(crate) fn const_fold<'a,'b>(compilation: &'b EardCompilation<'a>, bt: &'b BuildTree, block_indexes: &'b HashMap<usize,usize>, narrow: &HashMap<usize,NarrowType>, stmts: &[LinearStatement], verbose: bool) -> Vec<Operation> {
+    let mut fold = ConstFold::new(compilation,bt,block_indexes,narrow);
     for stmt in stmts {
         fold.add(stmt);
     }

@@ -94,6 +94,22 @@ fn test_load() {
         "-1", "[-2,-1]", "[-2,-2]", "[-4.2,-3.2]",
         "6", "[3,6]", "[3,8]", "[5.2,10.4]", 
         "9.5", "[0.5,1]", "[0.5,0.5]", "[4,8]",
+        "1", "[1,0]", "[1,2]", "[0,1]",
+
+        "true", "false", "false", 
+        "true", "true", "false", 
+
+        "[false,false,true,true]", "[false,false,false,true]", "[false,false,false,false]", 
+        "[false,true,true,true]", "[false,false,true,true]", "[false,false,false,true]", 
+
+        "[false,false,false,true]", "[false,false,true,true]",
+
+        "true", "false", "[true,false]", "[true,false,false,true]",
+        "true", "false", "[true,false]", "[true,false,false,true]", 
+        "true", "false", "[true,false]", "[true,false,false,true]",
+        "false", "true", "[false,true]", "[false,false,false,true]",
+        "false", "true", "[false,true]", "[false,true,true,true]",
+
     ],out);
 }
 

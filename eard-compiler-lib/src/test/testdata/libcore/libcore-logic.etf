@@ -32,7 +32,7 @@ c([]);
 
 >> constfold strip culdesac nolines
 
-sequences:182 r1 <- []
+sequences:151 r1 <- []b
 test:5 r0 (1#2) r1
 
 >> test
@@ -299,7 +299,7 @@ r1 <- true
 opcode 999, r2, r1
 opcode 51, r1, r2
 opcode 40, r1
-r3 <- []
+r3 <- []b
 opcode 54, r3, r2
 r4 <- false
 opcode 999, r5, r4
@@ -343,7 +343,7 @@ opcode 999, r2, r1
 opcode 51, r1, r2
 opcode 40, r1
 opcode 28, r3, r2
-r4 <- []
+r4 <- []b
 opcode 54, r4, r2
 r5 <- false
 opcode 999, r6, r5
@@ -1057,13 +1057,13 @@ opcode 999, r0, r2
 opcode 999, r0, r1
 opcode 999, r0, r1
 opcode 999, r0, r2
-r1 <- []
+r1 <- []n
 opcode 999, r0, r1
 opcode 999, r0, r1
 r2 <- [1]
 opcode 999, r0, r2
-r1 <- [0,1]
-opcode 999, r0, r1
+r2 <- [0,1]
+opcode 999, r0, r2
 
 >> test
 
@@ -1104,7 +1104,7 @@ c(position(tt));
 
 >> generate strip
 
-r1 <- []
+r1 <- []b
 opcode 999, r2, r1
 opcode 118, r1, r2
 opcode 117, r3, r2

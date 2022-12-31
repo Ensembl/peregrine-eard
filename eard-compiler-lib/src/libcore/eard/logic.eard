@@ -79,13 +79,13 @@ fold(libcore__and) code __code_and(seq(boolean) length(?X),seq(boolean)) -> seq(
 }
 
 fold(libcore__or) code __code_or(boolean,boolean) -> boolean {
-    impl (r1: boolean, true) -> r1 {}
+    impl (r1: boolean, true) -> true {}
 
-    impl (r1: boolean, true) -> r2: boolean {
+    impl (r1: boolean, false) -> r1 {}
+
+    impl (r1: boolean, false) -> r2: boolean {
         opcode 21, r2, r1;
     }
-
-    impl (r1: boolean, false) -> false {}
 
     impl (r1: boolean, r2: boolean) -> r1 {
         opcode 87, r1, r2;
@@ -97,9 +97,11 @@ fold(libcore__or) code __code_or(boolean,boolean) -> boolean {
 }
 
 fold(libcore__or) code __code_or(seq(boolean) length(?X),boolean) -> seq(boolean) length(?X) {
-    impl (r1: seq(boolean), true) -> r1 {}
+    impl (r1: seq(boolean), true) -> true {}
 
-    impl (r1: seq(boolean), true) -> r2: seq(boolean) {
+    impl (r1: seq(boolean), false) -> r1 {}
+
+    impl (r1: seq(boolean), false) -> r2: seq(boolean) {
         opcode 21, r2, r1;
     }
 
@@ -113,9 +115,11 @@ fold(libcore__or) code __code_or(seq(boolean) length(?X),boolean) -> seq(boolean
 }
 
 fold(libcore__or) code __code_or(boolean,seq(boolean) length(?X)) -> seq(boolean) length(?X) {
-    impl (0, r1: seq(boolean)) -> r1 {}
+    impl (true, r1: seq(boolean)) -> true {}
 
-    impl (0, r1: seq(boolean)) -> r2: seq(boolean) {
+    impl (false, r1: seq(boolean)) -> r1 {}
+
+    impl (false, r1: seq(boolean)) -> r2: seq(boolean) {
         opcode 21, r2, r1;
     }
 

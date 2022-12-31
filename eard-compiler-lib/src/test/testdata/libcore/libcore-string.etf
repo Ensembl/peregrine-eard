@@ -38,7 +38,7 @@ c(join(",",c(["1","2","3"])));
 
 >> generate strip
 
-r1 <- []
+r1 <- []b
 opcode 999, r2, r1
 r1 <- ","
 opcode 106, r2, r1

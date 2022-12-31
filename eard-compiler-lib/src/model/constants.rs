@@ -82,16 +82,51 @@ pub enum FullConstant {
 }
 
 impl FullConstant {
+    pub(crate) fn is_empty_list(&self) -> bool {
+        match self {
+            FullConstant::Finite(f) => f.len() == 0,
+            _ => false
+        }
+    }    
+}
+
+impl fmt::Debug for FullConstant {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Atomic(a) => write!(f,"{:?}",a),
+            Self::Finite(s) => write!(f,"[{}]",sepfmt(&mut s.iter(),",","")),
+            Self::Infinite(a) => write!(f,"[{:?},...]",a),
+        }
+    }
+}
+
+#[derive(Clone,PartialEq,Eq,PartialOrd,Ord)]
+pub(crate) enum OperationConstant {
+    Constant(FullConstant),
+    EmptyNumberSeq,
+    EmptyBooleanSeq,
+    EmptyStringSeq,
+    EmptyHandleSeq(String)
+}
+
+impl OperationConstant {
+    pub(crate) fn to_full_constant(&self) -> FullConstant {
+        match self {
+            Self::Constant(c) => c.clone(),
+            _ => FullConstant::Finite(vec![])
+        }
+    }
+
     pub(crate) fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         match self {
-            FullConstant::Atomic(c) => {
+            OperationConstant::Constant(FullConstant::Atomic(c)) => {
                 if let Some(value) = c.to_index() {
                     encoder.u32(value as u32)?;
                 } else {
                     c.encode(encoder)?;
                 }
             },
-            FullConstant::Finite(seq) => {
+            OperationConstant::Constant(FullConstant::Finite(seq)) => {
                 encoder.array(seq.len() as u64)?;
                 if let Some(value) = Constant::vec_to_index(seq) {
                     for v in value {
@@ -103,13 +138,33 @@ impl FullConstant {
                     }
                 }
             },
-            FullConstant::Infinite(c) => {
+            OperationConstant::Constant(FullConstant::Infinite(c)) => {
                 encoder.begin_map()?.str("")?;
                 if let Some(value) = c.to_index() {
                     encoder.u32(value as u32)?;
                 } else {
                     c.encode(encoder)?;
                 }
+                encoder.end()?;
+            },
+            OperationConstant::EmptyBooleanSeq => {
+                encoder.begin_map()?.str("e")?;
+                encoder.str("b")?;
+                encoder.end()?;
+            },
+            OperationConstant::EmptyNumberSeq => {
+                encoder.begin_map()?.str("e")?;
+                encoder.str("n")?;
+                encoder.end()?;
+            },
+            OperationConstant::EmptyStringSeq => {
+                encoder.begin_map()?.str("e")?;
+                encoder.str("s")?;
+                encoder.end()?;
+            },
+            OperationConstant::EmptyHandleSeq(h) => {
+                encoder.begin_map()?.str("e")?;
+                encoder.str(&format!("h{}",h))?;
                 encoder.end()?;
             }
         }
@@ -118,25 +173,47 @@ impl FullConstant {
 
     pub(crate) fn encode_json(&self) -> JsonValue {
         match self {
-            FullConstant::Atomic(c) => c.encode_json(),
-            FullConstant::Finite(s) => {
+            OperationConstant::Constant(FullConstant::Atomic(c)) => c.encode_json(),
+            OperationConstant::Constant(FullConstant::Finite(s)) => {
                 JsonValue::Array(s.iter().map(|c| c.encode_json()).collect())
             },
-            FullConstant::Infinite(c) => {
+            OperationConstant::Constant(FullConstant::Infinite(c)) => {
                 let mut obj = Object::new();
                 obj.insert("",c.encode_json());
+                JsonValue::Object(obj)
+            },
+            OperationConstant::EmptyBooleanSeq => {
+                let mut obj = Object::new();
+                obj.insert("e","b".into());
+                JsonValue::Object(obj)
+            },
+            OperationConstant::EmptyNumberSeq => {
+                let mut obj = Object::new();
+                obj.insert("e","n".into());
+                JsonValue::Object(obj)
+            },
+            OperationConstant::EmptyStringSeq => {
+                let mut obj = Object::new();
+                obj.insert("e","s".into());
+                JsonValue::Object(obj)
+            },
+            OperationConstant::EmptyHandleSeq(h) => {
+                let mut obj = Object::new();
+                obj.insert("e",format!("h{}",h).into());
                 JsonValue::Object(obj)
             },
         }
     }
 }
 
-impl fmt::Debug for FullConstant {
+impl fmt::Debug for OperationConstant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Atomic(a) => write!(f,"{:?}",a),
-            Self::Finite(s) => write!(f,"[{}]",sepfmt(&mut s.iter(),",","")),
-            Self::Infinite(a) => write!(f,"[{:?},...]",a),
+            Self::Constant(c) => write!(f,"{:?}",c),
+            Self::EmptyNumberSeq => write!(f, "[]n"),
+            Self::EmptyBooleanSeq => write!(f, "[]b"),
+            Self::EmptyStringSeq => write!(f, "[]s"),
+            Self::EmptyHandleSeq(h) => write!(f,"[]h({})",h)
         }
     }
 }

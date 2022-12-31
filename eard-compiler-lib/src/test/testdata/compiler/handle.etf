@@ -33,7 +33,7 @@ test:8  (5#7) r44
 >> generate strip
 
 opcode 999, r1
-r2 <- []
+r2 <- []h(h)
 opcode 4, r2, r1
 opcode 4, r2, r1
 opcode 4, r2, r1
@@ -60,4 +60,4 @@ cmp(a,b);
 
 >> narrow-fail strip
 
-cannot deduce type/B at sequences:158 (called from test:10) (called from test:14)
+cannot deduce type/B at sequences:152 (called from test:10) (called from test:14)

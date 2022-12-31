@@ -1,11 +1,11 @@
 use std::fmt;
 use crate::{test::testutil::sepfmt, controller::source::ParsePosition};
-use super::constants::FullConstant;
+use super::constants::{FullConstant, OperationConstant};
 
 #[derive(Clone)]
 pub(crate) enum OperationValue {
-    Constant(usize,FullConstant),
-    Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args,
+    Constant(usize,OperationConstant),
+    Code(usize,usize,Vec<usize>,Vec<usize>), // call,name,rets,args
     Entry(String)
 }
 

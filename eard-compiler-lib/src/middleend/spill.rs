@@ -1,5 +1,5 @@
 use std::{collections::HashMap};
-use crate::{middleend::narrowtyping::NarrowType, unbundle::linearize::Allocator, model::{operation::{Operation, OperationValue}, constants::FullConstant}, controller::source::ParsePosition};
+use crate::{middleend::narrowtyping::NarrowType, unbundle::linearize::Allocator, model::{operation::{Operation, OperationValue}, constants::OperationConstant}, controller::source::ParsePosition};
 
 /* We have no main-store but can spill small constants as they can be regenerated. We force spills
  * after a certain non-reuse distance and allow patchup of non-spills during generation.
@@ -23,7 +23,7 @@ const SPILL_IDLE : usize = 6;
 
 struct Spill<'a> {
     in_use: HashMap<usize,Option<usize>>, // reg -> instr number for const regs still alive
-    constants: HashMap<usize,FullConstant>, // reg -> value
+    constants: HashMap<usize,OperationConstant>, // reg -> value
     alias: HashMap<usize,usize>, // reg input -> reg output
     allocator: &'a mut Allocator,
     narrow: &'a mut HashMap<usize,NarrowType>,

@@ -186,3 +186,9 @@ print(format(set(a,c([true,...]),b)));
 print(format(set(a,c([true,true,false,true,false]),[-1,...])));
 print(format(set(a,c([false,...]),[-1,...])));
 print(format(set(a,c([true,...]),[-1,...])));
+
+print(format(set_at(a,[2,4],b)));
+print(format(set_at(a,[2,4],[-1,...])));
+
+print(format(set_from(a,[2,4],b)));
+print(format(set_from(a,[2,4],[-1,...])));

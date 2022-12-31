@@ -1,6 +1,5 @@
 use std::mem;
-
-use crate::controller::{globalcontext::{GlobalContext, GlobalBuildContext}, operation::Return, value::{Value, ValueVariety}};
+use crate::controller::{globalcontext::{GlobalContext, GlobalBuildContext}, operation::Return, value::{Value}};
 
 pub(crate) fn op_repeat(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     Ok(Box::new(move |ctx,regs| {
@@ -109,6 +108,125 @@ pub(crate) fn op_set_skip_m(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mu
                 ctx.set(regs[0],ctx.get(regs[2])?.clone())?;
             }
         }
+        Ok(Return::Sync)
+    }))
+}
+
+fn set_at<T: Clone>(dst: &mut Vec<T>, src: &[T], index: &[f64]) -> Result<(),String> {
+    let mut src_idx = 0;
+    for dst_idx in index {
+        let dst_idx = *dst_idx as usize;
+        if dst_idx < dst.len() && src_idx < src.len() {
+            dst[dst_idx] = src[src_idx].clone();
+            src_idx += 1;
+        }
+    }
+    Ok(())
+}
+
+fn set_at_one<T: Clone>(dst: &mut Vec<T>, src: &T, index: &[f64]) -> Result<(),String> {
+    for dst_idx in index {
+        let dst_idx = *dst_idx as usize;
+        if dst_idx < dst.len() {
+            dst[dst_idx] = src.clone();
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn op_set_at(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut value = ctx.get(regs[1])?.clone();
+        let index = ctx.force_finite_number(regs[2])?;
+        let repl = ctx.get(regs[3])?;
+        match (&mut value,repl) {
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => set_at(a,b,index)?,
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => set_at_one(a,b,index)?,
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => set_at(a,b,index)?,
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => set_at_one(a,b,index)?,
+            (Value::FiniteString(a), Value::FiniteString(b)) => set_at(a,b,index)?,
+            (Value::FiniteString(a), Value::InfiniteString(b)) => set_at_one(a,b,index)?,
+            (a,b) => { return Err(format!("invalid type combination {:?} and {:?}",a,b)); }
+        }
+        ctx.set(regs[0],value)?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_set_at_m(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut value = mem::replace(ctx.get_mut(regs[0])?,Value::Boolean(false));
+        let index = ctx.force_finite_number(regs[1])?;
+        let repl = ctx.get(regs[2])?;
+        match (&mut value,repl) {
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => set_at(a,b,index)?,
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => set_at_one(a,b,index)?,
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => set_at(a,b,index)?,
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => set_at_one(a,b,index)?,
+            (Value::FiniteString(a), Value::FiniteString(b)) => set_at(a,b,index)?,
+            (Value::FiniteString(a), Value::InfiniteString(b)) => set_at_one(a,b,index)?,
+            (a,b) => { return Err(format!("invalid type combination {:?} and {:?}",a,b)); }
+        }
+        ctx.set(regs[0],value)?;
+        Ok(Return::Sync)
+    }))
+}
+
+fn set_from<T: Clone>(dst: &mut Vec<T>, src: &[T], index: &[f64]) -> Result<(),String> {
+    let mut dst_idx = 0;
+    for src_idx in index {
+        let src_idx = *src_idx as usize;
+        if dst_idx < dst.len() && src_idx < src.len() {
+            dst[dst_idx] = src[src_idx].clone();
+            dst_idx += 1;
+        }
+    }
+    Ok(())
+}
+
+fn set_from_one<T: Clone>(dst: &mut Vec<T>, src: &T, index: &[f64]) -> Result<(),String> {
+    for dst_idx in 0..(index.len() as usize) {
+        if dst_idx < dst.len() {
+            dst[dst_idx] = src.clone();
+        }
+    }
+    Ok(())
+}
+
+pub(crate) fn op_set_from(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut value = ctx.get(regs[1])?.clone();
+        let index = ctx.force_finite_number(regs[2])?;
+        let repl = ctx.get(regs[3])?;
+        match (&mut value,repl) {
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => set_from(a,b,index)?,
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => set_from_one(a,b,index)?,
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => set_from(a,b,index)?,
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => set_from_one(a,b,index)?,
+            (Value::FiniteString(a), Value::FiniteString(b)) => set_from(a,b,index)?,
+            (Value::FiniteString(a), Value::InfiniteString(b)) => set_from_one(a,b,index)?,
+            (a,b) => { return Err(format!("invalid type combination {:?} and {:?}",a,b)); }
+        }
+        ctx.set(regs[0],value)?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_set_from_m(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut value = mem::replace(ctx.get_mut(regs[0])?,Value::Boolean(false));
+        let index = ctx.force_finite_number(regs[1])?;
+        let repl = ctx.get(regs[2])?;
+        match (&mut value,repl) {
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => set_from(a,b,index)?,
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => set_from_one(a,b,index)?,
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => set_from(a,b,index)?,
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => set_from_one(a,b,index)?,
+            (Value::FiniteString(a), Value::FiniteString(b)) => set_from(a,b,index)?,
+            (Value::FiniteString(a), Value::InfiniteString(b)) => set_from_one(a,b,index)?,
+            (a,b) => { return Err(format!("invalid type combination {:?} and {:?}",a,b)); }
+        }
+        ctx.set(regs[0],value)?;
         Ok(Return::Sync)
     }))
 }

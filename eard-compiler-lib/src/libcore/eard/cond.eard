@@ -7,7 +7,7 @@ fold(libcore__if) code __code_if(boolean,?X,?X) -> ?X {
     }
 }
 
-fold(libcore__if) code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
+code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
     impl (r1: seq(boolean), r2: seq(?X), r3: seq(?X)) -> r4: seq(?X) {
         opcode 93, r4, r1, r2, r3;
     }

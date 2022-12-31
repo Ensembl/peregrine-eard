@@ -68,6 +68,12 @@ macro_rules! force {
     };
 }
 
+pub enum ValueVariety {
+    Boolean, Number, String,
+    FiniteBoolean, FiniteNumber, FiniteString,
+    InfiniteBoolean, InfiniteNumber, InfiniteString
+}
+
 #[derive(Clone,Debug)] // but don't use Clone except for trivial values: it's expensive!
 pub enum Value {
     Boolean(bool),
@@ -81,7 +87,45 @@ pub enum Value {
     InfiniteString(String),
 }
 
+fn merge2_s<T,F>(a: &mut Vec<T>,b: &T, mut cb: F) where F: FnMut(&mut T,&T) {
+    for v in a.iter_mut() {
+        cb(v,b);
+    }
+}
+
+fn merge2_ss<T,F>(a: &mut Vec<T>,b: &Vec<T>, mut cb: F) where F: FnMut(&mut T,&T) {
+    for (v,w) in a.iter_mut().zip(b.iter()) {
+        cb(v,w);
+    }
+}
+
 impl Value {
+    pub fn merge2<F,G,H>(&mut self, other: &Value, mut cb_b: F, mut cb_n: G, mut cb_s: H) -> Result<(),String>
+            where F: FnMut(&mut bool,&bool), G: FnMut(&mut f64,&f64), H: FnMut(&mut String,&String) {
+        match (self,other) {
+            (Value::Boolean(a), Value::Boolean(b)) => cb_b(a,b),
+            (Value::Boolean(a), Value::InfiniteBoolean(b)) => cb_b(a,b),
+            (Value::Number(a), Value::Number(b)) => cb_n(a,b),
+            (Value::Number(a), Value::InfiniteNumber(b)) => cb_n(a,b),
+            (Value::String(a), Value::String(b)) => cb_s(a,b),
+            (Value::String(a), Value::InfiniteString(b)) => cb_s(a,b),
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => merge2_ss(a,b,cb_b),
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => merge2_s(a,b,cb_b),
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => merge2_ss(a,b,cb_n),
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => merge2_s(a,b,cb_n),
+            (Value::FiniteString(a), Value::FiniteString(b)) => merge2_ss(a,b,cb_s),
+            (Value::FiniteString(a), Value::InfiniteString(b)) => merge2_s(a,b,cb_s),
+            (Value::InfiniteBoolean(a), Value::Boolean(b)) => cb_b(a,b),
+            (Value::InfiniteBoolean(a), Value::InfiniteBoolean(b)) => cb_b(a,b),
+            (Value::InfiniteNumber(a), Value::Number(b)) => cb_n(a,b),
+            (Value::InfiniteNumber(a), Value::InfiniteNumber(b)) => cb_n(a,b),
+            (Value::InfiniteString(a), Value::String(b)) => cb_s(a,b),
+            (Value::InfiniteString(a), Value::InfiniteString(b)) => cb_s(a,b),
+            (a,b) => { return Err(format!("invalid type combination {:?} and {:?}",a,b)); }
+        }
+        Ok(())
+    }
+
     pub fn is_finite(&self) -> bool {
         match self {
             Value::InfiniteBoolean(_) => false,

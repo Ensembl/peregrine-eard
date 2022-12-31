@@ -11,6 +11,7 @@ mod controller {
 
 mod libcore {
     pub(crate) mod libcore;
+    mod opbbtb;
     mod opbtb;
     mod opntn;
     mod arith;

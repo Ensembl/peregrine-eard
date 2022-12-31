@@ -114,7 +114,8 @@ fn test_load() {
 
         "true", "[false,true,true,false]",
 
-        "[true,true,true,true,true]", "[]", "[3,3,3,3,3,3,3,3,3,3]"
+        "[true,true,true,true,true]", "[]", "[3,3,3,3,3,3,3,3,3,3]",
+        "[6,7,8,9,0]", "[1,2,3,4,5]", "[1,2,8,4,0]",
     ],out);
 }
 

@@ -165,3 +165,10 @@ print(format(![t,f,!t,!f]));
 print(format(repeat(true,5)));
 print(format(repeat("hi",0)));
 print(format(repeat(3,10)));
+
+let a = c([1,2,3,4,5]);
+let b = c([6,7,8,9,0]);
+
+print(format(if(c(false),a,b)));
+print(format(if(c(true),a,b)));
+print(format(if(c([true,true,false,true,false]),a,b)));

@@ -60,6 +60,10 @@ impl GlobalContext {
         self.registers.get(reg)
     }
 
+    pub fn get_mut(&mut self, reg: usize) -> Result<&mut Value,String> {
+        self.registers.get_mut(reg)
+    }
+
     force!(force_boolean,force_boolean_mut,bool,true);
     force!(force_number,force_number_mut,f64,true);
     force!(force_string,force_string_mut,str,false);

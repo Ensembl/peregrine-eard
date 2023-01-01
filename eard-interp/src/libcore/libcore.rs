@@ -1,6 +1,16 @@
 use std::{pin::Pin, future::Future};
 use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}, handles::HandleStore};
-use super::{print::{op_print, op_format}, seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3}, checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii}, arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss, op_gt, op_ge, op_gt_s, op_ge_s, op_gt_ss, op_ge_ss, op_eq_num, op_eq_str, op_eq_num_s, op_eq_str_s, op_eq_num_ss, op_eq_str_ss, op_mod3, op_mod2, op_mod3s, op_mod2s, op_mod3ss, op_mod2ss}, opntn::{op_neg2, op_neg1, op_neg2s, op_neg1s}, opbtb::{op_not2, op_not1, op_not2s, op_not1s}, seq::{op_repeat, op_if, op_set, op_set_m, op_set_skip, op_set_skip_m, op_set_at, op_set_at_m, op_set_from, op_set_from_m, op_index, op_index_s, op_count, op_enumerate, op_any, op_all, op_position}, opbbtb::{op_eq3_bool, op_eq3_bool_s, op_eq3_bool_ss, op_and3, op_and2_s, op_or3, op_or2_s, op_or2_ss, op_and2, op_and3_ss, op_or3_s, op_or3_ss, op_and3_s, op_and2_ss, op_or2}, string::{op_concat, op_push_str, op_push_str_s, op_push_str_revs, op_split, op_template, op_split_start, op_split_get, Template, op_template_start, op_template_set, op_template_end}};
+use super::{
+    print::{op_print, op_format}, 
+    seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3},
+    checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii},
+    arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss, op_gt, op_ge, op_gt_s, op_ge_s, op_gt_ss, op_ge_ss, op_eq_num, op_eq_str, op_eq_num_s, op_eq_str_s, op_eq_num_ss, op_eq_str_ss, op_mod3, op_mod2, op_mod3s, op_mod2s, op_mod3ss, op_mod2ss},
+    opntn::{op_neg2, op_neg1, op_neg2s, op_neg1s}, 
+    opbtb::{op_not2, op_not1, op_not2s, op_not1s},
+    seq::{op_repeat, op_if, op_set, op_set_m, op_set_skip, op_set_skip_m, op_set_at, op_set_at_m, op_set_from, op_set_from_m, op_index, op_index_s, op_count, op_enumerate, op_any, op_all, op_position},
+    opbbtb::{op_eq3_bool, op_eq3_bool_s, op_eq3_bool_ss, op_and3, op_and2_s, op_or3, op_or2_s, op_or2_ss, op_and2, op_and3_ss, op_or3_s, op_or3_ss, op_and3_s, op_and2_ss, op_or2}, 
+    string::{op_concat, op_push_str, op_push_str_s, op_push_str_revs, op_split, op_template, op_split_start, op_split_get, Template, op_template_start, op_template_set, op_template_end}, convert::{op_to_bool, op_to_bool_m, op_to_bool_s, op_to_bool_s_m, op_to_num, op_to_num_m, op_to_num_s, op_to_num_s_m, op_to_str, op_to_str_m, op_to_str_s, op_to_str_s_m}
+};
 
 pub trait LibcoreTemplate {
     fn print(&self, s: &str);
@@ -166,6 +176,18 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(122,Operation::new(op_mod2s));
     builder.add_operation(123,Operation::new(op_mod3ss));
     builder.add_operation(124,Operation::new(op_mod2ss));
+    builder.add_operation(125,Operation::new(op_to_bool));
+    builder.add_operation(126,Operation::new(op_to_bool_m));
+    builder.add_operation(127,Operation::new(op_to_bool_s));
+    builder.add_operation(128,Operation::new(op_to_bool_s_m));
+    builder.add_operation(129,Operation::new(op_to_num));
+    builder.add_operation(130,Operation::new(op_to_num_m));
+    builder.add_operation(131,Operation::new(op_to_num_s));
+    builder.add_operation(132,Operation::new(op_to_num_s_m));
+    builder.add_operation(133,Operation::new(op_to_str));
+    builder.add_operation(134,Operation::new(op_to_str_m));
+    builder.add_operation(135,Operation::new(op_to_str_s));
+    builder.add_operation(136,Operation::new(op_to_str_s_m));
     builder.add_operation(137,Operation::new(op_print));
     builder.add_operation(138,Operation::new(op_format));
     builder.add_operation(141,Operation::new(op_max3s));

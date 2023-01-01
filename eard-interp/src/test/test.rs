@@ -146,7 +146,11 @@ fn test_load() {
 
         "false", "false", "true", "true", "true", "false",
 
-        "[1,3]"
+        "[1,3]",
+
+        "true", "[false,true]", "true", "[false,true]", "true", "[false,true]",
+        "\"true\"", "[\"false\",\"true\"]", "\"3\"", "[\"0\",\"1\"]", "\"x\"", "[\"\",\"y\"]",
+        "1", "[0,1]", "3", "[0,1]", "0", "[0,0]"
     ],out);
 }
 

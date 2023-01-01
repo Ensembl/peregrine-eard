@@ -1,4 +1,4 @@
-use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, value::Value, operation::Return};
+use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, value::Value, operation::Return, handles::HandleStore};
 
 fn apply_template(template: &str, values: &[String]) -> Option<String> {
     let mut out = String::new();
@@ -103,6 +103,115 @@ pub(crate) fn op_template(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut 
         let input = ctx.force_finite_string(regs[2])?;
         let out = apply_template(template,&input).unwrap_or("".to_string());
         ctx.set(regs[0],Value::String(out))?;
+        Ok(Return::Sync)
+    }))
+}
+
+fn rotate(input: &Vec<Vec<String>>) -> Vec<Vec<String>> {
+    let num = input.iter().map(|x| x.len()).max().unwrap_or(0);
+    let mut out = vec![];
+    for pos in 0..num {
+        let mut more = vec![];
+        for item in input.iter() {
+            more.push(item.get(pos).map(|x| x.to_string()).unwrap_or_else(|| "".to_string()));
+        }
+        out.push(more);
+    }
+    out
+}
+
+pub(crate) fn op_split_start(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_splits = gctx.patterns.lookup::<HandleStore<Vec<Vec<String>>>>("splits")?;
+    Ok(Box::new(move |ctx,regs| {
+        let sep = ctx.force_string(regs[1])?;
+        let input = ctx.force_finite_string(regs[2])?;
+        let mut split = vec![];
+        for item in input {
+            let parts = item.split(sep).map(|x| x.to_string());
+            let parts = parts.collect::<Vec<_>>();
+            split.push(parts);
+        }
+        let out = rotate(&split);
+        let splits = ctx.context.get_mut(&libcore_splits);        
+        let h = splits.push(out);
+        ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_split_get(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_splits = gctx.patterns.lookup::<HandleStore<Vec<Vec<String>>>>("splits")?;
+    Ok(Box::new(move |ctx,regs| {
+        let h = ctx.force_number(regs[1])? as usize;
+        let idx = ctx.force_number(regs[2])? as usize;
+        let splits = ctx.context.get(&libcore_splits);        
+        let values = splits.get(h)?;
+        ctx.set(regs[0],Value::FiniteString(values.get(idx).cloned().unwrap_or(vec![])))?;
+        Ok(Return::Sync)
+    }))
+}
+
+#[derive(Debug)]
+pub(crate) struct Template {
+    template: String,
+    parts: Vec<Vec<String>>
+}
+
+impl Template {
+    fn new(template: &str) -> Template {
+        Template { template: template.to_string(), parts: vec![] }
+    }
+
+    fn add(&mut self, index: usize, value: Vec<String>) {
+        if self.parts.len() <= index {
+            self.parts.resize_with(index+1,|| vec![]);
+        }
+        self.parts[index] = value;
+    }
+
+    fn get(&self) -> Vec<String> {
+        let rotated = rotate(&self.parts);
+        rotated.iter().map(|parts| {
+            apply_template(&self.template,&parts).unwrap_or("".to_string())
+        }).collect()
+    }
+}
+
+pub(crate) fn op_template_start(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_templates = gctx.patterns.lookup::<HandleStore<Template>>("templates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let spec = ctx.force_string(regs[1])?;
+        let tmpl = Template::new(spec);
+        let templates = ctx.context.get_mut(&libcore_templates);
+        let h = templates.push(tmpl);
+        ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_template_set(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_templates = gctx.patterns.lookup::<HandleStore<Template>>("templates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let h = ctx.force_number(regs[0])? as usize;
+        let pos = ctx.force_number(regs[1])? as usize;
+        let values = ctx.force_finite_string(regs[2])?.clone();
+        let templates = ctx.context.get_mut(&libcore_templates);
+        let tmpl = templates.get_mut(h)?;
+        eprintln!("set {:?}",tmpl);
+        tmpl.add(pos,values);
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_template_end(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_templates = gctx.patterns.lookup::<HandleStore<Template>>("templates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let h = ctx.force_number(regs[1])? as usize;
+        let templates = ctx.context.get_mut(&libcore_templates);
+        let tmpl = templates.get_mut(h)?;
+        eprintln!("end {:?}",tmpl);
+        let out = tmpl.get();
+        ctx.set(regs[0],Value::FiniteString(out))?;
         Ok(Return::Sync)
     }))
 }

@@ -210,3 +210,17 @@ print(format(push_str("hello, ",["mercury","venus", "earth", "mars"])));
 
 print(format(split(",",c("1,2,3,4,5"))));
 print(format(template("first: {0}; second: {1}",c(["1st","2nd"]))));
+
+let x = split_start(",",c([
+    "fred,flintstone,bedrock,47",
+    "wilma,flintstone,bedrock,39",
+    "barney,rubble,bedrock,52",
+    "pebbles,flintstone,bedrock,2"
+]));
+print(format(split_get(x,0)));
+print(format(split_get(x,3)));
+
+let t = template_start("{0}/{1}");
+template_set(t,0,["salt","raw","blake"]);
+template_set(t,1,["pepper","cooked","avon"]);
+print(format(template_end(t)));

@@ -138,6 +138,11 @@ fn test_load() {
         "[\"hello, mercury\",\"hello, venus\",\"hello, earth\",\"hello, mars\"]",
         "[\"1\",\"2\",\"3\",\"4\",\"5\"]",
         "\"first: 1st; second: 2nd\"",
+
+        "[\"fred\",\"wilma\",\"barney\",\"pebbles\"]",
+        "[\"47\",\"39\",\"52\",\"2\"]",
+
+        "[\"salt/pepper\",\"raw/cooked\",\"blake/avon\"]"
     ],out);
 }
 

@@ -30,7 +30,7 @@ fold(libcore__split) code __code_split(string,string) -> seq(string) {
 
 code __code_split_start(string,seq(string)) -> handle(split) {
     impl (r1: string, r2: seq(string)) -> r3: handle(split) {
-        opcode 111, r3, r2, r1;
+        opcode 111, r3, r1, r2;
     }
 }
 
@@ -52,8 +52,8 @@ world code __code_template_set(handle(template), number, seq(string)) {
     }
 }
 
-code __code_template_end(handle(template)) -> seq(string) {
-    impl (r1: handle(template)) -> r2: string {
+world code __code_template_end(handle(template)) -> seq(string) {
+    impl (r1: handle(template)) -> r2: seq(string) {
         opcode 115, r2, r1;
     }
 }

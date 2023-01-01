@@ -31,7 +31,7 @@ pub(super) fn op_len_b(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glo
         let value = if !ctx.is_finite(regs[1])? {
             -1
         } else {
-            let seq = ctx.force_finite_number(regs[1])?.clone();
+            let seq = ctx.force_finite_boolean(regs[1])?.clone();
             seq.len() as i32
         };
         ctx.set(regs[0],Value::Number(value as f64))?;

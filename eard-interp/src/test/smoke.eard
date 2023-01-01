@@ -203,10 +203,10 @@ print(format(join(c(","),[])));
 print(format(join(c(","),["hello"])));
 print(format(join(c(","),["hello","world"])));
 
-print(format(push_str("hello",", world")));
-print(format(push_str(["hello","goodbye"],", world")));
-print(format(push_str(["hello",...],", world")));
-print(format(push_str("hello, ",["mercury","venus", "earth", "mars"])));
+print(format(push_str(c("hello"),", world")));
+print(format(push_str(["hello","goodbye"],c(", world"))));
+print(format(push_str(["hello",...],c(", world"))));
+print(format(push_str(c("hello, "),["mercury","venus", "earth", "mars"])));
 
 print(format(split(",",c("1,2,3,4,5"))));
 print(format(template("first: {0}; second: {1}",c(["1st","2nd"]))));
@@ -234,23 +234,27 @@ print(format(all(c([true,true]))));
 print(format(all(c([false,true]))));
 print(format(position(c([false,true,false,true]))));
 
-print(format(to_boolean(true)));
-print(format(to_boolean([false,true])));
-print(format(to_boolean(3)));
-print(format(to_boolean([0,1])));
-print(format(to_boolean("8")));
-print(format(to_boolean(["","8"])));
+print(format(to_boolean(c(true))));
+print(format(to_boolean(c([false,true]))));
+print(format(to_boolean(c(3))));
+print(format(to_boolean(c([0,1]))));
+print(format(to_boolean(c("8"))));
+print(format(to_boolean(c(["","8"]))));
 
-print(format(to_string(true)));
-print(format(to_string([false,true])));
-print(format(to_string(3)));
-print(format(to_string([0,1])));
-print(format(to_string("8")));
-print(format(to_string(["","8"])));
+print(format(to_string(c(true))));
+print(format(to_string(c([false,true]))));
+print(format(to_string(c(3))));
+print(format(to_string(c([0,1]))));
+print(format(to_string(c("8"))));
+print(format(to_string(c(["","8"]))));
 
-print(format(to_number(true)));
-print(format(to_number([false,true])));
-print(format(to_number(3)));
-print(format(to_number([0,1])));
-print(format(to_number("8")));
-print(format(to_number(["","8"])));
+print(format(to_number(c(true))));
+print(format(to_number(c([false,true]))));
+print(format(to_number(c(3))));
+print(format(to_number(c([0,1]))));
+print(format(to_number(c("8"))));
+print(format(to_number(c(["","8"]))));
+
+print(format(len(c([1,2,3]))));
+print(format(len(c([false,true]))));
+print(format(len(c(["a","b","c"]))));

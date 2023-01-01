@@ -63,7 +63,7 @@ pub(crate) fn op_push_str_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mu
             let out = base.iter().map(|s| format!("{}{}",s,extra)).collect();
             ctx.set(regs[0],Value::FiniteString(out))?;    
         } else {
-            let first = ctx.force_string(regs[1])?;
+            let first = ctx.force_infinite_string(regs[1])?;
             let second = ctx.force_string(regs[2])?;
             ctx.set(regs[0],Value::InfiniteString(format!("{}{}",first,second)))?;    
         }

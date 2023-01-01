@@ -230,3 +230,70 @@ pub(crate) fn op_set_from_m(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mu
         Ok(Return::Sync)
     }))
 }
+
+pub(crate) fn op_index(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let idx = ctx.force_number(regs[2])? as usize;
+        let v = ctx.get(regs[1])?;
+        let out = match v {
+            Value::FiniteBoolean(b) => Value::Boolean(*b.get(idx).unwrap_or(&false)),
+            Value::FiniteNumber(n) => Value::Number(*n.get(idx).unwrap_or(&0.)),
+            Value::FiniteString(s) => Value::String(s.get(idx).map(|x| x.as_str()).unwrap_or(&"").to_string()),
+            Value::InfiniteBoolean(b) => Value::Boolean(*b),
+            Value::InfiniteNumber(n) => Value::Number(*n),
+            Value::InfiniteString(s) => Value::String(s.to_string()),
+            _ => { return Err(format!("invalid type for index")); }
+
+        };
+        ctx.set(regs[0],out)?;
+        Ok(Return::Sync)
+    }))
+}
+
+fn index<T: Clone>(src: &[T], index: &[f64], default: T) -> Vec<T> {
+    index.iter().map(|idx| src.get(*idx as usize).cloned().unwrap_or(default.clone())).collect()
+} 
+
+pub(crate) fn op_index_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let idx = ctx.force_finite_number(regs[2])?;
+        let v = ctx.get(regs[1])?;
+        let out = match v {
+            Value::FiniteBoolean(b) => Value::FiniteBoolean(index(b,idx,false)),
+            Value::FiniteNumber(n) => Value::FiniteNumber(index(n,idx,0.)),
+            Value::FiniteString(s) => Value::FiniteString(index(s,idx,"".to_string())),
+            Value::InfiniteBoolean(b) => Value::Boolean(*b),
+            Value::InfiniteNumber(n) => Value::Number(*n),
+            Value::InfiniteString(s) => Value::String(s.to_string()),
+            _ => { return Err(format!("invalid type for index")); }
+        };
+        ctx.set(regs[0],out)?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_count(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut out = vec![];
+        let indexes = ctx.force_finite_number(regs[1])?;
+        for (i,num) in indexes.iter().enumerate() {
+            out.append(&mut vec![i as f64;*num as usize]);
+        } 
+        ctx.set(regs[0],Value::FiniteNumber(out))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_enumerate(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let mut out = vec![];
+        let indexes = ctx.force_finite_number(regs[1])?;
+        for num in indexes.iter() {
+            for i in 0..(*num as usize) {
+                out.push(i as f64);
+            }
+        }
+        ctx.set(regs[0],Value::FiniteNumber(out))?;
+        Ok(Return::Sync)
+    }))
+}

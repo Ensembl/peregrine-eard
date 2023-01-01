@@ -136,16 +136,30 @@ impl<'b> Decode<'b,()> for CompiledCode {
 
 #[derive(Debug)]
 pub struct ObjectFile {
+    pub(crate) version: (u32,u32),
     pub(crate) code: Vec<CompiledCode> // XXX pub crate
 }
 
 impl ObjectFile {
     pub(crate) fn decode(bytes: Vec<u8>) -> Result<ObjectFile,Error> {
-        let mut code = vec![];
         let mut decoder = Decoder::new(&bytes);
-        for part in decoder.array_iter::<CompiledCode>()? {
-            code.push(part?);
-        }
-        Ok(ObjectFile { code })
+        let mut out = ObjectFile {
+            version: (0,0),
+            code: vec![]
+        };
+        cbor_map(&mut decoder, &mut out, |key,out,d| {
+            if key == "code" {
+                for part in d.array_iter::<CompiledCode>()? {
+                    eprintln!("adding part");
+                    out.code.push(part?);
+                } 
+            } else if key == "version" {
+                d.array()?;
+                out.version = (d.u32()?,d.u32()?);
+                d.skip()?;
+            }
+            Ok(())
+        })?;
+        Ok(out)
     }
 }

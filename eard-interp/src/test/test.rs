@@ -10,7 +10,7 @@ struct LibcoreTest {
 
 async fn call_up_async(asyncs: Arc<Mutex<u64>>) -> Result<(),String> {
     eprintln!("waiting");
-    task::sleep(Duration::from_millis(1000)).await;
+    task::sleep(Duration::from_millis(100)).await;
     eprintln!("/waiting");
     *asyncs.lock().unwrap() += 1;
     Ok(())

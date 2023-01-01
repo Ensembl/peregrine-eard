@@ -494,7 +494,7 @@ opcode 69, r2
 opcode 999, r0, r2
 r2 <- [2]
 opcode 999, r1, r2
-opcode 71, r1
+opcode 79, r1
 opcode 999, r0, r1
 
 >> test
@@ -523,7 +523,7 @@ opcode 999, r2, r1
 opcode 68, r1, r2
 r3 <- [2]
 opcode 999, r4, r3
-opcode 70, r3, r4
+opcode 78, r3, r4
 opcode 999, r0, r1
 opcode 999, r0, r3
 opcode 999, r0, r2

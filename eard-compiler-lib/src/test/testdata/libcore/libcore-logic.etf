@@ -766,21 +766,17 @@ function c(x) { let y = wc(x); y }
 let x1 = [1,2,3];
 let x2 = [4,5,6];
 let y = c([true,false,true]);
-c(set(y,x1));
-c(set(y,x2));
+let x1 = set(x1,y,x2);
 c(x1);
 
 >> generate strip
 
 r1 <- [true,false,true]
 opcode 999, r2, r1
-r1 <- [4,5,6]
-opcode 95, r1, r2
-r3 <- [1,2,3]
-opcode 94, r4, r3, r2
-opcode 999, r0, r4
+r1 <- [1,2,3]
+r3 <- [4,5,6]
+opcode 95, r1, r2, r3
 opcode 999, r0, r1
-opcode 999, r0, r3
 
 >> test
 
@@ -796,21 +792,17 @@ function c(x) { let y = wc(x); y }
 let x1 = [1,2,3];
 let x2 = [4,5,6];
 let y = c([true,false,true]);
-c(set_skip(y,x1));
-c(set_skip(y,x2));
+let x1 = set_skip(x1,y,x2);
 c(x1);
 
 >> generate strip
 
 r1 <- [true,false,true]
 opcode 999, r2, r1
-r1 <- [4,5,6]
-opcode 97, r1, r2
-r3 <- [1,2,3]
-opcode 96, r4, r3, r2
-opcode 999, r0, r4
+r1 <- [1,2,3]
+r3 <- [4,5,6]
+opcode 97, r1, r2, r3
 opcode 999, r0, r1
-opcode 999, r0, r3
 
 >> test
 
@@ -826,21 +818,17 @@ function c(x) { let y = wc(x); y }
 let x1 = [1,2,3];
 let x2 = [4,5,6];
 let y = c([0,2]);
-c(set_at(y,x1));
-c(set_at(y,x2));
+let x1 = set_at(x1,y,x2);
 c(x1);
 
 >> generate strip
 
 r1 <- [0,2]
 opcode 999, r2, r1
-r1 <- [4,5,6]
-opcode 99, r1, r2
-r3 <- [1,2,3]
-opcode 98, r4, r3, r2
-opcode 999, r0, r4
+r1 <- [1,2,3]
+r3 <- [4,5,6]
+opcode 99, r1, r2, r3
 opcode 999, r0, r1
-opcode 999, r0, r3
 
 >> test
 
@@ -856,21 +844,17 @@ function c(x) { let y = wc(x); y }
 let x1 = [1,2,3];
 let x2 = [4,5,6];
 let y = c([0,2]);
-c(set_from(y,x1));
-c(set_from(y,x2));
+let x1 = set_from(x1,y,x2);
 c(x1);
 
 >> generate strip
 
 r1 <- [0,2]
 opcode 999, r2, r1
-r1 <- [4,5,6]
-opcode 101, r1, r2
-r3 <- [1,2,3]
-opcode 100, r4, r3, r2
-opcode 999, r0, r4
+r1 <- [1,2,3]
+r3 <- [4,5,6]
+opcode 101, r1, r2, r3
 opcode 999, r0, r1
-opcode 999, r0, r3
 
 >> test
 

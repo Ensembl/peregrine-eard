@@ -15,12 +15,13 @@ fn compactify(s: &str) -> String {
 
 #[derive(Debug)]
 pub struct EardSerializeCode {
+    version: (u32,u32),
     code: Vec<CompiledCode>
 }
 
 impl EardSerializeCode {
     pub fn new() -> EardSerializeCode {
-        EardSerializeCode { code: vec![] }
+        EardSerializeCode { version: (0,0), code: vec![] }
     }
 
     pub fn add(&mut self, code: CompiledCode) {
@@ -30,10 +31,18 @@ impl EardSerializeCode {
     fn encode(&self) -> Result<Vec<u8>,Error<Infallible>> {
         let mut buffer = vec![];
         let mut encoder = Encoder::new(&mut buffer);
+        encoder.begin_map()?;
+        encoder.str("version")?;
+        encoder.begin_array()?;
+        encoder.u32(self.version.0)?;
+        encoder.u32(self.version.1)?;
+        encoder.end()?;
+        encoder.str("code")?;
         encoder.begin_array()?;
         for code in &self.code {
             code.encode(&mut encoder)?;
         }
+        encoder.end()?;
         encoder.end()?;
         Ok(buffer)
     }

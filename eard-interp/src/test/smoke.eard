@@ -196,5 +196,14 @@ print(format(set_from(a,[2,4],[-1,...])));
 print(format(index(a,2)));
 print(format(index(a,[2,3,4])));
 
-print(format(count([1,7,4,2])));
-print(format(enumerate([1,7,4,2])));
+print(format(count(c([1,7,4,2]))));
+print(format(enumerate(c([1,7,4,2]))));
+
+print(format(join(c(","),[])));
+print(format(join(c(","),["hello"])));
+print(format(join(c(","),["hello","world"])));
+
+print(format(push_str("hello",", world")));
+print(format(push_str(["hello","goodbye"],", world")));
+print(format(push_str(["hello",...],", world")));
+print(format(push_str("hello, ",["mercury","venus", "earth", "mars"])));

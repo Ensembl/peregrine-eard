@@ -130,7 +130,12 @@ fn test_load() {
         "3", "[3,4,5]",
 
         "[0,1,1,1,1,1,1,1,2,2,2,2,3,3]",
-        "[0,0,1,2,3,4,5,6,0,1,2,3,0,1]"
+        "[0,0,1,2,3,4,5,6,0,1,2,3,0,1]",
+
+        "\"\"", "\"hello\"", "\"hello,world\"",
+
+        "\"hello, world\"", "[\"hello, world\",\"goodbye, world\"]", "[\"hello, world\",...]",
+        "[\"hello, mercury\",\"hello, venus\",\"hello, earth\",\"hello, mars\"]"
     ],out);
 }
 

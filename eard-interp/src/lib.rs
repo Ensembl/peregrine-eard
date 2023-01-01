@@ -18,6 +18,7 @@ mod libcore {
     mod checks;
     mod print;
     mod seq;
+    mod string;
     mod seqctors;
 }
 

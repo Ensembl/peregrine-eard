@@ -91,7 +91,7 @@
  90 or seq(bool)/seq(bool)
  91 or seq(bool)/seq(bool) modify
  92 if bool
- 93 *unused*
+ 93 push_str (seq, rev)
  94 set
  95 set modify
  96 set_skip
@@ -104,7 +104,7 @@
 103 index seq
 104 count
 105 enumerate
-106 concat
+106 join
 107 push_str
 108 push_str (seq)
 109 split

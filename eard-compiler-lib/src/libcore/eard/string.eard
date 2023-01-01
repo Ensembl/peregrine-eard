@@ -1,24 +1,30 @@
 fold(libcore__join) code __code_join(string,seq(string)) -> string {
     impl (r1: string, r2: seq(string)) -> r3: string {
-        opcode 106, r2, r1;
+        opcode 106, r3, r1, r2;
     }
 }
 
 fold(libcore__push_str) code __code_push_str(string,string) -> string {
     impl (r1: string, r2:string) -> r3: string {
-        opcode 107, r2, r1;
+        opcode 107, r3, r1, r2;
+    }
+}
+
+fold(libcore__push_str) code __code_push_str(string,seq(string)) -> string {
+    impl (r1: string, r2: seq(string)) -> r3: string {
+        opcode 93, r3, r1, r2;
     }
 }
 
 fold(libcore__push_str) code __code_push_str(seq(string),string) -> string {
     impl (r1: seq(string), r2:string) -> r3: seq(string) {
-        opcode 108, r2, r1;
+        opcode 108, r3, r1, r2;
     }
 }
 
 fold(libcore__split) code __code_split(string,string) -> seq(string) {
     impl (r1: string, r2:string) -> r3: string {
-        opcode 109, r2, r1;
+        opcode 109, r2, r1, r2;
     }
 }
 

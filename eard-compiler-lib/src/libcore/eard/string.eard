@@ -24,7 +24,7 @@ fold(libcore__push_str) code __code_push_str(seq(string),string) -> string {
 
 fold(libcore__split) code __code_split(string,string) -> seq(string) {
     impl (r1: string, r2:string) -> r3: string {
-        opcode 109, r2, r1, r2;
+        opcode 109, r3, r1, r2;
     }
 }
 

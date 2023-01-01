@@ -135,7 +135,9 @@ fn test_load() {
         "\"\"", "\"hello\"", "\"hello,world\"",
 
         "\"hello, world\"", "[\"hello, world\",\"goodbye, world\"]", "[\"hello, world\",...]",
-        "[\"hello, mercury\",\"hello, venus\",\"hello, earth\",\"hello, mars\"]"
+        "[\"hello, mercury\",\"hello, venus\",\"hello, earth\",\"hello, mars\"]",
+        "[\"1\",\"2\",\"3\",\"4\",\"5\"]",
+        "\"first: 1st; second: 2nd\"",
     ],out);
 }
 

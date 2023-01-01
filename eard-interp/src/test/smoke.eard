@@ -207,3 +207,6 @@ print(format(push_str("hello",", world")));
 print(format(push_str(["hello","goodbye"],", world")));
 print(format(push_str(["hello",...],", world")));
 print(format(push_str("hello, ",["mercury","venus", "earth", "mars"])));
+
+print(format(split(",",c("1,2,3,4,5"))));
+print(format(template("first: {0}; second: {1}",c(["1st","2nd"]))));

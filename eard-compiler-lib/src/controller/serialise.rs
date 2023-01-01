@@ -1,4 +1,4 @@
-use std::convert::Infallible;
+use std::{convert::Infallible, collections::HashMap};
 use json::JsonValue;
 use minicbor::{Encoder, encode::{Error}};
 use regex::Regex;
@@ -14,14 +14,39 @@ fn compactify(s: &str) -> String {
 }
 
 #[derive(Debug)]
+pub(crate) struct OpcodeVersion {
+    versions: HashMap<String,(u32,u32)>
+}
+
+impl OpcodeVersion {
+    pub(crate) fn new() -> OpcodeVersion {
+        let mut versions = HashMap::new();
+        versions.insert("core".to_string(),(0,0));
+        OpcodeVersion { versions }
+    }
+
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        encoder.begin_map()?;
+        for (name,version) in &self.versions {
+            encoder.str(name)?;
+            encoder.array(2)?;
+            encoder.u32(version.0)?;
+            encoder.u32(version.1)?;    
+        }
+        encoder.end()?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
 pub struct EardSerializeCode {
-    version: (u32,u32),
+    version: OpcodeVersion,
     code: Vec<CompiledCode>
 }
 
 impl EardSerializeCode {
     pub fn new() -> EardSerializeCode {
-        EardSerializeCode { version: (0,0), code: vec![] }
+        EardSerializeCode { version: OpcodeVersion::new(), code: vec![] }
     }
 
     pub fn add(&mut self, code: CompiledCode) {
@@ -33,10 +58,7 @@ impl EardSerializeCode {
         let mut encoder = Encoder::new(&mut buffer);
         encoder.begin_map()?;
         encoder.str("version")?;
-        encoder.begin_array()?;
-        encoder.u32(self.version.0)?;
-        encoder.u32(self.version.1)?;
-        encoder.end()?;
+        self.version.encode(&mut encoder);
         encoder.str("code")?;
         encoder.begin_array()?;
         for code in &self.code {

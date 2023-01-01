@@ -135,16 +135,45 @@ impl<'b> Decode<'b,()> for CompiledCode {
 }
 
 #[derive(Debug)]
+struct OpcodeVersion {
+    version: HashMap<String,(u32,u32)>
+}
+
+impl OpcodeVersion {
+    fn new() -> OpcodeVersion {
+        OpcodeVersion { version: HashMap::new() }
+    }
+
+    fn decode(&mut self, d: &mut Decoder) -> Result<(),Error> {
+        cbor_map(d,self,|key,out,d| {
+            let mut ver = vec![0,0];
+            cbor_array(d,&mut ver,|i,out,d| {
+                out[i as usize] = d.u32()?;
+                Ok(())
+            })?;
+            let ver = if let (Some(a),Some(b)) = (ver.get(0),ver.get(1)) {
+                (*a,*b)
+            } else {
+                return Err(Error::message(format!("bad version")));
+            };
+            out.version.insert(key.to_string(),ver);
+            Ok(())
+        })?;
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
 pub struct ObjectFile {
-    pub(crate) version: (u32,u32),
-    pub(crate) code: Vec<CompiledCode> // XXX pub crate
+    version: OpcodeVersion,
+    pub(crate) code: Vec<CompiledCode>
 }
 
 impl ObjectFile {
     pub(crate) fn decode(bytes: Vec<u8>) -> Result<ObjectFile,Error> {
         let mut decoder = Decoder::new(&bytes);
         let mut out = ObjectFile {
-            version: (0,0),
+            version: OpcodeVersion::new(),
             code: vec![]
         };
         cbor_map(&mut decoder, &mut out, |key,out,d| {
@@ -154,9 +183,7 @@ impl ObjectFile {
                     out.code.push(part?);
                 } 
             } else if key == "version" {
-                d.array()?;
-                out.version = (d.u32()?,d.u32()?);
-                d.skip()?;
+                out.version.decode(d)?;
             }
             Ok(())
         })?;

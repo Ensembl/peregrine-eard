@@ -142,7 +142,11 @@ fn test_load() {
         "[\"fred\",\"wilma\",\"barney\",\"pebbles\"]",
         "[\"47\",\"39\",\"52\",\"2\"]",
 
-        "[\"salt/pepper\",\"raw/cooked\",\"blake/avon\"]"
+        "[\"salt/pepper\",\"raw/cooked\",\"blake/avon\"]",
+
+        "false", "false", "true", "true", "true", "false",
+
+        "[1,3]"
     ],out);
 }
 

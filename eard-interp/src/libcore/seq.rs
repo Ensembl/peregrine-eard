@@ -297,3 +297,38 @@ pub(crate) fn op_enumerate(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut
         Ok(Return::Sync)
     }))
 }
+
+pub(crate) fn op_any(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let out = if ctx.is_finite(regs[1])? {
+            ctx.force_finite_boolean(regs[1])?.iter().any(|x| *x)
+        } else {
+            ctx.force_infinite_boolean(regs[1])?
+        };
+        ctx.set(regs[0],Value::Boolean(out))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_all(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let out = if ctx.is_finite(regs[1])? {
+            ctx.force_finite_boolean(regs[1])?.iter().all(|x| *x)
+        } else {
+            ctx.force_infinite_boolean(regs[1])?
+        };
+        ctx.set(regs[0],Value::Boolean(out))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_position(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let input = ctx.force_finite_boolean(regs[1])?;
+        let out = input.iter().enumerate().filter_map(|(i,p)| {
+            if *p { Some(i as f64) } else { None }
+        }).collect();
+        ctx.set(regs[0],Value::FiniteNumber(out))?;
+        Ok(Return::Sync)
+    }))
+}

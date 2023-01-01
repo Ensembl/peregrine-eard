@@ -197,7 +197,6 @@ pub(crate) fn op_template_set(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&m
         let values = ctx.force_finite_string(regs[2])?.clone();
         let templates = ctx.context.get_mut(&libcore_templates);
         let tmpl = templates.get_mut(h)?;
-        eprintln!("set {:?}",tmpl);
         tmpl.add(pos,values);
         Ok(Return::Sync)
     }))
@@ -209,7 +208,6 @@ pub(crate) fn op_template_end(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&m
         let h = ctx.force_number(regs[1])? as usize;
         let templates = ctx.context.get_mut(&libcore_templates);
         let tmpl = templates.get_mut(h)?;
-        eprintln!("end {:?}",tmpl);
         let out = tmpl.get();
         ctx.set(regs[0],Value::FiniteString(out))?;
         Ok(Return::Sync)

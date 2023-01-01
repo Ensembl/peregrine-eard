@@ -224,3 +224,12 @@ let t = template_start("{0}/{1}");
 template_set(t,0,["salt","raw","blake"]);
 template_set(t,1,["pepper","cooked","avon"]);
 print(format(template_end(t)));
+
+print(format(any(c([]))));
+print(format(any(c([false,false]))));
+print(format(any(c([false,true]))));
+
+print(format(all(c([]))));
+print(format(all(c([true,true]))));
+print(format(all(c([false,true]))));
+print(format(position(c([false,true,false,true]))));

@@ -30,7 +30,7 @@ fn cbor_array<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),
     Ok(())           
 }
 
-#[derive(Clone,PartialEq,Eq,Hash,Debug)]
+#[derive(Clone,PartialEq,Eq,Hash,Debug,PartialOrd,Ord)]
 pub struct Metadata {
     pub group: String,
     pub name: String,

@@ -1,0 +1,2 @@
+RUSTFLAGS="-Zinstrument-coverage" cargo +nightly test
+grcov . --binary-path . -s . -t html --branch --ignore-not-existing -o ~/tmp/coverage/

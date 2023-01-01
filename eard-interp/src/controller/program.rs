@@ -19,6 +19,16 @@ impl ProgramStore {
         self.program.insert((metadata.clone(),block.to_string()),program);
     }
 
+    pub(crate) fn list_programs(&self) -> Vec<Metadata> {
+        self.program.keys().map(|(m,_)| m.clone()).collect()
+    }
+
+    pub(crate) fn list_blocks(&self, metadata: &Metadata) -> Vec<String> {
+        self.program.keys().filter_map(|(m,b)| {
+            if m == metadata { Some(b.to_string()) } else { None }
+        }).collect()
+    }
+
     pub(crate) async fn run(&self, metadata: &Metadata, block: &str, context: RunContext) -> Result<(),String> {
         let program = self.program
             .get(&(metadata.clone(),block.to_string()))

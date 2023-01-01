@@ -13,8 +13,6 @@ pub(crate) enum Format {
     Dump    
 }
 
-
-/// Simple program to greet a person
 #[derive(Parser, Debug)]
 #[command(name = "eard compiler")]
 #[command(author = "Ensembl Webteam <ensembl-webteam@ebi.ac.uk>")]

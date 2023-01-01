@@ -28,5 +28,8 @@ mod test {
     mod test;
 }
 
-pub use controller::interpreter::Interpreter;
+pub use controller::context::RunContext;
+pub use controller::interpreter::{ Interpreter, InterpreterBuilder };
+pub use controller::objectcode::Metadata;
+pub use libcore::libcore::LibcoreTemplate;
 pub use libcore::libcore::{ prepare_libcore, build_libcore, LibcoreBuilder };

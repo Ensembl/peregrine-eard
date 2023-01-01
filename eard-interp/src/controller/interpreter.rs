@@ -1,6 +1,5 @@
 use super::{operation::{OperationStore, Operation}, context::{ContextTemplateBuilder, ContextItem, RunContext}, globalcontext::GlobalBuildContext, program::ProgramStore, objectcode::{ObjectFile, Metadata, CompiledBlock}};
 
-
 pub struct InterpreterBuilder {
     pub context: ContextTemplateBuilder,
     pub store: OperationStore
@@ -34,6 +33,14 @@ impl Interpreter {
             gbctx: GlobalBuildContext::new(builder.context),
             store: ProgramStore::new(builder.store)
         }
+    }
+
+    pub fn list_programs(&self) -> Vec<Metadata> {
+        self.store.list_programs()
+    }
+
+    pub fn list_blocks(&self, metadata: &Metadata) -> Vec<String> {
+        self.store.list_blocks(metadata)
     }
 
     pub fn load(&mut self, bytes: &[u8]) -> Result<(),String> {

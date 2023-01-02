@@ -2,7 +2,6 @@ use std::{convert::Infallible, collections::HashMap};
 use json::JsonValue;
 use minicbor::{Encoder, encode::{Error}};
 use regex::Regex;
-
 use crate::model::compiled::CompiledCode;
 
 fn compactify(s: &str) -> String {
@@ -13,7 +12,7 @@ fn compactify(s: &str) -> String {
     s
 }
 
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub(crate) struct OpcodeVersion {
     versions: HashMap<String,(u32,u32)>
 }
@@ -25,13 +24,17 @@ impl OpcodeVersion {
         OpcodeVersion { versions }
     }
 
-    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+    pub(crate) fn add(&mut self, name: &str, version: (u32,u32)) {
+        self.versions.insert(name.to_string(),version);
+    }
+
+    pub(crate) fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         encoder.begin_map()?;
         for (name,version) in &self.versions {
             encoder.str(name)?;
             encoder.array(2)?;
             encoder.u32(version.0)?;
-            encoder.u32(version.1)?;    
+            encoder.u32(version.1)?;
         }
         encoder.end()?;
         Ok(())
@@ -40,13 +43,12 @@ impl OpcodeVersion {
 
 #[derive(Debug)]
 pub struct EardSerializeCode {
-    version: OpcodeVersion,
     code: Vec<CompiledCode>
 }
 
 impl EardSerializeCode {
     pub fn new() -> EardSerializeCode {
-        EardSerializeCode { version: OpcodeVersion::new(), code: vec![] }
+        EardSerializeCode { code: vec![] }
     }
 
     pub fn add(&mut self, code: CompiledCode) {
@@ -56,15 +58,10 @@ impl EardSerializeCode {
     fn encode(&self) -> Result<Vec<u8>,Error<Infallible>> {
         let mut buffer = vec![];
         let mut encoder = Encoder::new(&mut buffer);
-        encoder.begin_map()?;
-        encoder.str("version")?;
-        self.version.encode(&mut encoder);
-        encoder.str("code")?;
         encoder.begin_array()?;
         for code in &self.code {
             code.encode(&mut encoder)?;
         }
-        encoder.end()?;
         encoder.end()?;
         Ok(buffer)
     }

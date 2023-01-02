@@ -1,7 +1,7 @@
 use std::{process::exit, pin::Pin, future::Future, fs::{self}};
 use async_std::task::block_on;
 use clap::{Parser};
-use eard_interp::{RunContext, LibcoreTemplate, build_libcore, InterpreterBuilder, Interpreter, prepare_libcore, Metadata};
+use eard_interp::{RunContext, LibcoreTemplate, build_libcore, InterpreterBuilder, Interpreter, prepare_libcore, ProgramName};
 
 #[derive(Parser, Debug)]
 #[command(name = "eard cli interpreter")]
@@ -37,7 +37,7 @@ impl LibcoreTemplate for LibcoreCli {
     }
 }
 
-fn guess_block(interp: &Interpreter, program: &Metadata) -> Result<String,String> {
+fn guess_block(interp: &Interpreter, program: &ProgramName) -> Result<String,String> {
     let blocks = interp.list_blocks(&program);
     if blocks.contains(&"main".to_string()) { 
         Ok("main".to_string())
@@ -74,7 +74,7 @@ fn do_it(config: &Config) -> Result<(),String> {
         let version = if let Ok(v) = parts[2].parse::<u32>() { v } else {
             return Err(format!("version must be a positive integer"));
         };
-        Metadata::new(&parts[0],&parts[1],version)
+        ProgramName::new(&parts[0],&parts[1],version)
     } else {
         first.clone()
     };

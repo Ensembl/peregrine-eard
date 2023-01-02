@@ -634,12 +634,29 @@ impl EardParser {
         Ok(PTStatement { value, position, context })
     }
 
+    fn version_part(input: Node) -> PestResult<u32> {
+        Ok(input.as_str().parse::<u32>().unwrap())
+    }
+
+    fn version_num(input: Node) -> PestResult<(u32,u32)> {
+        Ok(match_nodes!(input.into_children();
+            [version_part(a),version_part(b)] => (a,b)
+        ))
+    }
+
+    fn lib_version(input: Node) -> PestResult<PTStatementValue> {
+        Ok(match_nodes!(input.into_children();
+            [string(name),version_num(p)] => PTStatementValue::Version(name,p.0,p.1)
+        ))
+    }
+
     fn block(input: Node) -> PestResult<PTStatement> {
         let context = input.user_data().context;
         let line_no = input.as_span().start_pos().line_col().0;
         let position = input.user_data().position.at_line(line_no as u32);
         let value = match_nodes!(input.into_children();
             [header(v)] => v,
+            [lib_version(v)] => v,
             [code_block(block)] => PTStatementValue::Code(block),
             [include(s)] => PTStatementValue::Include(s,false),
             [fixed_include(s)] => PTStatementValue::Include(s,true),

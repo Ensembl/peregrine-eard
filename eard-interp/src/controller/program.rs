@@ -1,9 +1,9 @@
 use std::{sync::Arc, mem, collections::HashMap};
-use super::{objectcode::Metadata, operation::{OperationStore, Step}, context::RunContext, globalcontext::{GlobalContext, GlobalBuildContext}, value::Value};
+use super::{objectcode::ProgramName, operation::{OperationStore, Step}, context::RunContext, globalcontext::{GlobalContext, GlobalBuildContext}, value::Value};
 
 pub struct ProgramStore {
     store: OperationStore,
-    program: HashMap<(Metadata,String),Program>
+    program: HashMap<(ProgramName,String),Program>
 }
 
 impl ProgramStore {
@@ -15,21 +15,21 @@ impl ProgramStore {
         ProgramBuilder::new(&self.store)
     }
 
-    pub(crate) fn add_program(&mut self, metadata: &Metadata, block: &str, program: Program) {
+    pub(crate) fn add_program(&mut self, metadata: &ProgramName, block: &str, program: Program) {
         self.program.insert((metadata.clone(),block.to_string()),program);
     }
 
-    pub(crate) fn list_programs(&self) -> Vec<Metadata> {
+    pub(crate) fn list_programs(&self) -> Vec<ProgramName> {
         self.program.keys().map(|(m,_)| m.clone()).collect()
     }
 
-    pub(crate) fn list_blocks(&self, metadata: &Metadata) -> Vec<String> {
+    pub(crate) fn list_blocks(&self, metadata: &ProgramName) -> Vec<String> {
         self.program.keys().filter_map(|(m,b)| {
             if m == metadata { Some(b.to_string()) } else { None }
         }).collect()
     }
 
-    pub(crate) async fn run(&self, metadata: &Metadata, block: &str, context: RunContext) -> Result<(),String> {
+    pub(crate) async fn run(&self, metadata: &ProgramName, block: &str, context: RunContext) -> Result<(),String> {
         let program = self.program
             .get(&(metadata.clone(),block.to_string()))
             .ok_or_else(|| format!("no such program {:?} {:?}",metadata,block))?;

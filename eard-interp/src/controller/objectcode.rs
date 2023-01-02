@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use minicbor::{Decoder, Decode, decode::Error, data::Type};
-
-use super::{globalcontext::GlobalBuildContext, value::Value, program::{ProgramBuilder, Program}};
+use super::{globalcontext::GlobalBuildContext, value::Value, program::{ProgramBuilder, Program}, version::OpcodeVersion};
 
 pub(crate) fn cbor_map<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),Error>
         where F: FnMut(&str,&mut T,&mut Decoder<'b>) -> Result<(),Error> {
@@ -17,7 +16,7 @@ pub(crate) fn cbor_map<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> R
     Ok(())
 }
 
-fn cbor_array<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),Error>
+pub(crate) fn cbor_array<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),Error>
         where F: FnMut(u64,&mut T,&mut Decoder<'b>) -> Result<(),Error> {
     let entries = d.array()?;
     let mut index = 0;
@@ -31,21 +30,21 @@ fn cbor_array<'b,F,T>(d: &mut Decoder<'b>, obj: &mut T, mut cb: F) -> Result<(),
 }
 
 #[derive(Clone,PartialEq,Eq,Hash,Debug,PartialOrd,Ord)]
-pub struct Metadata {
+pub struct ProgramName {
     pub group: String,
     pub name: String,
     pub version: u32
 }
 
-impl Metadata {
-    pub fn new(group: &str, name: &str, version: u32) -> Metadata {
-        Metadata { group: group.to_string(), name: name.to_string(), version }
+impl ProgramName {
+    pub fn new(group: &str, name: &str, version: u32) -> ProgramName {
+        ProgramName { group: group.to_string(), name: name.to_string(), version }
     }
 }
 
-impl<'b> Decode<'b,()> for Metadata {
+impl<'b> Decode<'b,()> for ProgramName {
     fn decode(d: &mut Decoder<'b>, _ctx: &mut ()) -> Result<Self, Error> {
-        let mut out = Metadata { group: "".to_string(), name: "".to_string(), version: 0 };
+        let mut out = ProgramName { group: "".to_string(), name: "".to_string(), version: 0 };
         cbor_array(d, &mut out, |idx,out,d| {
             match idx {
                 0 => { out.group = d.str()?.to_string(); },
@@ -56,6 +55,30 @@ impl<'b> Decode<'b,()> for Metadata {
             Ok(())
         })?;
         Ok(out)
+    }
+}
+
+#[derive(Debug,Clone)]
+pub struct Metadata {
+    pub(crate) name: ProgramName,
+    pub(crate) version: OpcodeVersion
+}
+
+impl Metadata {
+    fn decode<'b>(d: &mut Decoder<'b>, ctx: &mut ()) -> Result<Self, Error> {
+        let mut data = (None,None);
+        cbor_map(d, &mut data,|key,md,d| {
+            if key == "name" {
+                md.0 = Some(ProgramName::decode(d,ctx)?);
+            } else if key == "version" {
+                md.1 = Some(OpcodeVersion::decode(d)?);
+            }
+            Ok(())
+        })?;
+        if data.0.is_none() || data.1.is_none() {
+            return Err(Error::message(format!("bad metadata block")));
+        }
+        Ok(Metadata { name: data.0.unwrap(), version: data.1.unwrap() })
     }
 }
 
@@ -119,8 +142,9 @@ impl<'b> Decode<'b,()> for CompiledCode {
         let mut out = (None,HashMap::new());
         cbor_map(d,&mut out,|key,out,d| {
             let (metadata,code) = out;
-            if key == "metadata" { *metadata = Some(Metadata::decode(d,ctx)?); }
-            else if key == "blocks" {
+            if key == "metadata" {
+                *metadata = Some(Metadata::decode(d,ctx)?);
+            } else if key == "blocks" {
                 for res in d.map_iter::<String,CompiledBlock>()? {
                     let (key,value) = res?;
                     code.insert(key,value);
@@ -130,42 +154,13 @@ impl<'b> Decode<'b,()> for CompiledCode {
             }
             Ok(())
         })?;
-        Ok(CompiledCode { metadata: out.0.unwrap(), code: out.1 })
-    }
-}
-
-#[derive(Debug)]
-struct OpcodeVersion {
-    version: HashMap<String,(u32,u32)>
-}
-
-impl OpcodeVersion {
-    fn new() -> OpcodeVersion {
-        OpcodeVersion { version: HashMap::new() }
-    }
-
-    fn decode(&mut self, d: &mut Decoder) -> Result<(),Error> {
-        cbor_map(d,self,|key,out,d| {
-            let mut ver = vec![0,0];
-            cbor_array(d,&mut ver,|i,out,d| {
-                out[i as usize] = d.u32()?;
-                Ok(())
-            })?;
-            let ver = if let (Some(a),Some(b)) = (ver.get(0),ver.get(1)) {
-                (*a,*b)
-            } else {
-                return Err(Error::message(format!("bad version")));
-            };
-            out.version.insert(key.to_string(),ver);
-            Ok(())
-        })?;
-        Ok(())
+        let metadata = out.0.unwrap();
+        Ok(CompiledCode { metadata, code: out.1 })
     }
 }
 
 #[derive(Debug)]
 pub struct ObjectFile {
-    version: OpcodeVersion,
     pub(crate) code: Vec<CompiledCode>
 }
 
@@ -173,20 +168,11 @@ impl ObjectFile {
     pub(crate) fn decode(bytes: Vec<u8>) -> Result<ObjectFile,Error> {
         let mut decoder = Decoder::new(&bytes);
         let mut out = ObjectFile {
-            version: OpcodeVersion::new(),
             code: vec![]
         };
-        cbor_map(&mut decoder, &mut out, |key,out,d| {
-            if key == "code" {
-                for part in d.array_iter::<CompiledCode>()? {
-                    eprintln!("adding part");
-                    out.code.push(part?);
-                } 
-            } else if key == "version" {
-                out.version.decode(d)?;
-            }
-            Ok(())
-        })?;
+        for part in decoder.array_iter::<CompiledCode>()? {
+            out.code.push(part?);
+        } 
         Ok(out)
     }
 }

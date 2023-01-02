@@ -1,18 +1,18 @@
 use std::{convert::Infallible, fmt, collections::HashMap};
 use json::{JsonValue, object::Object};
 use minicbor::{Encoder, encode::Error};
-use crate::test::testutil::sepfmt;
+use crate::{test::testutil::sepfmt, controller::serialise::OpcodeVersion};
 
 use super::constants::OperationConstant;
 
 #[derive(Clone)]
-pub(crate) struct Metadata {
+pub(crate) struct ProgramName {
     pub(crate) group: String,
     pub(crate) name: String,
     pub(crate) version: u32
 }
 
-impl Metadata {
+impl ProgramName {
     fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
         encoder.begin_array()?.str(&self.group)?.str(&self.name)?.u32(self.version)?.end()?;
         Ok(())
@@ -24,6 +24,24 @@ impl Metadata {
             JsonValue::String(self.name.to_string()),
             JsonValue::Number(self.version.into())
         ])
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct Metadata {
+    pub(crate) name: ProgramName,
+    pub(crate) version: OpcodeVersion,
+}
+
+impl Metadata {
+    fn encode(&self, encoder: &mut Encoder<&mut Vec<u8>>) -> Result<(),Error<Infallible>> {
+        encoder.begin_map()?;
+        encoder.str("name")?;
+        self.name.encode(encoder)?;
+        encoder.str("version")?;
+        self.version.encode(encoder)?;
+        encoder.end()?;
+        Ok(())
     }
 }
 
@@ -94,7 +112,7 @@ impl CompiledCode {
 
     pub(crate) fn encode_json(&self) -> JsonValue {
         let mut out = Object::new();
-        out.insert("metadata",self.metadata.encode_json());
+        out.insert("metadata",self.metadata.name.encode_json());
         let mut blocks = Object::new();
         for (name,block) in self.code.iter() {
             blocks.insert(&name,block.encode_json());

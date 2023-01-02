@@ -1,16 +1,25 @@
-use super::{operation::{OperationStore, Operation}, context::{ContextTemplateBuilder, ContextItem, RunContext}, globalcontext::GlobalBuildContext, program::ProgramStore, objectcode::{ObjectFile, Metadata, CompiledBlock}};
+use crate::ProgramName;
+use super::{operation::{OperationStore, Operation}, context::{ContextTemplateBuilder, ContextItem, RunContext}, globalcontext::GlobalBuildContext, program::ProgramStore, objectcode::{ObjectFile, CompiledBlock, Metadata }, version::OpcodeVersion};
 
 pub struct InterpreterBuilder {
-    pub context: ContextTemplateBuilder,
-    pub store: OperationStore
+    version: OpcodeVersion,
+    context: ContextTemplateBuilder,
+    store: OperationStore
 }
 
 impl InterpreterBuilder {
     pub fn new() ->  InterpreterBuilder {
-        InterpreterBuilder {
+        let mut out = InterpreterBuilder {
+            version: OpcodeVersion::new(),
             context: ContextTemplateBuilder::new(),
             store: OperationStore::new()
-        }
+        };
+        out.add_version("core",(0,0));
+        out
+    }
+
+    pub fn add_version(&mut self, name: &str, version: (u32,u32)) {
+        self.version.add_version(name,version);
     }
 
     pub fn add_context<T: 'static>(&mut self, name: &str) -> ContextItem<T> {
@@ -23,6 +32,7 @@ impl InterpreterBuilder {
 }
 
 pub struct Interpreter {
+    version: OpcodeVersion,
     gbctx: GlobalBuildContext,
     store: ProgramStore
 }
@@ -30,16 +40,17 @@ pub struct Interpreter {
 impl Interpreter {
     pub fn new(builder: InterpreterBuilder) -> Interpreter {
         Interpreter { 
+            version: builder.version,
             gbctx: GlobalBuildContext::new(builder.context),
             store: ProgramStore::new(builder.store)
         }
     }
 
-    pub fn list_programs(&self) -> Vec<Metadata> {
+    pub fn list_programs(&self) -> Vec<ProgramName> {
         self.store.list_programs()
     }
 
-    pub fn list_blocks(&self, metadata: &Metadata) -> Vec<String> {
+    pub fn list_blocks(&self, metadata: &ProgramName) -> Vec<String> {
         self.store.list_blocks(metadata)
     }
 
@@ -59,13 +70,14 @@ impl Interpreter {
     }
 
     pub(crate) fn build(&mut self, metadata: &Metadata, block: &str, code: CompiledBlock) -> Result<(),String> {
+        metadata.version.meets_minimums(&self.version)?;
         let mut builder = self.store.program_builder();
         let program = code.to_program(&self.gbctx,&mut builder)?;
-        self.store.add_program(metadata,block,program);
+        self.store.add_program(&metadata.name,block,program);
         Ok(())
     }
 
-    pub async fn run(&self, metadata: &Metadata, block: &str, context: RunContext) -> Result<(),String> {
+    pub async fn run(&self, metadata: &ProgramName, block: &str, context: RunContext) -> Result<(),String> {
         self.store.run(metadata,block,context).await
     }
 }

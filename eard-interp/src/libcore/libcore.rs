@@ -51,6 +51,7 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     let context = builder.add_context::<Box<dyn LibcoreTemplate>>("libcore");
     let splits = builder.add_context::<HandleStore<Vec<Vec<String>>>>("splits");
     let templates = builder.add_context::<HandleStore<Template>>("templates");
+    builder.add_version("libcore",(0,0));
     builder.add_operation(0,Operation::new(op_const));
     builder.add_operation(1,Operation::new(op_async));
     /* 2 is reserved */
@@ -190,6 +191,8 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(136,Operation::new(op_to_str_s_m));
     builder.add_operation(137,Operation::new(op_print));
     builder.add_operation(138,Operation::new(op_format));
+    //builder.add_operation(139,Operation::new(op_max_seq));
+    //builder.add_operation(140,Operation::new(op_min_seq));
     builder.add_operation(141,Operation::new(op_max3s));
     builder.add_operation(142,Operation::new(op_max2s));
     builder.add_operation(143,Operation::new(op_max3ss));

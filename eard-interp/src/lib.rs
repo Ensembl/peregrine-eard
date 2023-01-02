@@ -7,6 +7,7 @@ mod controller {
     pub(crate) mod program;
     pub(crate) mod value;
     pub(crate) mod objectcode;    
+    pub(crate) mod version;
 }
 
 mod libcore {
@@ -30,6 +31,6 @@ mod test {
 
 pub use controller::context::RunContext;
 pub use controller::interpreter::{ Interpreter, InterpreterBuilder };
-pub use controller::objectcode::Metadata;
+pub use controller::objectcode::ProgramName;
 pub use libcore::libcore::LibcoreTemplate;
 pub use libcore::libcore::{ prepare_libcore, build_libcore, LibcoreBuilder };

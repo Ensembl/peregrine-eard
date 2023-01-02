@@ -49,6 +49,10 @@ number = @{
 include = { "include" ~ string ~ ";" }
 fixed_include = { "refer" ~ string ~ ";" }
 
+version_part = { ASCII_DIGIT+ }
+version_num = { version_part ~ "." ~ version_part }
+lib_version = { "version" ~  string ~ version_num ~ ";" }
+
 /* checks */
 maybe_force_check = { "!" | "" }
 
@@ -265,6 +269,7 @@ header = {
 
 block = {
     header | /* Has to go at start of program, but this may not be the root file */
+    lib_version |
     code_block |
     include |
     fixed_include |

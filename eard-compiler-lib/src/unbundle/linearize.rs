@@ -1,5 +1,5 @@
 use std::{collections::{HashMap}};
-use crate::{frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypedArgument}, compiled::Metadata}, controller::source::ParsePosition};
+use crate::{frontend::{femodel::{OrBundle, OrBundleRepeater}, buildtree::Variable}, model::{linear::{LinearStatementValue, LinearStatement}, checkstypes::{TypedArgument}, compiled::{Metadata, ProgramName}}, controller::{source::ParsePosition, serialise::OpcodeVersion}};
 use crate::frontend::{buildtree::{BuildTree, BTStatement, BTStatementValue, BTLValue, BTProcCall, BTExpression, BTRegisterType, BTFuncProcDefinition, BTTopDefn}};
 use super::{unbundleaux::{Position, VarRegisters, Transits, Checks}, repeater::{find_repeater_arguments, rewrite_repeater}};
 
@@ -43,7 +43,8 @@ struct Linearize<'a> {
     captures: HashMap<usize,Vec<(Variable,usize)>>,
     checks: Checks,
     allocator: Allocator,
-    metadata: Option<Metadata>
+    name: Option<ProgramName>,
+    version: OpcodeVersion
 }
 
 impl<'a> Linearize<'a> {
@@ -61,7 +62,8 @@ impl<'a> Linearize<'a> {
             call_stack: vec![],
             captures: HashMap::new(),
             checks: Checks::new(),
-            metadata: None
+            name: None,
+            version: OpcodeVersion::new()
         }
     }
 
@@ -461,8 +463,15 @@ impl<'a> Linearize<'a> {
                 if self.output.len() > 0 {
                     return Err("program headr must be first statement".to_string());
                 }
-                self.metadata = Some(Metadata { group: group.to_string(), name: name.to_string(), version: *version })
-            }
+                self.name = Some(ProgramName {
+                    group: group.to_string(),
+                    name: name.to_string(),
+                    version: *version
+                });
+            },
+            BTStatementValue::Version(name,a,b) => {
+                self.version.add(name,(*a,*b));
+            },
         }
         Ok(())
     }
@@ -473,12 +482,13 @@ pub(crate) fn linearize(tree: &BuildTree, bundles: &Transits,verbose: bool) -> R
     for stmt in &tree.statements {
         linearize.statement(stmt).map_err(|e| linearize.positions.message(&e))?;
     }
-    if linearize.metadata.is_none() {
+    if linearize.name.is_none() {
         return Err("missing program header".to_string());
     }
     if verbose {
         eprintln!("linearised to {} statements",linearize.output.len());
         linearize.allocator.verbose();
     }
-    Ok((linearize.output,linearize.allocator,linearize.metadata.unwrap()))
+    let metadata = Metadata { name: linearize.name.unwrap(), version: linearize.version };
+    Ok((linearize.output,linearize.allocator,metadata))
 }

@@ -1,6 +1,6 @@
 use std::{time::Duration, sync::{Arc, Mutex}, mem, pin::Pin, future::Future, collections::HashSet};
 use async_std::task::{self, block_on};
-use crate::{controller::{interpreter::{Interpreter, InterpreterBuilder}, objectcode::{Metadata, ObjectFile}, context::RunContext}, libcore::libcore::{LibcoreTemplate, build_libcore, prepare_libcore, LibcoreBuilder}};
+use crate::{controller::{interpreter::{Interpreter, InterpreterBuilder}, objectcode::{ProgramName, ObjectFile}, context::RunContext}, libcore::libcore::{LibcoreTemplate, build_libcore, prepare_libcore, LibcoreBuilder}};
 
 #[derive(Clone)]
 struct LibcoreTest {
@@ -45,7 +45,7 @@ fn run_interpreter(interp: &Interpreter, libcore: &LibcoreBuilder, part: &str) -
         asyncs: Arc::new(Mutex::new(0))
     };
     prepare_libcore(&mut context,&libcore,libcore_context.clone());
-    match block_on(interp.run(&Metadata::new("group","program",1),part,context)) {
+    match block_on(interp.run(&ProgramName::new("group","program",1),part,context)) {
         Ok(_) => printed(&libcore_context),
         Err(e) => vec![e],
     }

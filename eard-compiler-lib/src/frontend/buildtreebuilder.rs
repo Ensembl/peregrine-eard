@@ -495,6 +495,9 @@ impl BuildContext {
             PTStatementValue::Header(group,name,version) => {
                 self.add_statement(bt,BTStatementValue::Header(group.to_string(),name.to_string(),*version))?;
             },
+            PTStatementValue::Version(name,a,b) => {
+                self.add_statement(bt,BTStatementValue::Version(name.to_string(),*a,*b))?;
+            }
             PTStatementValue::FuncDef(f) => { self.build_funcdef(bt,f)?; },
             PTStatementValue::ProcDef(p) => { self.build_procdef(bt,p)?; },
             PTStatementValue::Code(c) => { self.define_code(c,bt)?; },

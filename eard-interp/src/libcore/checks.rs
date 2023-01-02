@@ -58,29 +58,28 @@ fn build_check<F>(ctx: &mut GlobalContext, reg: usize, cb: F) -> Result<Option<u
 
 pub(super) fn op_total(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     Ok(Box::new(|ctx,regs| {
-        if let Some(total) = build_check(ctx,regs[1],|b,v| *b += v)? {
+        if let Some(total) = build_check(ctx,regs[2],|b,v| *b += v)? {
             ctx.set(regs[0],Value::Number(total as f64))?;
             Ok(Return::Sync)
         } else {
-            Err(format!("failed total check"))
+            Err(ctx.force_string(regs[1])?.to_string())
         }
     }))
 }
 
 pub(super) fn op_bound(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     Ok(Box::new(|ctx,regs| {
-        if let Some(total) = build_check(ctx,regs[1],|b,v| *b = (*b).max(v))? {
+        if let Some(total) = build_check(ctx,regs[2],|b,v| *b = (*b).max(v))? {
             ctx.set(regs[0],Value::Number(total as f64))?;
             Ok(Return::Sync)
         } else {
-            Err(format!("failed ref check"))
+            Err(ctx.force_string(regs[1])?.to_string())
         }
     }))
 }
 
 fn check_or_fail<F>(check_name: &str, cb: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(i32,i32) -> bool + 'static {
-    let check_name = check_name.to_string();
     Ok(Box::new(move |ctx,regs| {
         let msg = ctx.force_string(regs[0])?;
         let a = ctx.force_number(regs[1])? as i32;

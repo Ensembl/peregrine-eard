@@ -102,25 +102,33 @@ impl<'a> Checking<'a> {
         self.add_statement(LinearStatementValue::Code(call,name,ret_regs.to_vec(),arg_regs.to_vec()));
     }
 
-    fn add_check_code(&mut self, check_name: &str, check_fn: &str, ret_regs: Vec<usize>, a_reg: usize, b_reg: usize) {
+    fn add_message(&mut self, msg: &str) -> usize {
         let checkname_reg = self.allocator.next_register();
         self.broad.insert(checkname_reg,BroadType::Atomic);
-        let msg = format!("failed check of {} for {} at {:?}",check_name,check_fn,self.position);
         self.add_statement(LinearStatementValue::Constant(checkname_reg,Constant::String(msg.to_string())));
+        checkname_reg
+    }
+
+    fn add_check_code(&mut self, check_name: &str, check_fn: &str, ret_regs: Vec<usize>, a_reg: usize, b_reg: usize) {
+        let checkname_reg = self.add_message(&format!("failed check of {} for {} at {:?}",check_name,check_fn,self.position));
         self.add_opcode(check_fn,&ret_regs,&[checkname_reg,a_reg,b_reg]);
     }
 
     fn add_runtime_check(&mut self, reg: usize, check_name: &str, ct: &CheckType, ci: usize) {
+        let msg_reg = self.add_message(&format!("failed check of {} at {:?}",check_name,self.position));
         let value_reg = self.allocator.next_register();
         self.broad.insert(value_reg,BroadType::Atomic);
-        let value_fn = match ct {
-            CheckType::Length => "length",
-            CheckType::LengthOrInfinite => "length",
-            CheckType::Reference => "bound",
-            CheckType::Sum => "total",
-        };
-        /* collect the parameter for this variable */
-        self.add_opcode(value_fn,&[value_reg],&[reg]);
+        match ct {
+            CheckType::Length | CheckType::LengthOrInfinite => {
+                self.add_opcode("length",&[value_reg],&[reg]);
+            },
+            CheckType::Reference => {
+                self.add_opcode("bound",&[value_reg],&[msg_reg,reg]);
+            },
+            CheckType::Sum => {
+                self.add_opcode("total",&[value_reg],&[msg_reg,reg]);
+            },
+        }
         /* verify our parameter is compatible with the check variable */
         match ct {
             CheckType::Length => {

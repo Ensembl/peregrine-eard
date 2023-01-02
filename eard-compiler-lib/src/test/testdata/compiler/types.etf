@@ -49,12 +49,13 @@ seq: 1, 12, 22, 36
 
 >> checking strip nolines
 
-sequences:182 r1 (1#1) 
+sequences:151 r1 (1#1) 
 test:15 r7 <constant> true
-sequences:183 r12 (2#2) r1 r7
+sequences:152 r12 (2#2) r1 r7
 test:15 r17 <constant> false
-sequences:183 r22 (2#3) r12 r17
-test:15 r46 (3#5) r22
+sequences:152 r22 (2#3) r12 r17
+test:15 r46 <constant> "failed check of w at test:15"
+test:15 r47 (3#5) r22
 test:16 r29 <constant> 1
 test:11 <sig> r29: number
 test:11 <sig> r22: seq(boolean)
@@ -69,8 +70,9 @@ test:11 <sig> r29: number ; r22: seq(boolean) ; r29: number ; r36: seq(boolean)
 >> narrow strip
 
 boolean: 7, 17
-number: 29, 46
+number: 29, 47
 seq(boolean): 1, 12, 22, 36
+string: 46
 
 >> test
 
@@ -154,23 +156,26 @@ let b : length(!b) = [3,4];
 
 >> checking strip nolines
 
-test:6 r1 (1#1) 
-test:15 r7 <constant> 1
-test:7 r12 (2#2) r1 r7
-test:15 r17 <constant> 2
-test:7 r22 (2#3) r12 r17
-test:15 r55 (3#7) r22
-test:6 r29 (1#4) 
-test:16 r34 <constant> 3
-test:7 r39 (2#5) r29 r34
-test:16 r43 <constant> 4
-test:7 r48 (2#6) r39 r43
-test:16 r56 (3#8) r48
+test:8 r1 (1#1) 
+test:17 r7 <constant> 1
+test:9 r12 (2#2) r1 r7
+test:17 r17 <constant> 2
+test:9 r22 (2#3) r12 r17
+test:17 r55 <constant> "failed check of a at test:17"
+test:17 r56 (3#7) r22
+test:8 r29 (1#4) 
+test:18 r34 <constant> 3
+test:9 r39 (2#5) r29 r34
+test:18 r43 <constant> 4
+test:9 r48 (2#6) r39 r43
+test:18 r57 <constant> "failed check of b at test:18"
+test:18 r58 (3#8) r48
 
 >> narrow strip
 
-number: 7, 17, 34, 43, 55, 56
+number: 7, 17, 34, 43, 56, 58
 seq(number): 1, 12, 22, 29, 39, 48
+string: 55, 57
 
 >> test
 
@@ -198,18 +203,20 @@ let b : length(a) = c(a);
 
 >> checking strip nolines
 
-test:6 r1 (1#1) 
-test:15 r7 <constant> 1
-test:7 r12 (2#2) r1 r7
-test:15 r17 <constant> 2
-test:7 r22 (2#3) r12 r17
-test:15 r34 (3#5) r22
-test:16 r30 (4#4) r22
+test:8 r1 (1#1) 
+test:17 r7 <constant> 1
+test:9 r12 (2#2) r1 r7
+test:17 r17 <constant> 2
+test:9 r22 (2#3) r12 r17
+test:17 r34 <constant> "failed check of a at test:17"
+test:17 r35 (3#5) r22
+test:18 r30 (4#4) r22
 
 >> narrow strip
 
-number: 7, 17, 34
+number: 7, 17, 35
 seq(number): 1, 12, 22, 30
+string: 34
 
 >> test
 

@@ -99,15 +99,15 @@ fold(libcore__length) special(length) code __code_length(sparse seq(?X)) -> numb
     }
 }
 
-fold(libcore__total) special(total) code __code_total(seq(number)) -> number {
-    impl (r1: seq(number)) -> r2 : number {
-        opcode 6, r2, r1;
+fold(libcore__total) special(total) code __code_total(string,seq(number)) -> number {
+    impl (r1: string, r2: seq(number)) -> r3 : number {
+        opcode 6, r3, r1, r2;
     }
 }
 
-fold(libcore__bound) special(bound) code __code_bound(seq(number)) -> number {
-    impl (r1: seq(number)) -> r2 : number {
-        opcode 7, r2, r1;
+fold(libcore__bound) special(bound) code __code_bound(string,seq(number)) -> number {
+    impl (r1: string, r2: seq(number)) -> r3 : number {
+        opcode 7, r3, r1, r2;
     }
 }
 
@@ -153,8 +153,8 @@ export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
 export function __operator_length(x) { let y = __code_length(x); y }
 
 export function __test_length(x) { let y = __code_length(x); y }
-export function __test_total(x) { let y = __code_total(x); y }
-export function __test_bound(x) { let y = __code_bound(x); y }
+export function __test_total(s,x) { let y = __code_total(s,x); y }
+export function __test_bound(s,x) { let y = __code_bound(s,x); y }
 
 export function len(x) { let y = __code_length(x); y }
 export function push(x,v) { let z = __code_push(x,y); z }

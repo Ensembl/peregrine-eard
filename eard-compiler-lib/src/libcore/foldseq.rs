@@ -52,7 +52,7 @@ fn total(input: &[Constant]) -> i64 {
 }
 
 pub(super) fn fold_total(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
-    if let Some(Some(FullConstant::Finite(x))) = inputs.get(0) {
+    if let Some(Some(FullConstant::Finite(x))) = inputs.get(1) {
         Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(total(x) as f64)))])
     } else {
         None
@@ -73,7 +73,7 @@ fn bound(input: &[Constant]) -> i64 {
 }
 
 pub(super) fn fold_bound(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
-    if let Some(Some(FullConstant::Finite(x))) = inputs.get(0) {
+    if let Some(Some(FullConstant::Finite(x))) = inputs.get(1) {
         Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(bound(x) as f64)))])
     } else {
         None

@@ -105,7 +105,8 @@ impl<'a> Checking<'a> {
     fn add_check_code(&mut self, check_name: &str, check_fn: &str, ret_regs: Vec<usize>, a_reg: usize, b_reg: usize) {
         let checkname_reg = self.allocator.next_register();
         self.broad.insert(checkname_reg,BroadType::Atomic);
-        self.add_statement(LinearStatementValue::Constant(checkname_reg,Constant::String(check_name.to_string())));
+        let msg = format!("failed check of {} for {} at {:?}",check_name,check_fn,self.position);
+        self.add_statement(LinearStatementValue::Constant(checkname_reg,Constant::String(msg.to_string())));
         self.add_opcode(check_fn,&ret_regs,&[checkname_reg,a_reg,b_reg]);
     }
 

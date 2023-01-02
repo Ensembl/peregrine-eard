@@ -82,10 +82,11 @@ fn check_or_fail<F>(check_name: &str, cb: F) -> Result<Box<dyn Fn(&mut GlobalCon
         where F: Fn(i32,i32) -> bool + 'static {
     let check_name = check_name.to_string();
     Ok(Box::new(move |ctx,regs| {
+        let msg = ctx.force_string(regs[0])?;
         let a = ctx.force_number(regs[1])? as i32;
         let b = ctx.force_number(regs[2])? as i32;
         if !cb(a,b) {
-            return Err(format!("failed {} check",check_name));
+            return Err(msg.to_string());
         }
         Ok(Return::Sync)
     }))

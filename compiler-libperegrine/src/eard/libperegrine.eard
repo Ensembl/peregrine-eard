@@ -1,0 +1,13 @@
+world code __code_leaf(string) -> handle(leaf) {
+    impl (r1: string) -> r2: handle(leaf) {
+        opcode 256, r2, r1;
+    }
+}
+
+world code __code_leaf(string) -> seq(handle(leaf)) {
+    impl (r1: seq(string)) -> r2: seq(handle(leaf)) {
+        opcode 257, r2, r1;
+    }
+}
+
+export function leaf(s) { let h = __code_leaf(s); h }

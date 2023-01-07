@@ -79,3 +79,10 @@ pub use crate::controller::{
     serialise::EardSerializeCode,
     source::FixedSourceSource
 };
+
+/* these are all exported to allow macros in external libraries */
+pub use crate::controller::source::ParsePosition;
+pub use crate::frontend::femodel::OrBundleRepeater;
+pub use crate::frontend::parsetree::{ PTExpression, PTStatement, PTStatementValue, PTCall };
+pub use crate::frontend::parser::parse_string;
+pub use crate::model::constants::Constant;

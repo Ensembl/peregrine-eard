@@ -1,0 +1,30 @@
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ ("#" ~ (!"\n" ~ ANY)* ~ "\n") }
+
+document = { SOI ~ group* ~ EOI }
+
+group = { spec ~ "{" ~ statement* ~ "}" }
+
+spec = @{ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_"|"/"|"-"|"*")* }
+
+statement = { identifier ~ ":" ~ (string|number|bare) ~ ";" }
+
+identifier = @{ (ASCII_ALPHA|"_") ~ (ASCII_ALPHANUMERIC|"_"|"-")* }
+
+bare = @{ (!(WHITESPACE|";") ~ ANY)+ }
+
+number = @{ 
+    "-"? ~ 
+    ("0"|( ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* )) ~ 
+    ("." ~ ASCII_DIGIT+)? ~
+    ("e" ~ ("+"|"-")? ~ ASCII_DIGIT+)?
+}
+
+string = ${ "\"" ~ string_inner ~ "\"" }
+
+string_inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "0")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}

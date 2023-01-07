@@ -165,7 +165,7 @@ pub struct ObjectFile {
 }
 
 impl ObjectFile {
-    pub(crate) fn decode(bytes: Vec<u8>) -> Result<ObjectFile,Error> {
+    pub fn decode(bytes: Vec<u8>) -> Result<ObjectFile,Error> {
         let mut decoder = Decoder::new(&bytes);
         let mut out = ObjectFile {
             code: vec![]
@@ -174,5 +174,9 @@ impl ObjectFile {
             out.code.push(part?);
         } 
         Ok(out)
+    }
+
+    pub fn list_programs(&self) -> Vec<ProgramName> {
+        self.code.iter().map(|c| c.metadata.name.clone()).collect()
     }
 }

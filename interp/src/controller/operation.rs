@@ -1,10 +1,50 @@
-use std::{future::Future, pin::Pin};
+use std::{future::Future, pin::Pin, sync::{Arc, Mutex}};
 
 use super::globalcontext::{GlobalBuildContext, GlobalContext};
 
+pub struct AsyncReturnImpl<T> {
+    async_part: Arc<Mutex<Pin<Box<dyn Future<Output = Result<T,String>>>>>>,
+    sync_part: Box<dyn Fn(&mut GlobalContext,&[usize],T) -> Result<(),String>>
+}
+
+trait ErasedAsyncReturn {
+    fn callback<'a>(&'a self, gctx: &'a mut GlobalContext, regs: &'a [usize]) -> Pin<Box<dyn Future<Output = Result<(),String>> +'a>>;
+}
+
+impl<T: 'static> ErasedAsyncReturn for AsyncReturnImpl<T> {
+    fn callback<'a>(&'a self, gctx: &'a mut GlobalContext, regs: &'a [usize]) -> Pin<Box<dyn Future<Output = Result<(),String>> + 'a>> {
+        let async_part = self.async_part.clone();
+        Box::pin(async move {
+            /* Each time the initial, sync part of op is run, it returns a new async so we can't
+             * get mutex clashes.
+             */
+            let v = async_part.lock().unwrap().as_mut().await?;
+            (self.sync_part)(gctx,regs,v)
+        })
+    }
+}
+
+pub struct AsyncReturn(Box<dyn ErasedAsyncReturn>);
+
+impl AsyncReturn {
+    pub fn new<T: 'static,F>(async_part: Pin<Box<dyn Future<Output = Result<T,String>>>>,
+               sync_part: F) -> AsyncReturn
+            where F: Fn(&mut GlobalContext,&[usize],T) -> Result<(),String> + 'static {
+        let out = AsyncReturnImpl { 
+            async_part: Arc::new(Mutex::new(async_part)),
+            sync_part: Box::new(sync_part)
+        };
+        AsyncReturn(Box::new(out))
+    }
+
+    pub(crate) fn callback<'a>(&'a self, gctx: &'a mut GlobalContext, regs: &'a [usize]) -> Pin<Box<dyn Future<Output = Result<(),String>> + 'a>> {
+        self.0.callback(gctx,regs)
+    }
+}
+
 pub enum Return {
     Sync,
-    Async(Pin<Box<dyn Future<Output = Result<(),String>>>>)
+    Async(AsyncReturn)
 }
 
 pub struct OperationStore {
@@ -60,7 +100,7 @@ impl Step {
     pub(crate) async fn run(&self, gctx: &mut GlobalContext) -> Result<(),String> {
         match (self.callback)(gctx,&self.registers)? {
             Return::Sync => Ok(()),
-            Return::Async(w) => w.await,
+            Return::Async(ear) => ear.callback(gctx,&self.registers).await
         }
     }
 }

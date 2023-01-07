@@ -38,7 +38,7 @@
 		"functions": {
 			"patterns": [{
 				"name": "entity.name.function.eard",
-				"match": "\\b([A-Za-z_][A-Za-z0-9_]+)(?=\\()"
+				"match": "\\b([A-Za-z_][A-Za-z0-9_]+)\\!?(?=\\()"
 			}]
 		},
 		"strings": {

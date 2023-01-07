@@ -3,10 +3,10 @@ pub struct HandleStore<T> {
 }
 
 impl<T> HandleStore<T> {
-    pub(crate) fn new() -> HandleStore<T> {
+    pub fn new() -> HandleStore<T> {
         HandleStore { objects: vec![] }
     }
-
+    
     pub fn push(&mut self, value: T) -> usize {
         let h = self.objects.len();
         self.objects.push(value);

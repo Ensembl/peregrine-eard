@@ -15,24 +15,24 @@ struct ParseFixedState {
 }
 
 #[allow(unused)]
-type PestResult<T> = std::result::Result<T, Error<Rule>>;
+pub type PestResult<T> = std::result::Result<T, Error<Rule>>;
 #[allow(unused)]
 type Node<'i> = pest_consume::Node<'i, Rule, ParseFixedState>;
 
-fn parse_string(input: Node) -> PestResult<String> {
+pub fn parse_string(input: &str) -> Result<String,String> {
     /* Same as JSON's definition plus \0 */
     let mut out = String::new();
     let mut u_left = 0;
     let mut u_val = 0;
     let mut seen_bs = false;
-    for c in input.as_str().chars() {
+    for c in input.chars() {
         if seen_bs {
             if u_left > 0 {
                 u_left -= 1;
                 u_val = u_val*16 + c.to_digit(16).unwrap();
                 seen_bs = u_left != 0;
                 if !seen_bs { 
-                    out.push(char::from_u32(u_val).ok_or_else(|| input.error("bad unicode"))?);
+                    out.push(char::from_u32(u_val).ok_or_else(|| format!("bad unicode"))?);
                 }
             } else {
                 seen_bs = false;
@@ -94,11 +94,11 @@ fn decl_check(input: Node, check_type: CheckType) -> PestResult<Check> {
 #[pest_consume::parser]
 impl EardParser {
     fn string_inner(input: Node) -> PestResult<String> {
-        parse_string(input)
+        parse_string(input.as_str()).map_err(|e| input.error(e))
     }
 
     fn multi_string_inner(input: Node) -> PestResult<String> {
-        parse_string(input)
+        parse_string(input.as_str()).map_err(|e| input.error(e))
     }
 
     fn string(input: Node) -> PestResult<String> {

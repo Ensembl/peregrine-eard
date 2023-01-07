@@ -1,5 +1,5 @@
 use std::{pin::Pin, future::Future};
-use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}, handles::HandleStore};
+use crate::controller::{globalcontext::{GlobalBuildContext, GlobalContext}, operation::{Return, Operation, AsyncReturn}, interpreter::{InterpreterBuilder}, context::{RunContext, ContextItem}, handles::HandleStore};
 use super::{
     print::{op_print, op_format}, 
     seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3},
@@ -44,7 +44,7 @@ fn op_async(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&
     let libcore_context = gctx.patterns.lookup::<Box<dyn LibcoreTemplate>>("libcore")?;
     Ok(Box::new(move |ctx,_regs| {
         let x = ctx.context.get(&libcore_context).call_up();
-        Ok(Return::Async(x))
+        Ok(Return::Async(AsyncReturn::new::<(),_>(x,|_,_,_| Ok(()))))
     }))
 }
 

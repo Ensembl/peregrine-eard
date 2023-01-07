@@ -143,6 +143,15 @@ impl Value {
         }
     }
 
+    pub fn is_atomic(&self) -> bool {
+        match self {
+            Value::Boolean(_) => true,
+            Value::Number(_) => true,
+            Value::String(_) => true,
+            _ => false
+        }
+    }
+
     force!(force_boolean,force_boolean_mut,Boolean,bool,true);
     force!(force_number,force_number_mut,Number,f64,true);
     force!(force_string,force_string_mut,String,str,false);

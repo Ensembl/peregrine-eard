@@ -8,6 +8,10 @@ edition = "2018"
 anyhow = "*"
 clap = { version = "4", features = ["derive"] }
 async-std="*"
+serde_json="*"
 
 [dependencies.eard-interp]
 path = "../interp"
+
+[dependencies.eard-libperegrine-stub]
+path = "../libperegrine-stub"

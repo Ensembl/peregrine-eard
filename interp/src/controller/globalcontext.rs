@@ -77,4 +77,8 @@ impl GlobalContext {
     pub fn is_finite(&self, reg: usize) -> Result<bool,String> {
         Ok(self.registers.get(reg)?.is_finite())
     }
+
+    pub fn is_atomic(&self, reg: usize) -> Result<bool,String> {
+        Ok(self.registers.get(reg)?.is_atomic())
+    }
 }

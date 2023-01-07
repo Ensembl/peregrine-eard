@@ -10,4 +10,171 @@ world code __code_leaf(string) -> seq(handle(leaf)) {
     }
 }
 
+world code __code_style(string,seq(string),seq(string)) {
+    impl (r1: string, r2: seq(string), r3: seq(string)) {
+        opcode 258, r1, r2, r3;
+    }
+}
+
+code __code_colour(number,number,number,number) -> handle(colour) {
+    impl (r1: number, r2: number, r3: number, r4: number) -> r5: handle(colour) {
+        opcode 259, r5, r1, r2, r3, r4;
+    }
+}
+
+code __code_paint_solid(handle(colour)) -> handle(paint) {
+    impl (r1: handle(colour)) -> r2: handle(paint) {
+        opcode 260, r2, r1;
+    }
+}
+
+code __code_paint_solid(seq(handle(colour))) -> handle(paint) {
+    impl (r1: seq(handle(colour))) -> r2: handle(paint) {
+        opcode 261, r2, r1;
+    }
+}
+
+code __code_coord(seq(number),seq(number),seq(number)) -> handle(coord) {
+    impl (r1: seq(number), r2: seq(number), r3: seq(number)) -> r4: handle(coord) {
+        opcode 262, r4, r1, r2, r3;
+    }
+}
+
+world code __code_rectangle(handle(coord),handle(coord),handle(paint),handle(leaf)) {
+    impl (r1: handle(coord), r2: handle(coord), r3: handle(paint), r4: handle(leaf)) {
+        opcode 263, r1, r2, r3, r4;
+    }
+}
+
+world code __code_rectangle(handle(coord),handle(coord),handle(paint),seq(handle(leaf))) {
+    impl (r1: handle(coord), r2: handle(coord), r3: handle(paint), r4: seq(handle(leaf))) {
+        opcode 263, r1, r2, r3, r4;
+    }
+}
+
+code __code_request(string,string) -> handle(request) {
+    impl (r1: string, r2: string) -> r3: handle(request) {
+        opcode 264, r3, r1, r2;
+    }
+}
+
+world code __code_scope(handle(request),string,string) {
+    impl (r1: handle(request), r2: string, r3: string) {
+        opcode 265, r1, r2, r3;
+    }
+}
+
+world code __code_get_data(handle(request)) -> large handle(response) {
+    impl (r1: handle(request)) -> r2: handle(response) {
+        opcode 266, r2, r1;
+    }
+}
+
+code __code_data_boolean(handle(response),string) -> large seq(boolean) {
+    impl (r1: handle(response), r2: string) -> r3: seq(boolean) {
+        opcode 267, r3, r1, r2;
+    }
+}
+
+code __code_data_number(handle(response),string) -> large seq(number) {
+    impl (r1: handle(response), r2: string) -> r3: seq(number) {
+        opcode 268, r3, r1, r2;
+    }
+}
+
+code __code_data_string(handle(response),string) -> large seq(string) {
+    impl (r1: handle(response), r2: string) -> r3: seq(string) {
+        opcode 269, r3, r1, r2;
+    }
+}
+
+code __code_graph_type(number,handle(colour)) -> handle(graph) {
+    impl (r1: number, r2: handle(colour)) -> r3: handle(graph) {
+        opcode 270, r3, r1, r2;
+    }
+}
+
+world code __code_wiggle(number,number,handle(graph),seq(number),seq(boolean),handle(leaf)) {
+    impl (r1: number, r2: number, r3: handle(graph), r4: seq(number), r5: seq(boolean), r6: handle(leaf)) {
+        opcode 271, r1, r2, r3, r4, r5, r6;
+    }
+}
+
+code __code_setting_boolean(string,seq(string)) -> boolean {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 272, r3, r1, r2;
+    }
+}
+
+code __code_setting_number(string,seq(string)) -> number {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 273, r3, r1, r2;
+    }
+}
+
+code __code_setting_string(string,seq(string)) -> string {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 274, r3, r1, r2;
+    }
+}
+
+code __code_setting_boolean_seq(string,seq(string)) -> seq(boolean) {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 275, r3, r1, r2;
+    }
+}
+
+code __code_setting_number_seq(string,seq(string)) -> seq(number) {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 276, r3, r1, r2;
+    }
+}
+
+code __code_setting_string_seq(string,seq(string)) -> seq(string) {
+    impl (r1: string, r2: seq(string)) -> r3: boolean {
+        opcode 277, r3, r1, r2;
+    }
+}
+
+code __code_pen(string,number,handle(colour),handle(colour)) -> handle(pen) {
+    impl (r1: string, r2: number, r3: handle(colour), r4: handle(colour)) -> r5: handle(pen) {
+        opcode 278, r5, r1, r2, r3, r4;
+    }
+}
+
+world code __code_text(handle(coord),handle(pen),seq(string),seq(handle(leaf))) {
+    impl (r1: handle(coord), r2: handle(pen), r3: seq(string), r4: seq(handle(leaf))) {
+        opcode 279, r1, r2, r3, r4;
+    }
+}
+
+code __code_paint_hollow(handle(colour),number) -> handle(paint) {
+    impl (r1: handle(colour), r2: number) -> r3: handle(paint) {
+        opcode 280, r3, r1, r2;
+    }
+}
+
+code __code_paint_hollow(seq(handle(colour)),number) -> handle(paint) {
+    impl (r1: seq(handle(colour)), r2: number) -> r3: handle(paint) {
+        opcode 281, r3, r1, r2;
+    }
+}
+
 export function leaf(s) { let h = __code_leaf(s); h }
+export procedure style(f,k,v) { __code_style(f,k,v); }
+export function colour(r,g,b,a) { let h = __code_colour(r,g,b,a); h }
+export function paint_solid(c) { let h = __code_paint_solid(c); h }
+export function paint_hollow(c,w) { let h = __code_paint_hollow(c,w); h }
+export function coord(b,n,t) { let h = __code_coord(b,n,t); h }
+export procedure rectangle(nw,se,p,f) { __code_rectangle(nw,se,p,f); }
+export function request(c,e) { let h = __code_request(c,e); h }
+export function get_data(r) { let x = __code_get_data(r); x }
+export procedure scope(h,k,v) { __code_scope(h,k,v); }
+export function data_boolean(r,k) { let v = __code_data_boolean(r,k); v }
+export function data_number(r,k) { let v = __code_data_number(r,k); v }
+export function data_string(r,k) { let v = __code_data_string(r,k); v }
+export function graph_type(h,c) { let g = __code_graph_type(h,c); g }
+export procedure wiggle(s,e,g,v,p,f) { __code_wiggle(s,e,g,v,p,f); }
+export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
+export function pen(font,size,fgd,bgd) { let h = __code_pen(font,size,fgd,bgd); h }
+export procedure text(c,p,t,f) { __code_text(c,p,t,f); }

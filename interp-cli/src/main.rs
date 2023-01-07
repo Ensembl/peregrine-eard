@@ -2,6 +2,7 @@ use std::{process::exit, pin::Pin, future::Future, fs::{self}};
 use async_std::task::block_on;
 use clap::{Parser};
 use eard_interp::{RunContext, LibcoreTemplate, build_libcore, InterpreterBuilder, Interpreter, prepare_libcore, ProgramName};
+use eard_libperegrine_stub::{build_libperegrine, prepare_libperegrine, StubResponses};
 
 #[derive(Parser, Debug)]
 #[command(name = "eard cli interpreter")]
@@ -19,6 +20,10 @@ pub(crate) struct Config {
 
     /// Source files to run
     pub(crate) source: String,
+
+    /// Response input file (if any)
+    #[arg(short = 'r', long)]
+    pub(crate) responses: Option<String>
 }
 
 async fn call_up_async() -> Result<(),String> {
@@ -48,6 +53,39 @@ fn guess_block(interp: &Interpreter, program: &ProgramName) -> Result<String,Str
     }
 }
 
+fn unindent(data: &str, offset: usize) -> String {
+    let mut out = String::new();
+    for mut line in data.split("\n") {
+        let mut initial_ws = 0;
+        let mut non_ws = None;
+        for (i,c) in line.chars().enumerate() {
+            if !c.is_whitespace() {
+                initial_ws = i;
+                non_ws = Some(c);
+                break;
+            }
+        }
+        if initial_ws > offset || ( initial_ws == offset && (non_ws == Some(']') || non_ws == Some('}') ) ) {
+            out = out.trim_end().to_string();
+            out.push(' ');
+            line = line.trim_start();
+        } else {
+            out.push('\n');
+        }
+        out.push_str(line);
+    }
+    out
+}
+
+fn get_responses(config: &Config) -> Result<StubResponses,String> {
+    if let Some(responses) = &config.responses {
+        let input = fs::read(responses).map_err(|e| format!("cannot read response: {}",e))?;
+        Ok(serde_json::from_slice(&input).map_err(|e| format!("cannot read responses: {}",e))?)
+    } else {
+        Ok(StubResponses::empty())
+    }
+}
+
 fn do_it(config: &Config) -> Result<(),String> {
     eprintln!("running {} ; program {} ; block {}",
         config.source,
@@ -58,6 +96,7 @@ fn do_it(config: &Config) -> Result<(),String> {
     let libcore_context = LibcoreCli;
     let mut builder = InterpreterBuilder::new();
     let libcore_builder = build_libcore(&mut builder)?;
+    let libperegrine_builder = build_libperegrine(&mut builder)?;
     let mut interp = Interpreter::new(builder);
     /* read the source */
     let contents = fs::read(&config.source).map_err(|e| format!("cannot read {}: {}",config.source,e))?;
@@ -84,9 +123,14 @@ fn do_it(config: &Config) -> Result<(),String> {
     /* prepare a run */
     let mut context = RunContext::new();
     prepare_libcore(&mut context,&libcore_builder,libcore_context);
+    let responses = get_responses(config)?;
+    let stubdump = prepare_libperegrine(&mut context,&libperegrine_builder,responses)?;
     /* run */
     let program = interp.get(&program,&block)?;
     block_on(program.run(context))?;
+    if stubdump.used() {
+        println!("{}",unindent(&serde_json::to_string_pretty(&stubdump).ok().unwrap(),10));
+    }
     Ok(())
 }
 

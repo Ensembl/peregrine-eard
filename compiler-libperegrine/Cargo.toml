@@ -7,6 +7,11 @@ edition = "2018"
 [dependencies]
 anyhow="*"
 clap = { version = "4", features = ["derive"] }
+css-color-parser = "*"
+ordered-float="*"
+pest="*"
+pest_consume="*"
+pest_derive="*"
 
 [dependencies.eard-compiler-lib]
 path = "../compiler-lib"

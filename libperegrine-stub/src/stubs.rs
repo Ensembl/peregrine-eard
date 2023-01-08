@@ -316,6 +316,10 @@ impl ProgramShapesBuilderImpl {
         self.stubs.get_setting(key,path)
     }
 
+    fn get_request(&self, key: &str, part: &str) -> Result<&DataValue,String> {
+        self.stubs.get_request(key,part)
+    }
+
     pub(crate) fn add_request(&mut self, req: &Request) -> Result<Response,String> {
         self.used = true;
         self.requests.push(req.clone());
@@ -374,6 +378,10 @@ impl ProgramShapesBuilder {
 
     pub(crate) fn get_setting(&self, key: &str, path: &[String]) -> Result<DataValue,String> {
         self.0.lock().unwrap().get_setting(key,path).cloned()
+    }
+
+    pub(crate) fn get_request(&self, key: &str, part: &str) -> Result<DataValue,String> {
+        self.0.lock().unwrap().get_request(key,part).cloned()
     }
 }
 

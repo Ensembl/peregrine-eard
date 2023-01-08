@@ -1,0 +1,13 @@
+code __code_base_flip(string) -> string {
+    impl (r1: string) -> r2: string {
+        opcode 149, r2, r1;
+    }
+}
+
+code __code_base_flip(seq(string)) -> seq(string) {
+    impl (r1: seq(string)) -> r2: seq(string) {
+        opcode 150, r2, r1;
+    }
+}
+
+export function base_flip(x: string) { let z = __code_base_flip(x); z }

@@ -23,7 +23,12 @@ pub(crate) struct Config {
 
     /// Response input file (if any)
     #[arg(short = 'r', long)]
-    pub(crate) responses: Option<String>
+    pub(crate) responses: Option<String>,
+
+    /// Step-by-step run with debugging info at each stage (for deep debugging)
+    #[arg(short = 's', long = "step")]
+    pub(crate) step_by_step: bool
+
 }
 
 async fn call_up_async() -> Result<(),String> {
@@ -95,6 +100,9 @@ fn do_it(config: &Config) -> Result<(),String> {
     /* prepare an interpreter */
     let libcore_context = LibcoreCli;
     let mut builder = InterpreterBuilder::new();
+    if config.step_by_step {
+        builder.set_step_by_step(true);
+    }
     let libcore_builder = build_libcore(&mut builder)?;
     let libperegrine_builder = build_libperegrine(&mut builder)?;
     let mut interp = Interpreter::new(builder);

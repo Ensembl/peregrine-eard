@@ -12,3 +12,4 @@ refer "sequences";
 refer "cond";
 refer "string";
 refer "convert";
+refer "bio";

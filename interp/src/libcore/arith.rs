@@ -46,7 +46,7 @@ fn op_num2s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result
 fn op_num3s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(&mut f64,f64) + 'static {
     Ok(Box::new(move |ctx,regs| {
-        if ctx.is_finite(regs[0])? {
+        if ctx.is_finite(regs[1])? {
             let mut a = ctx.force_finite_number(regs[1])?.to_vec();
             let b = ctx.force_number(regs[2])?;
             for v in &mut a {

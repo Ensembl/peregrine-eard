@@ -11,8 +11,8 @@ impl ProgramStore {
         ProgramStore { store, program: HashMap::new() }
     }
 
-    pub(crate) fn program_builder(&self) -> ProgramBuilder {
-        ProgramBuilder::new(&self.store)
+    pub(crate) fn program_builder(&self, step_by_step: bool) -> ProgramBuilder {
+        ProgramBuilder::new(&self.store,step_by_step)
     }
 
     pub(crate) fn add_program(&mut self, metadata: &ProgramName, block: &str, program: Program) {
@@ -40,29 +40,55 @@ impl ProgramStore {
 pub struct Program {
     max_reg: usize,
     steps: Arc<Vec<Step>>,
-    constants: Arc<Vec<Value>>
+    constants: Arc<Vec<Value>>,
+    step_details: Arc<Vec<(usize,Vec<usize>)>>
 }
 
 impl Program {
-    pub async fn run(&self, context: RunContext) -> Result<(),String> {
+    async fn run_step_by_step(&self, context: RunContext) -> Result<(),String> {
+        let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
+        for (i,step) in self.steps.as_ref().iter().enumerate() {
+            eprintln!("{:?}",self.step_details[i]);
+            for reg in &self.step_details[i].1 {
+                eprintln!("  r{} = {:?}",*reg,gctx.get(*reg));
+            }
+            step.run(&mut gctx).await?;
+        }
+        Ok(())
+    }
+
+    async fn run_fast(&self, context: RunContext) -> Result<(),String> {
         let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
         for step in self.steps.as_ref().iter() {
             step.run(&mut gctx).await?;
         }
         Ok(())
     }
+
+    pub async fn run(&self, context: RunContext) -> Result<(),String> {
+        if self.step_details.len() > 0 {
+            self.run_step_by_step(context).await
+        } else {
+            self.run_fast(context).await
+        }
+    }
 }
 
 pub struct ProgramBuilder<'a> {
+    symbols: bool,
     max_reg: usize,
     store: &'a OperationStore,
     constants: Vec<Value>,
-    steps: Vec<Step>    
+    steps: Vec<Step>,
+    step_details: Vec<(usize,Vec<usize>)>  
 }
 
 impl<'a> ProgramBuilder<'a> {
-    pub(crate) fn new(store: &'a OperationStore) -> ProgramBuilder<'a> {
-        ProgramBuilder { store, constants: vec![], steps: vec![], max_reg: 0 }
+    pub(crate) fn new(store: &'a OperationStore, symbols: bool) -> ProgramBuilder<'a> {
+        ProgramBuilder { 
+            store, constants: vec![], steps: vec![], max_reg: 0, step_details: vec![],
+            symbols
+        }
     }
 
     pub(crate) fn add_constant(&mut self, index: usize, value: Value) {
@@ -75,6 +101,9 @@ impl<'a> ProgramBuilder<'a> {
     pub(crate) fn add_opcode(&mut self, gbctx: &GlobalBuildContext, opcode: usize, registers: Vec<usize>) -> Result<(),String> {
         self.max_reg = self.max_reg.max(*registers.iter().max().unwrap_or(&0));
         let oper = self.store.get(opcode)?;
+        if self.symbols {
+            self.step_details.push((opcode,registers.clone()));
+        }
         self.steps.push(Step::new(gbctx,oper,registers)?);
         Ok(())
     }
@@ -83,7 +112,8 @@ impl<'a> ProgramBuilder<'a> {
         Program {
             max_reg: self.max_reg,
             steps: Arc::new(mem::replace(&mut self.steps,vec![])),
-            constants: Arc::new(mem::replace(&mut self.constants,vec![]))
+            constants: Arc::new(mem::replace(&mut self.constants,vec![])),
+            step_details: Arc::new(mem::replace(&mut self.step_details,vec![]))
         }
     }
 }

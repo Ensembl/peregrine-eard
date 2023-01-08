@@ -55,5 +55,6 @@ pub(crate) fn libcore_sources() -> FixedSourceSource {
         ("cond",include_str!("eard/cond.eard")),
         ("string",include_str!("eard/string.eard")),
         ("convert",include_str!("eard/convert.eard")),
+        ("bio",include_str!("eard/bio.eard")),
     ])
 }

@@ -10,7 +10,7 @@
   9 finseq number
  10 runtime length/length check
  11 runtime total/total check
- 12 *unused*
+ 12 select
  13 runtime length/total check
  14 runtime length/bound check
  15 runtime inf/inf check
@@ -147,3 +147,5 @@
 146 min (destructive) seq(number)/number
 147 min (non-destructive) seq(number)/seq(number)
 148 min (destructive) seq(number)/seq(number)
+149 base_flip
+150 base_flip seq

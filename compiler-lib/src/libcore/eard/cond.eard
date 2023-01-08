@@ -13,6 +13,12 @@ code __code_if(seq(boolean),seq(?X),seq(?X)) -> seq(?X) {
     }
 }
 
+code __code_select(seq(?X), seq(boolean)) -> seq(?X) {
+    impl (r1: seq(?X), r2: seq(boolean)) -> r3: seq(?X) {
+        opcode 12, r3, r1, r2;
+    }
+}
+
 code __code_set(seq(?X) length(?X), seq(boolean), seq(?X)) -> seq(?X) length(?X) {
     impl (r1: seq(?X), r2: seq(boolean), r3: seq(?X)) -> r1 {
         opcode 95, r1, r2, r3;
@@ -92,3 +98,4 @@ export function repeat(d,n) { let z = __code_repeat(d,n); z }
 export function index(s,i) { let z = __code_index(s,i); z }
 export function count(x) { let z = __code_count(x); z }
 export function enumerate(x) { let z = __code_enumerate(x); z }
+export function select(x,p) { let z = __code_select(x,p); z }

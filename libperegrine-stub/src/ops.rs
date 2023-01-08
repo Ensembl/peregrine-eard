@@ -491,3 +491,14 @@ pub(crate) fn op_text(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Globa
         Ok(Return::Sync)
     }))
 }
+
+pub(crate) fn op_bp_range(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let shapes = ctx.context.get(&shapes);
+        let value = to_number(&shapes.get_request("bp_range","")?);
+        ctx.set(regs[0],Value::Number(value[0]))?;
+        ctx.set(regs[1],Value::Number(value[1]))?;
+        Ok(Return::Sync)
+    }))
+}

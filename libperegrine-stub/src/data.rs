@@ -163,4 +163,13 @@ impl StubResponses {
             r.get(&path.join("/")).ok()
         }).unwrap_or(&DataValue::Empty))
     }
+
+    pub(crate) fn get_request(&self, key: &str, part: &str) -> Result<&DataValue,String> {
+        let settings = self.0.get("__request").ok_or_else(|| {
+            format!("no request key in stub but request settings used by program")
+        })?;
+        Ok(settings.0.get(key).and_then(|r| {
+            r.get(part).ok()
+        }).unwrap_or(&DataValue::Empty))
+    }
 }

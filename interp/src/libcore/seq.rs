@@ -332,3 +332,23 @@ pub(crate) fn op_position(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut 
         Ok(Return::Sync)
     }))
 }
+
+fn select<T: Clone>(input: &[T], pred: &[bool]) -> Vec<T> {
+    input.iter().zip(pred.iter()).filter_map(|(v,b)| if *b { Some(v.clone()) } else { None } ).collect()
+}
+
+pub(crate) fn op_select(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let pred = ctx.force_finite_boolean(regs[2])?;
+        let v = ctx.get(regs[1])?;
+        let out = match v {
+            Value::FiniteBoolean(b) => Value::FiniteBoolean(select(b,pred)),
+            Value::FiniteNumber(n) => Value::FiniteNumber(select(n,pred)),
+            Value::FiniteString(s) => Value::FiniteString(select(s,pred)),
+            _ => { return Err(format!("invalid type for index")); }
+
+        };
+        ctx.set(regs[0],out)?;
+        Ok(Return::Sync)
+    }))
+}

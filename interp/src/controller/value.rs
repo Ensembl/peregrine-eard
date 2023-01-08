@@ -29,9 +29,8 @@ impl CborVariety {
     }
 }
 
-fn unexpected_type() -> String {
-    panic!();
-    format!("unexpected type")
+fn unexpected_type(got: &Value) -> String {
+    format!("unexpected type got={:?}",got)
 }
 
 macro_rules! force {
@@ -39,14 +38,14 @@ macro_rules! force {
         pub fn $name(&self) -> Result<&$out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(unexpected_type())
+                _ => Err(unexpected_type(self))
             }
         }
 
         pub fn $mname(&mut self) -> Result<&mut $out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(unexpected_type())
+                _ => Err(unexpected_type(self))
             }
         }
     };
@@ -55,14 +54,14 @@ macro_rules! force {
         pub fn $name(&self) -> Result<$out,String> {
             match self {
                 Value::$arm(v) => Ok(*v),
-                _ => Err(unexpected_type())
+                _ => Err(unexpected_type(self))
             }
         }
 
         pub fn $mname(&mut self) -> Result<&mut $out,String> {
             match self {
                 Value::$arm(v) => Ok(v),
-                _ => Err(unexpected_type())
+                _ => Err(unexpected_type(self))
             }
         }
     };

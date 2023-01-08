@@ -48,11 +48,15 @@ impl Program {
     async fn run_step_by_step(&self, context: RunContext) -> Result<(),String> {
         let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
         for (i,step) in self.steps.as_ref().iter().enumerate() {
-            eprintln!("{:?}",self.step_details[i]);
+            eprintln!("\n\n{:?}",self.step_details[i]);
             for reg in &self.step_details[i].1 {
-                eprintln!("  r{} = {:?}",*reg,gctx.get(*reg));
+                eprintln!("  before r{} = {:?}",*reg,gctx.get(*reg));
             }
             step.run(&mut gctx).await?;
+            eprintln!("");
+            for reg in &self.step_details[i].1 {
+                eprintln!("  after  r{} = {:?}",*reg,gctx.get(*reg));
+            }
         }
         Ok(())
     }

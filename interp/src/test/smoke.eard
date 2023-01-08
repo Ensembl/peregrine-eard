@@ -279,3 +279,14 @@ print(format(base_flip("CgAtn")));
 print(format(base_flip(["CgAtn","AnNnA"])));
 
 print(format(select([1,2,3,4,5],[false,true,true,false,true])));
+
+print(format(ruler_interval(1000000,10,[1,2,5])));
+print(format(ruler_interval(2000000,10,[1,2,5])));
+print(format(ruler_interval(8000000,10,[1,2,5])));
+
+print(format(ruler_markings(200000,1000000,2000000)));
+print(format(ruler_markings(500000,1000000,3000000)));
+print(format(ruler_markings(1000000,1000000,9000000)));
+
+print(format(comma_format(100000)));
+print(format(comma_format([100000,110000,101000,100100,1000000,1,100,0])));

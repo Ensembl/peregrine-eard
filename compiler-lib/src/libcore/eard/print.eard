@@ -10,5 +10,18 @@ world code __code_print(string) {
     }
 }
 
+code __code_comma_format(number) -> string {
+    impl (r1: number) -> r2: string {
+        opcode 153, r2, r1;
+    }
+}
+
+code __code_comma_format(seq(number)) -> seq(string) {
+    impl (r1: seq(number)) -> r2: seq(string) {
+        opcode 154, r2, r1;
+    }
+}
+
 export function format(x: ?X) -> string { let y = __code_format(x); y }
 export procedure print(x: string) { __code_print(x); }
+export function comma_format(x) { let z = __code_comma_format(x); z }

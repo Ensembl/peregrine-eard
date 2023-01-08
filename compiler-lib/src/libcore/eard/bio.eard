@@ -10,4 +10,18 @@ code __code_base_flip(seq(string)) -> seq(string) {
     }
 }
 
+code __code_ruler_interval(number,number,seq(number)) -> number {
+    impl (r1: number, r2: number, r3: seq(number)) -> r4: number {
+        opcode 151, r4, r1, r2, r3;
+    }
+}
+
+code __code_ruler_markings(number,number,number) -> seq(number) {
+    impl (r1: number, r2: number, r3: number) -> r4: seq(number) {
+        opcode 152, r4, r1, r2, r3;
+    }    
+}
+
 export function base_flip(x: string) { let z = __code_base_flip(x); z }
+export function ruler_interval(r,p,s) { let z = __code_ruler_interval(r,p,s); z }
+export function ruler_markings(v,a,b) { let z = __code_ruler_markings(v,a,b); z }

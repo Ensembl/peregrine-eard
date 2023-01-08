@@ -53,7 +53,8 @@ impl Serialize for Hollow {
 #[derive(Clone,PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
-    Hollow(Hollow)
+    Hollow(Hollow),
+    Special(String)
 }
 
 impl Serialize for Patina {
@@ -68,7 +69,11 @@ impl Serialize for Patina {
             Patina::Hollow(s) => {
                 map.serialize_key("hollow")?;
                 map.serialize_value(s)?;
-            }
+            },
+            Patina::Special(s) => {
+                map.serialize_key("special")?;
+                map.serialize_value(s)?;
+            },
         }
         map.end()
     }

@@ -502,3 +502,15 @@ pub(crate) fn op_bp_range(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut G
         Ok(Return::Sync)
     }))
 }
+
+pub(crate) fn op_paint_special(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
+    Ok(Box::new(move |ctx,regs| {
+        let special = ctx.force_string(regs[1])?;
+        let paint = Patina::Special(special.to_string());
+        let paints = ctx.context.get_mut(&paints);
+        let h = paints.push(paint);
+        ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}

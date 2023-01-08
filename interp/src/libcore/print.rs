@@ -45,3 +45,39 @@ pub(crate) fn op_print(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
         Ok(Return::Sync)
     }))
 }
+
+fn comma_format(number: f64) -> String {
+    let mut number = number.round() as i64;
+    let mut out = vec![];
+    while number >= 1000 {
+        out.push(format!("{0:0>3}",number%1000));
+        number /= 1000;
+    }
+    out.push(number.to_string());
+    out.reverse();
+    out.join(",")
+}
+
+pub(crate) fn op_comma_format(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_context = gctx.patterns.lookup::<Box<dyn LibcoreTemplate>>("libcore")?;
+    Ok(Box::new(move |ctx,regs| {
+        let value = ctx.force_number(regs[1])?;
+        ctx.set(regs[0],Value::String(comma_format(value)))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_comma_format_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let libcore_context = gctx.patterns.lookup::<Box<dyn LibcoreTemplate>>("libcore")?;
+    Ok(Box::new(move |ctx,regs| {
+        if ctx.is_finite(regs[1])? {
+            let value = ctx.force_finite_number(regs[1])?;
+            let value = value.iter().map(|v| comma_format(*v)).collect();
+            ctx.set(regs[0],Value::FiniteString(value))?;
+        } else {
+            let value = ctx.force_infinite_number(regs[1])?;
+            ctx.set(regs[0],Value::InfiniteString(comma_format(value)))?;
+        }
+        Ok(Return::Sync)    
+    }))
+}

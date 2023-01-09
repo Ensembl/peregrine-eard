@@ -144,7 +144,7 @@ fn op_numbool<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Resu
 fn op_numbool_s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(f64,f64) -> bool + 'static {
     Ok(Box::new(move |ctx,regs| {
-        if ctx.is_finite(regs[0])? {
+        if ctx.is_finite(regs[1])? {
             let a = ctx.force_finite_number(regs[1])?;
             let b = ctx.force_number(regs[2])?;
             ctx.set(regs[0],Value::FiniteBoolean(a.iter().map(|v| f(*v,b)).collect()))?;
@@ -199,7 +199,7 @@ fn op_strbool<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Resu
 fn op_strbool_s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(&str,&str) -> bool + 'static {
     Ok(Box::new(move |ctx,regs| {
-        if ctx.is_finite(regs[0])? {
+        if ctx.is_finite(regs[1])? {
             let a = ctx.force_finite_string(regs[1])?;
             let b = ctx.force_string(regs[2])?;
             ctx.set(regs[0],Value::FiniteBoolean(a.iter().map(|v| f(v,b)).collect()))?;

@@ -4,7 +4,7 @@ world code __code_leaf(string) -> handle(leaf) {
     }
 }
 
-world code __code_leaf(string) -> seq(handle(leaf)) {
+world code __code_leaf(seq(string)) -> seq(handle(leaf)) {
     impl (r1: seq(string)) -> r2: seq(handle(leaf)) {
         opcode 257, r2, r1;
     }
@@ -172,6 +172,12 @@ code __code_paint_special(string) -> handle(paint) {
     }
 }
 
+world code __code_image(handle(coord),seq(string),seq(handle(leaf))) {
+    impl (r1: handle(coord), r2: seq(string), r3: seq(handle(leaf))) {
+        opcode 284, r1, r2, r3;
+    }
+}
+
 export function leaf(s) { let h = __code_leaf(s); h }
 export procedure style(f,k,v) { __code_style(f,k,v); }
 export function colour(r,g,b,a) { let h = __code_colour(r,g,b,a); h }
@@ -187,8 +193,16 @@ export function data_number(r,k) { let v = __code_data_number(r,k); v }
 export function data_string(r,k) { let v = __code_data_string(r,k); v }
 export function graph_type(h,c) { let g = __code_graph_type(h,c); g }
 export procedure wiggle(s,e,g,v,p,f) { __code_wiggle(s,e,g,v,p,f); }
+
 export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
+export function setting_number(k,p) { let v = __code_setting_number(k,p); v }
+export function setting_string(k,p) { let v = __code_setting_string(k,p); v }
+export function setting_boolean_seq(k,p) { let v = __code_setting_boolean_seq(k,p); v }
+export function setting_number_seq(k,p) { let v = __code_setting_number_seq(k,p); v }
+export function setting_string_seq(k,p) { let v = __code_setting_string_seq(k,p); v }
+
 export function pen(font,size,fgd,bgd) { let h = __code_pen(font,size,fgd,bgd); h }
 export procedure text(c,p,t,f) { __code_text(c,p,t,f); }
 export procedure bp_range() { let (a,b) = __code_bp_range(); (a,b) }
 export function paint_special(s) { let h = __code_paint_special(s); h }
+export procedure image(c,s,f) { __code_image(c,s,f); }

@@ -97,3 +97,21 @@ r4 <- "failed check of x for check_length at test:8"
 opcode 10, r4, r5, r3
 opcode 137, r1
 opcode 137, r2
+
+>> test
+
+check 1
+
+>> input
+
+program "group" "program" 1;
+
+let x.a = 1;
+let x.b = false;
+
+let **y = **x;
+
+print(y.a);
+
+>> generate strip
+

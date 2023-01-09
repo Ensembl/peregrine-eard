@@ -1,8 +1,20 @@
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
-use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Shape, Rectangle, Request, Plotter, Wiggle, Pen, Text, Hollow }, data::{Response, DataValue}};
+use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Shape, Rectangle, Request, Plotter, Wiggle, Pen, Text, Hollow, Image }, data::{Response, DataValue}};
 
 fn to_u8(v: f64) -> u8 { (v*255.) as u8 }
+
+fn string_given_length(ctx: &mut GlobalContext, reg: usize, len: usize) -> Result<Vec<String>,String> {
+    if ctx.is_finite(reg)? {
+        let out = ctx.force_finite_string(reg)?;
+        if out.len() != len {
+            return Err(format!("incorrect legnth of sequence"));
+        }
+        Ok(out.to_vec())
+    } else {
+        Ok(vec![ctx.force_infinite_string(reg)?.to_string();len])
+    }
+}
 
 pub(crate) fn op_leaf_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
@@ -511,6 +523,26 @@ pub(crate) fn op_paint_special(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(paint);
         ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_image(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let coords = gctx.patterns.lookup::<HandleStore<Coords>>("coords")?;
+    let leafs = gctx.patterns.lookup::<HandleStore<LeafRequest>>("leaf")?;
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let coords = ctx.context.get(&coords);
+        let leafs = ctx.context.get(&leafs);
+        let coord = coords.get(ctx.force_number(regs[0] as usize)? as usize)?.clone();
+        let images = if ctx.is_finite(regs[1])? {
+            ctx.force_finite_string(regs[1])?.clone()
+        } else {
+            vec![ctx.force_infinite_string(regs[1])?.to_string()]
+        };
+        let leafs = leaf_from_handle(ctx,leafs,regs[2])?;
+        let shapes = ctx.context.get_mut(&shapes);
+        shapes.add_shape(Shape::Image(Image(coord.clone(),images.clone(),leafs)));
         Ok(Return::Sync)
     }))
 }

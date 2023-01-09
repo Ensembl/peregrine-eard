@@ -179,6 +179,20 @@ impl Serialize for Rectangle {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Image(pub(crate) Coords,pub(crate) Vec<String>,pub(crate) Vec<LeafRequest>);
+
+impl Serialize for Image {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut seq = serializer.serialize_seq(Some(4))?;
+        seq.serialize_element(&self.0)?;
+        seq.serialize_element(&self.1)?;
+        seq.serialize_element(&self.2)?;
+        seq.end()
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Wiggle(
     pub(crate) OrderedFloat<f64>, pub(crate) OrderedFloat<f64>, pub(crate) Plotter, 
     pub(crate) Vec<Option<OrderedFloat<f64>>>, pub(crate) LeafRequest
@@ -204,6 +218,7 @@ impl Serialize for Wiggle {
 pub(crate) enum Shape {
     Rectangle(Rectangle),
     Text(Text),
+    Image(Image),
     Wiggle(Wiggle)
 }
 
@@ -223,7 +238,12 @@ impl Serialize for Shape {
             Shape::Text(t) => {
                 map.serialize_key("text")?;
                 map.serialize_value(t)?;
+            },
+            Shape::Image(m) => {
+                map.serialize_key("image")?;
+                map.serialize_value(m)?;
             }
+
         }
         map.end()                
     }

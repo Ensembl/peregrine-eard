@@ -1,10 +1,9 @@
 use minicbor::{Decoder, decode::Error, Decode, data::Type};
 
-use super::objectcode::cbor_map;
+use super::objectcode::{cbor_map, cbor_array};
 
 enum CborVariety {
-    Integer,
-    Float,
+    Number,
     String,
     Boolean,
     Array,
@@ -17,8 +16,7 @@ impl CborVariety {
             Type::Bool => CborVariety::Boolean,
             Type::U8 | Type::U16 | Type::U32 | Type::U64 |
             Type::I8 | Type::I16 | Type::I32 | Type::I64 |
-            Type::Int => CborVariety::Integer,
-            Type::F16 | Type::F32 | Type::F64 => CborVariety::Float,
+            Type::Int | Type::F16 | Type::F32 | Type::F64 => CborVariety::Number,
             Type::String | Type::StringIndef => CborVariety::String,
             Type::Array | Type::ArrayIndef => CborVariety::Array,
             Type::Map | Type::MapIndef => CborVariety::Map,
@@ -65,12 +63,6 @@ macro_rules! force {
             }
         }
     };
-}
-
-pub enum ValueVariety {
-    Boolean, Number, String,
-    FiniteBoolean, FiniteNumber, FiniteString,
-    InfiniteBoolean, InfiniteNumber, InfiniteString
 }
 
 #[derive(Clone,Debug)] // but don't use Clone except for trivial values: it's expensive!
@@ -174,22 +166,30 @@ fn from_array<'a,T: Decode<'a,()>>(d: &mut Decoder<'a>) -> Result<Vec<T>,Error> 
     Ok(out)
 }
 
+fn number(d: &mut Decoder) -> Result<f64,Error> {
+    Ok(if d.probe().i64().is_ok() { d.i64()? as f64 } else { d.f64()? })
+}
+
+fn number_from_array(d: &mut Decoder) -> Result<Vec<f64>,Error> {
+    let mut out = vec![];
+    cbor_array(d,&mut out,|_,out,d| {
+        out.push(number(d)?);
+        Ok(())
+    })?;
+    Ok(out)
+}
+
 impl<'b> Decode<'b,()> for Value {
     fn decode(d: &mut Decoder<'b>, _ctx: &mut ()) -> Result<Self, Error> {
         Ok(match CborVariety::peek(d)? {
-            CborVariety::Float => Value::Number(d.f64()?),
-            CborVariety::Integer => Value::Number(d.i64()? as f64),
+            CborVariety::Number => Value::Number(number(d)?),
             CborVariety::String => Value::String(d.str()?.to_string()),
             CborVariety::Boolean => Value::Boolean(d.bool()?),
             CborVariety::Array => {
                 let mut p = d.probe();
                 p.array().ok();
                 match CborVariety::peek(&mut p)? {
-                    CborVariety::Float => Value::FiniteNumber(from_array(d)?),
-                    CborVariety::Integer => {
-                        let v = from_array::<i64>(d)?;
-                        Value::FiniteNumber(v.iter().map(|x| *x as f64).collect())
-                    }
+                    CborVariety::Number => Value::FiniteNumber(number_from_array(d)?),
                     CborVariety::String => Value::FiniteString(from_array(d)?),
                     CborVariety::Boolean => Value::FiniteBoolean(from_array(d)?),
                     _ => { return Err(Error::message("bad constant")); }
@@ -201,8 +201,7 @@ impl<'b> Decode<'b,()> for Value {
                     if key == "" {
                         let mut p = d.probe();
                         *out = Some(match CborVariety::peek(&mut p)? {
-                            CborVariety::Float => Value::InfiniteNumber(d.f64()?),
-                            CborVariety::Integer => Value::InfiniteNumber(d.i64()? as f64),
+                            CborVariety::Number => Value::InfiniteNumber(number(d)?),
                             CborVariety::String => Value::InfiniteString(d.str()?.to_string()),
                             CborVariety::Boolean => Value::InfiniteBoolean(d.bool()?),
                             _ => { return Err(Error::message("bad constant")); }

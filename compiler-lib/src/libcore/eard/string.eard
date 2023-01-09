@@ -10,15 +10,21 @@ fold(libcore__push_str) code __code_push_str(string,string) -> string {
     }
 }
 
-fold(libcore__push_str) code __code_push_str(string,seq(string)) -> string {
-    impl (r1: string, r2: seq(string)) -> r3: string {
-        opcode 93, r3, r1, r2;
+fold(libcore__push_str) code __code_push_str(string,seq(string)) -> seq(string) {
+    impl (r1: string, r2: seq(string)) -> r3: seq(string) {
+        opcode 156, r3, r1, r2;
     }
 }
 
-fold(libcore__push_str) code __code_push_str(seq(string),string) -> string {
+fold(libcore__push_str) code __code_push_str(seq(string),string) -> seq(string) {
     impl (r1: seq(string), r2:string) -> r3: seq(string) {
         opcode 108, r3, r1, r2;
+    }
+}
+
+fold(libcore__push_str) code __code_push_str(seq(string),seq(string)) -> seq(string) {
+    impl (r1: seq(string), r2:seq(string)) -> r3: seq(string) {
+        opcode 155, r3, r1, r2;
     }
 }
 

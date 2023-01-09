@@ -77,11 +77,45 @@ pub(crate) fn op_push_str_revs(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(
             let extra = ctx.force_string(regs[1])?;
             let base = ctx.force_finite_string(regs[2])?;
             let out = base.iter().map(|s| format!("{}{}",extra,s)).collect();
-            ctx.set(regs[0],Value::FiniteString(out))?;    
+            ctx.set(regs[0],Value::FiniteString(out))?;
         } else {
             let first = ctx.force_string(regs[1])?;
             let second = ctx.force_string(regs[2])?;
             ctx.set(regs[0],Value::InfiniteString(format!("{}{}",first,second)))?;    
+        }
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_push_str_ss(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        match (ctx.is_finite(regs[1])?,ctx.is_finite(regs[2])?) {
+            (true, true) => {
+                let a = ctx.force_finite_string(regs[1])?;
+                let b = ctx.force_finite_string(regs[2])?;
+                if a.len() != b.len() {
+                    return Err(format!("lengths do not match in push_str"));
+                }
+                let out = a.iter().zip(b.iter()).map(|(a,b)| format!("{}{}",a,b)).collect();
+                ctx.set(regs[0],Value::FiniteString(out))?;
+            },
+            (true, false) => {
+                let a = ctx.force_finite_string(regs[1])?;
+                let b = ctx.force_infinite_string(regs[2])?;
+                let out = a.iter().map(|a| format!("{}{}",a,b)).collect();
+                ctx.set(regs[0],Value::FiniteString(out))?;
+            },
+            (false, true) => {
+                let a = ctx.force_infinite_string(regs[1])?;
+                let b = ctx.force_finite_string(regs[2])?;
+                let out = b.iter().map(|b| format!("{}{}",a,b)).collect();
+                ctx.set(regs[0],Value::FiniteString(out))?;
+            },
+            (false, false) => {
+                let a = ctx.force_infinite_string(regs[1])?;
+                let b = ctx.force_infinite_string(regs[2])?;
+                ctx.set(regs[0],Value::InfiniteString(format!("{}{}",a,b)))?;
+            }
         }
         Ok(Return::Sync)
     }))

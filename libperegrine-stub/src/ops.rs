@@ -1,8 +1,8 @@
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
-use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Shape, Rectangle, Request, Plotter, Wiggle, Pen, Text, Hollow, Image }, data::{Response, DataValue}};
+use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Shape, Rectangle, Request, Plotter, Wiggle, Pen, Text, Hollow, Image, RunningText }, data::{Response, DataValue}};
 
-fn to_u8(v: f64) -> u8 { (v*255.) as u8 }
+fn to_u8(v: f64) -> u8 { v as u8 }
 
 fn string_given_length(ctx: &mut GlobalContext, reg: usize, len: usize) -> Result<Vec<String>,String> {
     if ctx.is_finite(reg)? {
@@ -500,6 +500,26 @@ pub(crate) fn op_text(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Globa
         let leaf = leaf_from_handle(ctx,leafs,regs[3])?;
         let shapes = ctx.context.get_mut(&shapes);
         shapes.add_shape(Shape::Text(Text { coords, pen, text, leaf }));
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_running_text(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let coords = gctx.patterns.lookup::<HandleStore<Coords>>("coords")?;
+    let leafs = gctx.patterns.lookup::<HandleStore<LeafRequest>>("leaf")?;
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    let pens = gctx.patterns.lookup::<HandleStore<Pen>>("pens")?;
+    Ok(Box::new(move |ctx,regs| {
+        let coords = ctx.context.get(&coords);
+        let leafs = ctx.context.get(&leafs);
+        let pens = ctx.context.get(&pens);
+        let nw = coords.get(ctx.force_number(regs[0])? as usize)?.clone();
+        let se = coords.get(ctx.force_number(regs[1])? as usize)?.clone();
+        let pen = pens.get(ctx.force_number(regs[2])? as usize)?.clone();
+        let text = ctx.force_finite_string(regs[3])?.to_vec();
+        let leaf = leaf_from_handle(ctx,leafs,regs[4])?;
+        let shapes = ctx.context.get_mut(&shapes);
+        shapes.add_shape(Shape::RunningText(RunningText { nw, se, pen, text, leaf }));
         Ok(Return::Sync)
     }))
 }

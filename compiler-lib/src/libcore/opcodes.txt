@@ -153,3 +153,5 @@
 152 ruler_markings
 153 comma_format
 154 comma_format (seq)
+155 push_str (seq/seq)
+156 push_str (seq, rev)

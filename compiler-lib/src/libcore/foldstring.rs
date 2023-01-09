@@ -44,6 +44,17 @@ pub(crate) fn fold_push_str(inputs: &[Option<FullConstant>]) -> Option<Vec<FullC
             )])
         }
     }    
+    if let (Some(Some(FullConstant::Finite(a))),
+            Some(Some(FullConstant::Finite(b)))) = 
+               (inputs.get(0),inputs.get(1)) {
+        if let (Some(a),Some(b)) = (to_string(&a),to_string(&b)) {
+            return Some(vec![FullConstant::Finite(
+                a.iter().zip(b.iter()).map(|(a,b)| {
+                    Constant::String(format!("{}{}",a,b))
+                }).collect::<Vec<_>>()
+            )])
+        }
+    }    
     None
 }
 

@@ -17,7 +17,7 @@ impl Serialize for LeafRequest {
     }
 }
 
-#[derive(Clone,PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
 pub(crate) struct Colour {
     pub(crate) r: u8,
     pub(crate) g: u8,
@@ -37,7 +37,7 @@ impl Serialize for Colour {
     }
 }
 
-#[derive(Clone,PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
 pub(crate) struct Hollow(pub(crate) Vec<Colour>,pub(crate) OrderedFloat<f64>);
 
 impl Serialize for Hollow {
@@ -50,7 +50,7 @@ impl Serialize for Hollow {
     }
 }
 
-#[derive(Clone,PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone,PartialEq,Eq,PartialOrd,Ord,Debug)]
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
@@ -145,6 +145,33 @@ impl Serialize for Text {
     }
 }
 
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct RunningText {
+    pub(crate) nw: Coords,
+    pub(crate) se: Coords,
+    pub(crate) pen: Pen,
+    pub(crate) text: Vec<String>,
+    pub(crate) leaf: Vec<LeafRequest>
+}
+
+impl Serialize for RunningText {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_key("start")?;
+        map.serialize_value(&self.nw)?;
+        map.serialize_key("end")?;
+        map.serialize_value(&self.se)?;
+        map.serialize_key("pen")?;
+        map.serialize_value(&self.pen)?;
+        map.serialize_key("text")?;
+        map.serialize_value(&self.text)?;
+        map.serialize_key("leaf")?;
+        map.serialize_value(&self.leaf)?;
+        map.end()
+    }
+}
+
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Plotter {
     pub(crate) height: u32,
@@ -218,6 +245,7 @@ impl Serialize for Wiggle {
 pub(crate) enum Shape {
     Rectangle(Rectangle),
     Text(Text),
+    RunningText(RunningText),
     Image(Image),
     Wiggle(Wiggle)
 }
@@ -237,6 +265,10 @@ impl Serialize for Shape {
             },
             Shape::Text(t) => {
                 map.serialize_key("text")?;
+                map.serialize_value(t)?;
+            },
+            Shape::RunningText(t) => {
+                map.serialize_key("running-text")?;
                 map.serialize_value(t)?;
             },
             Shape::Image(m) => {

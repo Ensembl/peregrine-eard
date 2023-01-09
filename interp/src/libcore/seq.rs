@@ -28,6 +28,53 @@ pub(crate) fn op_if(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Global
     }))
 }
 
+fn if_ss<T: Clone>(pred: &[bool], a: &[T], b: &[T]) -> Vec<T> {
+    pred.iter().zip(a.iter().zip(b.iter())).map(|(p,(a,b))| {
+        if *p { a.clone() } else {b.clone() }
+    }).collect()
+}
+
+fn if_sa<T: Clone>(pred: &[bool], a: &[T], b: &T) -> Vec<T> {
+    pred.iter().zip(a.iter()).map(|(p,a)| {
+        if *p { a.clone() } else { b.clone() }
+    }).collect()
+}
+
+fn if_sb<T: Clone>(pred: &[bool], a: &T, b: &[T]) -> Vec<T> {
+    pred.iter().zip(b.iter()).map(|(p,b)| {
+        if *p { a.clone() } else { b.clone() }
+    }).collect()
+}
+
+fn if_ii<T: Clone>(pred: &[bool], a: &T, b: &T) -> Vec<T> {
+    pred.iter().map(|p| {
+        if *p { a.clone() } else { b.clone() }
+    }).collect()
+}
+
+pub(crate) fn op_if_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let pred = ctx.force_finite_boolean(regs[1])?;
+        let out = match (ctx.get(regs[2])?,ctx.get(regs[3])?) {
+            (Value::FiniteBoolean(a), Value::FiniteBoolean(b)) => Value::FiniteBoolean(if_ss(pred,a,b)),
+            (Value::FiniteBoolean(a), Value::InfiniteBoolean(b)) => Value::FiniteBoolean(if_sa(pred,a,b)),
+            (Value::FiniteNumber(a), Value::FiniteNumber(b)) => Value::FiniteNumber(if_ss(pred,a,b)),
+            (Value::FiniteNumber(a), Value::InfiniteNumber(b)) => Value::FiniteNumber(if_sa(pred,a,b)),
+            (Value::FiniteString(a), Value::FiniteString(b)) => Value::FiniteString(if_ss(pred,a,b)),
+            (Value::FiniteString(a), Value::InfiniteString(b)) => Value::FiniteString(if_sa(pred,a,b)),
+            (Value::InfiniteBoolean(a), Value::FiniteBoolean(b)) => Value::FiniteBoolean(if_sb(pred,a,b)),
+            (Value::InfiniteBoolean(a), Value::InfiniteBoolean(b)) => Value::FiniteBoolean(if_ii(pred,a,b)),
+            (Value::InfiniteNumber(a), Value::FiniteNumber(b)) => Value::FiniteNumber(if_sb(pred,a,b)),
+            (Value::InfiniteNumber(a), Value::InfiniteNumber(b)) => Value::FiniteNumber(if_ii(pred,a,b)),
+            (Value::InfiniteString(a), Value::FiniteString(b)) => Value::FiniteString(if_sb(pred,a,b)),
+            (Value::InfiniteString(a), Value::InfiniteString(b)) => Value::FiniteString(if_ii(pred,a,b)),
+            _ => { return Err(format!("bad sequence if")); }
+        };
+        ctx.set(regs[0],out)?;
+        Ok(Return::Sync)
+    }))
+}
+
 fn set_merge(ctx: &GlobalContext, dst: &mut Value, cond_reg: usize, repl: &Value, advance: bool) -> Result<(),String> {
     if ctx.is_finite(cond_reg)? {
         let cond = ctx.force_finite_boolean(cond_reg)?;

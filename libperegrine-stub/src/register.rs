@@ -1,5 +1,5 @@
 use eard_interp::{Operation, HandleStore, ContextItem, InterpreterBuilder, RunContext};
-use crate::{stubs::{LeafRequest, Colour, Patina, ProgramShapesBuilder, Coords, StubDump, Request, Plotter, Pen}, ops::{op_leaf, op_leaf_s, op_style, op_colour, op_paint_solid, op_paint_solid_s, op_coord, op_rectangle, op_request, op_scope, op_get_data, op_data_boolean, op_data_number, op_data_string, op_graph_type, op_wiggle, op_setting_boolean, op_setting_number, op_setting_string, op_setting_boolean_seq, op_setting_number_seq, op_setting_string_seq, op_pen, op_text, op_paint_hollow, op_paint_hollow_s, op_bp_range, op_paint_special, op_image}, data::{StubResponses, Response}};
+use crate::{stubs::{LeafRequest, Colour, Patina, ProgramShapesBuilder, Coords, StubDump, Request, Plotter, Pen}, ops::{op_leaf, op_leaf_s, op_style, op_colour, op_paint_solid, op_paint_solid_s, op_coord, op_rectangle, op_request, op_scope, op_get_data, op_data_boolean, op_data_number, op_data_string, op_graph_type, op_wiggle, op_setting_boolean, op_setting_number, op_setting_string, op_setting_boolean_seq, op_setting_number_seq, op_setting_string_seq, op_pen, op_text, op_paint_hollow, op_paint_hollow_s, op_bp_range, op_paint_special, op_image, op_running_text}, data::{StubResponses, Response}};
 
 #[derive(Clone)]
 pub struct LibPeregrineBuilder {
@@ -54,6 +54,7 @@ pub fn build_libperegrine(builder: &mut InterpreterBuilder) -> Result<LibPeregri
     builder.add_operation(282,Operation::new(op_bp_range));
     builder.add_operation(283,Operation::new(op_paint_special));
     builder.add_operation(284,Operation::new(op_image));
+    builder.add_operation(285,Operation::new(op_running_text));
     Ok(LibPeregrineBuilder {
         leafs, shapes, colours, paint, coords, requests, responses, graph_types, pens
     })

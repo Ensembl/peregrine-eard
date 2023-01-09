@@ -179,3 +179,61 @@ test:17 let a
 test:17 let b
 test:17 (a) <- #19 r5
 test:17 (b) <- #20 r6
+
+>> test
+
+check repetar no proc
+
+>> input
+
+program "group" "program" 1;
+
+world code wc(number) -> number { impl (r1: number) -> r2: number { opcode 999,r2, r1; } }
+procedure c(x) { let y = wc(x); y }
+
+let x.a = 1;
+let x.b = false;
+
+let **y = **x;
+
+let y.a = c(y.a);
+
+c(y.a);
+c(x.a);
+
+>> built strip
+
+
+0:world code wc(number ) -> (number )  {
+   impl (r1 : number) -> (r2 : number)  { opcode 999, r2, r1; }
+}
+
+1:proc (x) {
+  test:5 (r1) <- (0#1 x)
+  test:5 let y
+  test:5 (y) <- #2 r1
+  (y)
+}
+
+test:2 program "group" "program" 1
+test:5 define 1
+test:7 (r2) <- #3 1
+test:7 let x.a
+test:7 (x.a) <- #4 r2
+test:8 (r3) <- #5 false
+test:8 let x.b
+test:8 (x.b) <- #6 r3
+test:10 let **y
+test:10 (**y) <- #7 **x
+test:12 (r4) <- (1#8 y.a)
+test:12 let y.a
+test:12 (y.a) <- #9 r4
+test:14 (1#10 y.a)
+test:15 (1#11 x.a)
+
+>> generate strip
+
+r1 <- 1
+opcode 999, r2, r1
+opcode 999, r0, r2
+opcode 999, r0, r1

@@ -406,17 +406,22 @@ impl EardParser {
     }
 
     fn let_rhs_tuple(input: Node) -> PestResult<Vec<OrBundle<PTExpression>>> {
-        let mut out = vec![];
-        for child in input.into_children() {
-            out.push(Self::expr_or_bundle(child)?);
-        }
-        Ok(out)
+        Ok(match_nodes!(input.into_children();
+            [expr_or_bundle(b)..] => b.collect()
+        ))
     }
 
     fn let_statement(input: Node) -> PestResult<PTStatementValue> {
         Ok(match_nodes!(input.into_children();
             [let_decls(d),let_rhs_tuple(t)] =>
                 PTStatementValue::LetStatement(d,t),
+        ))
+    }
+
+    fn let_repeater_statement(input: Node) -> PestResult<PTStatementValue> {
+        Ok(match_nodes!(input.into_children();
+            [repeater(a),repeater(b)] =>
+                PTStatementValue::LetRepeaterStatement(a,b),
         ))
     }
 
@@ -627,6 +632,7 @@ impl EardParser {
         let context = input.user_data().context;
         let value = match_nodes!(input.into_children();
             [let_statement(s)] => s,
+            [let_repeater_statement(s)] => s,
             [modify_statement(s)] => s,
             [expression(c)] => PTStatementValue::Expression(c),
             [macro_call(c)] => PTStatementValue::MacroCall(c)

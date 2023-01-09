@@ -232,6 +232,7 @@ pub enum PTStatementValue {
 
     /* instructions */
     LetStatement(Vec<OrBundleRepeater<(Variable,Vec<Check>)>>,Vec<OrBundle<PTExpression>>),
+    LetRepeaterStatement(String,String),
     ModifyStatement(Vec<Variable>,Vec<PTExpression>),
     Expression(PTExpression),
     MacroCall(PTCall),

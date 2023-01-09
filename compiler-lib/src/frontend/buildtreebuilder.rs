@@ -505,6 +505,16 @@ impl BuildContext {
             PTStatementValue::LetStatement(vv,xx) => {
                 self.make_statement(vv,xx,true,bt)?;
             },
+            PTStatementValue::LetRepeaterStatement(a,b) => {
+                self.add_statement(bt,BTStatementValue::Declare(OrBundleRepeater::Repeater(a.to_string())))?;
+                let stmt = self.make_statement_value(None,vec![
+                        OrBundleRepeater::Repeater(b.to_string())
+                    ],Some(vec![
+                        OrBundleRepeater::Repeater(a.to_string())
+                    ]
+                ));
+                self.add_statement(bt,stmt)?;
+            },
             PTStatementValue::ModifyStatement(vv,xx) => {
                 /* Dress up our variable, temporarily */
                 let vv = vv.iter().map(|v| OrBundleRepeater::Normal((v.clone(),vec![]))).collect::<Vec<_>>();

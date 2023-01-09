@@ -246,6 +246,10 @@ let_statement = {
     "let" ~ let_decls ~ "=" ~ let_rhs_tuple
 }
 
+let_repeater_statement = {
+    "let" ~ repeater ~ "=" ~ repeater ~ ";"
+}
+
 modify_lvalue = _{
     ( "(" ~ ( variable ~ ("," ~ variable)* ) ~ ")" ) |
     variable
@@ -256,6 +260,7 @@ modify_statement = { modify_lvalue ~ "=" ~ rhs_tuple }
 bare_statement = _{ expression ~ ";" }
 
 inner_block = {
+    let_repeater_statement |
     let_statement |
     modify_statement |
     (macro_call ~ ";") |

@@ -11,4 +11,4 @@ ordered-float="*"
 
 [dependencies.eard-interp]
 version="*"
-path="../../eard/interp"
+path="../interp"

@@ -1,0 +1,40 @@
+WHITESPACE = _{ " " | "\t" | NEWLINE }
+COMMENT = _{ ("//" ~ (!"\n" ~ ANY)* ~ "\n") | ("/*" ~ (!"*/" ~ ANY)* ~ "*/") }
+
+document = { SOI ~ expr ~ EOI }
+
+expr = { 
+    object | array | string | number | boolean | null | var | cond | all
+}
+
+pair = {  string ~ ":" ~ expr }
+object = { "{" ~ pair ~ ("," ~ pair?)* ~ "}" }
+array = { "[" ~ expr ~ ("," ~ expr?)* ~ "]" }
+
+string = ${ "\"" ~ string_inner ~ "\"" }
+string_inner = @{ char* }
+char = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "0")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+number = @{ 
+    "-"? ~ 
+    ("0"|( ASCII_NONZERO_DIGIT ~ ASCII_DIGIT* )) ~ 
+    ("." ~ ASCII_DIGIT+)? ~
+    ("e" ~ ("+"|"-")? ~ ASCII_DIGIT+)?
+}
+
+boolean = { "false" | "true" }
+
+null = { "null" }
+
+varnum = @{ASCII_DIGIT+}
+varnums = _{ varnum ~ ("," ~ varnum)* }
+
+vartype = { "s" | "n" | "b" }
+var = { "<" ~ varnum ~ vartype ~ ">" }
+
+cond = { "(" ~ "<" ~ varnum ~ "b" ~ ">" ~ "?" ~ expr ~ ")" }
+all = { "(" ~ "<" ~ varnums ~ ">" ~ "!" ~ expr ~ ")" }

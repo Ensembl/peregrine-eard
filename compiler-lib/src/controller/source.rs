@@ -27,7 +27,7 @@ impl SourceSource for NoneSourceSource {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone,Debug)]
 pub struct FixedSourceSource {
     files: Arc<HashMap<String,String>>
 }

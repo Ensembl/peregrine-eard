@@ -3,11 +3,13 @@ use std::{process::exit, fs::File, io::{Write, self}};
 use eard_compiler_lib::{EardCompiler, EardCompilation, EardSerializeCode };
 use config::{Config, Format};
 use clap::Parser;
+use eard_compiler_libeoe::libeoe_add;
 use eard_compiler_libperegrine::libperegrine_add;
 
 fn do_it(config: &Config) -> Result<(),String> {
     let mut compiler = EardCompiler::new()?;
     libperegrine_add(&mut compiler)?;
+    libeoe_add(&mut compiler)?;
     if config.optimise {
         compiler.set_optimise(true);
     }

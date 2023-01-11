@@ -82,7 +82,8 @@ pub use crate::controller::{
 
 /* these are all exported to allow macros in external libraries */
 pub use crate::controller::source::ParsePosition;
-pub use crate::frontend::femodel::OrBundleRepeater;
+pub use crate::frontend::femodel::{OrBundle, OrBundleRepeater };
 pub use crate::frontend::parsetree::{ PTExpression, PTStatement, PTStatementValue, PTCall };
+pub use crate::frontend::buildtree::{ Variable };
 pub use crate::frontend::parser::parse_string;
 pub use crate::model::constants::Constant;

@@ -24,7 +24,7 @@ impl InterpreterBuilder {
         self.version.add_version(name,version);
     }
 
-    pub fn add_context<T: 'static>(&mut self, name: &str) -> ContextItem<T> {
+    pub fn add_context<T: 'static>(&mut self, name: &str) -> Result<ContextItem<T>,String> {
         self.context.add(name)
     }
 

@@ -1,10 +1,16 @@
-use std::{marker::PhantomData, any::Any, mem, sync::Arc, collections::HashMap};
+use std::{marker::PhantomData, any::Any, mem, sync::Arc, collections::HashMap, fmt};
 
 pub struct ContextItem<T>(usize,PhantomData<T>);
 
 impl<T> Clone for ContextItem<T> {
     fn clone(&self) -> Self {
         ContextItem(self.0.clone(),self.1.clone())
+    }
+}
+
+impl<T> fmt::Debug for ContextItem<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f,"{}",self.0)
     }
 }
 
@@ -17,11 +23,14 @@ impl ContextTemplateBuilder {
         ContextTemplateBuilder { name: HashMap::new() }
     }
 
-    pub fn add<T: 'static>(&mut self, name: &str) -> ContextItem<T> {
+    pub fn add<T: 'static>(&mut self, name: &str) -> Result<ContextItem<T>,String> {
         let creator : PhantomData<T> = PhantomData;
         let h = self.name.len();
+        if self.name.contains_key(name) {
+            return Err(format!("duplicate context key {}",name));
+        }
         self.name.insert(name.to_string(),(h,Box::new(creator)));
-        ContextItem(h,PhantomData)
+        Ok(ContextItem(h,PhantomData))
     }
 
     pub fn build(&mut self) -> ContextTemplate {

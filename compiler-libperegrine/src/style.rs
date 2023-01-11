@@ -47,7 +47,7 @@ impl StyleParser {
 
     fn document(input: Node) -> PestResult<Vec<(String,Vec<(String,String)>)>> {
         Ok(match_nodes!(input.into_children();
-          [group(g)..,EOI] => g.collect(),
+          [group(g)..,_EOI] => g.collect(),
         ))
     }
 }

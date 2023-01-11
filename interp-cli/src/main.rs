@@ -2,6 +2,7 @@ use std::{process::exit, pin::Pin, future::Future, fs::{self}};
 use async_std::task::block_on;
 use clap::{Parser};
 use eard_interp::{RunContext, LibcoreTemplate, build_libcore, InterpreterBuilder, Interpreter, prepare_libcore, ProgramName};
+use eard_libeoe::{build_libeoe, prepare_libeoe};
 use eard_libperegrine_stub::{build_libperegrine, prepare_libperegrine, StubResponses};
 
 #[derive(Parser, Debug)]
@@ -105,6 +106,7 @@ fn do_it(config: &Config) -> Result<(),String> {
     }
     let libcore_builder = build_libcore(&mut builder)?;
     let libperegrine_builder = build_libperegrine(&mut builder)?;
+    let libeoe_builder = build_libeoe(&mut builder)?;
     let mut interp = Interpreter::new(builder);
     /* read the source */
     let contents = fs::read(&config.source).map_err(|e| format!("cannot read {}: {}",config.source,e))?;
@@ -133,6 +135,7 @@ fn do_it(config: &Config) -> Result<(),String> {
     prepare_libcore(&mut context,&libcore_builder,libcore_context);
     let responses = get_responses(config)?;
     let stubdump = prepare_libperegrine(&mut context,&libperegrine_builder,responses)?;
+    prepare_libeoe(&mut context,&libeoe_builder)?;
     /* run */
     let program = interp.get(&program,&block)?;
     block_on(program.run(context))?;

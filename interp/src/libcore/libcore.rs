@@ -49,9 +49,9 @@ fn op_async(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&
 }
 
 pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,String> {
-    let context = builder.add_context::<Box<dyn LibcoreTemplate>>("libcore");
-    let splits = builder.add_context::<HandleStore<Vec<Vec<String>>>>("splits");
-    let templates = builder.add_context::<HandleStore<Template>>("templates");
+    let context = builder.add_context::<Box<dyn LibcoreTemplate>>("libcore")?;
+    let splits = builder.add_context::<HandleStore<Vec<Vec<String>>>>("splits")?;
+    let templates = builder.add_context::<HandleStore<Template>>("templates")?;
     builder.add_version("libcore",(0,0));
     builder.add_operation(0,Operation::new(op_const));
     builder.add_operation(1,Operation::new(op_async));

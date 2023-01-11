@@ -15,3 +15,6 @@ path = "../interp"
 
 [dependencies.eard-libperegrine-stub]
 path = "../libperegrine-stub"
+
+[dependencies.eard-libeoe]
+path = "../libeoe"

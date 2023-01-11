@@ -15,15 +15,15 @@ pub struct LibPeregrineBuilder {
 }
 
 pub fn build_libperegrine(builder: &mut InterpreterBuilder) -> Result<LibPeregrineBuilder,String> {
-    let leafs = builder.add_context::<HandleStore<LeafRequest>>("leaf");
-    let colours = builder.add_context::<HandleStore<Colour>>("colours");
-    let paint = builder.add_context::<HandleStore<Patina>>("paint");
-    let shapes = builder.add_context::<ProgramShapesBuilder>("shapes");
-    let coords = builder.add_context::<HandleStore<Coords>>("coords");
-    let requests = builder.add_context::<HandleStore<Request>>("requests");
-    let responses = builder.add_context::<HandleStore<Response>>("responses");
-    let graph_types = builder.add_context::<HandleStore<Plotter>>("graph-types");
-    let pens = builder.add_context::<HandleStore<Pen>>("pens");
+    let leafs = builder.add_context::<HandleStore<LeafRequest>>("leaf")?;
+    let colours = builder.add_context::<HandleStore<Colour>>("colours")?;
+    let paint = builder.add_context::<HandleStore<Patina>>("paint")?;
+    let shapes = builder.add_context::<ProgramShapesBuilder>("shapes")?;
+    let coords = builder.add_context::<HandleStore<Coords>>("coords")?;
+    let requests = builder.add_context::<HandleStore<Request>>("requests")?;
+    let responses = builder.add_context::<HandleStore<Response>>("responses")?;
+    let graph_types = builder.add_context::<HandleStore<Plotter>>("graph-types")?;
+    let pens = builder.add_context::<HandleStore<Pen>>("pens")?;
     builder.add_version("libperegrine",(0,0));
     builder.add_operation(256,Operation::new(op_leaf));
     builder.add_operation(257,Operation::new(op_leaf_s));

@@ -1,0 +1,100 @@
+version "libeoe" 0.0;
+
+code __code_eoe_boolean(boolean) -> handle(eoetmpl) {
+    impl (r1: boolean) -> r2: handle(eoetmpl) {
+        opcode 512, r2, r1;
+    }
+}
+
+code __code_eoe_number(number) -> handle(eoetmpl) {
+    impl (r1: number) -> r2: handle(eoetmpl) {
+        opcode 513, r2, r1;
+    }
+}
+
+code __code_eoe_string(string) -> handle(eoetmpl) {
+    impl (r1: string) -> r2: handle(eoetmpl) {
+        opcode 514, r2, r1;
+    }
+}
+
+code __code_eoe_null() -> handle(eoetmpl) {
+    impl () -> r1: handle(eoetmpl) {
+        opcode 515, r1;
+    }
+}
+
+code __code_eoe_group() -> handle(eoegroup) {
+    impl () -> r1: handle(eoegroup) {
+        opcode 516, r1;
+    }
+}
+
+code __code_eoe_var_boolean(handle(eoegroup),seq(boolean)) -> handle(eoevar) {
+    impl (r1: handle(eoegroup), r2: seq(boolean)) -> r3: handle(eoetmpl) {
+        opcode 517, r3, r1, r2;
+    }
+}
+
+code __code_eoe_var_number(handle(eoegroup),seq(number)) -> handle(eoevar) {
+    impl (r1: handle(eoegroup), r2: seq(number)) -> r3: handle(eoetmpl) {
+        opcode 518, r3, r1, r2;
+    }
+}
+
+code __code_eoe_var_string(handle(eoegroup),seq(string)) -> handle(eoevar) {
+    impl (r1: handle(eoegroup), r2: seq(string)) -> r3: handle(eoetmpl) {
+        opcode 519, r3, r1, r2;
+    }
+}
+
+code __code_eoe_array(seq(handle(eoetmpl))) -> handle(eoetmpl) {
+    impl (r1: seq(handle(eoetmpl))) -> r2: handle(eoetmpl) {
+        opcode 520, r2, r1;
+    }
+}
+
+code __code_eoe_pair(string,handle(eoetmpl)) -> handle(eoepair) {
+    impl (r1: string, r2: handle(eoetmpl)) -> r3: handle(eoepair) {
+        opcode 521, r3, r1, r2;
+    }
+}
+
+code __code_eoe_object(seq(handle(eoepair))) -> handle(eoetmpl) {
+    impl (r1: seq(handle(eoepair))) -> r2: handle(eoetmpl) {
+        opcode 522, r2, r1;
+    }
+}
+
+code __code_eoe_var(handle(eoevar)) -> handle(eoetmpl) {
+    impl (r1: handle(eoevar)) -> r2: handle(eoetmpl) {
+        opcode 523, r2, r1;
+    }
+}
+
+code __code_eoe_all(handle(eoegroup),handle(eoetmpl)) -> handle(eoetmpl) {
+    impl (r1: handle(eoegroup), r2:handle(eoetmpl)) -> r3: handle(eoetmpl) {
+        opcode 524, r3, r1, r2;
+    }
+}
+
+code __code_eoe_condition(handle(eoevar),handle(eoetmpl)) -> handle(eoetmpl) {
+    impl (r1: handle(eoevar), r2:handle(eoetmpl)) -> r3: handle(eoetmpl) {
+        opcode 525, r3, r1, r2;
+    }
+}
+
+export function eoe_boolean(b) { let h = __code_eoe_boolean(b); h }
+export function eoe_number(b) { let h = __code_eoe_number(b); h }
+export function eoe_string(b) { let h = __code_eoe_string(b); h }
+export function eoe_null(b) { let h = __code_eoe_null(); h }
+export function eoe_group() { let h = __code_eoe_group(); h }
+export function eoe_var_boolean(g,b) { let h = __code_eoe_var_boolean(g,b); h }
+export function eoe_var_number(g,b) { let h = __code_eoe_var_number(g,b); h }
+export function eoe_var_string(g,b) { let h = __code_eoe_var_string(g,b); h }
+export function eoe_array(t) { let h = __code_eoe_array(t); h }
+export function eoe_pair(k,v) { let h = __code_eoe_pair(k,v); h }
+export function eoe_object(p) { let h = __code_eoe_object(p); h }
+export function eoe_var(v) { let h = __code_eoe_var(v); h }
+export function eoe_all(g,t) { let h = __code_eoe_all(g,t); h  }
+export function eoe_condition(v,t) { let h = __code_eoe_condition(v,t); h  }

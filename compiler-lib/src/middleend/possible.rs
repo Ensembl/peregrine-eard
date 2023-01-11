@@ -1,14 +1,28 @@
-use std::collections::{BTreeSet};
+use std::{collections::{BTreeSet}, fmt};
 use crate::model::checkstypes::{AtomicTypeSpec, TypeSpec};
 use super::{narrowtyping::NarrowType, broadtyping::BroadType};
 
-#[derive(Clone,Debug)]
+#[derive(Clone)]
 pub(crate) struct NarrowPoss {
     number: bool,
     string: bool,
     boolean: bool,
     any_handle: bool,
     specific_handles: BTreeSet<String>
+}
+
+impl fmt::Debug for NarrowPoss {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut pos = vec![];
+        if self.number { pos.push("number".to_string()); }
+        if self.string { pos.push("string".to_string()); }
+        if self.boolean { pos.push("boolean".to_string()); }
+        if self.any_handle { pos.push("any handle".to_string()); }
+        for h in &self.specific_handles {
+            pos.push(format!("handle '{}'",h));
+        }
+        write!(f,"{}",pos.join(" or "))
+    }
 }
 
 impl NarrowPoss {
@@ -105,6 +119,7 @@ impl NarrowPoss {
     }
 
     pub(crate) fn restrict_by_spec(&mut self, spec: &AtomicTypeSpec) -> Result<(),String> {
+        let before = format!("{:?}",self);
         let mut new = Self::none();
         let ok = match spec {
             AtomicTypeSpec::Number => { new.number = true; self.number },
@@ -115,7 +130,8 @@ impl NarrowPoss {
                 self.any_handle || self.specific_handles.contains(h)
             },
         };
-        if !ok { return Err(format!("cannot deduce type/D")); }
+        /* This is the typing error normal programmers see in the course of coding, so make it nice. */
+        if !ok { return Err(format!("cannot deduce type: expected {}; can't force to be {:?}",before,spec)); }
         *self = new;
         self.check_valid()?;
         Ok(())

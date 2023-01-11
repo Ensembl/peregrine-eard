@@ -1,0 +1,37 @@
+program "smoke" "smoke" 1;
+refer "libeoe";
+
+world code __code_test(handle(eoetmpl)) -> string {
+    impl (r1: handle(eoetmpl)) -> r2: string {
+        opcode 9999, r2, r1;
+    }
+}
+
+function test(t) { let s = __code_test(t); s }
+
+print(test(eoe_array([eoe_boolean(true)])));
+print(test(eoe_object([eoe_pair("number",eoe_number(1)),eoe_pair("string",eoe_string("hi"))])));
+
+let g = eoe_group();
+let v = eoe_var_number(g,[2,3,5,7,11]);
+let v2 = eoe_var_string(g,["ii","iii","v","vii","xi"]);
+let v3 = eoe_var_boolean(g,[true,false,false,false,false]);
+print(test(eoe_all(g,eoe_var(v))));
+print(test(eoe_all(g,eoe_object([
+    eoe_pair("arabic",eoe_var(v)),
+    eoe_pair("roman",eoe_var(v2)),
+    eoe_pair("even",eoe_condition(v3,eoe_boolean(true)))
+]))));
+
+struct!(payload,"""
+(<0,1,2,3>!
+    {
+        "arabic": <0n>,
+        "roman": <1s>,
+        "type": (<2b>? "even"),
+        "type": (<3b>? "odd")
+    }
+)
+""", [2,3,5,7,11], ["ii","iii","v","vii","xi"], [true,false,false,false,false], [false,true,true,true,true] );
+
+print(test(payload));

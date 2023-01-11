@@ -81,15 +81,6 @@ pub enum FullConstant {
     Infinite(Constant)
 }
 
-impl FullConstant {
-    pub(crate) fn is_empty_list(&self) -> bool {
-        match self {
-            FullConstant::Finite(f) => f.len() == 0,
-            _ => false
-        }
-    }    
-}
-
 impl fmt::Debug for FullConstant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {

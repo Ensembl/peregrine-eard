@@ -1,0 +1,16 @@
+[package]
+name = "eard-libeoe"
+version = "0.1.0"
+authors = ["Dan Sheppard <dan@ebi.ac.uk>"]
+edition = "2018"
+
+[dependencies]
+async-std="*"
+
+[dependencies.eard-interp]
+version="*"
+path="../interp"
+
+[dependencies.eachorevery]
+version="*"
+path="../../peregrine-eachorevery"

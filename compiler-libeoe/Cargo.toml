@@ -1,18 +1,18 @@
 [package]
-name = "eard-compiler"
+name = "eard-compiler-libeoe"
 version = "0.0.0"
 authors = ["ensembl-webteam@ebi.ac.uk"]
 edition = "2018"
 
 [dependencies]
 anyhow="*"
+rand="*"
 clap = { version = "4", features = ["derive"] }
+css-color-parser = "*"
+ordered-float="*"
+pest="*"
+pest_consume="*"
+pest_derive="*"
 
 [dependencies.eard-compiler-lib]
 path = "../compiler-lib"
-
-[dependencies.eard-compiler-libperegrine]
-path = "../compiler-libperegrine"
-
-[dependencies.eard-compiler-libeoe]
-path = "../compiler-libeoe"

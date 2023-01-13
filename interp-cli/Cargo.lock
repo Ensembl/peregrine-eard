@@ -264,6 +264,7 @@ dependencies = [
  "async-thread",
  "minicbor",
  "serde_json",
+ "web-sys",
 ]
 
 [[package]]
@@ -292,10 +293,12 @@ dependencies = [
 name = "eard-libperegrine-stub"
 version = "0.1.0"
 dependencies = [
+ "eachorevery",
  "eard-interp",
  "ordered-float",
  "serde",
  "serde_derive",
+ "serde_json",
 ]
 
 [[package]]

@@ -9,6 +9,9 @@
 			"include": "#types"
 		},
 		{
+			"include": "#multistrings"
+		},
+		{
 			"include": "#strings"
 		},
 		{
@@ -45,6 +48,17 @@
 			"name": "string.quoted.double.eard",
 			"begin": "\"",
 			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.eard",
+					"match": "\\\\."
+				}
+			]
+		},
+		"multistrings": {
+			"begin": "\"\"\"",
+			"end": "\"\"\"",
+			"name": "string.quoted.double.block.eard",
 			"patterns": [
 				{
 					"name": "constant.character.escape.eard",

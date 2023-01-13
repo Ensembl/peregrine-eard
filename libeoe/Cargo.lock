@@ -215,6 +215,7 @@ dependencies = [
  "async-thread",
  "minicbor",
  "serde_json",
+ "web-sys",
 ]
 
 [[package]]

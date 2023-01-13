@@ -7,8 +7,13 @@ edition = "2018"
 [dependencies]
 serde="*"
 serde_derive="*"
+serde_json="*"
 ordered-float="*"
 
 [dependencies.eard-interp]
 version="*"
 path="../interp"
+
+[dependencies.eachorevery]
+version="*"
+path="../../peregrine-eachorevery"

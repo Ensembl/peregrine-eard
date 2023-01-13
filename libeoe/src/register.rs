@@ -2,6 +2,7 @@ use eachorevery::eoestruct::{StructTemplate, StructVarGroup, StructPair, StructV
 use eard_interp::{ContextItem, HandleStore, InterpreterBuilder, Operation, RunContext};
 use crate::ops::{op_boolean, op_number, op_string, op_null, op_group, op_var_boolean, op_var_number, op_var_string, op_array, op_pair, op_object, op_var, op_all, op_condition};
 
+#[derive(Clone)]
 pub struct LibEoEBuilder {
     templates: ContextItem<HandleStore<StructTemplate>>,
     groups: ContextItem<HandleStore<StructVarGroup>>,

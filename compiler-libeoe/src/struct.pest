@@ -8,8 +8,8 @@ expr = {
 }
 
 pair = {  string ~ ":" ~ expr }
-object = { "{" ~ pair ~ ("," ~ pair?)* ~ "}" }
-array = { "[" ~ expr ~ ("," ~ expr?)* ~ "]" }
+object = { "{" ~ (pair ~ ",")* ~ pair? ~ "}" }
+array = { "[" ~ (expr ~ ",")* ~ expr? ~ "]" }
 
 string = ${ "\"" ~ string_inner ~ "\"" }
 string_inner = @{ char* }

@@ -1,7 +1,8 @@
 use std::{collections::{HashSet, HashMap}, sync::{Arc, Mutex}};
-
+use eachorevery::eoestruct::{StructTemplate, struct_to_json };
 use ordered_float::OrderedFloat;
-use serde::{Serialize, ser::{SerializeSeq, SerializeMap}};
+use serde::{Serialize, ser::{SerializeSeq, SerializeMap, Error}};
+use serde_json::Value as JsonValue;
 
 use crate::{data::{Response, DataValue}, StubResponses};
 
@@ -54,7 +55,8 @@ impl Serialize for Hollow {
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
-    Special(String)
+    Special(String),
+    ZMenu(String,String)
 }
 
 impl Serialize for Patina {
@@ -73,6 +75,10 @@ impl Serialize for Patina {
             Patina::Special(s) => {
                 map.serialize_key("special")?;
                 map.serialize_value(s)?;
+            },
+            Patina::ZMenu(k,v) => {
+                map.serialize_key("zmenu")?;
+                map.serialize_value(&[k,v])?;
             },
         }
         map.end()
@@ -331,12 +337,36 @@ impl Serialize for Request {
     }
 }
 
+struct ZMenus<'a>(&'a [(String,StructTemplate)]);
+
+impl<'a> ZMenus<'a> {
+    fn do_serialize(&self, tmpl: &StructTemplate) -> Result<JsonValue,String> {
+        Ok(struct_to_json(&tmpl.build()?,None)?)
+    }
+}
+
+impl<'a> Serialize for ZMenus<'a> {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut map = serializer.serialize_map(Some(self.0.len()))?;
+        for (k,v) in self.0 {
+            map.serialize_key(k)?;
+            let json = self.do_serialize(v).map_err(|e| 
+                S::Error::custom(e)
+            )?;
+            map.serialize_value(&json)?;
+        }
+        map.end()
+    }
+}
+
 pub(crate) struct ProgramShapesBuilderImpl {
     stubs: StubResponses,
     requests: Vec<Request>,
     leafs: HashSet<LeafRequest>,
     style: HashMap<String,Vec<(String,String)>>,
     shapes: Vec<Shape>,
+    zmenus: Vec<(StructTemplate,StructTemplate)>,
     used: bool
 }
 
@@ -348,6 +378,7 @@ impl ProgramShapesBuilderImpl {
             leafs: HashSet::new(),
             style: HashMap::new(),
             shapes: vec![],
+            zmenus: vec![],
             used: false
         }
     }
@@ -377,7 +408,7 @@ impl ProgramShapesBuilderImpl {
         self.stubs.get_request(key,part)
     }
 
-    pub(crate) fn add_request(&mut self, req: &Request) -> Result<Response,String> {
+    fn add_request(&mut self, req: &Request) -> Result<Response,String> {
         self.used = true;
         self.requests.push(req.clone());
         self.stubs.get(&req.backend,&req.endpoint).cloned()

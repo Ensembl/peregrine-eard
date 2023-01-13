@@ -3,6 +3,17 @@
 version = 3
 
 [[package]]
+name = "ahash"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf6ccdb167abbf410dcb915cabd428929d7f6a04980b54a11f26a39f1c7f7107"
+dependencies = [
+ "cfg-if",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
 name = "async-channel"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -186,6 +197,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "eachorevery"
+version = "0.0.0"
+dependencies = [
+ "hashbrown",
+ "lazy_static",
+ "ordered-float",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "eard-interp"
 version = "0.0.0"
 dependencies = [
@@ -193,16 +215,19 @@ dependencies = [
  "async-thread",
  "minicbor",
  "serde_json",
+ "web-sys",
 ]
 
 [[package]]
 name = "eard-libperegrine-stub"
 version = "0.1.0"
 dependencies = [
+ "eachorevery",
  "eard-interp",
  "ordered-float",
  "serde",
  "serde_derive",
+ "serde_json",
 ]
 
 [[package]]
@@ -269,6 +294,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hashbrown"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
+dependencies = [
+ "ahash",
+]
+
+[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -300,6 +334,12 @@ checksum = "0de8b303297635ad57c9f5059fd9cee7a47f8e8daa09df0fcd07dd39fb22977f"
 dependencies = [
  "log",
 ]
+
+[[package]]
+name = "lazy_static"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"

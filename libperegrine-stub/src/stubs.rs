@@ -366,7 +366,6 @@ pub(crate) struct ProgramShapesBuilderImpl {
     leafs: HashSet<LeafRequest>,
     style: HashMap<String,Vec<(String,String)>>,
     shapes: Vec<Shape>,
-    zmenus: Vec<(StructTemplate,StructTemplate)>,
     used: bool
 }
 
@@ -378,7 +377,6 @@ impl ProgramShapesBuilderImpl {
             leafs: HashSet::new(),
             style: HashMap::new(),
             shapes: vec![],
-            zmenus: vec![],
             used: false
         }
     }

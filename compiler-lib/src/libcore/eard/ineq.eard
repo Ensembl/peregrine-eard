@@ -12,7 +12,7 @@ fold(libcore__gt) code __code_gt(seq(number) length(?X),number) -> seq(boolean) 
 
 fold(libcore__gt) code __code_gt(number,seq(number) length(?X)) -> seq(boolean) length(?X) {
     impl (r1: number, r2: seq(number)) -> r3: seq(boolean) {
-        opcode 48, r3, r2, r1;
+        opcode 157, r3, r2, r1;
     }
 }
 
@@ -36,7 +36,7 @@ fold(libcore__ge) code __code_ge(seq(number) length(?X),number) -> seq(boolean) 
 
 fold(libcore__ge) code __code_ge(number,seq(number) length(?X)) -> seq(boolean) length(?X) {
     impl (r1: number, r2: seq(number)) -> r3: seq(boolean) {
-        opcode 49, r3, r2, r1;
+        opcode 158, r3, r2, r1;
     }
 }
 

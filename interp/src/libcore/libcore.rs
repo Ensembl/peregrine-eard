@@ -4,7 +4,7 @@ use super::{
     print::{op_print, op_format, op_comma_format, op_comma_format_s}, 
     seqctors::{op_push_b2, op_push_b3, op_finseq_b, op_infseq_b, op_push_s2, op_push_s3, op_push_n2, op_finseq_s, op_infseq_s, op_finseq_n, op_infseq_n, op_push_n3},
     checks::{op_len_n, op_len_s, op_len_b, op_total, op_bound, op_check_l, op_check_t, op_check_b, op_check_tt, op_check_li, op_check_ii},
-    arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss, op_gt, op_ge, op_gt_s, op_ge_s, op_gt_ss, op_ge_ss, op_eq_num, op_eq_str, op_eq_num_s, op_eq_str_s, op_eq_num_ss, op_eq_str_ss, op_mod3, op_mod2, op_mod3s, op_mod2s, op_mod3ss, op_mod2ss, op_max_s, op_min_s},
+    arith::{op_max3, op_max2, op_min3, op_min2, op_max3s, op_max2s, op_min3s, op_min2s, op_max3ss, op_max2ss, op_min2ss, op_min3ss, op_add3, op_add2, op_add3s, op_add2s, op_add3ss, op_add2ss, op_sub2ss, op_sub3ss, op_sub2s, op_sub3s, op_sub2, op_sub3, op_mul3, op_mul2, op_div3, op_div2, op_mul3s, op_div3s, op_mul2s, op_div2s, op_mul3ss, op_mul2ss, op_div3ss, op_div2ss, op_gt, op_ge, op_gt_s, op_ge_s, op_gt_ss, op_ge_ss, op_eq_num, op_eq_str, op_eq_num_s, op_eq_str_s, op_eq_num_ss, op_eq_str_ss, op_mod3, op_mod2, op_mod3s, op_mod2s, op_mod3ss, op_mod2ss, op_max_s, op_min_s, op_lt_s, op_le_s},
     opntn::{op_neg2, op_neg1, op_neg2s, op_neg1s}, 
     opbtb::{op_not2, op_not1, op_not2s, op_not1s},
     seq::{op_repeat, op_if, op_set, op_set_m, op_set_skip, op_set_skip_m, op_set_at, op_set_at_m, op_set_from, op_set_from_m, op_index, op_index_s, op_count, op_enumerate, op_any, op_all, op_position, op_select, op_if_s},
@@ -210,6 +210,8 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(154,Operation::new(op_comma_format_s));
     builder.add_operation(155,Operation::new(op_push_str_ss));
     builder.add_operation(156,Operation::new(op_push_str_revs));
+    builder.add_operation(157,Operation::new(op_lt_s));
+    builder.add_operation(158,Operation::new(op_le_s));
     Ok(LibcoreBuilder { context, splits, templates })
 }
 

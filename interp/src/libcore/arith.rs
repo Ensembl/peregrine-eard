@@ -271,14 +271,17 @@ macro_rules! op_binnum {
 
 macro_rules! op_binnumbool {
     ($op:ident,$ops:ident,$opss:ident,$cb:expr) => {
+        #[allow(unused)]
         pub(super) fn $op(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_numbool($cb)
         }
-                
+
+        #[allow(unused)]
         pub(super) fn $ops(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_numbool_s($cb)
         }
-                
+        
+        #[allow(unused)]
         pub(super) fn $opss(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
             op_numbool_ss($cb)
         }
@@ -311,6 +314,8 @@ op_binnum!(op_mod2,op_mod3,op_mod2s,op_mod3s,op_mod2ss,op_mod3ss,|a,b| *a %= b);
 
 op_binnumbool!(op_gt,op_gt_s,op_gt_ss,|a,b| a>b);
 op_binnumbool!(op_ge,op_ge_s,op_ge_ss,|a,b| a>=b);
+op_binnumbool!(op_lt,op_lt_s,op_lt_ss,|a,b| a<b);
+op_binnumbool!(op_le,op_le_s,op_le_ss,|a,b| a<=b);
 op_binnumbool!(op_eq_num,op_eq_num_s,op_eq_num_ss,|a,b| a==b);
 op_binstrbool!(op_eq_str,op_eq_str_s,op_eq_str_ss,|a,b| a==b);
 

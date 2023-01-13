@@ -155,3 +155,5 @@
 154 comma_format (seq)
 155 push_str (seq/seq)
 156 push_str (seq, rev)
+157 lt seq(number)/number
+158 le seq(number)/number

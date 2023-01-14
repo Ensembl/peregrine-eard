@@ -192,6 +192,12 @@ world code __code_paint_click(handle(eoetmpl),handle(eoetmpl)) -> handle(paint) 
     }
 }
 
+world code __code_paint_dotted(handle(colour),handle(colour),number,number,number) -> handle(paint) {
+    impl (r1: handle(colour), r2: handle(colour), r3: number, r4: number, r5: number) -> r6: handle(paint) {
+        opcode 287, r6, r1, r2, r3, r4, r5;
+    }
+}
+
 export function leaf(s) { let h = __code_leaf(s); h }
 export procedure style(f,k,v) { __code_style(f,k,v); }
 export function colour(r,g,b,a) { let h = __code_colour(r,g,b,a); h }
@@ -207,14 +213,6 @@ export function data_number(r,k) { let v = __code_data_number(r,k); v }
 export function data_string(r,k) { let v = __code_data_string(r,k); v }
 export function graph_type(h,c) { let g = __code_graph_type(h,c); g }
 export procedure wiggle(s,e,g,v,p,f) { __code_wiggle(s,e,g,v,p,f); }
-
-export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
-export function setting_number(k,p) { let v = __code_setting_number(k,p); v }
-export function setting_string(k,p) { let v = __code_setting_string(k,p); v }
-export function setting_boolean_seq(k,p) { let v = __code_setting_boolean_seq(k,p); v }
-export function setting_number_seq(k,p) { let v = __code_setting_number_seq(k,p); v }
-export function setting_string_seq(k,p) { let v = __code_setting_string_seq(k,p); v }
-
 export function pen(font,size,fgd,bgd) { let h = __code_pen(font,size,fgd,bgd); h }
 export procedure text(c,p,t,f) { __code_text(c,p,t,f); }
 export procedure bp_range() { let (a,b) = __code_bp_range(); (a,b) }
@@ -222,3 +220,11 @@ export function paint_special(s) { let h = __code_paint_special(s); h }
 export procedure image(c,s,f) { __code_image(c,s,f); }
 export procedure running_text(nw,se,p,t,f) { __code_running_text(nw,se,p,t,f); }
 export procedure paint_click(name,tmpl) { let h = __code_paint_click(name,tmpl); h }
+export function paint_dotted(f,b,g,w,p) { let h = __code_paint_dotted(f,b,g,w,p); h }
+
+export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
+export function setting_number(k,p) { let v = __code_setting_number(k,p); v }
+export function setting_string(k,p) { let v = __code_setting_string(k,p); v }
+export function setting_boolean_seq(k,p) { let v = __code_setting_boolean_seq(k,p); v }
+export function setting_number_seq(k,p) { let v = __code_setting_number_seq(k,p); v }
+export function setting_string_seq(k,p) { let v = __code_setting_string_seq(k,p); v }

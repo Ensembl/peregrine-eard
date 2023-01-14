@@ -52,11 +52,34 @@ impl Serialize for Hollow {
 }
 
 #[derive(Clone,PartialEq,Eq,PartialOrd,Ord,Debug)]
+pub(crate) struct Dotted(
+    pub(crate) Colour,
+    pub(crate) Colour,
+    pub(crate) OrderedFloat<f64>,
+    pub(crate) OrderedFloat<f64>,
+    pub(crate) OrderedFloat<f64>
+);
+
+impl Serialize for Dotted {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut map = serializer.serialize_map(Some(1))?;
+        map.serialize_entry("colour_a",&self.0)?;
+        map.serialize_entry("colour_b",&self.1)?;
+        map.serialize_entry("length",&self.2.0)?;
+        map.serialize_entry("width",&self.3.0)?;
+        map.serialize_entry("proportion",&self.4.0)?;
+        map.end()
+    }
+}
+
+#[derive(Clone,PartialEq,Eq,PartialOrd,Ord,Debug)]
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
     Special(String),
-    ZMenu(String,String)
+    ZMenu(String,String),
+    Dotted(Dotted)
 }
 
 impl Serialize for Patina {
@@ -80,7 +103,11 @@ impl Serialize for Patina {
                 map.serialize_key("zmenu")?;
                 map.serialize_value(&[k,v])?;
             },
-        }
+            Patina::Dotted(d) => {
+                map.serialize_key("dotted")?;
+                map.serialize_value(d)?;
+            }
+            }
         map.end()
     }
 }

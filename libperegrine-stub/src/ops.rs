@@ -1,7 +1,7 @@
 use eachorevery::eoestruct::{StructTemplate, struct_to_json};
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
-use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen, Hollow }, util::to_number};
+use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen, Hollow, Dotted }, util::to_number};
 
 fn to_u8(v: f64) -> u8 { v as u8 }
 
@@ -249,6 +249,24 @@ pub(crate) fn op_zmenu(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
         let zmenu_content = templates.get(content_h)?.clone();
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(Patina::ZMenu(json_ser(&zmenu_variety)?,json_ser(&zmenu_content)?));
+        ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_paint_dotted(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let colours = gctx.patterns.lookup::<HandleStore<Colour>>("colours")?;
+    let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
+    Ok(Box::new(move |ctx,regs| {
+        let colours = ctx.context.get(&colours);
+        let colour_a = colours.get(ctx.force_number(regs[1])? as usize)?.clone();
+        let colour_b = colours.get(ctx.force_number(regs[2])? as usize)?.clone();
+        let length = ctx.force_number(regs[3])?;
+        let width = ctx.force_number(regs[4])?;
+        let prop = ctx.force_number(regs[5])?;
+        let paint = Patina::Dotted(Dotted(colour_a,colour_b,OrderedFloat(length),OrderedFloat(width),OrderedFloat(prop)));
+        let paints = ctx.context.get_mut(&paints);
+        let h = paints.push(paint);
         ctx.set(regs[0],Value::Number(h as f64))?;
         Ok(Return::Sync)
     }))

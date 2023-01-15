@@ -13,6 +13,7 @@ mod controller {
 mod libcore {
     pub(crate) mod libcore;
     mod bio;
+    mod complex;
     mod convert;
     mod opbbtb;
     mod opbtb;

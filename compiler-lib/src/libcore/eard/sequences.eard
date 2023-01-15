@@ -147,6 +147,12 @@ debug special(check_length_inf) code __code_check_length_inf(string,number,numbe
     }
 }
 
+code __code_gaps(seq(number),seq(number),seq(number),seq(number),seq(number)) -> (seq(number),seq(number),seq(number)) {
+    impl (r1: seq(number), r2: seq(number), r3: seq(number), r4: seq(number), r5: seq(number)) -> (r6: seq(number), r7: seq(number), r8: seq(number)) {
+        opcode 159, r6, r7, r8, r1, r2, r3, r4, r5;
+    }
+}
+
 export function __operator_infseq(x) { let y = __code_infseq(x); y }
 export function __operator_finseq() { let y = __code_finseq(); y }
 export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
@@ -158,3 +164,4 @@ export function __test_bound(s,x) { let y = __code_bound(s,x); y }
 
 export function len(x) { let y = __code_length(x); y }
 export function push(x,v) { let z = __code_push(x,y); z }
+export procedure gaps(s,e,bs,be,bi) { let (zs,ze,zi) = __code_gaps(s,e,bs,be,bi); (zs,ze,zi) }

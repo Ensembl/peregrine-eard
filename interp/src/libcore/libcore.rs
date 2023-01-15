@@ -9,7 +9,7 @@ use super::{
     opbtb::{op_not2, op_not1, op_not2s, op_not1s},
     seq::{op_repeat, op_if, op_set, op_set_m, op_set_skip, op_set_skip_m, op_set_at, op_set_at_m, op_set_from, op_set_from_m, op_index, op_index_s, op_count, op_enumerate, op_any, op_all, op_position, op_select, op_if_s},
     opbbtb::{op_eq3_bool, op_eq3_bool_s, op_eq3_bool_ss, op_and3, op_and2_s, op_or3, op_or2_s, op_or2_ss, op_and2, op_and3_ss, op_or3_s, op_or3_ss, op_and3_s, op_and2_ss, op_or2}, 
-    string::{op_concat, op_push_str, op_push_str_s, op_push_str_revs, op_split, op_template, op_split_start, op_split_get, Template, op_template_start, op_template_set, op_template_end, op_push_str_ss}, convert::{op_to_bool, op_to_bool_m, op_to_bool_s, op_to_bool_s_m, op_to_num, op_to_num_m, op_to_num_s, op_to_num_s_m, op_to_str, op_to_str_m, op_to_str_s, op_to_str_s_m}, bio::{op_base_flip, op_base_flip_s, op_ruler_interval, op_ruler_markings}
+    string::{op_concat, op_push_str, op_push_str_s, op_push_str_revs, op_split, op_template, op_split_start, op_split_get, Template, op_template_start, op_template_set, op_template_end, op_push_str_ss}, convert::{op_to_bool, op_to_bool_m, op_to_bool_s, op_to_bool_s_m, op_to_num, op_to_num_m, op_to_num_s, op_to_num_s_m, op_to_str, op_to_str_m, op_to_str_s, op_to_str_s_m}, bio::{op_base_flip, op_base_flip_s, op_ruler_interval, op_ruler_markings}, complex::op_gaps
 };
 
 pub trait LibcoreTemplate {
@@ -212,6 +212,7 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_operation(156,Operation::new(op_push_str_revs));
     builder.add_operation(157,Operation::new(op_lt_s));
     builder.add_operation(158,Operation::new(op_le_s));
+    builder.add_operation(159,Operation::new(op_gaps));
     Ok(LibcoreBuilder { context, splits, templates })
 }
 

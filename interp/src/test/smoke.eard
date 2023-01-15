@@ -292,3 +292,15 @@ print(format(ruler_markings(1000000,1000000,9000000)));
 
 print(format(comma_format(100000)));
 print(format(comma_format([100000,110000,101000,100100,1000000,1,100,0])));
+
+let (a,b,c) = gaps(
+    [1000,3000],
+    [1999,3999],
+    [1000,1300,2100],
+    [1100,1400,2700],
+    [0,0,1]
+);
+
+print(format(a));
+print(format(b));
+print(format(c));

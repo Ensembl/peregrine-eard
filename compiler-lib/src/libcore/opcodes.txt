@@ -157,3 +157,4 @@
 156 push_str (seq, rev)
 157 lt seq(number)/number
 158 le seq(number)/number
+159 gaps

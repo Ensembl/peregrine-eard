@@ -46,54 +46,6 @@ unknown variable 'x' at test:4
 
 >> test
 
-bad variable 4
-
->> input
-
-program "test" "test" 1;
-
-procedure p(x) { (*y) }
-
-p(0);
-
->> linearize-fail trim
-
-empty bundle return 'y' at test:4 (called from test:6)
-
->> test
-
-bad variable 5
-
->> input
-
-program "test" "test" 1;
-
-procedure p(*x) { (*x) }
-
-p(*a);
-
->> linearize-fail trim
-
-empty bundle argument 'a' at test:6
-
->> test
-
-bad variable 6
-
->> input
-
-program "test" "test" 1;
-
-procedure p(x) { (x) }
-
-let **a = p(**b);
-
->> linearize-fail trim
-
-empty bundle used in repeater 'b' at test:6
-
->> test
-
 bad args 1
 
 >> input

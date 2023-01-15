@@ -65,7 +65,7 @@ print(format("hi"+3));
 
 >> narrow-fail strip
 
-cannot deduce type/D at arith:393 (called from test:4)
+cannot deduce type: expected string; can't force to be number at arith:393 (called from test:4)
 
 >> test
 
@@ -137,15 +137,12 @@ opcode 27, r1, r2, r2
 opcode 27, r3, r2, r2
 r4 <- 4
 opcode 999, r5, r4
-  # r1, r3 = a>=a ; r2 = c(3) = a ; r5 = c(4) = b
 opcode 27, r4, r5, r2
 opcode 26, r6, r5, r2
 opcode 26, r7, r2, r5
-  # r4 = b>=a; r6 = b>a ; r7 = a>b
 opcode 27, r8, r2, r5
 opcode 26, r9, r2, r5
 opcode 26, r10, r5, r2
-  # r8 = a>=b ; r9 = a>b ; r10 = b>a
 opcode 999, r0, r10
 opcode 999, r0, r9
 opcode 999, r0, r3
@@ -234,9 +231,9 @@ r4 <- [4]
 opcode 999, r5, r4
 opcode 49, r4, r5, r2
 opcode 48, r6, r5, r2
-opcode 48, r7, r5, r2
-opcode 49, r8, r5, r2
-opcode 48, r9, r5, r2
+opcode 157, r7, r5, r2
+opcode 158, r8, r5, r2
+opcode 157, r9, r5, r2
 opcode 48, r10, r5, r2
 opcode 999, r0, r10
 opcode 999, r0, r9

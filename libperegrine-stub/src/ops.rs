@@ -254,13 +254,24 @@ pub(crate) fn op_zmenu(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
     }))
 }
 
+fn to_colours(ctx: &GlobalContext, colours: &HandleStore<Colour>, reg: usize) -> Result<Vec<Colour>,String> {
+    if ctx.is_finite(reg)? {
+        let values = ctx.force_finite_number(reg)?;
+        values.iter().map(|h| {
+            colours.get(*h as usize).cloned()
+        }).collect::<Result<Vec<_>,_>>()    
+    } else {
+        Ok(vec![colours.get(ctx.force_infinite_number(reg)? as usize).cloned()?])
+    }
+}
+
 pub(crate) fn op_paint_dotted(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     let colours = gctx.patterns.lookup::<HandleStore<Colour>>("colours")?;
     let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
     Ok(Box::new(move |ctx,regs| {
         let colours = ctx.context.get(&colours);
-        let colour_a = colours.get(ctx.force_number(regs[1])? as usize)?.clone();
-        let colour_b = colours.get(ctx.force_number(regs[2])? as usize)?.clone();
+        let colour_a = to_colours(ctx,colours,regs[1])?;
+        let colour_b= to_colours(ctx,colours,regs[2])?;
         let length = ctx.force_number(regs[3])?;
         let width = ctx.force_number(regs[4])?;
         let prop = ctx.force_number(regs[5])?;

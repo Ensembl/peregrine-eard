@@ -192,8 +192,8 @@ world code __code_paint_click(handle(eoetmpl),handle(eoetmpl)) -> handle(paint) 
     }
 }
 
-world code __code_paint_dotted(handle(colour),handle(colour),number,number,number) -> handle(paint) {
-    impl (r1: handle(colour), r2: handle(colour), r3: number, r4: number, r5: number) -> r6: handle(paint) {
+world code __code_paint_dotted(seq(handle(colour)),seq(handle(colour)),number,number,number) -> handle(paint) {
+    impl (r1: seq(handle(colour)), r2: seq(handle(colour)), r3: number, r4: number, r5: number) -> r6: handle(paint) {
         opcode 287, r6, r1, r2, r3, r4, r5;
     }
 }

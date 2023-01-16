@@ -94,7 +94,7 @@ pub(crate) fn op_push_str_ss(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&m
                 let a = ctx.force_finite_string(regs[1])?;
                 let b = ctx.force_finite_string(regs[2])?;
                 if a.len() != b.len() {
-                    return Err(format!("lengths do not match in push_str"));
+                    return Err(format!("lengths do not match in push_str {:?} {:?}",a,b));
                 }
                 let out = a.iter().zip(b.iter()).map(|(a,b)| format!("{}{}",a,b)).collect();
                 ctx.set(regs[0],Value::FiniteString(out))?;

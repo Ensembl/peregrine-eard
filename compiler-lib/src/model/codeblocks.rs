@@ -256,7 +256,7 @@ impl fmt::Debug for ImplBlock {
 
 fn set_wild(wilds: &mut HashMap<String,BroadType>, name: &str, broad: &BroadType) -> Result<(),String> {
     if let Some(old) = wilds.get(name) {
-        if old != broad { return Err(format!("cannot deduce value of wildcard")); }
+        if old != broad { return Err(format!("cannot deduce value of wildcard (seq vs non-seq)")); }
     } else {
         wilds.insert(name.to_string(),broad.clone());
     }

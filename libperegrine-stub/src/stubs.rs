@@ -53,8 +53,8 @@ impl Serialize for Hollow {
 
 #[derive(Clone,PartialEq,Eq,PartialOrd,Ord,Debug)]
 pub(crate) struct Dotted(
-    pub(crate) Colour,
-    pub(crate) Colour,
+    pub(crate) Vec<Colour>,
+    pub(crate) Vec<Colour>,
     pub(crate) OrderedFloat<f64>,
     pub(crate) OrderedFloat<f64>,
     pub(crate) OrderedFloat<f64>

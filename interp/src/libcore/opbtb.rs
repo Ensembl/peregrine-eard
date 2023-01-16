@@ -44,7 +44,7 @@ fn op_ubool1s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Resu
 fn op_ubool2s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(&mut bool) + 'static {
     Ok(Box::new(move |ctx,regs| {
-        if ctx.is_finite(regs[0])? {
+        if ctx.is_finite(regs[1])? {
             let mut a = ctx.force_finite_boolean(regs[1])?.to_vec();
             for v in &mut a {
                 f(v);

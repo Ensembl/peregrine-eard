@@ -183,12 +183,10 @@ impl<'a> Linearize<'a> {
                     }
                 },
                 OrBundle::Bundle(prefix) => {
-                    if self.var_registers.check_used(prefix) {
-                        let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;
-                        for name in bundle {
-                            let var_reg = self.var_registers.get(&Variable { name: name.clone(), prefix: Some(prefix.clone()) })?;
-                            regs.push(var_reg);
-                        }
+                    let bundle = self.bundles.get(&self.call_stack,&Position::Return(i))?;
+                    for name in bundle {
+                        let var_reg = self.var_registers.get(&Variable { name: name.clone(), prefix: Some(prefix.clone()) })?;
+                        regs.push(var_reg);
                     }
                 }
             }
@@ -291,17 +289,15 @@ impl<'a> Linearize<'a> {
                     }
                 },
                 OrBundleRepeater::Bundle(bundle_name) =>  {
-                    if self.var_registers.check_used(bundle_name) {
-                        let bundle = self.bundles.get(&self.call_stack,&Position::Arg(i))?;
-                        for bundle_arg in bundle {
-                            let arg_reg = self.allocator.next_register();
-                            let variable = self.var_registers.get(&Variable {
-                                prefix: Some(bundle_name.to_string()),
-                                name: bundle_arg.to_string()
-                            })?;
-                            self.add(LinearStatementValue::Copy(arg_reg,variable));
-                            arg_regs.push(arg_reg);
-                        }
+                    let bundle = self.bundles.get(&self.call_stack,&Position::Arg(i))?;
+                    for bundle_arg in bundle {
+                        let arg_reg = self.allocator.next_register();
+                        let variable = self.var_registers.get(&Variable {
+                            prefix: Some(bundle_name.to_string()),
+                            name: bundle_arg.to_string()
+                        })?;
+                        self.add(LinearStatementValue::Copy(arg_reg,variable));
+                        arg_regs.push(arg_reg);
                     }
                 },
                 OrBundleRepeater::Repeater(_) => { panic!("Should be no repeaters here/A") },
@@ -382,13 +378,11 @@ impl<'a> Linearize<'a> {
     fn procedure(&mut self, proc: &BTProcCall<OrBundleRepeater<BTLValue>>) -> Result<(),String> {
         self.call_stack.push(proc.call_index);
         if let Some((left_prefix,right_prefix)) = find_repeater_arguments(proc)? {
-            if self.var_registers.check_used(&right_prefix) {
-                for name in self.bundles.get(&self.call_stack,&Position::Repeater)? {
-                    let left = Variable { prefix: Some(left_prefix.clone()), name: name.to_string() };
-                    let right = Variable { prefix: Some(right_prefix.clone()), name: name.to_string() };
-                    let call = rewrite_repeater(proc,&left,&right)?;
-                    self.non_repeater_procedure(&call)?;
-                }
+            for name in self.bundles.get(&self.call_stack,&Position::Repeater)? {
+                let left = Variable { prefix: Some(left_prefix.clone()), name: name.to_string() };
+                let right = Variable { prefix: Some(right_prefix.clone()), name: name.to_string() };
+                let call = rewrite_repeater(proc,&left,&right)?;
+                self.non_repeater_procedure(&call)?;
             }
         } else {
             self.non_repeater_procedure(&proc)?;

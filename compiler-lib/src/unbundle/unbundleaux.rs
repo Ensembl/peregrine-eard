@@ -168,10 +168,6 @@ impl VarRegisterLevel {
             .map(|x| x.keys().cloned().collect::<Vec<_>>())
             .unwrap_or_else(|| vec![])
     }
-
-    fn check_used(&self, prefix: &str) -> bool {
-        self.regs.contains_key(&Some(prefix.to_string()))
-    }
 }
 
 pub(super) struct VarRegisters {
@@ -219,10 +215,6 @@ impl VarRegisters {
 
     pub(super) fn outer_all_prefix(&self, prefix: &str) -> Vec<String> {
         self.bottom().all_prefix(prefix)
-    }
-
-    pub(super) fn check_used(&self, prefix: &str) -> bool {
-        self.top().check_used(prefix)
     }
 }
 

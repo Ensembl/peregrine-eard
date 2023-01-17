@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::{GlobalBuildContext, GlobalContext, Return, Value};
 
 fn process_gap(out: &mut Vec<(f64,f64)>, start: f64, end: f64, gap_start: Option<f64>, gap_end: Option<f64>) {
@@ -19,18 +21,18 @@ fn process_gap(out: &mut Vec<(f64,f64)>, start: f64, end: f64, gap_start: Option
 }
 
 fn gaps_one(start: f64, end: f64, mut blocks: Vec<(f64,f64)>) -> Vec<(f64,f64)> {
-    blocks.sort_by_key(|(a,b)| a.partial_cmp(b).unwrap());
+    blocks.sort_by_key(|(a,b)| (OrderedFloat(*a),OrderedFloat(*b)));
     /* Call our block start ends (a0,b0), (a1,b1), (a2,b2) etc (an,bn)
      * Our gaps are then (-INF,a0), (b0,a1), (b1,a2),  (bn,+INF).
      * Pass these to process_gap().
      */
-     let mut out = vec![];
+    let mut out = vec![];
     let mut prev_start = None;
     for (block_start,block_end) in blocks.iter() {
         process_gap(&mut out, start,end,prev_start,Some(*block_start));
         prev_start = Some(*block_end);
     }
-    process_gap(&mut out, start,end,prev_start,None);
+    process_gap(&mut out,start,end,prev_start,None);
     out
 }
 

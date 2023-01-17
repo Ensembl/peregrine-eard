@@ -11,3 +11,4 @@ async-thread="*"
 minicbor={ version="*", features=["std"] }
 serde_json="*"
 web-sys={ version="*", features =["console"] }
+ordered-float="*"

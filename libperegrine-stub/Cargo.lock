@@ -214,6 +214,7 @@ dependencies = [
  "async-std",
  "async-thread",
  "minicbor",
+ "ordered-float",
  "serde_json",
  "web-sys",
 ]

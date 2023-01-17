@@ -134,8 +134,8 @@ impl Serialize for Coords {
 pub(crate) struct Pen {
     pub(crate) font: String,
     pub(crate) size: OrderedFloat<f64>,
-    pub(crate) fgd: Colour,
-    pub(crate) bgd: Colour
+    pub(crate) fgd: Vec<Colour>,
+    pub(crate) bgd: Vec<Colour>
 }
 
 impl Serialize for Pen {
@@ -239,6 +239,20 @@ impl Serialize for Rectangle {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Empty(pub(crate) Coords,pub(crate) Coords,pub(crate) Vec<LeafRequest>);
+
+impl Serialize for Empty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut seq = serializer.serialize_seq(Some(4))?;
+        seq.serialize_element(&self.0)?;
+        seq.serialize_element(&self.1)?;
+        seq.serialize_element(&self.2)?;
+        seq.end()
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Image(pub(crate) Coords,pub(crate) Vec<String>,pub(crate) Vec<LeafRequest>);
 
 impl Serialize for Image {
@@ -280,7 +294,8 @@ pub(crate) enum Shape {
     Text(Text),
     RunningText(RunningText),
     Image(Image),
-    Wiggle(Wiggle)
+    Wiggle(Wiggle),
+    Empty(Empty)
 }
 
 impl Serialize for Shape {
@@ -307,8 +322,11 @@ impl Serialize for Shape {
             Shape::Image(m) => {
                 map.serialize_key("image")?;
                 map.serialize_value(m)?;
+            },
+            Shape::Empty(e) => {
+                map.serialize_key("empty")?;
+                map.serialize_value(e)?;
             }
-
         }
         map.end()                
     }

@@ -195,11 +195,9 @@ pub(crate) fn op_pen(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Global
     Ok(Box::new(move |ctx,regs| {
         let font = ctx.force_string(regs[1])?.to_string();
         let size = ctx.force_number(regs[2])?;
-        let fgd_h = ctx.force_number(regs[3])? as usize;
-        let bgd_h = ctx.force_number(regs[4])? as usize;
         let colours = ctx.context.get(&colours);
-        let fgd = colours.get(fgd_h)?.clone();
-        let bgd = colours.get(bgd_h)?.clone();
+        let fgd = to_colours(ctx,colours,regs[3])?;
+        let bgd = to_colours(ctx,colours,regs[4])?;
         let pen = Pen {
             font, size: OrderedFloat(size), fgd, bgd
         };

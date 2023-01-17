@@ -138,8 +138,8 @@ code __code_setting_string_seq(string,seq(string)) -> seq(string) {
     }
 }
 
-code __code_pen(string,number,handle(colour),handle(colour)) -> handle(pen) {
-    impl (r1: string, r2: number, r3: handle(colour), r4: handle(colour)) -> r5: handle(pen) {
+code __code_pen(string,number,seq(handle(colour)),seq(handle(colour))) -> handle(pen) {
+    impl (r1: string, r2: number, r3: seq(handle(colour)), r4: seq(handle(colour))) -> r5: handle(pen) {
         opcode 278, r5, r1, r2, r3, r4;
     }
 }
@@ -198,6 +198,12 @@ world code __code_paint_dotted(seq(handle(colour)),seq(handle(colour)),number,nu
     }
 }
 
+world code __code_empty(handle(coord),handle(coord),seq(handle(leaf))) {
+    impl (r1: handle(coord), r2: handle(coord), r3: seq(handle(leaf))) {
+        opcode 288, r1, r2, r3;
+    }
+}
+
 export function leaf(s) { let h = __code_leaf(s); h }
 export procedure style(f,k,v) { __code_style(f,k,v); }
 export function colour(r,g,b,a) { let h = __code_colour(r,g,b,a); h }
@@ -221,6 +227,7 @@ export procedure image(c,s,f) { __code_image(c,s,f); }
 export procedure running_text(nw,se,p,t,f) { __code_running_text(nw,se,p,t,f); }
 export procedure paint_click(name,tmpl) { let h = __code_paint_click(name,tmpl); h }
 export function paint_dotted(f,b,g,w,p) { let h = __code_paint_dotted(f,b,g,w,p); h }
+export procedure empty(nw,se,f) { __code_empty(nw,se,f); }
 
 export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
 export function setting_number(k,p) { let v = __code_setting_number(k,p); v }

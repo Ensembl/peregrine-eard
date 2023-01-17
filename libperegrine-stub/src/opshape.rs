@@ -1,6 +1,6 @@
 use eard_interp::{HandleStore, Return, GlobalBuildContext, GlobalContext};
 use ordered_float::OrderedFloat;
-use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina};
+use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina, Empty};
 
 fn leaf_from_handle(ctx: &GlobalContext, leafs: &HandleStore<LeafRequest>, reg: usize) -> Result<Vec<LeafRequest>,String> {
     Ok(if !ctx.is_finite(reg)? {
@@ -12,6 +12,22 @@ fn leaf_from_handle(ctx: &GlobalContext, leafs: &HandleStore<LeafRequest>, reg: 
             leafs.get(*h as usize).cloned()
         }).collect::<Result<Vec<_>,_>>()?
     })
+}
+
+pub(crate) fn op_empty(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let coords = gctx.patterns.lookup::<HandleStore<Coords>>("coords")?;
+    let leafs = gctx.patterns.lookup::<HandleStore<LeafRequest>>("leaf")?;
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let coords = ctx.context.get(&coords);
+        let leafs = ctx.context.get(&leafs);
+        let nw = coords.get(ctx.force_number(regs[0] as usize)? as usize)?.clone();
+        let se = coords.get(ctx.force_number(regs[1] as usize)? as usize)?.clone();
+        let leafs = leaf_from_handle(ctx,leafs,regs[2])?;
+        let shapes = ctx.context.get_mut(&shapes);
+        shapes.add_shape(Shape::Empty(Empty(nw.clone(),se.clone(),leafs)));
+        Ok(Return::Sync)
+    }))
 }
 
 pub(crate) fn op_rectangle(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {

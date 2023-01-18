@@ -18,6 +18,24 @@ code __code_eoe_string(string) -> handle(eoetmpl) {
     }
 }
 
+code __code_eoe_boolean(seq(boolean)) -> seq(handle(eoetmpl)) {
+    impl (r1: seq(boolean)) -> r2: seq(handle(eoetmpl)) {
+        opcode 526, r2, r1;
+    }
+}
+
+code __code_eoe_number(seq(number)) -> seq(handle(eoetmpl)) {
+    impl (r1: seq(number)) -> r2: seq(handle(eoetmpl)) {
+        opcode 527, r2, r1;
+    }
+}
+
+code __code_eoe_string(seq(string)) -> seq(handle(eoetmpl)) {
+    impl (r1: seq(string)) -> r2: seq(handle(eoetmpl)) {
+        opcode 528, r2, r1;
+    }
+}
+
 code __code_eoe_null() -> handle(eoetmpl) {
     impl () -> r1: handle(eoetmpl) {
         opcode 515, r1;

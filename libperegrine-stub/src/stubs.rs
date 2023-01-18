@@ -1,5 +1,5 @@
-use std::{collections::{HashSet, HashMap}, sync::{Arc, Mutex}};
-use eachorevery::eoestruct::{StructTemplate, struct_to_json };
+use std::{collections::{HashSet, HashMap, BTreeMap}, sync::{Arc, Mutex}};
+use eachorevery::eoestruct::{StructTemplate, struct_to_json, StructValue };
 use ordered_float::OrderedFloat;
 use serde::{Serialize, ser::{SerializeSeq, SerializeMap, Error}};
 use serde_json::Value as JsonValue;
@@ -73,13 +73,15 @@ impl Serialize for Dotted {
     }
 }
 
-#[derive(Clone,PartialEq,Eq,PartialOrd,Ord,Debug)]
+#[cfg_attr(any(test,debug_assertions),derive(Debug))]
+#[derive(Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
     Special(String),
     ZMenu(String,String),
-    Dotted(Dotted)
+    Dotted(Dotted),
+    Metadata(String,Vec<(String,StructValue)>)
 }
 
 impl Serialize for Patina {
@@ -106,8 +108,14 @@ impl Serialize for Patina {
             Patina::Dotted(d) => {
                 map.serialize_key("dotted")?;
                 map.serialize_value(d)?;
+            },
+            Patina::Metadata(key,values) => {
+                map.serialize_key("metadata")?;
+                let mut v = BTreeMap::new();
+                v.insert(key.to_string(),values);
+                map.serialize_value(&v)?;
             }
-            }
+        }
         map.end()
     }
 }

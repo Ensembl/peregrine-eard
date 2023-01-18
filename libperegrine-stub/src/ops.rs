@@ -1,4 +1,4 @@
-use eachorevery::eoestruct::{StructTemplate, struct_to_json};
+use eachorevery::eoestruct::{StructTemplate, struct_to_json, StructValue};
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
 use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen, Hollow, Dotted }, util::to_number};
@@ -276,6 +276,26 @@ pub(crate) fn op_paint_dotted(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&m
         let paint = Patina::Dotted(Dotted(colour_a,colour_b,OrderedFloat(length),OrderedFloat(width),OrderedFloat(prop)));
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(paint);
+        ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_paint_metadata(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
+    let templates = gctx.patterns.lookup::<HandleStore<StructTemplate>>("eoetemplates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let templates = ctx.context.get(&templates);
+        let key = ctx.force_string(regs[1])?.to_string();
+        let values_id = ctx.force_finite_string(regs[2])?;
+        let values_h = ctx.force_finite_number(regs[3])?;
+        let values = values_h.iter().zip(values_id.iter()).map(|(h,id)| {
+            let build = templates.get(*h as usize)?.build()?;
+            let value = StructValue::new_expand(&build,None)?;
+            Ok::<_,String>((id.to_string(),value))
+        }).collect::<Result<Vec<_>,_>>()?;
+        let paints = ctx.context.get_mut(&paints);
+        let h = paints.push(Patina::Metadata(key.to_string(),values));
         ctx.set(regs[0],Value::Number(h as f64))?;
         Ok(Return::Sync)
     }))

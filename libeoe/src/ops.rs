@@ -34,6 +34,45 @@ pub(crate) fn op_string(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glo
     }))
 }
 
+pub(crate) fn op_boolean_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let templates = gctx.patterns.lookup::<HandleStore<StructTemplate>>("eoetemplates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let input = ctx.force_finite_boolean(regs[1])?.clone();
+        let templates = ctx.context.get_mut(&templates);
+        let hh = input.iter().map(|v| {
+            templates.push(StructTemplate::new_boolean(*v)) as f64
+        }).collect();
+        ctx.set(regs[0],Value::FiniteNumber(hh))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_number_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let templates = gctx.patterns.lookup::<HandleStore<StructTemplate>>("eoetemplates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let input = ctx.force_finite_number(regs[1])?.clone();
+        let templates = ctx.context.get_mut(&templates);
+        let hh = input.iter().map(|v| {
+            templates.push(StructTemplate::new_number(*v)) as f64
+        }).collect();
+        ctx.set(regs[0],Value::FiniteNumber(hh))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_string_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let templates = gctx.patterns.lookup::<HandleStore<StructTemplate>>("eoetemplates")?;
+    Ok(Box::new(move |ctx,regs| {
+        let input = ctx.force_finite_string(regs[1])?.clone();
+        let templates = ctx.context.get_mut(&templates);
+        let hh = input.iter().map(|v| {
+            templates.push(StructTemplate::new_string(v.to_string())) as f64
+        }).collect();
+        ctx.set(regs[0],Value::FiniteNumber(hh))?;
+        Ok(Return::Sync)
+    }))
+}
+
 pub(crate) fn op_null(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     let templates = gctx.patterns.lookup::<HandleStore<StructTemplate>>("eoetemplates")?;
     Ok(Box::new(move |ctx,regs| {

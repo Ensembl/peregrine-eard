@@ -1,6 +1,6 @@
 use eachorevery::eoestruct::{StructTemplate, StructVarGroup, StructPair, StructVar};
 use eard_interp::{ContextItem, HandleStore, InterpreterBuilder, Operation, RunContext};
-use crate::ops::{op_boolean, op_number, op_string, op_null, op_group, op_var_boolean, op_var_number, op_var_string, op_array, op_pair, op_object, op_var, op_all, op_condition};
+use crate::ops::{op_boolean, op_number, op_string, op_null, op_group, op_var_boolean, op_var_number, op_var_string, op_array, op_pair, op_object, op_var, op_all, op_condition, op_boolean_s, op_number_s, op_string_s};
 
 #[derive(Clone)]
 pub struct LibEoEBuilder {
@@ -31,6 +31,9 @@ pub fn build_libeoe(builder: &mut InterpreterBuilder) -> Result<LibEoEBuilder,St
     builder.add_operation(523,Operation::new(op_var));
     builder.add_operation(524,Operation::new(op_all));
     builder.add_operation(525,Operation::new(op_condition));
+    builder.add_operation(526,Operation::new(op_boolean_s));
+    builder.add_operation(527,Operation::new(op_number_s));
+    builder.add_operation(528,Operation::new(op_string_s));
     Ok(LibEoEBuilder { templates, groups, pairs, vars })
 }
 

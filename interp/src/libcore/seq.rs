@@ -1,4 +1,6 @@
-use std::{mem, collections::HashMap};
+use std::{mem, collections::HashMap, hash};
+use ordered_float::OrderedFloat;
+
 use crate::controller::{globalcontext::{GlobalContext, GlobalBuildContext}, operation::Return, value::{Value}};
 
 pub(crate) fn op_repeat(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
@@ -402,23 +404,50 @@ pub(crate) fn op_select(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Gl
 
 pub(crate) fn op_find(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     Ok(Box::new(move |ctx,regs| {
-        let haystack = ctx.force_finite_string(regs[1])?;
-        let needle = ctx.force_string(regs[2])?;
-        let index = haystack.iter().position(|candidate| candidate == needle);
+        let index = match (ctx.get(regs[1])?,ctx.get(regs[2])?) {
+            (Value::FiniteBoolean(haystack),Value::Boolean(needle)) => {
+                haystack.iter().position(|candidate| candidate == needle)
+            },
+            (Value::FiniteNumber(haystack),Value::Number(needle)) => {
+                haystack.iter().position(|candidate| candidate == needle)
+            },
+            (Value::FiniteString(haystack),Value::String(needle)) => {
+                haystack.iter().position(|candidate| candidate == needle)
+            },
+            _ => { return Err("bad type in find".to_string()) }
+        };
         ctx.set(regs[0],Value::Number(index.map(|x| x as f64).unwrap_or(-1.)))?;
         Ok(Return::Sync)
     }))
 }
 
+fn orderable_seq(data: &[f64]) -> Vec<OrderedFloat<f64>> {
+    data.iter().map(|x| OrderedFloat(*x)).collect()
+}
+
+fn find_seq<T>(haystack: &[T], needles: &[T]) -> Result<Vec<f64>,String> where T: hash::Hash + Eq {
+    let haystack = haystack
+            .iter().enumerate().map(|(i,v)| (v,i))
+            .collect::<HashMap<_,_>>();    
+    Ok(needles.iter().map(|needle| {
+        haystack.get(needle).map(|x| *x as f64).unwrap_or(-1.)
+    }).collect::<Vec<_>>())
+}
+
 pub(crate) fn op_find_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
     Ok(Box::new(move |ctx,regs| {
-        let haystack = ctx.force_finite_string(regs[1])?
-            .iter().enumerate().map(|(i,v)| (v,i))
-            .collect::<HashMap<_,_>>();
-        let needles = ctx.force_finite_string(regs[2])?;
-        let index = needles.iter().map(|needle| {
-            haystack.get(needle).map(|x| *x as f64).unwrap_or(-1.)
-        }).collect();        
+        let index = match (ctx.get(regs[1])?,ctx.get(regs[2])?) {
+            (Value::FiniteBoolean(haystack),Value::FiniteBoolean(needles)) => {
+                find_seq(haystack,needles)?
+            },
+            (Value::FiniteNumber(haystack),Value::FiniteNumber(needles)) => {
+                find_seq(&orderable_seq(haystack),&orderable_seq(needles))?
+            },
+            (Value::FiniteString(haystack),Value::FiniteString(needles)) => {
+                find_seq(haystack,needles)?
+            },
+            _ => { return Err("bad type in find".to_string()) }
+        };
         ctx.set(regs[0],Value::FiniteNumber(index))?;
         Ok(Return::Sync)
     }))

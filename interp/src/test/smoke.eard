@@ -313,3 +313,5 @@ print(format(c));
 
 print(format(find(["A","B","C"],"B")));
 print(format(find(["A","B","C"],["C","C","A"])));
+print(format(find([2,3,5,7,11,1],1)));
+print(format(find([2,3,5,7,11,1],[1,2,3,4])));

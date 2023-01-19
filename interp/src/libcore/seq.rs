@@ -1,4 +1,4 @@
-use std::mem;
+use std::{mem, collections::HashMap};
 use crate::controller::{globalcontext::{GlobalContext, GlobalBuildContext}, operation::Return, value::{Value}};
 
 pub(crate) fn op_repeat(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
@@ -396,6 +396,30 @@ pub(crate) fn op_select(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Gl
 
         };
         ctx.set(regs[0],out)?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_find(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let haystack = ctx.force_finite_string(regs[1])?;
+        let needle = ctx.force_string(regs[2])?;
+        let index = haystack.iter().position(|candidate| candidate == needle);
+        ctx.set(regs[0],Value::Number(index.map(|x| x as f64).unwrap_or(-1.)))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_find_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let haystack = ctx.force_finite_string(regs[1])?
+            .iter().enumerate().map(|(i,v)| (v,i))
+            .collect::<HashMap<_,_>>();
+        let needles = ctx.force_finite_string(regs[2])?;
+        let index = needles.iter().map(|needle| {
+            haystack.get(needle).map(|x| *x as f64).unwrap_or(-1.)
+        }).collect();        
+        ctx.set(regs[0],Value::FiniteNumber(index))?;
         Ok(Return::Sync)
     }))
 }

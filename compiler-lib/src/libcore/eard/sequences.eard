@@ -153,6 +153,18 @@ code __code_gaps(seq(number),seq(number),seq(number),seq(number),seq(number)) ->
     }
 }
 
+code __code_find(seq(?X),atom(?X)) -> number {
+    impl (r1: seq(?X), r2: ?X) -> r3: number {
+        opcode 160, r3, r1, r2;
+    }
+}
+
+code __code_find(seq(?X),seq(?X)) -> seq(number) {
+    impl (r1: seq(?X), r2: seq(?X)) -> r3: seq(number) {
+        opcode 161, r3, r1, r2;
+    }
+}
+
 export function __operator_infseq(x) { let y = __code_infseq(x); y }
 export function __operator_finseq() { let y = __code_finseq(); y }
 export procedure __operator_push(x,y) { let y = __code_push(x,y); y }
@@ -165,3 +177,4 @@ export function __test_bound(s,x) { let y = __code_bound(s,x); y }
 export function len(x) { let y = __code_length(x); y }
 export function push(x,v) { let z = __code_push(x,y); z }
 export procedure gaps(s,e,bs,be,bi) { let (zs,ze,zi) = __code_gaps(s,e,bs,be,bi); (zs,ze,zi) }
+export function find(haystack,needle) { let pos = __code_find(haystack,needle); pos }

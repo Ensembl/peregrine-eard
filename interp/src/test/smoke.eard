@@ -306,17 +306,10 @@ print(format(b));
 print(format(c));
 
 let (a,b,c) = gaps([45453],[95256],[86624,86692],[86624,86880],[0,0]);
-// [45453,86692], [86623,95256], [0,0]
-// [45453,86624], [86692,95256], [0,0]
-
-// in start=45453.0 end=95256.0 gap_start=None gap_end=Some(86692.0)
-// in start=45453.0 end=95256.0 gap_start=Some(86880.0) gap_end=Some(86624.0)
-// in start=45453.0 end=95256.0 gap_start=Some(86624.0) gap_end=None
-
-// one: [(45453.0, 86692.0), (86624.0, 95256.0)]
-
-// [(86624.0, 86624.0), (86692.0, 86880.0)]]
 
 print(format(a));
 print(format(b));
 print(format(c));
+
+print(format(find(["A","B","C"],"B")));
+print(format(find(["A","B","C"],["C","C","A"])));

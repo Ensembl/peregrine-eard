@@ -46,7 +46,7 @@ fn op_bool2_s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Resu
 fn op_bool3_s<F>(f: F) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String>
         where F: Fn(&mut bool,bool) + 'static {
     Ok(Box::new(move |ctx,regs| {
-        if ctx.is_finite(regs[0])? {
+        if ctx.is_finite(regs[1])? {
             let mut a = ctx.force_finite_boolean(regs[1])?.to_vec();
             let b = ctx.force_boolean(regs[2])?;
             for v in &mut a {

@@ -246,6 +246,12 @@ world code __code_running_rectangle(handle(coord),handle(coord),seq(number),hand
     }
 }
 
+world code __code_small_value(string,string,seq(string)) -> seq(string) {
+    impl (r1: string, r2: string, r3: seq(string)) -> r4: seq(string) {
+        opcode 296, r4, r1, r2, r3;
+    }
+}
+
 export function leaf(s) { let h = __code_leaf(s); h }
 export procedure style(f,k,v) { __code_style(f,k,v); }
 export function colour(r,g,b,a) { let h = __code_colour(r,g,b,a); h }
@@ -273,6 +279,7 @@ export function paint_dotted(f,b,g,w,p) { let h = __code_paint_dotted(f,b,g,w,p)
 export procedure empty(nw,se,f) { __code_empty(nw,se,f); }
 export function paint_metadata(key,value_id,value) { let h = __code_paint_metadata(key,value_id,value); h }
 export function paint_setting(setting,path,value) { let h = __code_paint_setting(setting,path,value); h }
+export function small_value(ns,col,row) { let v = __code_small_value(ns,col,row); v }
 
 export function setting_boolean(k,p) { let v = __code_setting_boolean(k,p); v }
 export function setting_number(k,p) { let v = __code_setting_number(k,p); v }

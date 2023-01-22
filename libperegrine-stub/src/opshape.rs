@@ -1,6 +1,6 @@
 use eard_interp::{HandleStore, Return, GlobalBuildContext, GlobalContext};
 use ordered_float::OrderedFloat;
-use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina, Empty};
+use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina, Empty, RunningRectangle};
 
 fn leaf_from_handle(ctx: &GlobalContext, leafs: &HandleStore<LeafRequest>, reg: usize) -> Result<Vec<LeafRequest>,String> {
     Ok(if !ctx.is_finite(reg)? {
@@ -45,6 +45,26 @@ pub(crate) fn op_rectangle(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut 
         let paint = paints.get(ctx.force_number(regs[2])? as usize)?.clone();
         let shapes = ctx.context.get_mut(&shapes);
         shapes.add_shape(Shape::Rectangle(Rectangle(nw.clone(),se.clone(),paint.clone(),leafs)));
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_running_rectangle(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let coords = gctx.patterns.lookup::<HandleStore<Coords>>("coords")?;
+    let leafs = gctx.patterns.lookup::<HandleStore<LeafRequest>>("leaf")?;
+    let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let coords = ctx.context.get(&coords);
+        let leafs = ctx.context.get(&leafs);
+        let paints = ctx.context.get(&paints);
+        let nw = coords.get(ctx.force_number(regs[0] as usize)? as usize)?.clone();
+        let se = coords.get(ctx.force_number(regs[1] as usize)? as usize)?.clone();
+        let run = ctx.force_finite_number(regs[2])?.iter().map(|x| OrderedFloat(*x)).collect();
+        let leafs = leaf_from_handle(ctx,leafs,regs[4])?;
+        let paint = paints.get(ctx.force_number(regs[3])? as usize)?.clone();
+        let shapes = ctx.context.get_mut(&shapes);
+        shapes.add_shape(Shape::RunningRectangle(RunningRectangle(nw.clone(),se.clone(),run,paint.clone(),leafs)));
         Ok(Return::Sync)
     }))
 }

@@ -57,6 +57,15 @@ pub(crate) enum DataValue {
     String(Vec<String>)
 }
 
+impl DataValue {
+    pub(crate) fn first_string(&self) -> Option<String> {
+        match self {
+            DataValue::String(s) if s.len() > 0 => Some(s[0].to_string()),
+            _ => None
+        }
+    }
+}
+
 fn downcast_bool(input: &[OneValue]) -> DataValue {
     let mut out = vec![];
     for v in input {
@@ -162,6 +171,14 @@ impl StubResponses {
         Ok(settings.0.get(key).and_then(|r| {
             r.get(&path.join("/")).ok()
         }).unwrap_or(&DataValue::Empty))
+    }
+
+    pub(crate) fn get_small_value(&self, namespace: &str, column: &str, key: &str) -> Option<String> {
+        self.0.get("__small-values").and_then(|settings| {
+            settings.0.get(&format!("{}/{}",namespace,column)).and_then(|r| {
+                r.get(key).ok()?.first_string()
+            })
+        })
     }
 
     pub(crate) fn get_request(&self, key: &str, part: &str) -> Result<&DataValue,String> {

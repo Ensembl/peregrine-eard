@@ -1,5 +1,5 @@
 use std::{collections::{HashSet, HashMap, BTreeMap}, sync::{Arc, Mutex}};
-use eachorevery::eoestruct::{StructTemplate, struct_to_json, StructValue };
+use eachorevery::{eoestruct::{StructTemplate, struct_to_json, StructValue }};
 use ordered_float::OrderedFloat;
 use serde::{Serialize, ser::{SerializeSeq, SerializeMap, Error}};
 use serde_json::Value as JsonValue;
@@ -75,13 +75,31 @@ impl Serialize for Dotted {
 
 #[cfg_attr(any(test,debug_assertions),derive(Debug))]
 #[derive(Clone,PartialEq,Eq,PartialOrd,Ord)]
+pub(crate) struct Setting(pub(crate) String,pub(crate) StructValue);
+
+impl Serialize for Setting {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut map = serializer.serialize_map(Some(1))?;
+        map.serialize_entry("key",&self.0)?;
+        map.serialize_entry("setting",&self.1)?;
+        map.end()
+    }
+}
+
+#[derive(serde_derive::Serialize)]
+struct SettingPatina<'a>(&'a String,&'a [Setting]);
+
+#[cfg_attr(any(test,debug_assertions),derive(Debug))]
+#[derive(Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
     Special(String),
     ZMenu(String,String),
     Dotted(Dotted),
-    Metadata(String,Vec<(String,StructValue)>)
+    Metadata(String,Vec<(String,StructValue)>),
+    Setting(String,Vec<Setting>)
 }
 
 impl Serialize for Patina {
@@ -114,6 +132,10 @@ impl Serialize for Patina {
                 let mut v = BTreeMap::new();
                 v.insert(key.to_string(),values);
                 map.serialize_value(&v)?;
+            },
+            Patina::Setting(setting,values) => {
+                map.serialize_key("setting")?;
+                map.serialize_value(&SettingPatina(setting,values))?;
             }
         }
         map.end()
@@ -232,7 +254,12 @@ impl Serialize for Plotter {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
-pub(crate) struct Rectangle(pub(crate) Coords,pub(crate) Coords,pub(crate) Patina,pub(crate) Vec<LeafRequest>);
+pub(crate) struct Rectangle(
+    pub(crate) Coords,
+    pub(crate) Coords,
+    pub(crate) Patina,
+    pub(crate) Vec<LeafRequest>
+);
 
 impl Serialize for Rectangle {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -242,6 +269,28 @@ impl Serialize for Rectangle {
         seq.serialize_element(&self.1)?;
         seq.serialize_element(&self.2)?;
         seq.serialize_element(&self.3)?;
+        seq.end()
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct RunningRectangle(
+    pub(crate) Coords,
+    pub(crate) Coords,
+    pub(crate) Vec<OrderedFloat<f64>>,
+    pub(crate) Patina,
+    pub(crate) Vec<LeafRequest>
+);
+
+impl Serialize for RunningRectangle {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut seq = serializer.serialize_seq(Some(4))?;
+        seq.serialize_element(&self.0)?;
+        seq.serialize_element(&self.1)?;
+        seq.serialize_element(&self.2.iter().map(|x| x.0).collect::<Vec<_>>())?;
+        seq.serialize_element(&self.3)?;
+        seq.serialize_element(&self.4)?;
         seq.end()
     }
 }
@@ -299,6 +348,7 @@ impl Serialize for Wiggle {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Shape {
     Rectangle(Rectangle),
+    RunningRectangle(RunningRectangle),
     Text(Text),
     RunningText(RunningText),
     Image(Image),
@@ -313,6 +363,10 @@ impl Serialize for Shape {
         match self {
             Shape::Rectangle(r) => {
                 map.serialize_key("rectangle")?;
+                map.serialize_value(r)?;
+            },
+            Shape::RunningRectangle(r) => {
+                map.serialize_key("running-rectangle")?;
                 map.serialize_value(r)?;
             },
             Shape::Wiggle(r) => {
@@ -341,7 +395,7 @@ impl Serialize for Shape {
 }
 
 #[derive(Clone)]
-struct RequestScope(Vec<(String,String)>);
+struct RequestScope(Vec<(String,Vec<String>)>);
 
 impl Serialize for RequestScope {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -371,8 +425,8 @@ impl Request {
         }
     }
 
-    pub(crate) fn scope(&mut self, key: &str, value: &str) {
-        self.scope.0.push((key.to_string(),value.to_string()));
+    pub(crate) fn scope(&mut self, key: &str, value: &[String]) {
+        self.scope.0.push((key.to_string(),value.to_vec()));
     }
 }
 
@@ -455,6 +509,10 @@ impl ProgramShapesBuilderImpl {
         self.stubs.get_setting(key,path)
     }
 
+    fn get_small_value(&self, namespace: &str, column: &str, key: &str) -> Result<String,String> {
+        Ok(self.stubs.get_small_value(namespace,column,key).unwrap_or(key.to_string()))        
+    }
+
     fn get_request(&self, key: &str, part: &str) -> Result<&DataValue,String> {
         self.stubs.get_request(key,part)
     }
@@ -521,6 +579,10 @@ impl ProgramShapesBuilder {
 
     pub(crate) fn get_request(&self, key: &str, part: &str) -> Result<DataValue,String> {
         self.0.lock().unwrap().get_request(key,part).cloned()
+    }
+
+    pub(crate) fn get_small_value(&self, namespace: &str, column: &str, key: &str) -> Result<String,String> {
+        self.0.lock().unwrap().get_small_value(namespace,column,key)
     }
 }
 

@@ -23,6 +23,19 @@ pub(crate) fn op_scope(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
         let v = ctx.force_string(regs[2])?.to_string();
         let requests = ctx.context.get_mut(&requests);
         let req = requests.get_mut(h)?;
+        req.scope(&k,&[v]);
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_scope_s(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let requests = gctx.patterns.lookup::<HandleStore<Request>>("requests")?;
+    Ok(Box::new(move |ctx,regs| {
+        let h = ctx.force_number(regs[0])? as usize;
+        let k = ctx.force_string(regs[1])?.to_string();
+        let v = ctx.force_finite_string(regs[2])?.to_vec();
+        let requests = ctx.context.get_mut(&requests);
+        let req = requests.get_mut(h)?;
         req.scope(&k,&v);
         Ok(Return::Sync)
     }))

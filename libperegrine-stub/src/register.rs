@@ -1,5 +1,5 @@
 use eard_interp::{Operation, HandleStore, ContextItem, InterpreterBuilder, RunContext};
-use crate::{stubs::{LeafRequest, Colour, Patina, ProgramShapesBuilder, Coords, StubDump, Request, Plotter, Pen}, ops::{op_leaf, op_leaf_s, op_style, op_colour, op_paint_solid, op_paint_solid_s, op_coord, op_graph_type, op_pen, op_paint_hollow, op_paint_hollow_s, op_bp_range, op_paint_special, op_zmenu, op_paint_dotted, op_paint_metadata }, data::{StubResponses, Response}, opshape::{op_rectangle, op_wiggle, op_text, op_image, op_running_text, op_empty}, opdata::{op_request, op_scope, op_get_data, op_data_boolean, op_data_number, op_data_string}, opsetting::{op_setting_boolean, op_setting_string, op_setting_number, op_setting_boolean_seq, op_setting_number_seq, op_setting_string_seq}};
+use crate::{stubs::{LeafRequest, Colour, Patina, ProgramShapesBuilder, Coords, StubDump, Request, Plotter, Pen}, ops::{op_leaf, op_leaf_s, op_style, op_colour, op_paint_solid, op_paint_solid_s, op_coord, op_graph_type, op_pen, op_paint_hollow, op_paint_hollow_s, op_bp_range, op_paint_special, op_zmenu, op_paint_dotted, op_paint_metadata, op_paint_setting }, data::{StubResponses, Response}, opshape::{op_rectangle, op_wiggle, op_text, op_image, op_running_text, op_empty, op_running_rectangle}, opdata::{op_request, op_scope, op_get_data, op_data_boolean, op_data_number, op_data_string, op_scope_s}, opsetting::{op_setting_boolean, op_setting_string, op_setting_number, op_setting_boolean_seq, op_setting_number_seq, op_setting_string_seq, op_setting_boolean_keys, op_setting_number_keys, op_setting_string_keys, op_small_value}};
 
 #[derive(Clone)]
 pub struct LibPeregrineBuilder {
@@ -59,7 +59,13 @@ pub fn build_libperegrine(builder: &mut InterpreterBuilder) -> Result<LibPeregri
     builder.add_operation(287,Operation::new(op_paint_dotted));
     builder.add_operation(288,Operation::new(op_empty));
     builder.add_operation(289,Operation::new(op_paint_metadata));
-
+    builder.add_operation(290,Operation::new(op_paint_setting));
+    builder.add_operation(291,Operation::new(op_setting_boolean_keys));
+    builder.add_operation(292,Operation::new(op_setting_number_keys));
+    builder.add_operation(293,Operation::new(op_setting_string_keys));
+    builder.add_operation(294,Operation::new(op_scope_s));
+    builder.add_operation(295,Operation::new(op_running_rectangle));
+    builder.add_operation(296,Operation::new(op_small_value));
     Ok(LibPeregrineBuilder {
         leafs, shapes, colours, paint, coords, requests, responses, graph_types, pens
     })

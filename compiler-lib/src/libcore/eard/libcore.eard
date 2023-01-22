@@ -3,6 +3,9 @@ version "libcore" 0.0;
 special(libcore__call_up) world code __code_call_up() { impl() { opcode 1; } }
 export procedure call_up() { __code_call_up(); }
 
+world code __code_halt(boolean) { impl(r1: boolean) { opcode 2, r1; } }
+export procedure halt(yn) { __code_halt(yn); }
+
 refer "logic";
 refer "eq";
 refer "ineq";

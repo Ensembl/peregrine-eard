@@ -1,7 +1,7 @@
 use eachorevery::{eoestruct::{StructTemplate, struct_to_json, StructValue}};
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
-use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen,Setting, Hollow, Dotted }, util::to_number};
+use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen,Setting, Hollow, Dotted }, util::{to_number, to_boolean}};
 
 fn to_u8(v: f64) -> u8 { v as u8 }
 
@@ -215,6 +215,16 @@ pub(crate) fn op_bp_range(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut G
         let value = to_number(&shapes.get_request("bp_range","")?);
         ctx.set(regs[0],Value::Number(value[0]))?;
         ctx.set(regs[1],Value::Number(value[1]))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_only_warm(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let shapes = ctx.context.get(&shapes);
+        let value = to_boolean(&shapes.get_request("only_warm","")?);
+        ctx.set(regs[0],Value::Boolean(value[0]))?;
         Ok(Return::Sync)
     }))
 }

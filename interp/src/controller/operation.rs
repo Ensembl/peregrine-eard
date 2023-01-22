@@ -44,6 +44,7 @@ impl AsyncReturn {
 
 pub enum Return {
     Sync,
+    Halt,
     Async(AsyncReturn)
 }
 
@@ -97,10 +98,11 @@ impl Step {
         Ok(Step { callback: operation.make(gbctx)?, registers })
     }
 
-    pub(crate) async fn run(&self, gctx: &mut GlobalContext) -> Result<(),String> {
+    pub(crate) async fn run(&self, gctx: &mut GlobalContext) -> Result<(),Option<String>> {
         match (self.callback)(gctx,&self.registers)? {
             Return::Sync => Ok(()),
-            Return::Async(ear) => ear.callback(gctx,&self.registers).await
+            Return::Halt => Err(None),
+            Return::Async(ear) => ear.callback(gctx,&self.registers).await.map_err(|e| Some(e))
         }
     }
 }

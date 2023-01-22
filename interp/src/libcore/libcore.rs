@@ -48,6 +48,13 @@ fn op_async(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&
     }))
 }
 
+fn op_halt(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let yn = ctx.force_boolean(regs[0])?;
+        Ok(if yn { Return::Halt } else { Return::Sync })
+    }))
+}
+
 pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,String> {
     let context = builder.add_context::<Box<dyn LibcoreTemplate>>("libcore")?;
     let splits = builder.add_context::<HandleStore<Vec<Vec<String>>>>("splits")?;
@@ -55,7 +62,7 @@ pub fn build_libcore(builder: &mut InterpreterBuilder) -> Result<LibcoreBuilder,
     builder.add_version("libcore",(0,0));
     builder.add_operation(0,Operation::new(op_const));
     builder.add_operation(1,Operation::new(op_async));
-    /* 2 is reserved */
+    builder.add_operation(2,Operation::new(op_halt));
     builder.add_operation(3,Operation::new(op_push_n3));
     builder.add_operation(4,Operation::new(op_push_n2));
     builder.add_operation(5,Operation::new(op_len_n));

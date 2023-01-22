@@ -45,7 +45,7 @@ pub struct Program {
 }
 
 impl Program {
-    async fn run_step_by_step(&self, context: RunContext) -> Result<(),String> {
+    async fn run_step_by_step(&self, context: RunContext) -> Result<(),Option<String>> {
         let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
         for (i,step) in self.steps.as_ref().iter().enumerate() {
             eprintln!("\n\n{:?}",self.step_details[i]);
@@ -61,7 +61,7 @@ impl Program {
         Ok(())
     }
 
-    async fn run_fast(&self, context: RunContext) -> Result<(),String> {
+    async fn run_fast(&self, context: RunContext) -> Result<(),Option<String>> {
         let mut gctx = GlobalContext::new(self.max_reg,&self.constants,context);
         for step in self.steps.as_ref().iter() {
             step.run(&mut gctx).await?;
@@ -70,10 +70,15 @@ impl Program {
     }
 
     pub async fn run(&self, context: RunContext) -> Result<(),String> {
-        if self.step_details.len() > 0 {
+        let out = if self.step_details.len() > 0 {
             self.run_step_by_step(context).await
         } else {
             self.run_fast(context).await
+        };
+        match out {
+            Ok(()) => Ok(()),
+            Err(None) => Ok(()),
+            Err(Some(x)) => Err(x)
         }
     }
 }

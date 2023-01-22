@@ -1,6 +1,6 @@
   0 load constant
   1 call up
-  2 *reserved*
+  2 halt
   3 push (non-destructive) number
   4 push (destructive) number
   5 length seq(number) -> number

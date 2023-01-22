@@ -1,0 +1,134 @@
+> introduction
+
+This manual is a quick-reference for all builtin functions. It gives the name, arguments and return types and whether they can/must be sequences, and whether any sequences can be infinite. ?X denotes a wildcard, any type but where all match. atom means non-sequence. opcodes are given but during regular programming these will not be relevent: they are useful during debugging.
+
+> section libcore
+> introduction
+
+Libcore contains everything which isn't overly specialist, and which you would expect a programming language to support and without any dependencies on the genome browser.
+
+> name push
+> opcodes 3,4,43,44,53,54
+> signature seq(?X),?X) -> seq(?X)
+> arg 1 finite sequence to use as base
+> arg 2 new value to add
+> res 1 finite sequence with value on end
+
+Pushes an item onto the end of an array and returns the updated array.
+
+> name len
+> opcodes 5,45,55
+> signature seq(?X) -> number
+> arg 1 finite sequence to measure
+> res 1 length
+
+Return length of finite array.
+
+> name gaps
+> opcodes 159
+> signature (seq(number),seq(number),seq(number),seq(number),seq(number)) -> (seq(number),seq(number),seq(number))
+> arg 1 starts of principal set of intervals (finite)
+> arg 2 ends of principal set of intervals (finite)
+> arg 3 starts of set of intervals to remove (finite)
+> arg 4 ends of set of intervals to remove (finite)
+> arg 5 which of the principal sets each of the intervals to remove belongs to (finite)
+> res 1 starts of remaining intervals (finite)
+> res 2 ends of remaining intervals (finite)
+> res 3 which of the principal sets each of the remaining intervals belongs to (finite)
+
+Given two sets of intervals, find the asymmetric difference between them, and return the new set. For example, given a set of transcripts and exons, return the introns.
+
+> name find
+> opcodes 160, 261
+> signature (seq(?X),atom(?X)) -> number
+> signature (seq(?X),seq(?X)) -> seq(number)
+> arg 1 haystack (finite)
+> arg 2 needle (finite)
+> res 1 position of needle in haystack, -1 if missing (finite)
+
+Given the array haystack, look for each member of needle andreturn its index. -1 indicates not found.
+
+> name join
+> opcodes 106
+> signature (string,seq(string)) -> string
+> arg 1 joiner
+> arg 2 parts (finite)
+> res 1 joined string
+
+Given a finite sequence of strings in parts, join them with the joiner string as a separator and return.
+
+> name push_str
+> opcodes 107,108,155,156
+> signature (string,string) -> string
+> signature (string,seq(string)) -> seq(string)
+> signature (seq(string),string) -> seq(string)
+> signature (seq(string),seq(string)) -> seq(string)
+> arg 1 prefix (finite)
+> arg 2 suffix (finite)
+> res 1 output
+
+Join given strings together. If one argument is a sequence prefix/suffix is added to all members. If both are, they must be the same length and are added pairwise.
+
+> name split
+> opcodes 109
+> signature (string,string) -> seq(string)
+> arg 1 separator
+> arg 2 string to split
+> res 1 split string
+
+Split string into parts at given separator. Simpler but less powerful version of full splitting suite, split_*.
+
+> name split_start
+> opcodes 111
+> signature (string,seq(string)) -> handle(split)
+> arg 1 separator
+> arg 2 input
+> res 1 handle to use to extract results
+
+Start splitting a sequence of strings with the given separator. Returns a handle to be used with split_get to retrieve a particular column. This advanced kind of split (compared to split()) is designed to handle CSV-like situations.
+
+> name split_get
+> opcodes 112
+> signature (handle(split), number) -> seq(string)
+> arg 1 split handle from split_start
+> arg 2 column to retrieve
+
+Retrieve result of given column from previous call to split_start. See split_start for details.
+
+> name template_start
+> opcodes 113
+> signature (string) -> handle(template)
+> arg 1 template string
+> res 1 handle to use to prepare template
+
+Build sequence of templated strings with arguments to be provided by other calls. Template uses {0}, {1} etc placeholders.
+
+> name template_set
+> opcodes 114
+> signature (handle(template), number, seq(string))
+> arg 1 template handle from template_start
+> arg 2 index of argument provided
+> arg 3 values provided
+
+Add the given values in argument 3 to the position given in argument 2. See template_start for details.
+
+> name template_end
+> opcodes 115
+> signature (handle(template)) -> seq(string)
+> arg 1 template handle from template_start
+> res 1 resulting strings
+
+Given the handle provided by template_start, and after allnecessary calls to template_set, return resulting strings.
+
+> name template
+> opcodes 110
+> signature (string,seq(string)) -> string
+> arg 1 template
+> arg 2 values
+> res 1 resulting string
+
+Simpler version of template suite for when just one string is needed. Takes template and sequence of values and returns finished string.
+
+> section libeoe
+
+> section libperegrine

@@ -95,11 +95,11 @@ struct SettingPatina<'a>(&'a String,&'a [Setting]);
 pub(crate) enum Patina {
     Solid(Vec<Colour>),
     Hollow(Hollow),
-    Special(String),
-    ZMenu(String,String),
+    Special(String,bool),
+    ZMenu(String,String,bool),
     Dotted(Dotted),
     Metadata(String,Vec<(String,StructValue)>),
-    Setting(String,Vec<Setting>)
+    Setting(String,Vec<Setting>,bool)
 }
 
 impl Serialize for Patina {
@@ -115,13 +115,15 @@ impl Serialize for Patina {
                 map.serialize_key("hollow")?;
                 map.serialize_value(s)?;
             },
-            Patina::Special(s) => {
+            Patina::Special(s,h) => {
                 map.serialize_key("special")?;
                 map.serialize_value(s)?;
+                map.serialize_entry("hover",h)?;
             },
-            Patina::ZMenu(k,v) => {
+            Patina::ZMenu(k,v,h) => {
                 map.serialize_key("zmenu")?;
                 map.serialize_value(&[k,v])?;
+                map.serialize_entry("hover",h)?;
             },
             Patina::Dotted(d) => {
                 map.serialize_key("dotted")?;
@@ -133,9 +135,10 @@ impl Serialize for Patina {
                 v.insert(key.to_string(),values);
                 map.serialize_value(&v)?;
             },
-            Patina::Setting(setting,values) => {
+            Patina::Setting(setting,values,hover) => {
                 map.serialize_key("setting")?;
                 map.serialize_value(&SettingPatina(setting,values))?;
+                map.serialize_entry("hover",hover)?;
             }
         }
         map.end()

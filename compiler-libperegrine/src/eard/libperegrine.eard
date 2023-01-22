@@ -168,9 +168,9 @@ code __code_bp_range() -> (number,number) {
     }
 }
 
-code __code_paint_special(string) -> handle(paint) {
-    impl (r1: string) -> r2: handle(paint) {
-        opcode 283, r2, r1;
+code __code_paint_special(string,boolean) -> handle(paint) {
+    impl (r1: string, r2: boolean) -> r3: handle(paint) {
+        opcode 283, r3, r1, r2;
     }
 }
 
@@ -186,9 +186,9 @@ world code __code_running_text(handle(coord),handle(coord),handle(pen),seq(strin
     }
 }
 
-world code __code_paint_click(handle(eoetmpl),handle(eoetmpl)) -> handle(paint) {
-    impl (r1: handle(eoetmpl), r2: handle(eoetmpl)) -> r3: handle(paint) {
-        opcode 286, r3, r1, r2;
+world code __code_paint_click(handle(eoetmpl),handle(eoetmpl),boolean) -> handle(paint) {
+    impl (r1: handle(eoetmpl), r2: handle(eoetmpl), r3: boolean) -> r4: handle(paint) {
+        opcode 286, r4, r1, r2, r3;
     }
 }
 
@@ -210,9 +210,9 @@ world code __code_paint_metadata(string,seq(string),seq(handle(eoetmpl))) -> han
     }
 }
 
-world code __code_paint_setting(string,seq(string),seq(handle(eoetmpl))) -> handle(paint) {
-    impl (r1: string, r2: seq(string), r3: seq(handle(eoetmpl))) -> r4: handle(paint) {
-        opcode 290, r4, r1, r2, r3;
+world code __code_paint_setting(string,seq(string),seq(handle(eoetmpl)),boolean) -> handle(paint) {
+    impl (r1: string, r2: seq(string), r3: seq(handle(eoetmpl)), r4: boolean) -> r5: handle(paint) {
+        opcode 290, r5, r1, r2, r3, r4;
     }
 }
 
@@ -277,14 +277,14 @@ export procedure wiggle(s,e,g,v,p,f) { __code_wiggle(s,e,g,v,p,f); }
 export function pen(font,size,fgd,bgd) { let h = __code_pen(font,size,fgd,bgd); h }
 export procedure text(c,p,t,f) { __code_text(c,p,t,f); }
 export procedure bp_range() { let (a,b) = __code_bp_range(); (a,b) }
-export function paint_special(s) { let h = __code_paint_special(s); h }
+export function paint_special(s,hover) { let h = __code_paint_special(s,hover); h }
 export procedure image(c,s,f) { __code_image(c,s,f); }
 export procedure running_text(nw,se,p,t,f) { __code_running_text(nw,se,p,t,f); }
-export procedure paint_click(name,tmpl) { let h = __code_paint_click(name,tmpl); h }
+export procedure paint_click(name,tmpl,hover) { let h = __code_paint_click(name,tmpl,hover); h }
 export function paint_dotted(f,b,g,w,p) { let h = __code_paint_dotted(f,b,g,w,p); h }
 export procedure empty(nw,se,f) { __code_empty(nw,se,f); }
 export function paint_metadata(key,value_id,value) { let h = __code_paint_metadata(key,value_id,value); h }
-export function paint_setting(setting,path,value) { let h = __code_paint_setting(setting,path,value); h }
+export function paint_setting(setting,path,value,hover) { let h = __code_paint_setting(setting,path,value,hover); h }
 export function small_value(ns,col,row) { let v = __code_small_value(ns,col,row); v }
 export function only_warm() { let yn = __code_only_warm(); yn }
 

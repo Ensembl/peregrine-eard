@@ -233,7 +233,8 @@ pub(crate) fn op_paint_special(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&
     let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
     Ok(Box::new(move |ctx,regs| {
         let special = ctx.force_string(regs[1])?;
-        let paint = Patina::Special(special.to_string());
+        let hover = ctx.force_boolean(regs[2])?;
+        let paint = Patina::Special(special.to_string(),hover);
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(paint);
         ctx.set(regs[0],Value::Number(h as f64))?;
@@ -253,10 +254,11 @@ pub(crate) fn op_zmenu(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
         let templates = ctx.context.get(&templates);
         let variety_h = ctx.force_number(regs[1])? as usize;
         let content_h = ctx.force_number(regs[2])? as usize;
+        let hover = ctx.force_boolean(regs[3])?;
         let zmenu_variety = templates.get(variety_h)?.clone();
         let zmenu_content = templates.get(content_h)?.clone();
         let paints = ctx.context.get_mut(&paints);
-        let h = paints.push(Patina::ZMenu(json_ser(&zmenu_variety)?,json_ser(&zmenu_content)?));
+        let h = paints.push(Patina::ZMenu(json_ser(&zmenu_variety)?,json_ser(&zmenu_content)?,hover));
         ctx.set(regs[0],Value::Number(h as f64))?;
         Ok(Return::Sync)
     }))
@@ -320,11 +322,12 @@ pub(crate) fn op_paint_setting(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&
         let value = ctx.force_finite_number(regs[3])?.iter().map(|h| {
             templates.get(*h as usize)
         });
+        let hover = ctx.force_boolean(regs[4])?;
         let updates = ctx.force_finite_string(regs[2])?
             .iter().zip(value).map(|(key,value)| {
                 Ok::<_,String>(Setting(key.to_string(),StructValue::new_expand(&value?.build()?,None)?))
         }).collect::<Result<Vec<_>,String>>()?;
-        let paint = Patina::Setting(setting.to_string(),updates);
+        let paint = Patina::Setting(setting.to_string(),updates,hover);
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(paint);
         ctx.set(regs[0],Value::Number(h as f64))?;

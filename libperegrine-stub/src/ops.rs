@@ -1,7 +1,7 @@
 use eachorevery::{eoestruct::{StructTemplate, struct_to_json, StructValue}};
 use eard_interp::{GlobalBuildContext, GlobalContext, HandleStore, Value, Return};
 use ordered_float::OrderedFloat;
-use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen,Setting, Hollow, Dotted }, util::{to_number, to_boolean}};
+use crate::{stubs::{LeafRequest, ProgramShapesBuilder, Colour, Patina, Coords, Plotter,Pen,Setting, Hollow, Dotted }, util::{to_number, to_boolean, to_string}};
 
 fn to_u8(v: f64) -> u8 { v as u8 }
 
@@ -331,6 +331,16 @@ pub(crate) fn op_paint_setting(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&
         let paints = ctx.context.get_mut(&paints);
         let h = paints.push(paint);
         ctx.set(regs[0],Value::Number(h as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_stick(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let shapes = ctx.context.get(&shapes);
+        let value = to_string(&shapes.get_request("stick","")?);
+        ctx.set(regs[0],Value::String(value[0].clone()))?;
         Ok(Return::Sync)
     }))
 }

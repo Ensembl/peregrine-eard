@@ -553,4 +553,142 @@ Given start and end coordinates and the chosen interval output the sequence of m
 
 > section libeoe
 
+> introduction
+
+libeoe wraps the library EachOrEvery most importantly the module within it called eoes (EachOrEveryStruct). This is a way of interfacing the flat datatypes of eard with the highly-structured outside world. You mainly encounter it when handling zmenus and other hotspots, but isn't genome browser specific and is standalone. See eoestruct.md, elsewhere, for an introduction to EoEStruct, though this is mainly from the Rust perspective (which is much more detail and many more options than you need or are exposed here).
+
+Essentially the functions exposed here allow you to generate data in the JSON model "plus" some features to allow data to come from sequences. A sequence can appear at any point a non-sequence value occurs as long as at some level above it there is an "all" node. This all node converts to an array and iterates across the sequence, reproducing the contents of its entire contents each time. All nodes allow multiple iteration at the same node so that sequences are traversed in sync. 
+
+Pairs and conditions can also conspire to put optional keys into hashes and optional elements into arrays. See the struct! macro for another, more practical introduction. The struct! macro essentially iterates over all the functions given here and you should use it when it is powerful enough for your task.
+
+> name eoe_boolean
+> opcodes 512, 526
+> signature (boolean) -> handle(eoetmpl)
+> signature (seq(boolean)) -> seq(handle(eoetmpl))
+> arg 1 a boolean value
+> res 1 a template using the given fixed boolean value
+
+Create a template comprising just a fixed boolean value. If passed a sequence simply creates a sequence of fixed values.
+
+> name eoe_number
+> opcodes 513, 527
+> signature (number) -> handle(eoetmpl)
+> signature (seq(number)) -> seq(handle(eoetmpl))
+> arg 1 a number
+> res 1 a template using the given fixed number
+
+Create a template comprising just a fixed number. If passed a sequence simply creates a sequence of fixed values.
+
+> name eoe_string
+> opcodes 514, 528
+> signature (string) -> handle(eoetmpl)
+> signature (seq(string)) -> seq(handle(eoetmpl))
+> arg 1 a string value
+> res 1 a template using the given fixed string
+
+Create a template comprising just a fixed string.  If passed a sequence simply creates a sequence of fixed values.
+
+> name eoe_null
+> opcodes 515
+> signature () -> handle(eoetmpl)
+> res 1 the template for null
+
+Create a template comprising just the constant null.
+
+> name eoe_group
+> opcodes 516
+> signature () -> handle(eoegroup)
+> res 1 a new variable group
+
+Create a variable group. All variables within a variable group are iterated through together in lock-step.
+
+> name eoe_var_boolean
+> opcodes 517
+> signature (handle(eoegroup),seq(boolean)) -> handle(eoevar)
+> arg 1 the group to which this variable should belong
+> arg 2 a sequence of booleans being the value of this variable
+> res 1 an eoevar which can be added to a template as a variable node by eoe_var
+
+Create a template containing the given sequence of booleans. For each member of the array ultimately created by all, an element will be chosen from the supplied value.
+
+> name eoe_var_number
+> opcodes 518
+> signature (handle(eoegroup),seq(number)) -> handle(eoevar)
+> arg 1 the group to which this variable should belong
+> arg 2 a sequence of numbers being the value of this variable
+> res 1 an eoevar which can be added to a template as a variable node by eoe_var
+
+Create a template containing the given sequence of numbers. For each member of the array ultimately created by all, an element will be chosen from the supplied value.
+
+> name eoe_var_string
+> opcodes 519
+> signature (handle(eoegroup),seq(string)) -> handle(eoevar)
+> arg 1 the group to which this variable should belong
+> arg 2 a sequence of strings being the value of this variable
+> res 1 an eoevar which can be added to a template as a variable node by eoe_var
+
+Create a template containing the given sequence of strings. For each member of the array ultimately created by all, an element will be chosen from the supplied value.
+
+> name eoe_array
+> opcodes 520
+> signature (seq(handle(eoetmpl))) -> handle(eoetmpl)
+> arg 1 sequence of templates to assemble into an array
+> res 1 template of array
+
+Create a template containing the given array of templates. Note that this is probably not the function you want. If you need to iterate over all instances of a sequence, you need eoe_all. This function is useful for when arrays are (mis?)-used to speficy tuples, etc, of essentially independent data needing different templates.
+
+> name eoe_pair
+> opcodes 521
+> signature (string,handle(eoetmpl)) -> handle(eoepair)
+> arg 1 key
+> arg 2 value
+
+Creates a key-value pair to build into a hash.
+
+> name eoe_object
+> opcodes 522
+> signature (seq(handle(eoepair))) -> handle(eoetmpl)
+> arg 1 a sequence of pairs to build into an object template
+> res 1 the resulting template
+
+Create a template commprising an object containing thegiven pairs.
+
+> name eoe_var
+> opcodes 523
+> signature (handle(eoevar)) -> handle(eoetmpl)
+> arg 1 variable to use as a template
+> res 1 resulting template
+
+Use a variable to create a template which, when nested inside an eoe_all, will be iterated over to create multiple array elements. Note that the only reason eoevar exists separate to eoetmpl, and the functionality here not built into eoe_var_boolean etc is that some variables are destined instead for eoe_condition.
+
+> name eoe_all
+> opcodes 524
+> signature (handle(eoegroup),handle(eoetmpl)) -> handle(eoetmpl)
+> arg 1 group of variables to iterate over
+> arg 2 template of each element
+> res 1 resulting template
+
+Models an array which iterates over all the variables in the eoegroup, for each one creating a member matching the template in the second argument with the cursor for each variable advanced by one each time.
+
+> name eoe_condition
+> opcode 525
+> signature (handle(eoevar),handle(eoetmpl)) -> handle(eoetmpl)
+> arg 1 boolean variable to use to determine whether to include the second argument or not
+> arg 2 template to include or not depending on value in first argument
+> res 1 resulting template
+
+When included in an array or object will only include an element or pair (respectively) if the value in the first argument is true.
+
+> name struct!
+
+struct is a macro to compose all of the calls in this library to generate a template using just a string defining the template you want and a number of variable arguments (like format! in rust or printf in C). It's not as powerful as using each of the functions individually, so sometimes you may need to resort to that, but most of the time you can get away with just using this macro.
+
+Syntax is per JSON with the following extensions:
+
+(<0,1,2,3,vars>! ...  ) : create an all node for the variables at argument positions 0,1,2,3 etc and use it to wrap the nested template ....
+(<0>? ... ) : create a condition node from the variable at the given position.
+<0s> <0b> <0n> : use argument at given position (a string/boolean/number) as a variable.
+
+For example strict!("""(<0,1>! { "first": <0s>, "second": <1s> })""",[1,2,3],[101,102,103]) will  expand to [{ "first": 1, "second": 101 },{ "first": 2, "second": 102 },{ "first": 3, "second": 103 }]. 
+
 > section libperegrine

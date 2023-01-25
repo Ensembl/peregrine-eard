@@ -277,6 +277,28 @@ impl Serialize for Rectangle {
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct RectangleJoin(
+    pub(crate) Coords,
+    pub(crate) Coords,
+    pub(crate) Patina,
+    pub(crate) Vec<LeafRequest>,
+    pub(crate) Vec<LeafRequest>
+);
+
+impl Serialize for RectangleJoin {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut seq = serializer.serialize_seq(Some(4))?;
+        seq.serialize_element(&self.0)?;
+        seq.serialize_element(&self.1)?;
+        seq.serialize_element(&self.2)?;
+        seq.serialize_element(&self.3)?;
+        seq.serialize_element(&self.4)?;
+        seq.end()
+    }
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct RunningRectangle(
     pub(crate) Coords,
     pub(crate) Coords,
@@ -351,6 +373,7 @@ impl Serialize for Wiggle {
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Shape {
     Rectangle(Rectangle),
+    RectangleJoin(RectangleJoin),
     RunningRectangle(RunningRectangle),
     Text(Text),
     RunningText(RunningText),
@@ -366,6 +389,10 @@ impl Serialize for Shape {
         match self {
             Shape::Rectangle(r) => {
                 map.serialize_key("rectangle")?;
+                map.serialize_value(r)?;
+            },
+            Shape::RectangleJoin(r) => {
+                map.serialize_key("rectangle-join")?;
                 map.serialize_value(r)?;
             },
             Shape::RunningRectangle(r) => {

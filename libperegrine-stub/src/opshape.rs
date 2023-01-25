@@ -1,6 +1,6 @@
 use eard_interp::{HandleStore, Return, GlobalBuildContext, GlobalContext};
 use ordered_float::OrderedFloat;
-use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina, Empty, RunningRectangle, RectangleJoin};
+use crate::stubs::{ProgramShapesBuilder, LeafRequest, Shape, RunningText, Coords, Image, Wiggle, Rectangle, Plotter, Text, Pen, Patina, Empty, RunningRectangle, RectangleJoin, Polygon};
 
 fn leaf_from_handle(ctx: &GlobalContext, leafs: &HandleStore<LeafRequest>, reg: usize) -> Result<Vec<LeafRequest>,String> {
     Ok(if !ctx.is_finite(reg)? {
@@ -181,6 +181,27 @@ pub(crate) fn op_image(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut Glob
         let leafs = leaf_from_handle(ctx,leafs,regs[2])?;
         let shapes = ctx.context.get_mut(&shapes);
         shapes.add_shape(Shape::Image(Image(coord.clone(),images.clone(),leafs)));
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_polygon(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    let coords = gctx.patterns.lookup::<HandleStore<Coords>>("coords")?;
+    let leafs = gctx.patterns.lookup::<HandleStore<LeafRequest>>("leaf")?;
+    let paints = gctx.patterns.lookup::<HandleStore<Patina>>("paint")?;
+    let shapes = gctx.patterns.lookup::<ProgramShapesBuilder>("shapes")?;
+    Ok(Box::new(move |ctx,regs| {
+        let coords = ctx.context.get(&coords);
+        let leafs = ctx.context.get(&leafs);
+        let paints = ctx.context.get(&paints);
+        let centre = coords.get(ctx.force_number(regs[0] as usize)? as usize)?.clone();
+        let radius = ctx.force_finite_number(regs[1])?.iter().map(|x| OrderedFloat(*x)).collect::<Vec<_>>();
+        let points = ctx.force_number(regs[2])? as usize;
+        let angle = ctx.force_number(regs[3])? as usize;
+        let paint = paints.get(ctx.force_number(regs[4])? as usize)?.clone();
+        let leaf = leaf_from_handle(ctx,leafs,regs[5])?;
+        let shapes = ctx.context.get_mut(&shapes);
+        shapes.add_shape(Shape::Polygon(Polygon(centre.clone(),radius.clone(),points,angle,paint.clone(),leaf)));
         Ok(Return::Sync)
     }))
 }

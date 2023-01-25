@@ -370,9 +370,35 @@ impl Serialize for Wiggle {
     }
 }
 
+// shapes.add_shape(Shape::Polygon(Polygon(centre.clone(),radius.clone(),points,angle,paint.clone(),leafs)));
+#[derive(PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) struct Polygon(
+    pub(crate) Coords,
+    pub(crate) Vec<OrderedFloat<f64>>,
+    pub(crate) usize,
+    pub(crate) usize,
+    pub(crate) Patina,
+    pub(crate) Vec<LeafRequest>
+);
+
+impl Serialize for Polygon {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where S: serde::Serializer {
+        let mut map = serializer.serialize_map(None)?;
+        map.serialize_entry("centre",&self.0)?;
+        map.serialize_entry("radius",&self.1.iter().map(|x| x.0).collect::<Vec<_>>())?;
+        map.serialize_entry("points",&self.2)?;
+        map.serialize_entry("angle",&self.3)?;
+        map.serialize_entry("paint",&self.4)?;
+        map.serialize_entry("leaf",&self.5)?;
+        map.end()
+    }
+}
+
 #[derive(PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum Shape {
     Rectangle(Rectangle),
+    Polygon(Polygon),
     RectangleJoin(RectangleJoin),
     RunningRectangle(RunningRectangle),
     Text(Text),
@@ -389,6 +415,10 @@ impl Serialize for Shape {
         match self {
             Shape::Rectangle(r) => {
                 map.serialize_key("rectangle")?;
+                map.serialize_value(r)?;
+            },
+            Shape::Polygon(r) => {
+                map.serialize_key("polygon")?;
                 map.serialize_value(r)?;
             },
             Shape::RectangleJoin(r) => {

@@ -299,7 +299,7 @@ export procedure bp_range() { let (a,b) = __code_bp_range(); (a,b) }
 export function paint_special(s,hover) { let h = __code_paint_special(s,hover); h }
 export procedure image(c,s,f) { __code_image(c,s,f); }
 export procedure running_text(nw,se,p,t,f) { __code_running_text(nw,se,p,t,f); }
-export procedure paint_click(name,tmpl,hover) { let h = __code_paint_click(name,tmpl,hover); h }
+export function paint_click(name,tmpl,hover) { let h = __code_paint_click(name,tmpl,hover); h }
 export function paint_dotted(f,b,g,w,p) { let h = __code_paint_dotted(f,b,g,w,p); h }
 export procedure empty(nw,se,f) { __code_empty(nw,se,f); }
 export function paint_metadata(key,value_id,value) { let h = __code_paint_metadata(key,value_id,value); h }

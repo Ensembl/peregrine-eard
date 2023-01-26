@@ -247,3 +247,24 @@ pub(crate) fn op_template_end(gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&m
         Ok(Return::Sync)
     }))
 }
+
+pub(crate) fn op_strlen(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        let len = ctx.force_string(regs[1])?.len();
+        ctx.set(regs[0],Value::Number(len as f64))?;
+        Ok(Return::Sync)
+    }))
+}
+
+pub(crate) fn op_strlen_s(_gctx: &GlobalBuildContext) -> Result<Box<dyn Fn(&mut GlobalContext,&[usize]) -> Result<Return,String>>,String> {
+    Ok(Box::new(move |ctx,regs| {
+        if ctx.is_finite(regs[1])? {
+            let len = ctx.force_finite_string(regs[1])?.iter().map(|x| x.len() as f64).collect();
+            ctx.set(regs[0],Value::FiniteNumber(len))?;
+        } else {
+            let len = ctx.force_infinite_string(regs[1])?.len();
+            ctx.set(regs[0],Value::InfiniteNumber(len as f64))?;    
+        }
+        Ok(Return::Sync)
+    }))
+}

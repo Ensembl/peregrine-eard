@@ -1,5 +1,5 @@
 use crate::{controller::{compiler::EardCompiler, source::FixedSourceSource}};
-use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq, fold_if, fold_repeat, fold_index, fold_count, fold_enumerate }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div, fold_gt, fold_ge, fold_not, fold_eq, fold_minus, fold_and, fold_or, fold_any, fold_all, fold_position, fold_mod, fold_max, fold_min_seq, fold_max_seq, fold_min}, foldstring::{fold_push_str, fold_split, fold_template, fold_join, fold_format}, foldconvert::{fold_to_boolean, fold_to_number, fold_to_string}};
+use super::{foldseq::{fold_bound, fold_total, fold_length, fold_push, fold_finseq, fold_infseq, fold_if, fold_repeat, fold_index, fold_count, fold_enumerate }, foldmaths::{fold_add, fold_sub, fold_mul, fold_div, fold_gt, fold_ge, fold_not, fold_eq, fold_minus, fold_and, fold_or, fold_any, fold_all, fold_position, fold_mod, fold_max, fold_min_seq, fold_max_seq, fold_min}, foldstring::{fold_push_str, fold_split, fold_template, fold_join, fold_format, fold_strlen}, foldconvert::{fold_to_boolean, fold_to_number, fold_to_string}};
 
 pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__infseq",fold_infseq)?;
@@ -40,6 +40,7 @@ pub(crate) fn libcore_add(compiler: &mut EardCompiler) -> Result<(),String> {
     compiler.add_constant_folder("libcore__min",fold_min)?;
     compiler.add_constant_folder("libcore__max_seq",fold_max_seq)?;
     compiler.add_constant_folder("libcore__min_seq",fold_min_seq)?;
+    compiler.add_constant_folder("libcore__strlen",fold_strlen)?;
     Ok(())
 }
 

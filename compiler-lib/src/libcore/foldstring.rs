@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::model::constants::{FullConstant, Constant};
 use super::util::{to_string, arm };
 
@@ -143,4 +145,24 @@ pub(crate) fn fold_format(inputs: &[Option<FullConstant>]) -> Option<Vec<FullCon
     } else {
         None
     }
+}
+
+pub(crate) fn fold_strlen(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
+    if let Some(Some(value)) = inputs.get(0) {
+        match value {
+            FullConstant::Atomic(Constant::String(s)) => {
+                Some(vec![FullConstant::Atomic(Constant::Number(OrderedFloat(s.len() as f64)))])
+            },
+            FullConstant::Finite(seq) => {
+                let seq = to_string(seq)?.iter().map(|s|
+                    Constant::Number(OrderedFloat(s.len() as f64))
+                ).collect();
+                Some(vec![FullConstant::Finite(seq)])
+            },
+            FullConstant::Infinite(Constant::String(s)) => {
+                Some(vec![FullConstant::Infinite(Constant::Number(OrderedFloat(s.len() as f64)))])
+            },
+            _ => { None }
+        }
+    } else { None }
 }

@@ -70,6 +70,18 @@ fold(libcore__template) code __code_template(string,seq(string)) -> string {
     }
 }
 
+fold(libcore__strlen) code __code_strlen(string) -> number {
+    impl (r1: string) -> r2: number {
+        opcode 162, r2, r1;
+    }
+}
+
+fold(libcore__strlen) code __code_strlen(seq(string)) -> seq(number) {
+    impl (r1: seq(string)) -> r2: seq(number) {
+        opcode 163, r2, r1;
+    }
+}
+
 export function join(sep,parts) { let out = __code_join(sep,parts); out }
 export function push_str(input,value) { let out = __code_push_str(input,value); out }
 export function split(sep,input) { let out = __code_split(sep,input); out }
@@ -79,3 +91,4 @@ export function template_start(pattern) { let out = __code_template_start(patter
 export procedure template_set(tmpl,pos,values) { __code_template_set(tmpl,pos,values); }
 export function template_end(tmpl) { let out = __code_template_end(tmpl); out }
 export function template(pattern,values) { let out = __code_template(pattern,values); out }
+export function strlen(s) { let out = __code_strlen(s); out }

@@ -105,7 +105,7 @@ code __code_eoe_condition(handle(eoevar),handle(eoetmpl)) -> handle(eoetmpl) {
 export function eoe_boolean(b) { let h = __code_eoe_boolean(b); h }
 export function eoe_number(b) { let h = __code_eoe_number(b); h }
 export function eoe_string(b) { let h = __code_eoe_string(b); h }
-export function eoe_null(b) { let h = __code_eoe_null(); h }
+export function eoe_null() { let h = __code_eoe_null(); h }
 export function eoe_group() { let h = __code_eoe_group(); h }
 export function eoe_var_boolean(g,b) { let h = __code_eoe_var_boolean(g,b); h }
 export function eoe_var_number(g,b) { let h = __code_eoe_var_number(g,b); h }

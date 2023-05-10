@@ -1,4 +1,4 @@
-FROM rust:1.67 as builder
+FROM rust:1.67.1-alpine3.17 as builder
 
 RUN apt-get update
 RUN apt-get install -y curl
@@ -11,6 +11,6 @@ WORKDIR /app/compiler
 
 RUN cargo build --release
 
-ENV PATH=$PATH:/app/compiler/target/release/eard-compiler
+ENV PATH=$PATH:/app/compiler/target/release/
 
 ENTRYPOINT ["eard-compiler"]

@@ -1,6 +1,6 @@
-FROM rust:1.67.1-alpine3.17 as builder
+FROM rust:1.67 as builder
 
-RUN apk update
+RUN apt update
 
 RUN rm -rf /app
 RUN mkdir /app

@@ -18,6 +18,7 @@ build-eard:
 
   script:
     - docker build -t ${CONTAINER_IMAGE} --no-cache .
-    - docker push ${CONTAINER_IMAGE}
-    - docker rmi ${CONTAINER_IMAGE}
+    - docker tag ${CONTAINER_IMAGE} ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+    - docker rmi ${CONTAINER_IMAGE} ${CI_REGISTRY_IMAGE}:latest
     - docker logout $CI_REGISTRY

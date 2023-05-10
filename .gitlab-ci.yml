@@ -5,7 +5,7 @@ stages:
 variables:
   CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}:eard-${CI_COMMIT_SHORT_SHA}
 
-.build-eard:
+build-eard:
   image: docker
 
   services:

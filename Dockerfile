@@ -12,4 +12,4 @@ RUN cargo build --release
 
 ENV PATH=$PATH:/app/compiler/target/release/
 
-ENTRYPOINT ["eard-compiler"]
+# ENTRYPOINT ["eard-compiler"]

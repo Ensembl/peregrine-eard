@@ -1,7 +1,6 @@
 FROM rust:1.67.1-alpine3.17 as builder
 
-RUN apt-get update
-RUN apt-get install -y curl
+RUN apk update
 
 RUN rm -rf /app
 RUN mkdir /app

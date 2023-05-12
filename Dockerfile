@@ -10,7 +10,7 @@ WORKDIR /app/compiler
 
 RUN cargo build --release
 
-FROM rust:1.67.1-alpine as run
+FROM alpine:3.16 as run
 
 RUN mkdir /app
 

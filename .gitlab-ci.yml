@@ -13,6 +13,11 @@ build-eard:
 
   stage: build_docker_image
 
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
+
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 

@@ -1,0 +1,29 @@
+# Define stages for the CI/CD pipeline
+stages:
+  - build_docker_image
+
+variables:
+  CONTAINER_IMAGE: ${CI_REGISTRY_IMAGE}:eard-${CI_COMMIT_SHORT_SHA}
+
+build-eard:
+  image: docker
+
+  services:
+    - docker:dind
+
+  stage: build_docker_image
+
+  rules:
+    - if: '$CI_DEPLOY_FREEZE == null && $CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
+
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+  script:
+    - docker build -t ${CONTAINER_IMAGE} --no-cache .
+    - docker tag ${CONTAINER_IMAGE} ${CI_REGISTRY_IMAGE}:latest
+    - docker push ${CI_REGISTRY_IMAGE}:latest
+    - docker rmi ${CONTAINER_IMAGE} ${CI_REGISTRY_IMAGE}:latest
+    - docker logout $CI_REGISTRY

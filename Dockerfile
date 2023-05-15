@@ -14,6 +14,8 @@ FROM alpine:3.16 as run
 
 RUN mkdir /app
 
+RUN apk add bash
+
 COPY --from=builder /app/compiler/target/release/eard-compiler /app
 
 ENV PATH=$PATH:/app

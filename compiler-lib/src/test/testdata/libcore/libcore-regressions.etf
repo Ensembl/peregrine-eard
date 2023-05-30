@@ -98,3 +98,44 @@ opcode 10, r4, r5, r3
 opcode 137, r1
 opcode 137, r2
 
+>> test
+
+Fold numbers for ==
+
+>> input
+
+program "group" "program" 1;
+
+print(format(1 == 2));
+print(format([1,1] == [2,2]));
+
+>> generate strip
+
+r1 <- "false"
+opcode 137, r1
+r1 <- "[false,false]"
+opcode 137, r1
+
+>> test
+
+Don't fold non-numbers for ==
+
+>> input
+
+program "group" "program" 1;
+
+print(format("hello" == "world"));
+print(format(["hello","hello"] == ["world","world"]));
+
+>> generate strip
+
+r1 <- "hello"
+r2 <- "world"
+opcode 31, r3, r1, r2
+opcode 138, r1, r3
+opcode 137, r1
+r1 <- ["hello","hello"]
+r3 <- ["world","world"]
+opcode 37, r2, r1, r3
+opcode 138, r1, r2
+opcode 137, r1

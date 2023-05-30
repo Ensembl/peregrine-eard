@@ -1,4 +1,4 @@
-use crate::model::constants::{FullConstant, Constant};
+use crate::model::{constants::{FullConstant, Constant}, checkstypes::AtomicTypeSpec};
 use ordered_float::OrderedFloat;
 use super::util::{ arm, seq_flex, seq_flex_un, to_boolean, fold_num_bin};
 
@@ -179,10 +179,11 @@ pub(crate) fn fold_not(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConsta
 
 pub(crate) fn fold_eq(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {
     if let (Some(Some(a)),Some(Some(b))) = (inputs.get(0),inputs.get(1)) {
-        Some(vec![number_pred!(|a,b| a==b,a,b)])
-    } else {
-        None
+        if let (Some(AtomicTypeSpec::Number),Some(AtomicTypeSpec::Number)) = (a.to_atomic_type(),b.to_atomic_type()) {
+            return Some(vec![number_pred!(|a,b| a==b,a,b)]);
+        }
     }
+    None
 }
 
 pub(crate) fn fold_any(inputs: &[Option<FullConstant>]) -> Option<Vec<FullConstant>> {

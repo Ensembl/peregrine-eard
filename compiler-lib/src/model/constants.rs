@@ -81,6 +81,16 @@ pub enum FullConstant {
     Infinite(Constant)
 }
 
+impl FullConstant {
+    pub(crate) fn to_atomic_type(&self) -> Option<AtomicTypeSpec> {
+        match self {
+            FullConstant::Atomic(a) => Some(a.to_atomic_type()),
+            FullConstant::Finite(s) => s.get(0).map(|a| a.to_atomic_type()),
+            FullConstant::Infinite(a) => Some(a.to_atomic_type()),
+        }
+    }
+}
+
 impl fmt::Debug for FullConstant {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
